@@ -38,6 +38,7 @@ For local development against a checkout:
     repo-specific `SONARQUBE_PROJECT_KEY` from the environment; no secrets are committed.
 - **Skills** (`xwiki/skills/`):
   - `xwiki-build` — canonical Maven build/test commands.
+  - `xwiki-pull-request` — conventions for creating a PR (template, commit format, squash/backport).
   - `standard-for-tests` — testing best practices and the XWiki test frameworks.
   - `convert-tests` — convert unit tests to JUnit5/Mockito.
   - `convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.

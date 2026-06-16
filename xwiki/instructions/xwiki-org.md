@@ -63,6 +63,9 @@ definitions.
   run `mvn license:format` to add missing headers).
 - Use the XWiki **Component system** (`@Component`, `@Inject`, `@Role`, declared in
   `META-INF/components.txt`) rather than passing context objects around in new code.
+- The project is **migrating away from `javax.*` in favor of `jakarta.*`**. In new code, prefer the
+  `jakarta.*` namespaces — e.g. use `jakarta.inject.*` (not `javax.inject.*`) for `@Inject`,
+  `@Named`, `Provider`, etc., and likewise for other migrated `javax`→`jakarta` packages.
 - `-legacy` modules only re-export deprecated APIs — never add new logic there, and non-legacy
   modules must not depend on legacy ones.
 - Public API changes are checked for binary/source compatibility by **Revapi**.
