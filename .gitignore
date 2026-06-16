@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# LLM
+.qodo
+CLAUDE.md
