@@ -44,6 +44,7 @@ For local development against a checkout:
   - `convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
   - `extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-translations` — externalize and render i18n strings safely.
+  - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
 
 ## Required environment variables
 
