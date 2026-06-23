@@ -168,9 +168,9 @@ When you modify a template in `xwiki-platform-web-templates`, you must also rebu
 
 ```bash
 mvn clean install -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-templates \
-    -Plegacy,snapshot -DskipTests
+    -DskipTests
 mvn clean install -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-war \
-    -Plegacy,snapshot -DskipTests
+    -DskipTests
 ```
 
 The Docker test's `mvn clean verify` then picks up the updated `xwiki-platform-web-war` JAR from the local Maven repo.
@@ -297,7 +297,7 @@ assertTrue(searchResults.getDisplayedResultsCount() >= 1);
 # Full run including Docker functional tests
 mvn clean verify \
     -pl xwiki-platform-core/xwiki-platform-<feature>/xwiki-platform-<feature>-test/xwiki-platform-<feature>-test-docker \
-    -Plegacy,integration-tests,snapshot,docker \
+    -Pintegration-tests,docker \
     -Dxwiki.checkstyle.skip=true \
     -Dxwiki.surefire.captureconsole.skip=true \
     -Dxwiki.revapi.skip=true
@@ -309,10 +309,33 @@ Results in: `target/failsafe-reports/TEST-*.xml`
 
 Screenshots on failure in: `target/screenshots/` or in the test output directory named after the test configuration.
 
+### Validate the DOOD setup on a non-default servlet engine
+
+**Always run the converted test on at least one other servlet engine, not just the default.** The
+default engine is **Jetty Standalone**, which runs both the test process and the XWiki servlet
+container directly on the host — this path does **not** exercise the Docker-out-of-Docker (DOOD)
+setup. A test can pass on Jetty Standalone yet fail when XWiki runs inside a Docker container,
+because container networking, volume mounts, and host access behave differently (e.g. the local
+Maven repo must be reached over `http://` rather than `file://` from inside the container).
+
+Re-run the test against a containerized engine such as Tomcat to validate DOOD:
+
+```bash
+# Run XWiki inside a Docker container (Tomcat) instead of the default Jetty Standalone (host).
+mvn clean verify \
+    -pl xwiki-platform-core/xwiki-platform-<feature>/xwiki-platform-<feature>-test/xwiki-platform-<feature>-test-docker \
+    -Pintegration-tests,docker \
+    -Dxwiki.test.ui.servletEngine=tomcat \
+    -Dxwiki.checkstyle.skip=true \
+    -Dxwiki.surefire.captureconsole.skip=true \
+    -Dxwiki.revapi.skip=true
+```
+
 ## Post-conversion checklist
 
 1. Verify test count matches original JUnit4 suite (no tests accidentally dropped).
 2. Assert the same things as the original tests — do not silently weaken assertions.
 3. Run `mvn clean verify` with the `docker` profile and confirm 0 failures, 0 errors.
-4. Check that `@Order` values cover the expected dependency chain between tests.
-5. Confirm `@BeforeEach` cleanup uninstalls/deletes all state that tests create, so tests are independent.
+4. Run the test on a second, containerized servlet engine (`-Dxwiki.test.ui.servletEngine=tomcat`) to validate the DOOD setup — do not rely solely on the default Jetty Standalone run.
+5. Check that `@Order` values cover the expected dependency chain between tests.
+6. Confirm `@BeforeEach` cleanup uninstalls/deletes all state that tests create, so tests are independent.
