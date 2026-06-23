@@ -309,19 +309,44 @@ Results in: `target/failsafe-reports/TEST-*.xml`
 
 Screenshots on failure in: `target/screenshots/` or in the test output directory named after the test configuration.
 
-### Validate the DOOD setup on a non-default servlet engine
+### Verify the DOOD use case (Maven build itself running inside a Docker container)
 
-**Always run the converted test on at least one other servlet engine, not just the default.** The
-default engine is **Jetty Standalone**, which runs both the test process and the XWiki servlet
-container directly on the host — this path does **not** exercise the Docker-out-of-Docker (DOOD)
-setup. A test can pass on Jetty Standalone yet fail when XWiki runs inside a Docker container,
-because container networking, volume mounts, and host access behave differently (e.g. the local
-Maven repo must be reached over `http://` rather than `file://` from inside the container).
+The default `mvn clean verify` runs above execute the Maven build on the **host** with XWiki on the
+default Jetty Standalone engine. That does not need to be repeated separately — instead, validate
+the converted test with the **DOOD (Docker-out-of-Docker)** setup, which exercises everything more
+thoroughly in one run. The CI agents run the whole build *inside* the `xwiki/build` Docker image, and
+that build then spawns the test's servlet-engine / database / browser containers as **siblings on the
+host Docker daemon**. This is enabled by bind-mounting the host's Docker socket into the build
+container (`-v /var/run/docker.sock:/var/run/docker.sock`), so the Docker client inside the container
+talks to the host daemon. Running this setup (e.g. on Tomcat) surfaces issues that only appear when
+the build itself is containerized (paths, socket access, container-to-container networking) as well as
+those from XWiki running inside a container (the local Maven repo must be reached over `http://`
+rather than `file://`).
 
-Re-run the test against a containerized engine such as Tomcat to validate DOOD:
+Reference (don't duplicate): the full, up-to-date instructions and per-flag explanations live in the
+[xwiki-docker-build "Local usage" doc](https://github.com/xwiki/xwiki-docker-build/tree/master/build#local-usage).
+Salient points:
+
+- The prebuilt `xwiki/build` image (on DockerHub) bundles the required build tools: Java 17, the
+  latest Maven, a Docker client, Firefox, and a VNC server.
+- The essential mount is the Docker socket — that is what makes DOOD work. Also bind-mount your local
+  Maven repo (`-v $HOME/.m2:/root/.m2:delegated`) to avoid re-downloading dependencies, and the
+  module source (e.g. ``-v `pwd`:/root/`basename \`pwd\``:delegated``) to build your local changes.
+- Functional tests need a display, so start a VNC server inside the container and export `DISPLAY`
+  (the doc also covers forwarding the display to a Mac/Linux host via XQuartz/X11).
+
+Minimal interactive shell inside the build container, then run the test as usual from there:
 
 ```bash
-# Run XWiki inside a Docker container (Tomcat) instead of the default Jetty Standalone (host).
+# On the host: get a shell inside the xwiki/build container with the Docker socket mounted (DOOD).
+docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $HOME/.m2:/root/.m2:delegated \
+    -v "$(pwd)":/root/"$(basename "$(pwd)")":delegated \
+    --entrypoint "/bin/bash" xwiki/build
+
+# Inside the container: start a display, then run the Docker test (Tomcat shown for the DOOD path).
+vncserver :1 -geometry 1280x960 -localhost -nolisten tcp && export DISPLAY=:1
+cd /root/<module-dir>
 mvn clean verify \
     -pl xwiki-platform-core/xwiki-platform-<feature>/xwiki-platform-<feature>-test/xwiki-platform-<feature>-test-docker \
     -Pintegration-tests,docker \
@@ -336,6 +361,6 @@ mvn clean verify \
 1. Verify test count matches original JUnit4 suite (no tests accidentally dropped).
 2. Assert the same things as the original tests — do not silently weaken assertions.
 3. Run `mvn clean verify` with the `docker` profile and confirm 0 failures, 0 errors.
-4. Run the test on a second, containerized servlet engine (`-Dxwiki.test.ui.servletEngine=tomcat`) to validate the DOOD setup — do not rely solely on the default Jetty Standalone run.
+4. Verify the DOOD use case by running the build itself inside the `xwiki/build` container (Docker socket mounted, e.g. on Tomcat) — this matches how CI runs it and validates everything in one run. See "Verify the DOOD use case" above.
 5. Check that `@Order` values cover the expected dependency chain between tests.
 6. Confirm `@BeforeEach` cleanup uninstalls/deletes all state that tests create, so tests are independent.
