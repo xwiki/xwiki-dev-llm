@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Shared LLM (Claude Code) configuration for XWiki org repositories",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "plugins": [
     {
       "name": "xwiki",
       "source": "./xwiki",
       "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "XWiki Development Team"
       }

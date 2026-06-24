@@ -7,15 +7,21 @@ description: Build and test XWiki Maven modules. Use when building XWiki, runnin
 
 XWiki is a multi-module Maven project. Almost every build needs the `legacy` profile.
 
-## Full build (no integration tests, fast)
+**Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
+per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
+hard-to-diagnose failures.
+
+## Full build (fast, unit tests only — no integration tests)
 
 ```bash
-mvn clean install -Plegacy,integration-tests,snapshot \
+mvn clean install -Plegacy,snapshot \
   -Dxwiki.checkstyle.skip=true -Dxwiki.surefire.captureconsole.skip=true \
-  -Dxwiki.revapi.skip=true -DskipITs
+  -Dxwiki.revapi.skip=true
 ```
 
-Drop `-DskipITs` to include integration tests. Add `-DskipTests` to skip all tests.
+Without the `integration-tests` profile, `*IT.java` tests don't run. To include integration tests,
+add `-Pintegration-tests` (and `-Pdocker` for the Docker-based ITs). `-DskipITs` skips ITs while
+keeping unit tests; `-DskipTests` skips all tests.
 
 ## Build a single module
 
@@ -48,3 +54,5 @@ mvn verify -pl <module-path> -Pintegration-tests
 - Skip flags worth knowing: `-Dxwiki.checkstyle.skip=true` (Checkstyle),
   `-Dxwiki.revapi.skip=true` (API compat), `-Dxwiki.surefire.captureconsole.skip=true`
   (stdout capture check).
+- Checkstyle and Revapi run in the `verify` phase (not `test`), so `mvn test` won't catch them —
+  use `mvn clean verify` or `install` to validate.
