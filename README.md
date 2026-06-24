@@ -32,6 +32,13 @@ For local development against a checkout:
   **scoped by git remote** so it only applies inside `xwiki/*` and `xwiki-contrib/*` repos (never in
   personal projects). The hook is written in Node (which ships with Claude Code), so it works on
   Windows, macOS and Linux without a bash or `jq` dependency.
+- **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — a `PostToolUse` hook on
+  `Write`/`Edit` that checks every file written against the explicit `eol` declared by the repo's
+  `.gitattributes` (via `git check-attr`). On a CRLF/LF mismatch it fails with a clear message so
+  the file gets rewritten with the right endings, preventing spurious whole-file diffs. It enforces
+  this deterministically and at near-zero token cost — it only emits output on an actual violation,
+  and stays silent when no `eol` is declared (so it never mis-fires on Windows `core.autocrlf`
+  working trees). Also Node-based for cross-platform support.
 - **MCP servers** (`xwiki/.mcp.json`):
   - `discourse` — forum.xwiki.org search/read (no auth).
   - `sonarqube` — SonarCloud code-quality analysis (Docker). Reads `SONARQUBE_TOKEN` and the
@@ -45,7 +52,6 @@ For local development against a checkout:
   - `extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
-  - `gitattributes` — respect the repo's `.gitattributes` (line endings, encoding) when generating files.
 
 ## Required environment variables
 
