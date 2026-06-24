@@ -24,6 +24,9 @@ follows.
 
 ## Build (Maven)
 
+- **Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
+  per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
+  hard-to-diagnose failures.
 - Common snapshot build (enable the `legacy` profile for almost everything):
   `mvn clean install -Plegacy,snapshot` (add `integration-tests` and `docker` when ITs are involved).
 - Skip slow checks while iterating:
@@ -31,6 +34,8 @@ follows.
 - `-DskipITs` skips integration tests; `-DskipTests` skips all tests.
 - Build a single module: `mvn clean install -pl <module-path> -Plegacy,snapshot`.
 - Run a single test: `mvn test -pl <module-path> -Dtest=MyTestClass#myMethod`.
+- Checkstyle and Revapi run in the `verify` phase (not `test`), so `mvn test` won't catch them —
+  use `mvn clean verify` or `install` to validate.
 
 ### Common profiles
 
