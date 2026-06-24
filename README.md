@@ -45,6 +45,7 @@ For local development against a checkout:
   - `extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
+  - `gitattributes` — respect the repo's `.gitattributes` (line endings, encoding) when generating files.
 
 ## Required environment variables
 
