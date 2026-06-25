@@ -46,6 +46,7 @@ For local development against a checkout:
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
   - `contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
+  - `fix-sonarqube-issue` — find and fix one SonarCloud issue, open a PR, mark it Accepted.
 
 ## Required environment variables
 
