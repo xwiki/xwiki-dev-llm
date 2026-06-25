@@ -27,6 +27,9 @@ follows.
 For Maven build/test commands — full build, single module, single test, skip flags, and the
 `clean`/`verify`-phase gotchas — use the **`xwiki-build`** skill (the canonical reference).
 
+**Always pass `-B -ntp`** (batch mode + no-transfer-progress) on every `mvn` invocation, to suppress
+interactive prompts and the download/progress lines that otherwise flood the output.
+
 ### Common profiles
 
 Standardized across all XWiki projects — see
@@ -55,7 +58,7 @@ definitions.
 
 - **Lines must not exceed 120 characters.**
 - LGPL license headers are required on every source file (validated by `license-maven-plugin`;
-  run `mvn license:format` to add missing headers).
+  run `mvn license:format -B -ntp` to add missing headers).
 - Use the XWiki **Component system** (`@Component`, `@Inject`, `@Role`, declared in
   `META-INF/components.txt`) rather than passing context objects around in new code.
 - The project is **migrating away from `javax.*` in favor of `jakarta.*`**. In new code, prefer the

@@ -3,8 +3,8 @@ name: increase-test-coverage
 description: Guide for increasing the unit test coverage for an XWiki module.
 ---
 
-1. Verify the build passes with ``mvn clean install -q -Pquality -Dxwiki.jacoco.instructionRatio=0.00``
-2. Run ``mvn jacoco:report``
+1. Verify the build passes with ``mvn clean install -B -ntp -q -Pquality -Dxwiki.jacoco.instructionRatio=0.00``
+2. Run ``mvn jacoco:report -B -ntp``
 3. Compare the computed total instruction coverage ratio from ``./target/site/jacoco/index.html`` with ``xwiki.jacoco.instructionRatio`` property from ``pom.xml``
   * if greater, update ``pom.xml`` and stop
   * if lower:

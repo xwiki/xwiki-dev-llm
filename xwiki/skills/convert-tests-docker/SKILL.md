@@ -167,9 +167,9 @@ This is the clean way to test against modified templates without rebuilding the 
 When you modify a template in `xwiki-platform-web-templates`, you must also rebuild `xwiki-platform-web-war` for the change to appear in the Docker test WAR:
 
 ```bash
-mvn clean install -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-templates \
+mvn clean install -B -ntp -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-templates \
     -DskipTests
-mvn clean install -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-war \
+mvn clean install -B -ntp -pl xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-war \
     -DskipTests
 ```
 
@@ -295,7 +295,7 @@ assertTrue(searchResults.getDisplayedResultsCount() >= 1);
 
 ```bash
 # Full run including Docker functional tests
-mvn clean verify \
+mvn clean verify -B -ntp \
     -pl xwiki-platform-core/xwiki-platform-<feature>/xwiki-platform-<feature>-test/xwiki-platform-<feature>-test-docker \
     -Pintegration-tests,docker \
     -Dxwiki.checkstyle.skip=true \
@@ -347,7 +347,7 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
 # Inside the container: start a display, then run the Docker test (Tomcat shown for the DOOD path).
 vncserver :1 -geometry 1280x960 -localhost -nolisten tcp && export DISPLAY=:1
 cd /root/<module-dir>
-mvn clean verify \
+mvn clean verify -B -ntp \
     -pl xwiki-platform-core/xwiki-platform-<feature>/xwiki-platform-<feature>-test/xwiki-platform-<feature>-test-docker \
     -Pintegration-tests,docker \
     -Dxwiki.test.ui.servletEngine=tomcat \

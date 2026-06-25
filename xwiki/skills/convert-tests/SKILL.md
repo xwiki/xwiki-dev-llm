@@ -447,5 +447,5 @@ when(resolver.resolve(eq("XWiki.SomeClass"), any(DocumentReference.class))).then
 ## Post-conversion checklist
 
 1. Remove unused imports from every converted file (JMock, JUnit4, Hamcrest, and any other imports no longer referenced after conversion).
-2. Run `mvn clean verify` on the module (skip checkstyle/revapi/console-capture as needed). All tests must pass.
+2. Run `mvn clean verify -B -ntp` on the module (skip checkstyle/revapi/console-capture as needed). All tests must pass.
 3. Check the jacoco threshold: run with `-Pquality -Dxwiki.jacoco.instructionRatio=1.00`. The failure output shows the current coverage ratio. If it is higher than the value in `<xwiki.jacoco.instructionRatio>`, update the POM property.
