@@ -27,13 +27,19 @@ From the extension page on the Extensions wiki (e.g.
 - **Extension space path** — the nested path after `Extension/` in the URL (usually a single
   segment, e.g. `WikiLinkURLNormalizer`). Used to build the reference
   `extensions:Extension.<space path>.WebHome`.
+- **Extension type** — shown in the extension's metadata on the page. Most extensions are type
+  "Extension" or "Application"; some multi-module projects are type **"Project"**. This affects
+  which template to use in step 3.
 - **Released version** and **release date**.
-- **What changed** in this version — read the version's row/release notes. Each version now has a
-  dedicated page at
-  `https://extensions.xwiki.org/xwiki/bin/view/Extension/<ExtensionSpace>/Versions/<version>/`
-  (reference `extensions:Extension.<space path>.Versions.<version>.WebHome`). The JIRA issues listed
-  there (e.g. "Add support for local URL fragments", "Depend on XWiki 15.10+") are the basis for the
-  release text and any minimal-version change.
+- **What changed** in this version:
+  - For **non-project types**: each version has a dedicated page at
+    `https://extensions.xwiki.org/xwiki/bin/view/Extension/<ExtensionSpace>/Versions/<version>/`
+    (reference `extensions:Extension.<space path>.Versions.<version>.WebHome`). The JIRA issues
+    listed there (e.g. "Add support for local URL fragments", "Depend on XWiki 15.10+") are the
+    basis for the release text and any minimal-version change.
+  - For **project types**: there are no `Versions/<version>/` sub-pages. Gather the changes from
+    the git log (`git log --oneline <prev-tag>..<release-tag>`) and the JIRA issues referenced in
+    the commit messages.
 
 ## 2. Page name and title
 
@@ -54,9 +60,12 @@ From the extension page on the Extensions wiki (e.g.
 ## 3. Content and summary templates (XWiki 2.1 syntax)
 
 The post's text + metadata live in a `Blog.BlogPostClass` xobject. Fill **both** the content and the
-summary/extract fields. Use these templates (the version link points to the **dedicated version
-page** — the older guide pointed it at a no-longer-existing `anchor="H<version>"` on the extension
-homepage):
+summary/extract fields.
+
+### Non-project type (has version sub-pages)
+
+The version link points to the **dedicated version page** (the older guide pointed it at a
+no-longer-existing `anchor="H<version>"` on the extension homepage):
 
 **Content:**
 
@@ -66,7 +75,7 @@ The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<versi
 <one or two sentences describing what this release adds/changes>
 ```
 
-**Summary / extract** (same lead sentence, condensed on one paragraph):
+**Summary / extract:**
 
 ```
 The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<version>>>doc:extensions:Extension.<space path>.Versions.<version>.WebHome]] has been released. <short description>
@@ -81,6 +90,24 @@ The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<versi
 
 `extensions:` is the cross-wiki prefix (the Blog is on the `xwiki` wiki, versions on the
 `extensions` wiki — same farm, so `doc:` references resolve).
+
+### Project type (no version sub-pages)
+
+Since there is no dedicated version page to link to, write the version number as plain text:
+
+**Content:**
+
+```
+The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] <version> has been released.
+
+<one or two sentences describing what this release adds/changes>
+```
+
+**Summary / extract:**
+
+```
+The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] <version> has been released. <short description>
+```
 
 ## 4. Categories
 
@@ -117,9 +144,12 @@ Use the **agent-browser** skill. Key gotchas learned the hard way:
 
 ## 7. Verify, then hand off
 
-- Use the editor's **Preview** to confirm the links resolve: the version link `href` must point to
-  `…/Extension/<ExtensionSpace>/Versions/<version>/` and there must be **no rendering errors**
+- Use the editor's **Preview** to confirm the links resolve and there are **no rendering errors**
   (`.xwikirenderingerror`). Click **"Back To Edit"** to return.
+  - For non-project types: verify the version link `href` points to
+    `…/Extension/<ExtensionSpace>/Versions/<version>/`.
+  - For project types: only the extension name link needs to resolve; there is no version page link
+    to check.
 - **Do not Save unless asked.** The default is to leave the form fully filled and let the user
   review and press **Save** / **Save & View** themselves. Save automatically only when the user
   explicitly tells you to.
