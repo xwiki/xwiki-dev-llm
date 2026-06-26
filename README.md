@@ -39,14 +39,14 @@ For local development against a checkout:
 - **Skills** (`xwiki/skills/`):
   - `xwiki-build` — canonical Maven build/test commands.
   - `xwiki-pull-request` — conventions for creating a PR (template, commit format, squash/backport).
-  - `standard-for-tests` — testing best practices and the XWiki test frameworks.
-  - `convert-tests` — convert unit tests to JUnit5/Mockito.
-  - `convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
-  - `extension` — deploy a XAR/JAR extension to a running XWiki instance.
+  - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.
+  - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
+  - `xwiki-convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
+  - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
-  - `contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
-  - `fix-sonarqube-issue` — find and fix one SonarCloud issue, open a PR, mark it Accepted.
+  - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
+  - `xwiki-fix-sonarqube-issue` — find and fix one SonarCloud issue, open a PR, mark it Accepted.
 
 ## Required environment variables
 

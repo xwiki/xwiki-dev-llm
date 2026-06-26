@@ -1,5 +1,5 @@
 ---
-name: fix-sonarqube-issue
+name: xwiki-fix-sonarqube-issue
 description: Find and fix a single open SonarCloud (SonarQube) issue in the current XWiki repo, then open a PR and mark the issue Accepted. Use when asked to fix/clear/triage a SonarQube issue, reduce SonarCloud findings, or run a "fix one Sonar issue" pass. For the build commands it relies on use xwiki-build; for PR/commit conventions use xwiki-pull-request.
 ---
 

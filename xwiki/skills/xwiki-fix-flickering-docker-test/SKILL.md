@@ -1,5 +1,5 @@
 ---
-name: fix-flickering-docker-test
+name: xwiki-fix-flickering-docker-test
 description: Guide for fixing a flickering Docker-based functional test for an XWiki module.
 ---
 

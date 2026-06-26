@@ -1,5 +1,5 @@
 ---
-name: convert-tests-docker
+name: xwiki-convert-tests-docker
 description: Convert XWiki functional IT tests from the JUnit4 legacy framework (xwiki-platform-test-ui) to the JUnit5 Docker-based framework (@UITest). Covers module setup, @UITest configuration, WAR composition, repository setup, and common pitfalls.
 ---
 
@@ -7,7 +7,7 @@ description: Convert XWiki functional IT tests from the JUnit4 legacy framework 
 
 Use this skill when converting existing tests that use the JUnit4 legacy functional test framework (based on `AbstractAuthenticatedTest`, `getUtil()`, `getRepositoryTestUtils()`, etc. from `xwiki-platform-test-ui`) to JUnit5 Docker-based tests using `@UITest`.
 
-For converting unit tests (JUnit4/JMock → JUnit5/Mockito), use the `convert-tests` skill instead.
+For converting unit tests (JUnit4/JMock → JUnit5/Mockito), use the `xwiki-convert-tests` skill instead.
 
 ## Module structure
 

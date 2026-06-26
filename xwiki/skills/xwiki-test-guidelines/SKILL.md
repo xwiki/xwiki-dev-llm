@@ -1,9 +1,9 @@
 ---
-name: standard-for-tests
+name: xwiki-test-guidelines
 description: Best practices, rules and XWiki-specific testing framework documentation for writing tests for the XWiki code base.
 ---
 
-When **converting** existing tests (JUnit4/JMock → JUnit5/Mockito), use the `convert-tests` skill in addition to this one.
+When **converting** existing tests (JUnit4/JMock → JUnit5/Mockito), use the `xwiki-convert-tests` skill in addition to this one.
 
 When writing a test:
 * Follow the test strategy at https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HTestingStrategy

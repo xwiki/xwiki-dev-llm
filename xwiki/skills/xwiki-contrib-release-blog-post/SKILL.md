@@ -1,6 +1,6 @@
 ---
-name: contrib-release-blog-post
-description: Announce an xwiki-contrib extension release by creating the "<Extension> Extension <version> Released" blog post on the xwiki.org Blog, following the contrib release-documentation convention (page name, title, content/summary templates, categories, publish date). Use after releasing an xwiki-contrib extension (groupId org.xwiki.contrib) when the blog-post step of the release documentation still needs doing. This is for contributed extensions only — not core xwiki-platform releases. For writing/reviewing general documentation pages use xwiki-documentation instead; for deploying a XAR/JAR to a running instance use extension.
+name: xwiki-contrib-release-blog-post
+description: Announce an xwiki-contrib extension release by creating the "<Extension> Extension <version> Released" blog post on the xwiki.org Blog, following the contrib release-documentation convention (page name, title, content/summary templates, categories, publish date). Use after releasing an xwiki-contrib extension (groupId org.xwiki.contrib) when the blog-post step of the release documentation still needs doing. This is for contributed extensions only — not core xwiki-platform releases. For writing/reviewing general documentation pages use xwiki-documentation instead; for deploying a XAR/JAR to a running instance use xwiki-deploy-extension.
 ---
 
 # Announce an xwiki-contrib extension release on the xwiki.org Blog
