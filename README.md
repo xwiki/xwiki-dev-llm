@@ -43,7 +43,16 @@ For local development against a checkout:
   - `discourse` — forum.xwiki.org search/read (no auth).
   - `sonarqube` — SonarCloud code-quality analysis (Docker). Reads `SONARQUBE_TOKEN` and the
     repo-specific `SONARQUBE_PROJECT_KEY` from the environment; no secrets are committed.
+- **OKF — knowledge base** (`xwiki/okf/`) — a curated, LLM-oriented corpus of XWiki *declarative*
+  knowledge: conventions (`conventions/`), architecture (`architecture/`), the dev-server ecosystem
+  (`servers/`), testing strategy (`testing/`) and release process (`processes/`). It complements the
+  skills (which hold task *procedures*): the OKF holds *facts*. A slimmed map of it is injected via
+  `xwiki-org.md`; `okf/index.md` is the full map. Durable facts are stored inline; **volatile facts
+  (versions, build/issue status, role holders) are stored as a "where to look + how to verify"
+  pointer, never as a cached value**, so the corpus does not go stale silently. New knowledge is
+  added only through a reviewed PR — the `xwiki-knowledge` skill governs reading and extending it.
 - **Skills** (`xwiki/skills/`):
+  - `xwiki-knowledge` — read and extend the OKF knowledge base (declarative XWiki knowledge).
   - `xwiki-build` — canonical Maven build/test commands.
   - `xwiki-pull-request` — conventions for creating a PR (template, commit format, squash/backport).
   - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.

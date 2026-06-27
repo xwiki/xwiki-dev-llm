@@ -70,17 +70,10 @@ definitions.
 
 ### Code comments
 
-- Write comments about the code as it is *now*, explaining the real reason for it — the use case,
-  requirement, constraint, or edge case being handled, stated inline so the comment is
-  self-contained. Do **not**:
-  - justify code by referring to a previous, old, or removed implementation, or to the change itself
-    ("like the previous X did", "as it was before", "to keep the old behavior", "changed because…");
-    a future reader has no knowledge of that history and the reference becomes misleading once the
-    old code is gone.
-  - point to transient external resources — JIRA issue keys, forum/mailing-list links, PR or commit
-    URLs, etc. They rot over time and disappear entirely if the project ever switches tools, leaving
-    a dangling reference. Put the actual reasoning in the comment itself; change history and issue
-    references belong in the commit message (which keeps its JIRA prefix), not in the code.
+- Comment about the code as it is *now* and state the real reason inline (the use case, constraint
+  or edge case). **Never** justify code by its history ("as it was before", "to keep the old
+  behavior") or point to transient external resources (JIRA keys, forum/PR/commit URLs) — those rot.
+  Full policy and rationale: `okf/conventions/code-comments.md` (see the OKF map below).
 
 ## Versioning new/deprecated APIs
 
@@ -88,3 +81,38 @@ definitions.
   dev version**, written as `<X.Y.0>RC1` (e.g. `18.5.0RC1`).
 - Do **not** trust the version string in a repo's `CLAUDE.md` — it goes stale. Read the real
   version from the root `pom.xml` (`<version>`) or the SNAPSHOT jar names under `~/.m2`.
+
+## OKF — how to go deeper
+
+The above are the always-on essentials. Fuller *declarative* knowledge (conventions, architecture,
+the dev-server ecosystem, release process) lives in this plugin's **OKF** knowledge base. When a
+question is about how XWiki works or what its rules are — rather than performing a task — consult
+the OKF; when you learn a durable, generic XWiki fact, propose adding it (via PR). The
+`xwiki-knowledge` skill is the entry point for both reading and extending it.
+
+OKF map (files under the plugin's `okf/` directory):
+
+- `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
+  `backward-compatibility`.
+- `okf/architecture/` — `component-system` (`@Role`/`@Component`/`components.txt`, `@Inject`).
+- `okf/testing/` — `strategy` (test kinds, naming, framework locations; procedures are in the skills).
+- `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum… and how to access/verify each).
+- `okf/processes/` — `release` (version/release orientation; detailed steps are dev-wiki pointers).
+- `okf/decisions/` — ADRs: the *why* behind durable architectural choices (each grounded in a
+  cited source). Record a new ADR when you hit an architectural decision whose rationale is grounded.
+
+**Volatile facts are never cached** in the OKF (current version, build/issue status, role holders):
+the relevant file gives a `verify:` recipe instead — read `pom.xml`, query the `sonarqube`/
+`discourse` MCP, or WebFetch the dev wiki. The dev wiki (dev.xwiki.org) remains the upstream source
+of truth.
+
+### Capturing learnings into the OKF
+
+When you complete a substantive task, consider whether it produced a **durable, generic,
+non-obvious** XWiki learning — or whether the developer **corrected you** on an XWiki convention,
+architecture point, or an existing OKF/skill statement. If so, **proactively ask** the developer
+whether to capture it in the OKF, and on yes run the `xwiki-knowledge` skill's EXTEND flow (gate
+checklist → entry or ADR → reviewed PR). Apply the same gate before asking: **stay silent** for
+trivial sessions and for anything personal, secret, session-specific, or already present — do not
+pester. Shared XWiki knowledge belongs in the OKF (it ships to the whole team via PR), never in a
+private/per-machine LLM memory.
