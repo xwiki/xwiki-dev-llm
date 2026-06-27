@@ -26,20 +26,35 @@ src/
 
 ### AllIT.java
 
+`AllIT` is the single entry point: it carries `@UITest` and aggregates every test class as a JUnit5
+`@Nested` inner class, so XWiki is started **once** and shared across all of them.
+
 ```java
 package org.xwiki.<feature>.test.docker;
 
-import org.junit.platform.suite.api.Suite;
-import org.junit.platform.suite.api.SuiteDisplayName;
-import org.xwiki.test.docker.junit5.DockerTestSuite;
+import org.junit.jupiter.api.Nested;
+import org.xwiki.test.docker.junit5.UITest;
 
-@Suite
-@SuiteDisplayName("Feature Tests (Docker)")
-@DockerTestSuite
-public class AllIT
+@UITest
+class AllIT
 {
+    @Nested
+    class NestedFeatureIT extends FeatureIT
+    {
+    }
+    // Add one @Nested class per *IT test class.
 }
 ```
+
+The `xwiki-commons` parent pom sets the failsafe `<includes>` default to `**/AllIT.java`, so only
+`AllIT` runs — every test class must be reachable as a `@Nested` class from it.
+
+**Where does the `@UITest` configuration go?** When a test class needs `@UITest` parameters
+(`extraJARs`, `properties`, …), put them on the **test class's own `@UITest`**, and leave a bare
+`@UITest` on `AllIT` — e.g. `xwiki-platform-extension-test-docker` (`ExtensionIT` holds the config,
+`AllIT` is bare). A test class that needs no configuration can be left **without** any `@UITest` of
+its own (e.g. `xwiki-platform-rest-test-docker`, whose pom documents that the nested classes are not
+`@UITest`-annotated). Either way it must not be run standalone — only `AllIT` is executed.
 
 ### pom.xml key elements
 
@@ -92,12 +107,19 @@ Add a `docker` profile to the parent test module's `pom.xml`:
 
 The `@UITest` annotation on the IT class configures the Docker test environment:
 
+> **Prefer pom dependencies over `extraJARs`.** The feature modules a test needs should be declared
+> as normal (runtime) dependencies in the test pom — the framework installs them as runtime
+> extensions (see "The minimal WAR" below). Reach for `extraJARs` only as a last resort, for JARs
+> that must be physically present in `WEB-INF/lib` at WAR **startup** (e.g. a repository factory or
+> index provider needed during bootstrap, before extensions are installed). The example below is
+> exactly that last-resort case.
+
 ```java
 @UITest(
     extraJARs = {
-        // Add JARs needed at WAR startup that aren't in the minimal WAR by default.
-        // The minimal WAR only contains the bare minimum — runtime deps in pom.xml
-        // are NOT automatically added to WEB-INF/lib.
+        // Last resort: these are needed in WEB-INF/lib at WAR startup, before runtime extension
+        // installation, so they can't be provided as ordinary pom dependencies (which install as
+        // extensions). Everything else belongs in the pom as a runtime dependency instead.
         "org.xwiki.commons:xwiki-commons-extension-repository-xwiki",
         "org.xwiki.platform:xwiki-platform-extension-index"
     },
@@ -115,7 +137,7 @@ class FeatureIT { ... }
 
 | Parameter | Purpose |
 |-----------|---------|
-| `extraJARs` | JARs added to WEB-INF/lib. Use for components needed at startup (e.g. repository factories, index providers). Format: `"groupId:artifactId"` |
+| `extraJARs` | JARs added to WEB-INF/lib. **Last resort** — only for components that must be present at WAR startup, before runtime extension installation (e.g. repository factories, index providers). For everything else, declare a pom dependency instead. Format: `"groupId:artifactId"` |
 | `properties` | Entries added to `TestConfiguration`. `xwikiPropertiesAdditionalProperties` appends lines to `xwiki.properties` |
 | `offline` | When `true`, configures Maven in offline mode; only `maven-local` repository is set in `xwiki.properties` |
 | `xwikiExtensionRepositories` | REPLACES the full extension repository list. Prefer `xwikiPropertiesAdditionalProperties` to APPEND repositories instead |
@@ -138,10 +160,21 @@ extension.repositories = self:xwiki:http://localhost:8080/xwiki/rest
 
 `WARBuilder` builds a minimal WAR from `xwiki-platform-minimaldependencies`. What this means:
 
-- **NOT included by default**: runtime dependencies listed in the test module's `pom.xml`. These are meant to be installed as extensions at runtime.
-- **Included**: only the core components in `minimaldependencies` plus any `extraJARs` from `@UITest`.
+- **Included in `WEB-INF/lib`**: only the core components in `minimaldependencies` (and their
+  transitive deps) plus any `extraJARs` from `@UITest`.
+- **NOT bundled in the WAR**: the test module's own dependencies. Instead, `ExtensionInstaller`
+  reads the test pom's non-`test`-scope `jar`/`xar` dependencies and installs each as a **runtime
+  extension** into the running XWiki — **skipping any artifact already bundled in the minimal WAR**
+  (`ExtensionInstaller.getProjectExtensionIds()`). So declaring an already-bundled dependency is
+  harmless (it's auto-skipped), and declaring a missing one gets it installed correctly. This is why
+  the deps-first rule above works: just declare the feature modules under test as runtime
+  dependencies.
 
-Common `extraJARs` needed for extension-related tests:
+**Migrating from a packager-based `-tests` module:** don't blindly carry over its runtime deps. Keep
+only what the feature actually needs at runtime; drop infrastructure deps the minimal WAR already
+provides (e.g. `xwiki-platform-search-solr-embedded` for a test that does no search).
+
+Common `extraJARs` (the last-resort, startup-time case) needed for extension-related tests:
 - `org.xwiki.commons:xwiki-commons-extension-repository-xwiki` — provides `XWikiExtensionRepositoryFactory` for the `xwiki:` repository type. Without it: startup error "Unsupported repository type [xwiki]".
 - `org.xwiki.platform:xwiki-platform-extension-index` — Solr-backed extension search. Without it: `NullPointerException` in Solr client, keyword searches return 0 results.
 
