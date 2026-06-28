@@ -33,6 +33,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 - **commit-messages** — JIRA-key prefix (`XWIKI-12345:`) or `[Misc]`.
 - **versioning** — `@since`/`@Deprecated(since=…)` use `<X.Y.0>RC1`; current version is volatile.
 - **backward-compatibility** — Revapi, the `@Unstable` lifecycle, evolve interfaces via default methods.
+- **security** — escaping APIs, untrusted user input & translations, context-author right checks in
+  script services, configurable HTML sanitizer.
 
 ### architecture/
 - **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation.
@@ -47,6 +49,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 ### processes/
 - **release** — how XWiki versions/releases (Commons+Rendering+Platform together); detailed steps are
   volatile pointers to the dev wiki.
+- **security-policy** — CVSS-4 severity scoring (volatile; verify) and the durable rule never to
+  reveal a vulnerability publicly until disclosure (obfuscated commits, restricted JIRA issues).
 
 ### decisions/ (ADRs)
 Architectural Decision Records — the *why* behind durable choices (context, decision, consequences),

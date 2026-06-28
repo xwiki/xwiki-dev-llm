@@ -93,11 +93,13 @@ the OKF; when you learn a durable, generic XWiki fact, propose adding it (via PR
 OKF map (files under the plugin's `okf/` directory):
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
-  `backward-compatibility`.
+  `backward-compatibility`, `security` (escaping, untrusted input/translations, context-author
+  right checks).
 - `okf/architecture/` — `component-system` (`@Role`/`@Component`/`components.txt`, `@Inject`).
 - `okf/testing/` — `strategy` (test kinds, naming, framework locations; procedures are in the skills).
 - `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum… and how to access/verify each).
-- `okf/processes/` — `release` (version/release orientation; detailed steps are dev-wiki pointers).
+- `okf/processes/` — `release` (version/release orientation; detailed steps are dev-wiki pointers),
+  `security-policy` (CVSS-4 severity + the never-disclose-a-vuln-publicly rule).
 - `okf/decisions/` — ADRs: the *why* behind durable architectural choices (each grounded in a
   cited source). Record a new ADR when you hit an architectural decision whose rationale is grounded.
 
