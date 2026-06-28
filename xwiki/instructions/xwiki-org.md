@@ -110,11 +110,16 @@ of truth.
 
 ### Capturing learnings into the OKF
 
-When you complete a substantive task, consider whether it produced a **durable, generic,
-non-obvious** XWiki learning — or whether the developer **corrected you** on an XWiki convention,
-architecture point, or an existing OKF/skill statement. If so, **proactively ask** the developer
-whether to capture it in the OKF, and on yes run the `xwiki-knowledge` skill's EXTEND flow (gate
-checklist → entry or ADR → reviewed PR). Apply the same gate before asking: **stay silent** for
-trivial sessions and for anything personal, secret, session-specific, or already present — do not
-pester. Shared XWiki knowledge belongs in the OKF (it ships to the whole team via PR), never in a
-private/per-machine LLM memory.
+Run the capture check whenever **either** (a) the task *relied on or fetched* a durable, generic
+XWiki fact — a convention, policy, architecture point, or a dev-wiki / xwiki.org doc page — whose
+topic is **absent from the OKF map, or contradicts it** (*absence is itself the signal; the fact
+need not be new to you* — in particular, if you WebFetch an authoritative XWiki doc page to do a task
+and its topic isn't in the OKF map, offer to capture it); or (b) the developer **corrected you** on
+an XWiki convention, architecture point, or an existing OKF/skill statement. On either, **proactively
+ask** whether to capture it in the OKF, and on yes run the `xwiki-knowledge` skill's EXTEND flow (gate
+checklist → entry or ADR → reviewed PR). Beware the common miss: a task that merely *consumes*
+established knowledge can still expose an OKF gap — judge novelty against the **OKF**, not against
+what you already know. Apply the gate before asking: **stay silent** for trivial sessions and for
+anything personal, secret, session-specific, or already present — do not pester. Shared XWiki
+knowledge belongs in the OKF (it ships to the whole team via PR), never in a private/per-machine LLM
+memory.

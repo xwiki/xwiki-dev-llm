@@ -79,11 +79,21 @@ Superseding instead of deleting: when a decision changes, set the old ADR's `sta
 
 ## When to offer capture (closing the loop each session)
 
-Self-improvement only happens if learnings flow back. When a substantive task completes — or
-whenever the developer **corrects** you on an XWiki convention, architecture point, or an existing
-OKF/skill statement — **proactively ask** whether to capture the learning, then run the EXTEND flow
-above on a yes. The org instructions (always injected) carry this directive too, so the prompt is
-well-timed at task completion.
+Self-improvement only happens if learnings flow back. Run the capture check whenever **either**:
+
+- **(a)** the task *relied on or fetched* a durable, generic XWiki fact — a convention, policy,
+  architecture point, or a dev-wiki / xwiki.org doc page — whose topic is **absent from the OKF map,
+  or contradicts it**. *Absence is itself the signal; the fact need not be new to you.* In
+  particular, **if you WebFetch an authoritative XWiki doc page to perform a task and its topic isn't
+  in the OKF map, offer to capture it.** A whole topic area you needed but the map lacks is a strong
+  signal.
+- **(b)** the developer **corrects** you on an XWiki convention, architecture point, or an existing
+  OKF/skill statement.
+
+On either, **proactively ask** whether to capture, then run the EXTEND flow above on a yes. The org
+instructions (always injected) carry this directive too, so the prompt is well-timed at task
+completion. Note the common miss: a task that *consumes* established knowledge to produce an output
+can still surface an OKF gap — judge novelty against the **OKF**, not against what you already know.
 
 Run it through the gate **before** asking, and **stay silent** when it fails — do not pester:
 
