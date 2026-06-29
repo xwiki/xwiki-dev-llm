@@ -29,6 +29,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   with `-Dxwiki.surefire.captureconsole.skip=true` only when justified.
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
+- **Test method order matches `@Order`** — in a test class that orders its methods with `@Order(n)`,
+  keep the physical (source) order of the `@Test` methods aligned with their `@Order` values (1, 2,
+  3 …) so the file reads in execution order. When adding a new test, place it according to its
+  `@Order` value rather than simply appending it at the end.
 - **Coverage** — after adding tests, check whether the JaCoCo threshold can be raised by running
   `-Pquality -Dxwiki.jacoco.instructionRatio=1.00` (it fails but reports the achievable ratio, which
   you then set as the new threshold).
