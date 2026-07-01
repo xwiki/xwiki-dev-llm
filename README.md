@@ -59,6 +59,7 @@ For local development against a checkout:
   - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
   - `xwiki-convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
   - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
+  - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
   - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.

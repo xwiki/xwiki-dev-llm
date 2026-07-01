@@ -1,11 +1,6 @@
 ---
-title: Editing XAR wiki pages (xar:format / xar:verify)
-stability: durable
-summary: Extension wiki pages are XML files packaged in a XAR (xar-packaging module). After hand-editing
-  a page XML, run `mvn xar:format` to normalize it; `mvn install`/`verify` runs `xar:verify`, which fails
-  the build if pages break the conventions (version 1.1, authors, license, encoding, hidden/language rules…).
-sources:
-  - https://dev.xwiki.org/xwiki/bin/view/Community/XARPlugin
+name: xwiki-xar-pages
+description: Edit wiki pages shipped inside an XWiki extension's XAR — the .xml files under src/main/resources/ of a xar-packaging module. Use when hand-editing or adding an extension wiki page and you need the conventions and the mvn xar:format / xar:verify workflow (page version stays 1.1, authors, license, encoding, hidden/language rules per page type). For the i18n string content inside those pages use xwiki-translations; for the Maven commands use xwiki-build; to deploy the built XAR to a running instance use xwiki-deploy-extension.
 ---
 
 # Editing XAR wiki pages
@@ -13,6 +8,17 @@ sources:
 XWiki extensions ship wiki pages as XML files under `src/main/resources/` (directories match space
 names), packaged into a **XAR** by a module with `<packaging>xar</packaging>`. These files are
 maintained with the **XAR Maven plugin** (`xwiki-commons-tool-xar-plugin`).
+
+## Page version stays `1.1` — never bump it
+
+Each page XML carries a `<version>` element. **Always keep it at `<version>1.1</version>`; never
+bump it when editing an extension's XAR page.** The extension's own (Maven) version is what tracks
+changes across releases — the per-page XML `<version>` is not a changelog, and bumping it only
+produces spurious diffs. `xar:verify` enforces this (it fails the build if a page's version is not
+`1.1`).
+
+This is unrelated to Java API `@since` / `@Deprecated` version tags (see the OKF `versioning`
+convention).
 
 ## After editing: run `mvn xar:format`
 
@@ -34,7 +40,7 @@ Whenever you hand-edit a page XML, run `mvn xar:format` on that module (e.g.
 xar-packaging module **fails the build** if any page breaks the conventions. It checks, among others:
 
 - Encoding is UTF-8; authors are `xwiki:XWiki.Admin`; `comment` is empty; `minorEdit` is `false`.
-- **`<version>` is `1.1`** (this is why extension pages always keep version 1.1 — see [[versioning]]).
+- **`<version>` is `1.1`** (this is why extension pages always keep version 1.1 — see above).
 - `defaultLanguage` empty for technical pages, non-empty (and matching the configured language) for
   content/translatable pages; `hidden` set correctly per page type.
 - License headers present (when `formatLicense` is on); attachments have a mimetype.
@@ -50,4 +56,13 @@ Skip it (rarely) with `-Dxar.verify.skip=true`.
 - **Translatable**: technical page that can have translations — hidden, non-empty `defaultLanguage`
   (defaults to files matching `.*/.*Translations\.xml`).
 
-Building a XAR module and the standard Maven commands are covered by the `xwiki-build` skill.
+## Related skills
+
+- **xwiki-build** — the standard Maven commands and profiles for building a XAR module.
+- **xwiki-translations** — editing `Translations` pages and i18n string content inside XAR pages
+  (those pages are XAR pages, so this `xar:format` / `xar:verify` workflow applies to them too).
+- **xwiki-deploy-extension** — deploy the built XAR/JAR to a running XWiki instance.
+
+## References
+
+- XAR Maven plugin: https://dev.xwiki.org/xwiki/bin/view/Community/XARPlugin

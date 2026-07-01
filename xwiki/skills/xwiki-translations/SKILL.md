@@ -170,7 +170,9 @@ data])` (the documented fallback) rather than the macro.
 
 ## After editing
 
-- Build the module and confirm the XAR `verify` passes (well-formed pages) and checkstyle is clean.
+- If you hand-edited a `Translations` (or any) wiki page XML, run `mvn xar:format` on the module and
+  confirm the build's `xar:verify` passes — those pages are XAR pages (see the `xwiki-xar-pages`
+  skill for the full conventions/workflow). Also keep checkstyle clean.
 - Verify on a running XWiki: labels/headings render, links work, and switching the UI language falls
   back to English (no raw `some.key` shown), proving the text goes through localization.
 
@@ -179,4 +181,5 @@ data])` (the documented fallback) rather than the macro.
 - Localization scripting: https://extensions.xwiki.org/xwiki/bin/view/Extension/Localization/Scripting/
 - Security best practices: https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Security/
 - L10N conventions: https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions/
+- Editing XAR page XML (Translations pages included): the `xwiki-xar-pages` skill.
 - Mass-escaping effort / rationale: XWIKI-19749

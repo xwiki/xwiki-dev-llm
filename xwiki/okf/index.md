@@ -32,9 +32,6 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 - **code-comments** — comment about the code as-is; never reference history or transient links.
 - **commit-messages** — JIRA-key prefix (`XWIKI-12345:`) or `[Misc]`.
 - **versioning** — `@since`/`@Deprecated(since=…)` use `<X.Y.0>RC1`; current version is volatile.
-  Extension XAR pages always keep `<version>1.1</version>` — never bump it.
-- **xar-pages** — editing extension wiki-page XML: run `mvn xar:format` after editing; `xar:verify`
-  (bound to the build) enforces version 1.1, authors, license, encoding, hidden/language rules.
 - **backward-compatibility** — Revapi, the `@Unstable` lifecycle, evolve interfaces via default methods.
 - **security** — escaping APIs, untrusted user input & translations, context-author right checks in
   script services, configurable HTML sanitizer.
