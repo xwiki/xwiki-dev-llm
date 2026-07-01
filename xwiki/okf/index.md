@@ -38,6 +38,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 
 ### architecture/
 - **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation.
+- **macro-refactoring** — `MacroRefactoring` role (keyed by macro id) rewrites a macro's references on
+  rename/move and extracts them for backlinks; `DefaultMacroRefactoring` is content-only (ignores parameters).
 
 ### testing/
 - **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, `@Order` source-ordering rule, coverage, framework locations.
