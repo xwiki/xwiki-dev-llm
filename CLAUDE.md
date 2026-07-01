@@ -16,11 +16,13 @@ required directory layout. Keep new content that way.
 ## Validate
 
 ```
-claude plugin validate ./xwiki
+claude plugin validate ./xwiki   # manifest schema
+node scripts/validate.mjs        # repo consistency (skill inventory, version sync, OKF map)
 ```
 
-Run this after any change to the plugin. There is no build step, no test runner, and no lint — JSON
-manifests and Markdown/`.mjs` files are the entire artifact.
+Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI (GitHub Actions) on
+every push and pull request. There is no build step, no test runner, and no lint — JSON manifests and
+Markdown/`.mjs` files are the entire artifact.
 
 ## Architecture
 

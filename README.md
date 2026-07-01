@@ -58,6 +58,8 @@ For local development against a checkout:
   - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.
   - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
   - `xwiki-convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
+  - `xwiki-increase-test-coverage` — raise and lock in a module's unit-test coverage (JaCoCo instruction ratio).
+  - `xwiki-fix-flickering-docker-test` — fix a flickering Docker-based functional test.
   - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
   - `xwiki-translations` — externalize and render i18n strings safely.
@@ -98,8 +100,11 @@ https://sonarcloud.io/organizations/xwiki/projects.
 ## Validate
 
 ```
-claude plugin validate ./xwiki
+claude plugin validate ./xwiki   # manifest schema
+node scripts/validate.mjs        # repo consistency (skill inventory, version sync, OKF map)
 ```
+
+`scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
 
 ## Contributing
 

@@ -64,7 +64,7 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 
 `xwiki-build`, `xwiki-pull-request`, `xwiki-test-guidelines`, `xwiki-convert-tests`,
 `xwiki-convert-tests-docker`, `xwiki-fix-flickering-docker-test`, `xwiki-increase-test-coverage`,
-`xwiki-deploy-extension`, `xwiki-documentation`, `xwiki-translations`,
+`xwiki-deploy-extension`, `xwiki-xar-pages`, `xwiki-documentation`, `xwiki-translations`,
 `xwiki-contrib-release-blog-post`, `xwiki-fix-sonarqube-issue`.
 
 ## How to extend the OKF (EXTEND)
