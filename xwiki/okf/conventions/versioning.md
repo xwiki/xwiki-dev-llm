@@ -33,6 +33,7 @@ Wiki pages packaged in an extension's XAR are stored as XML files (e.g.
 **Always keep that page version at `1.1`; never bump it when editing an extension's XAR page.** The
 extension's own (Maven) version is what tracks changes across releases — the per-page XML `<version>`
 is not a changelog, and bumping it only produces spurious diffs. Extensions ship their pages at
-version `1.1`.
+version `1.1`, and `xar:verify` enforces this (it fails the build if a page's version is not `1.1`) —
+see [[xar-pages]] for the full XAR editing workflow (`xar:format` / `xar:verify`).
 
 This is unrelated to the `@since` / `@Deprecated` version above, which is about Java API tags.

@@ -94,7 +94,8 @@ OKF map (files under the plugin's `okf/` directory):
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security` (escaping, untrusted input/translations, context-author
-  right checks).
+  right checks), `xar-pages` (run `mvn xar:format` after editing extension page XML; `xar:verify`
+  enforces version 1.1 / authors / license / language rules).
 - `okf/architecture/` — `component-system` (`@Role`/`@Component`/`components.txt`, `@Inject`).
 - `okf/testing/` — `strategy` (test kinds, naming, framework locations; procedures are in the skills).
 - `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum… and how to access/verify each).
