@@ -7,8 +7,7 @@ description: Increase (and lock in) the unit-test coverage of an XWiki module. R
   missing tests otherwise.
 ---
 
-Run this whenever unit tests are added or changed in a module (do it as part of that change, not as a
-separate opt-in step), or when asked to raise a module's coverage. Run it from the module directory.
+Run this from the module directory.
 
 1. Verify the build passes with ``mvn clean install -B -ntp -q -Pquality -Dxwiki.jacoco.instructionRatio=0.00``
 2. Run ``mvn jacoco:report -B -ntp``

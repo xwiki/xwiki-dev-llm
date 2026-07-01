@@ -33,12 +33,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   keep the physical (source) order of the `@Test` methods aligned with their `@Order` values (1, 2,
   3 …) so the file reads in execution order. When adding a new test, place it according to its
   `@Order` value rather than simply appending it at the end.
-- **Coverage** — whenever you add or change unit tests in a module, run the
-  `xwiki-increase-test-coverage` skill as part of that change (not as a separate opt-in step). It
-  recomputes the module's achieved JaCoCo instruction ratio and, when that ratio has risen above the
-  `xwiki.jacoco.instructionRatio` property in the module `pom.xml`, raises the property to lock the
-  gain in (otherwise it guides adding the missing tests). Under the hood it uses
-  `-Pquality -Dxwiki.jacoco.instructionRatio=0.00` + `jacoco:report` to read the achievable ratio.
+- **Coverage** — keep a module's coverage current by running the `xwiki-increase-test-coverage`
+  skill as part of any unit-test change: it raises the module pom's `xwiki.jacoco.instructionRatio`
+  when the achieved ratio has grown, and otherwise guides adding the missing tests. (The mvn command
+  lives in the skill.)
 
 ## Where the test frameworks live (per repo checkout)
 
