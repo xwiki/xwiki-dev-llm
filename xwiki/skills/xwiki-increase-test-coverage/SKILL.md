@@ -1,7 +1,14 @@
 ---
 name: xwiki-increase-test-coverage
-description: Guide for increasing the unit test coverage for an XWiki module.
+description: Increase (and lock in) the unit-test coverage of an XWiki module. Run this automatically
+  whenever unit tests are added or changed in a module — as part of that same change — as well as when
+  explicitly asked to raise coverage. It recomputes the module's achieved JaCoCo instruction ratio and
+  raises the module pom's xwiki.jacoco.instructionRatio when the ratio has grown, or guides adding the
+  missing tests otherwise.
 ---
+
+Run this whenever unit tests are added or changed in a module (do it as part of that change, not as a
+separate opt-in step), or when asked to raise a module's coverage. Run it from the module directory.
 
 1. Verify the build passes with ``mvn clean install -B -ntp -q -Pquality -Dxwiki.jacoco.instructionRatio=0.00``
 2. Run ``mvn jacoco:report -B -ntp``

@@ -52,6 +52,9 @@ definitions.
   Skip per-module with `-Dxwiki.surefire.captureconsole.skip=true`.
 - Prefer the lightest test base that works: use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
+- After adding or changing unit tests in a module, run the **`xwiki-increase-test-coverage`** skill as
+  part of that change — it refreshes the module's achieved coverage and raises the
+  `xwiki.jacoco.instructionRatio` pom property when it has grown.
 - Full testing strategy: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
 
 ## Code conventions
