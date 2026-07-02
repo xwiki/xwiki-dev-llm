@@ -29,7 +29,8 @@ From the extension page on the Extensions wiki (e.g.
   `extensions:Extension.<space path>.WebHome`.
 - **Extension type** — shown in the extension's metadata on the page. Most extensions are type
   "Extension" or "Application"; some multi-module projects are type **"Project"**. This affects
-  which template to use in step 3.
+  which template to use in step 3 (see `okf/servers/index.md`, the extensions.xwiki.org row, for the
+  page-structure difference).
 - **Released version** and **release date**.
 - **What changed** in this version:
   - For **non-project types**: each version has a dedicated page at
@@ -165,3 +166,5 @@ Use the **agent-browser** skill. Key gotchas learned the hard way:
   This version adds support for normalizing local URLs that contain anchors (URL fragments). It now requires XWiki 15.10 or later.
   ```
 - Categories: the six in step 4. Publish: on. Date: `11/06/2026 12:00:00`.
+- This example is a non-project (Extension) type. For a **Project** type, omit the version link and
+  write the version as plain text — see §3 "Project type".
