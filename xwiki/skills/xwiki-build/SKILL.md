@@ -27,6 +27,10 @@ Without the `integration-tests` profile, `*IT.java` tests don't run. To include 
 add `-Pintegration-tests` (and `-Pdocker` for the Docker-based ITs). `-DskipITs` skips ITs while
 keeping unit tests; `-DskipTests` skips all tests.
 
+> **These skip flags are for speed only.** They disable Checkstyle, API compatibility checks, and
+> console-capture validation to make the full multi-module build faster. Do NOT carry them over to
+> single-module builds when you need to validate code quality (e.g., before committing).
+
 ## Build a single module
 
 ```bash
@@ -34,6 +38,10 @@ mvn clean install -B -ntp -pl <module-path> -Plegacy,snapshot
 ```
 
 For example in xwiki-platform: `-pl xwiki-platform-core/xwiki-platform-<module>`.
+
+This command runs all checks (Checkstyle, API compat, etc.) and is the correct way to validate
+code quality before committing. Do not add the skip flags from the full build recipe here unless
+you explicitly want to bypass those checks.
 
 ## Run tests
 
