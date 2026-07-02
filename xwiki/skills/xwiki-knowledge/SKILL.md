@@ -55,7 +55,12 @@ Then:
    Cross-link related entries with `[[name]]` (the target file's basename without extension).
 2. **Update `okf/index.md`** (add the topic line) **and the mirrored map in
    `instructions/xwiki-org.md`** so the always-on map stays in sync.
-3. Open a PR using the `xwiki-pull-request` skill's conventions (JIRA/`[Misc]` prefix, squashed
+3. **Bump the plugin version** so installed plugins actually pull the update — Claude Code updates a
+   plugin only when its version *increases*. Increment all three synced fields
+   (`.claude-plugin/marketplace.json` `metadata.version` + the `xwiki` plugin entry's `version`, and
+   `xwiki/.claude-plugin/plugin.json`); **patch** for an OKF content edit. `node scripts/validate.mjs`
+   verifies they stay in sync.
+4. Open a PR using the `xwiki-pull-request` skill's conventions (JIRA/`[Misc]` prefix, squashed
    commit, no AI-attribution trailers). The change is reviewed like code before it ships.
 
 ### Recording an ADR (architectural decision)

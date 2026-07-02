@@ -54,8 +54,13 @@ Inside `xwiki/`:
 
 ## Conventions when editing this repo
 
-- Keep the three version numbers in sync when bumping the plugin: `marketplace.json`
-  (`metadata.version` and the plugin entry's `version`) and `xwiki/.claude-plugin/plugin.json`.
+- **Bump the plugin version on every change that ships** — any edit under `xwiki/` (a skill, an OKF
+  entry, `instructions/xwiki-org.md`, `.mcp.json`, hooks). Claude Code only pulls a plugin update
+  when its version *increases*, so an un-bumped change never reaches installed machines. Which
+  segment: **patch** for content edits (OKF/skill/instruction/README wording); **minor** when
+  capabilities change (adding/removing a skill or MCP server). Keep the three numbers in sync:
+  `marketplace.json` (`metadata.version` and the plugin entry's `version`) and
+  `xwiki/.claude-plugin/plugin.json` — `node scripts/validate.mjs` fails if they diverge.
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
   instead) — that text is the only thing Claude sees when deciding to invoke it.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the
