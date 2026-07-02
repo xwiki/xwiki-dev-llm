@@ -69,6 +69,11 @@ definitions.
 - `-legacy` modules only re-export deprecated APIs — never add new logic there, and non-legacy
   modules must not depend on legacy ones.
 - Public API changes are checked for binary/source compatibility by **Revapi**.
+- **Prefer streaming over buffering for large / user-sized data.** Attachments, request/response
+  bodies, uploads, exports and unbounded query results must flow through `InputStream` /
+  `OutputStream` pipelines — never read fully into a `byte[]` / `String` / `ByteArrayOutputStream`
+  (nor `IOUtils.toByteArray` / `readAllBytes`), which OOMs on real data. Full guidance:
+  `okf/conventions/performance.md`.
 
 ### Code comments
 
@@ -96,7 +101,7 @@ OKF map (files under the plugin's `okf/` directory):
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security` (escaping, untrusted input/translations, context-author
-  right checks).
+  right checks), `performance` (stream large data; never buffer unbounded payloads in memory).
 - `okf/architecture/` — `component-system` (`@Role`/`@Component`/`components.txt`, `@Inject`),
   `macro-refactoring` (`MacroRefactoring` role keyed by macro id; content-only default fallback).
 - `okf/testing/` — `strategy` (test kinds, naming, framework locations; procedures are in the skills).
