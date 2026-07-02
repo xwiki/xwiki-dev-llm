@@ -35,6 +35,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 - **backward-compatibility** — Revapi, the `@Unstable` lifecycle, evolve interfaces via default methods.
 - **security** — escaping APIs, untrusted user input & translations, context-author right checks in
   script services, configurable HTML sanitizer.
+- **performance** — prefer streaming over buffering; never load an unbounded payload (attachment,
+  body, upload, export, query result) fully into memory.
 
 ### architecture/
 - **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation.
