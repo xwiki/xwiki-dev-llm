@@ -7,6 +7,10 @@ description: Build and test XWiki Maven modules. Use when building XWiki, runnin
 
 XWiki is a multi-module Maven project. Almost every build needs the `legacy` profile.
 
+**Always pass `-B -ntp`** (batch mode + no-transfer-progress) on every `mvn` invocation. This
+removes all interactive prompts and the download/progress lines that otherwise flood the output —
+keep it on the commands below and on any new `mvn` command you run.
+
 **Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
 per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
 hard-to-diagnose failures.
@@ -14,7 +18,7 @@ hard-to-diagnose failures.
 ## Full build (fast, unit tests only — no integration tests)
 
 ```bash
-mvn clean install -Plegacy,snapshot \
+mvn clean install -B -ntp -Plegacy,snapshot \
   -Dxwiki.checkstyle.skip=true -Dxwiki.surefire.captureconsole.skip=true \
   -Dxwiki.revapi.skip=true
 ```
@@ -26,7 +30,7 @@ keeping unit tests; `-DskipTests` skips all tests.
 ## Build a single module
 
 ```bash
-mvn clean install -pl <module-path> -Plegacy,snapshot
+mvn clean install -B -ntp -pl <module-path> -Plegacy,snapshot
 ```
 
 For example in xwiki-platform: `-pl xwiki-platform-core/xwiki-platform-<module>`.
@@ -35,16 +39,16 @@ For example in xwiki-platform: `-pl xwiki-platform-core/xwiki-platform-<module>`
 
 ```bash
 # All unit tests in a module
-mvn test -pl <module-path>
+mvn test -B -ntp -pl <module-path>
 
 # A single test class
-mvn test -pl <module-path> -Dtest=MyTestClass
+mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass
 
 # A single test method
-mvn test -pl <module-path> -Dtest=MyTestClass#myMethod
+mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass#myMethod
 
 # Integration tests
-mvn verify -pl <module-path> -Pintegration-tests
+mvn verify -B -ntp -pl <module-path> -Pintegration-tests
 ```
 
 ## Notes

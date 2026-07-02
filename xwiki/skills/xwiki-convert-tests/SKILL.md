@@ -1,13 +1,13 @@
 ---
-name: convert-tests
-description: Convert XWiki unit tests to JUnit5/Mockito and normalize style. Handles JUnit4, JMock, MockitoComponentMockingRule, and style cleanup of existing JUnit5 tests. For converting functional IT tests to the Docker framework, use the convert-tests-docker skill.
+name: xwiki-convert-tests
+description: Convert XWiki unit tests to JUnit5/Mockito and normalize style. Handles JUnit4, JMock, MockitoComponentMockingRule, and style cleanup of existing JUnit5 tests. For converting functional IT tests to the Docker framework, use the xwiki-convert-tests-docker skill.
 ---
 
 # Converting XWiki tests to JUnit5 + Mockito
 
 Use this skill when converting existing **unit tests** that use JUnit4 (`@Before`, `@Test` from `org.junit`) and/or JMock (`AbstractMockingComponentTestCase`, `getMockery()`, `Expectations`) or `MockitoComponentMockingRule` to JUnit5 + Mockito.
 
-**For converting functional IT tests** (browser-based tests using `getUtil()`, `AbstractAuthenticatedTest`, page objects) to the JUnit5 Docker framework (`@UITest`), use the **`convert-tests-docker`** skill instead.
+**For converting functional IT tests** (browser-based tests using `getUtil()`, `AbstractAuthenticatedTest`, page objects) to the JUnit5 Docker framework (`@UITest`), use the **`xwiki-convert-tests-docker`** skill instead.
 
 ## Code style rules to apply during conversion
 
@@ -447,5 +447,5 @@ when(resolver.resolve(eq("XWiki.SomeClass"), any(DocumentReference.class))).then
 ## Post-conversion checklist
 
 1. Remove unused imports from every converted file (JMock, JUnit4, Hamcrest, and any other imports no longer referenced after conversion).
-2. Run `mvn clean verify` on the module (skip checkstyle/revapi/console-capture as needed). All tests must pass.
+2. Run `mvn clean verify -B -ntp` on the module (skip checkstyle/revapi/console-capture as needed). All tests must pass.
 3. Check the jacoco threshold: run with `-Pquality -Dxwiki.jacoco.instructionRatio=1.00`. The failure output shows the current coverage ratio. If it is higher than the value in `<xwiki.jacoco.instructionRatio>`, update the POM property.

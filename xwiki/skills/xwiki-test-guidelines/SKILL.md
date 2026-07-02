@@ -1,9 +1,11 @@
 ---
-name: standard-for-tests
+name: xwiki-test-guidelines
 description: Best practices, rules and XWiki-specific testing framework documentation for writing tests for the XWiki code base.
 ---
 
-When **converting** existing tests (JUnit4/JMock → JUnit5/Mockito), use the `convert-tests` skill in addition to this one.
+For the declarative testing map — test kinds and naming, the no-stdout rule, the lightest-base rule, coverage, and **where each test framework lives** — see `okf/testing/strategy.md` (via the `xwiki-knowledge` skill). This skill is the *procedure* for writing a test.
+
+When **converting** existing tests (JUnit4/JMock → JUnit5/Mockito), use the `xwiki-convert-tests` skill in addition to this one.
 
 When writing a test:
 * Follow the test strategy at https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HTestingStrategy
@@ -18,7 +20,4 @@ When writing a test:
 * Don't use @OldcoreTest when @ComponentTest is enough.
 * Verify if the jacoco coverage threshold cannot be increased after tests have been added, by running maven with `-Pquality -Dxwiki.jacoco.instructionRatio=1.00` which should fail but provide the current threshold value that can then be used to replace the current value.
 
-Location of XWiki test frameworks (relative to each repo's checkout):
-* Simple and component-based test framework: in the **xwiki-commons** repo at `xwiki-commons-tools/xwiki-commons-tool-test`
-* Rendering test framework: in the **xwiki-rendering** repo at `xwiki-rendering-test`
-* Oldcore test framework + docker test framework + page test framework and more: in the **xwiki-platform** repo at `xwiki-platform-core/xwiki-platform-test`
+For where each XWiki test framework lives in the source tree (commons/rendering/platform), see `okf/testing/strategy.md`.

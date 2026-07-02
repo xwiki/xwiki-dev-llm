@@ -1,5 +1,5 @@
 ---
-name: extension
+name: xwiki-deploy-extension
 description: Deploy an XWiki extension (XAR or JAR) to a running XWiki instance via the REST job API. Use when the user wants to install, deploy, or hot-reload a built extension into a local XWiki.
 ---
 

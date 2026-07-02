@@ -27,6 +27,9 @@ follows.
 For Maven build/test commands — full build, single module, single test, skip flags, and the
 `clean`/`verify`-phase gotchas — use the **`xwiki-build`** skill (the canonical reference).
 
+**Always pass `-B -ntp`** (batch mode + no-transfer-progress) on every `mvn` invocation, to suppress
+interactive prompts and the download/progress lines that otherwise flood the output.
+
 ### Common profiles
 
 Standardized across all XWiki projects — see
@@ -49,13 +52,15 @@ definitions.
   Skip per-module with `-Dxwiki.surefire.captureconsole.skip=true`.
 - Prefer the lightest test base that works: use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
+- After adding or changing unit tests in a module, run the **`xwiki-increase-test-coverage`** skill
+  as part of that change — it keeps the module's JaCoCo coverage threshold current.
 - Full testing strategy: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
 
 ## Code conventions
 
 - **Lines must not exceed 120 characters.**
 - LGPL license headers are required on every source file (validated by `license-maven-plugin`;
-  run `mvn license:format` to add missing headers).
+  run `mvn license:format -B -ntp` to add missing headers).
 - Use the XWiki **Component system** (`@Component`, `@Inject`, `@Role`, declared in
   `META-INF/components.txt`) rather than passing context objects around in new code.
 - The project is **migrating away from `javax.*` in favor of `jakarta.*`**. In new code, prefer the
@@ -65,9 +70,59 @@ definitions.
   modules must not depend on legacy ones.
 - Public API changes are checked for binary/source compatibility by **Revapi**.
 
+### Code comments
+
+- Comment about the code as it is *now* and state the real reason inline (the use case, constraint
+  or edge case). **Never** justify code by its history ("as it was before", "to keep the old
+  behavior") or point to transient external resources (JIRA keys, forum/PR/commit URLs) — those rot.
+  Full policy and rationale: `okf/conventions/code-comments.md` (see the OKF map below).
+
 ## Versioning new/deprecated APIs
 
 - For `@since` and `@Deprecated(since = "…")` tags, use the **next release of the actual current
   dev version**, written as `<X.Y.0>RC1` (e.g. `18.5.0RC1`).
 - Do **not** trust the version string in a repo's `CLAUDE.md` — it goes stale. Read the real
   version from the root `pom.xml` (`<version>`) or the SNAPSHOT jar names under `~/.m2`.
+
+## OKF — how to go deeper
+
+The above are the always-on essentials. Fuller *declarative* knowledge (conventions, architecture,
+the dev-server ecosystem, release process) lives in this plugin's **OKF** knowledge base. When a
+question is about how XWiki works or what its rules are — rather than performing a task — consult
+the OKF; when you learn a durable, generic XWiki fact, propose adding it (via PR). The
+`xwiki-knowledge` skill is the entry point for both reading and extending it.
+
+OKF map (files under the plugin's `okf/` directory):
+
+- `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
+  `backward-compatibility`, `security` (escaping, untrusted input/translations, context-author
+  right checks).
+- `okf/architecture/` — `component-system` (`@Role`/`@Component`/`components.txt`, `@Inject`),
+  `macro-refactoring` (`MacroRefactoring` role keyed by macro id; content-only default fallback).
+- `okf/testing/` — `strategy` (test kinds, naming, framework locations; procedures are in the skills).
+- `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum… and how to access/verify each).
+- `okf/processes/` — `release` (version/release orientation; detailed steps are dev-wiki pointers),
+  `security-policy` (CVSS-4 severity + the never-disclose-a-vuln-publicly rule).
+- `okf/decisions/` — ADRs: the *why* behind durable architectural choices (each grounded in a
+  cited source). Record a new ADR when you hit an architectural decision whose rationale is grounded.
+
+**Volatile facts are never cached** in the OKF (current version, build/issue status, role holders):
+the relevant file gives a `verify:` recipe instead — read `pom.xml`, query the `sonarqube`/
+`discourse` MCP, or WebFetch the dev wiki. The dev wiki (dev.xwiki.org) remains the upstream source
+of truth.
+
+### Capturing learnings into the OKF
+
+Run the capture check whenever **either** (a) the task *relied on or fetched* a durable, generic
+XWiki fact — a convention, policy, architecture point, or a dev-wiki / xwiki.org doc page — whose
+topic is **absent from the OKF map, or contradicts it** (*absence is itself the signal; the fact
+need not be new to you* — in particular, if you WebFetch an authoritative XWiki doc page to do a task
+and its topic isn't in the OKF map, offer to capture it); or (b) the developer **corrected you** on
+an XWiki convention, architecture point, or an existing OKF/skill statement. On either, **proactively
+ask** whether to capture it in the OKF, and on yes run the `xwiki-knowledge` skill's EXTEND flow (gate
+checklist → entry or ADR → reviewed PR). Beware the common miss: a task that merely *consumes*
+established knowledge can still expose an OKF gap — judge novelty against the **OKF**, not against
+what you already know. Apply the gate before asking: **stay silent** for trivial sessions and for
+anything personal, secret, session-specific, or already present — do not pester. Shared XWiki
+knowledge belongs in the OKF (it ships to the whole team via PR), never in a private/per-machine LLM
+memory.

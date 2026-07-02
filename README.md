@@ -32,20 +32,40 @@ For local development against a checkout:
   **scoped by git remote** so it only applies inside `xwiki/*` and `xwiki-contrib/*` repos (never in
   personal projects). The hook is written in Node (which ships with Claude Code), so it works on
   Windows, macOS and Linux without a bash or `jq` dependency.
+- **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — a `PostToolUse` hook on
+  `Write`/`Edit` that checks every file written against the explicit `eol` declared by the repo's
+  `.gitattributes` (via `git check-attr`). On a CRLF/LF mismatch it fails with a clear message so
+  the file gets rewritten with the right endings, preventing spurious whole-file diffs. It enforces
+  this deterministically and at near-zero token cost — it only emits output on an actual violation,
+  and stays silent when no `eol` is declared (so it never mis-fires on Windows `core.autocrlf`
+  working trees). Also Node-based for cross-platform support.
 - **MCP servers** (`xwiki/.mcp.json`):
   - `discourse` — forum.xwiki.org search/read (no auth).
   - `sonarqube` — SonarCloud code-quality analysis (Docker). Reads `SONARQUBE_TOKEN` and the
     repo-specific `SONARQUBE_PROJECT_KEY` from the environment; no secrets are committed.
+- **OKF — knowledge base** (`xwiki/okf/`) — a curated, LLM-oriented corpus of XWiki *declarative*
+  knowledge: conventions (`conventions/`), architecture (`architecture/`), the dev-server ecosystem
+  (`servers/`), testing strategy (`testing/`) and release process (`processes/`). It complements the
+  skills (which hold task *procedures*): the OKF holds *facts*. A slimmed map of it is injected via
+  `xwiki-org.md`; `okf/index.md` is the full map. Durable facts are stored inline; **volatile facts
+  (versions, build/issue status, role holders) are stored as a "where to look + how to verify"
+  pointer, never as a cached value**, so the corpus does not go stale silently. New knowledge is
+  added only through a reviewed PR — the `xwiki-knowledge` skill governs reading and extending it.
 - **Skills** (`xwiki/skills/`):
+  - `xwiki-knowledge` — read and extend the OKF knowledge base (declarative XWiki knowledge).
   - `xwiki-build` — canonical Maven build/test commands.
   - `xwiki-pull-request` — conventions for creating a PR (template, commit format, squash/backport).
-  - `standard-for-tests` — testing best practices and the XWiki test frameworks.
-  - `convert-tests` — convert unit tests to JUnit5/Mockito.
-  - `convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
-  - `extension` — deploy a XAR/JAR extension to a running XWiki instance.
+  - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.
+  - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
+  - `xwiki-convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
+  - `xwiki-increase-test-coverage` — raise and lock in a module's unit-test coverage (JaCoCo instruction ratio).
+  - `xwiki-fix-flickering-docker-test` — fix a flickering Docker-based functional test.
+  - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
+  - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-documentation` — write and review xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
-  - `contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
+  - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
+  - `xwiki-fix-sonarqube-issue` — find and fix one SonarCloud issue, open a PR, mark it Accepted.
 
 ## Required environment variables
 
@@ -80,8 +100,11 @@ https://sonarcloud.io/organizations/xwiki/projects.
 ## Validate
 
 ```
-claude plugin validate ./xwiki
+claude plugin validate ./xwiki   # manifest schema
+node scripts/validate.mjs        # repo consistency (skill inventory, version sync, OKF map)
 ```
+
+`scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
 
 ## Contributing
 
