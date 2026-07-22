@@ -1,6 +1,6 @@
 {
   "name": "xwiki",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
   "interface": {
     "displayName": "XWiki",

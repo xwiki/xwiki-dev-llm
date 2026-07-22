@@ -73,8 +73,8 @@ OKF map (topic files under `okf/`, described in `okf/index.md`):
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `performance`.
-- `okf/architecture/` — `component-system`, `macro-refactoring`, `wiki-user-scope`.
-- `okf/testing/` — `strategy`.
+- `okf/architecture/` — `component-system`, `macro-refactoring`, `wiki-user-scope`, `data-migrations`.
+- `okf/testing/` — `strategy`, `data-migration-validation`.
 - `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum… and how to access/verify each);
   `jira` (jira.xwiki.org access via jira-cli/REST + issue-field conventions + resolving/closing conventions + wiki-markup gotchas — see the `xwiki-jira` skill).
 - `okf/processes/` — `release`, `security-policy`.

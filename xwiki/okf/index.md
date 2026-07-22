@@ -44,9 +44,15 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   rename/move and extracts them for backlinks; `DefaultMacroRefactoring` is content-only (ignores parameters).
 - **wiki-user-scope** — a subwiki's user scope (local/global/both) is stored on its own
   `WikiManager.WikiUserConfiguration` doc (not the descriptor) and defaults to `GLOBAL_ONLY` when absent.
+- **data-migrations** — versioned migrations run per wiki at startup; `AbstractDocumentsMigration`
+  only queues documents and a `TaskConsumer` does the work; the empty-string locale, `"current"`
+  resolver hint and `length()>0` rules that otherwise make the pair a silent no-op.
 
 ### testing/
 - **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, `@Order` source-ordering rule, don't-pay-the-timeout rule, coverage, framework locations.
+- **data-migration-validation** — validating a migration on the five supported engines: real upgrade,
+  subwiki fixture, draining the async queue, and the engine differences (Oracle `''`=NULL above all)
+  that otherwise yield a passing-but-wrong result.
 
 ### servers/
 - **index** — the xwiki.org server ecosystem (JIRA, CI, Nexus, SonarCloud, forum, …) and how to
