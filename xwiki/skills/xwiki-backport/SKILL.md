@@ -142,8 +142,9 @@ Decide the lines **empirically**, one per version-line, **ascending** by version
 each branch already carries (`git show origin/<branch>:<path>` for the file) and add only the missing
 lines. **Never invent an `@since`** where the source code did not already have one.
 
-For the exact format and *which elements* carry `@since` (class vs. method; test-support scope — e.g.
-page-object methods do **not** get `@since`), see the versioning convention via **xwiki-knowledge**.
+For the exact format and *which elements* carry `@since` (reusable classes/members — `internal` ones
+and test tools such as page objects and test frameworks included — versus the tests themselves, which
+carry none), see the versioning convention via **xwiki-knowledge**.
 
 ## 4. When a backport branch goes stale (base moved under it)
 

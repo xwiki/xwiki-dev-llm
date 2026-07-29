@@ -20,10 +20,16 @@ branches, list one `@since` line per version-line where it becomes available, **
 number**, keeping the original (e.g. `@since 17.10.10` / `@since 18.4.3` / `@since 18.5.0RC1`). Make
 the block **identical on every branch** the code lives on (master included).
 
-**No `@since` on test-support methods.** Methods of page objects / test helpers (the
-`*-test-pageobjects` and `*-test-*` support modules) do **not** carry `@since` — annotate only the
-**class** (a genuinely-new test-support class gets a class-level `@since`; its members inherit it).
-And **never invent an `@since`** where the master code didn't already have one.
+**`@since` goes on reusable code, not only on public API.** Anything something else calls carries
+`@since` — including `internal` classes and methods, and the *tools* tests are written with: page
+objects (`*-test-pageobjects`), test frameworks and test helpers (`*-test-*` modules — for example
+the `@UITest` annotation and its `TestConfiguration`, or `TestUtils`). A caller needs to know when
+the thing it calls appeared, whatever the module and whatever the visibility. Annotate a new
+**class** *and* any new **member** added to an existing one.
+
+**Tests themselves carry no `@since`.** A test class or test method (`src/test/**`, `*IT.java`,
+`*Test.java`) is not reusable — nothing calls it — so there is nothing to version. And when
+backporting, **never invent an `@since`** where the source code didn't already have one.
 
 **The version number itself is volatile — do not cache it here or trust any `CLAUDE.md` string.**
 To get the current dev version:

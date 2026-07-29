@@ -51,16 +51,17 @@ branch (master/source included), decide the lines empirically and ascending, the
 **xwiki-backport §3.D**. Apply it. This section adds only what is specific to `testneeded` tests:
 
 Scope — what carries `@since` for a test backport (see `xwiki-knowledge` → versioning):
-- **Only class-level** `@since`, and only on a **genuinely-new** test-support class (a new page
-  object under `*-test-pageobjects/src/main/java`). Members inherit the class `@since`.
-- **Never on methods** of page objects / test helpers — these are test-support methods and do not get
-  `@since`. If the original commit added a method-level `@since`, it should not have; do not carry it
-  into the backport (and it can be dropped).
-- IT test classes (`src/test/**IT.java`) are not API — no `@since`. If the issue adds no new
-  test-support **class**, there is **no `@since` work at all**.
+- **The test tools do**, since they are reusable code other tests call: a new page object under
+  `*-test-pageobjects/src/main/java`, or a new test-framework/test-helper class — **and** any new
+  member added to an existing one.
+- **The tests don't**: IT/unit test classes (`src/test/**IT.java`, `*Test.java`) are not reusable, so
+  no `@since`. If the issue only adds tests and touches no test tool, there is **no `@since` work at
+  all**.
+- Never *invent* an `@since` the source branch didn't have — carry over what master has, and add one
+  line per branch where the element becomes available.
 
-Concretely, deciding the lines for the new class (the §3.D empirical check, made explicit here): keep
-the class's existing original `@since` from master; if the class is **absent** on
+Concretely, deciding the lines for a new class or member (the §3.D empirical check, made explicit
+here): keep the element's existing original `@since` from master; if it is **absent** on
 `origin/stable-17.10.x` → add `@since 17.10.10`; if **absent** on `origin/stable-18.4.x` (and the
 issue was backported there) → add `@since 18.4.3`; if it already exists on a branch, do not re-add
 that branch's line.
