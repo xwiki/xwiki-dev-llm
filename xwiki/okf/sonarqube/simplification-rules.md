@@ -9,7 +9,7 @@ summary: Correct fixes and XWiki-specific drop conditions for the behaviour-pres
 # SonarQube simplification rules
 
 S1066 · S1125 · S1126 · S1155 · S1264 · S1488 · S1602 · S1612 · S1858 · S2130 · S2864 ·
-S3012 · S3024 · S3706 · S6397 · S7158
+S3012 · S3024 · S3706 · S4201 · S6397 · S7158
 
 Behaviour-preserving rewrites that need no dataflow analysis — the best mechanical-fix fodder after
 the syntax family. Read [[index]] for the universal drop conditions first.
@@ -55,6 +55,16 @@ Message: "Use `Arrays.copyOf`, `Arrays.asList`, `Collections.addAll` or `System.
   whenever the result is later mutated or handed on as a mutable list — `subList` returns a view and
   `Arrays.asList` a fixed-size list, so dropping the wrapper is a behaviour change, not a cleanup.
 - Check the import: `Arrays` / `Collections` are frequently *not* yet imported in the file.
+
+## S4201 — redundant null check before `instanceof`
+
+`if (x == null || !(x instanceof T))` → `if (!(x instanceof T))`: `instanceof` is already `false` for
+`null`, so the guard is dead. A one-line delete with no dataflow to check; the XWiki pool sits on
+`equals()` implementations and on validate-the-argument methods, and both are safe. The mirror shape
+`x != null && x instanceof T` → `x instanceof T` is the same fix.
+
+Only real caution: the module's JaCoCo floor, since the removed bytecode was covered — see
+[[verification]].
 
 ## S3024 — do not concatenate inside a `StringBuilder.append`
 

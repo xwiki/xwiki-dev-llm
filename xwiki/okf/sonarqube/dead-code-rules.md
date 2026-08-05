@@ -80,6 +80,12 @@ explicit "we must override this" / "do not remove" Javadoc is a hard stop.
 Plain POJOs and component implementations called through their interface, with no such dispatch, are
 safe to remove. Removing the sole method of a class orphans its imports — clean them.
 
+**"It is public API" is NOT by itself a drop reason here.** Removing a `public` super-only override
+from a public, non-`internal` class passes `revapi:check` — Revapi still sees the method on the type,
+inherited from the superclass. (Verified on `XWikiSerializer2.onNewLine()` in
+`xwiki-rendering-wikimodel`.) A comment on the override still is a hard stop, and a method that
+*widens* visibility or narrows `throws` relative to the parent is a real signature change.
+
 ## S1144 — remove an unused private method
 
 Delete the method and anything it orphans.
@@ -90,6 +96,10 @@ Delete the method and anything it orphans.
   mappings before removing any getter or setter.
 - **Serialization hooks** — `writeObject`, `readObject`, `readResolve`, `writeReplace` — are called
   reflectively by Java serialization.
+- **An "unused" private member inside a test *of reflection*.** `ReflectionUtilsTest` declares
+  `privateMethod` / `privateParentMethod` purely so the assertions can name them in the expected
+  `getAllMethods()` output — used, never called. Before removing a private member from any test whose
+  subject is reflection or introspection, grep the file for the member's name **as a string**.
 
 **Removal cascades.** Deleting the method can orphan a private helper it was the sole caller of, and
 that helper's field with it. Trace and delete the whole dead chain, or you leave a fresh S1144 behind.

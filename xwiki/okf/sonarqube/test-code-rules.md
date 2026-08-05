@@ -1,14 +1,15 @@
 ---
 title: SonarQube test-code rules
 stability: durable
-summary: Correct fixes and XWiki-specific drop conditions for S5786, S5785, S3415, S6068 and
+summary: Correct fixes and XWiki-specific drop conditions for S5786, S5785, S3415, S6068, S8714 and
   S8924 — including why S5785 must not be applied inside equals()/hashCode() contract tests, why
-  S3415's operand swap is usually unsafe, and how far an S6068 eq() unwrap may reach.
+  S3415's operand swap is usually unsafe, how far an S6068 eq() unwrap may reach, and the three
+  shapes an S8714 try/catch/fail conversion takes.
 ---
 
 # SonarQube test-code rules
 
-S3415 · S5785 · S5786 · S6068 · S8924
+S3415 · S5785 · S5786 · S6068 · S8714 · S8924
 
 These touch only test code, so production behaviour is untouched and review risk is low. But the
 module's tests actually run during verification, so a wrong edit fails the build rather than shipping
@@ -31,7 +32,11 @@ at the class declaration. Key the fix **by file** instead: strip the leading `pu
 Keep the other modifiers (`@BeforeAll public static void` → `static void`).
 
 **Do not touch** fields, unannotated helper methods, or methods carrying an XWiki-specific (non-JUnit)
-lifecycle annotation — `@BeforeComponent` and `@AfterComponent` methods stay public.
+lifecycle annotation — `@BeforeComponent` and `@AfterComponent` methods stay public. **Nor an
+`@Override`**: a JUnit-annotated method that also overrides a public parent method (`@BeforeEach
+@Override void setUp()` of an abstract base test) cannot have its visibility reduced — that does not
+compile. When such a method is the only thing left public in the file, the issue cannot be cleared at
+all; drop it rather than shipping a half fix.
 
 A class-level flag means the whole file's test methods get stripped, so a dense file yields far more
 removals than its issue count. That is expected.
@@ -40,7 +45,9 @@ removals than its issue count. That is expected.
 class package-private can break another module that extends it. For each class you make
 package-private, grep for `extends <Class>` across the source tree outside its own module. The risk is
 only with `abstract` or base test classes — and note that a class *named* `Abstract*Test` is often not
-actually abstract, so read the declaration rather than the name.
+actually abstract, so read the declaration rather than the name. Grep for the **bare class name** too,
+not just `extends`: a sibling test in another package reading a constant off it
+(`DefaultHTMLCleanerTest.HEADER`) is just as blocking and far easier to miss.
 
 ## S5785 — use `assertEquals` instead of `assertTrue(a.equals(b))`
 
@@ -175,6 +182,37 @@ skips string and char literals. Drop `import static org.mockito.ArgumentMatchers
 Test sources only, so there is no coverage or API risk, and the module's own test suite is the
 complete verification. Lines only get shorter; where the shortened statement now fits, re-join its
 continuation line rather than leaving a one-token orphan.
+
+## S8714 — use `assertThrows()` / `assertDoesNotThrow()` instead of try/catch + `fail()`
+
+Structural but safe: the rewritten assertion fails in exactly the cases the `fail()` did. Three shapes
+cover essentially the whole pool.
+
+1. **Single call, then `fail()`** — the common case:
+   ```java
+   T e = assertThrows(T.class, () -> call());
+   <the old catch body, dedented>
+   ```
+   Keep the `fail("…")` text as `assertThrows`'s third argument when it says something; a bare
+   `fail()` just disappears (`assertThrows` produces a better message on its own).
+2. **`try { call(); } catch (T e) { fail("…"); }`** — Sonar words this one *"use
+   `assertDoesNotThrow()`… in the catch"*: `assertDoesNotThrow(() -> call(), "…")`. It widens what is
+   caught (any `Throwable`, not just `T`), which only turns an error into an assertion failure.
+3. **Multi-statement try where only the last call throws** — hoist the setup statements out of the
+   `try` (dedent them) and wrap just the throwing call. The hoisted locals stay usable in the lambda
+   because they are assigned once and so effectively final; check the enclosing method does not
+   already declare the same names.
+
+**Watch for a duplicate local.** Several converted sites in *one* test method each want to declare
+`T e` — declare it at the first site and assign at the later ones, and give a differently-typed one
+its own name. The compiler catches this, but a scan of the method body catches it 20 minutes sooner.
+
+`fail` almost always becomes an unused static import — remove it, and add `assertThrows` /
+`assertDoesNotThrow` in sorted position.
+
+**No XWiki-specific drop condition has ever been found for this rule** (62/62 converted across the
+three repos). The only real constraint is the 120-column rule on the rewritten lines: prefer wrapping
+after `assertThrows(T.class,` over inventing a shorter name.
 
 ## Related
 

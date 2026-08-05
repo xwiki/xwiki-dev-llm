@@ -37,11 +37,11 @@ every day.
 | Rule keys | Family file |
 |---|---|
 | S1116 S1124 S1128 S1161 S1197 S1611 S2209 S3878 S6208 S7476 | [[syntax-rules]] |
-| S1066 S1125 S1126 S1155 S1264 S1488 S1602 S1612 S1858 S2130 S2864 S3012 S3024 S3706 S6397 S7158 | [[simplification-rules]] |
+| S1066 S1125 S1126 S1155 S1264 S1488 S1602 S1612 S1858 S2130 S2864 S3012 S3024 S3706 S4201 S6397 S7158 | [[simplification-rules]] |
 | S1604 S1640 S1643 S6126 S6201 S6204 S6211 S6485 | [[modernization-rules]] |
 | S1068 S1118 S1144 S1185 S1481 S1854 | [[dead-code-rules]] |
 | S1143 S1163 S1192 S2093 S2119 S2147 S3626 S5361 | [[constant-and-resource-rules]] |
-| S3415 S5785 S5786 S6068 S8924 | [[test-code-rules]] |
+| S3415 S5785 S5786 S6068 S8714 S8924 | [[test-code-rules]] |
 
 Ordered roughly safest-first: comment-only and pure-syntax rules cannot change behaviour;
 simplification rules need no dataflow check; modernization and dead-code rules do.
