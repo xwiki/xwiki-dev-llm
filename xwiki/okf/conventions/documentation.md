@@ -365,7 +365,17 @@ These rules decide whether a page renders as intended, so they belong to authori
   `{{displayIcon}}` to show an icon, say) silently changes when the product does.
 - **Several images side by side go in the Gallery macro**, so variations don't clutter the page.
 - **No animated GIFs** — they are unmaintainable; use several PNGs instead.
-- **Tables and figures are wrapped in the figure + figureCaption macros**, with a meaningful caption.
+- **Never wrap a table in the `{{figure}}` / `{{figureCaption}}` macros.** The Figure macro is
+  **`org.xwiki.contrib:figure-macro`**, a contrib extension that xwiki.org does not have, so the
+  wrapper renders an `Unknown macro: figure` error box **in place of the table** — the content
+  disappears while the page still looks deliberate. The guide's
+  [Working with Attachments](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/)
+  never asks for it (it mentions figures only in a WCAG aside about describing non-text content), and
+  no page under `documentation` uses it. Write the table on its own; if it needs a caption, that is a
+  sentence of prose before it. More generally, **a macro being bundled in XWiki is not the test — what
+  matters is whether xwiki.org has it**: PlantUML is contrib too (`org.xwiki.contrib.plantuml`) and the
+  guide *requires* it, because xwiki.org installs it. Checking a local instance proves nothing either
+  way; its extension set is not xwiki.org's.
 - **Videos: avoid them unless they carry real value** — they rot as the UI changes. When one is
   justified it is in **`webm`** format and it is **displayed with the `{{embed}}` macro**:
   `{{embed attachment="usage.webm" width="780"/}}`, which renders a real HTML5 player. **A video is
