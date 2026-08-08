@@ -37,7 +37,7 @@ every day.
 | Rule keys | Family file |
 |---|---|
 | S1116 S1124 S1128 S1161 S1197 S1611 S1659 S2209 S3878 S6208 S7476 | [[syntax-rules]] |
-| S1066 S1125 S1126 S1155 S1264 S1488 S1596 S1602 S1612 S1858 S1905 S2130 S2864 S3012 S3024 S3706 S4201 S6353 S6397 S7158 | [[simplification-rules]] |
+| S1066 S1125 S1126 S1155 S1264 S1488 S1596 S1602 S1612 S1858 S1905 S2130 S2629 S2864 S3012 S3024 S3358 S3706 S4201 S6353 S6397 S7158 | [[simplification-rules]] |
 | S1604 S1640 S1643 S6126 S6201 S6204 S6211 S6485 | [[modernization-rules]] |
 | S125 S1068 S1118 S1130 S1144 S1185 S1481 S1854 | [[dead-code-rules]] |
 | S1143 S1163 S1192 S2093 S2119 S2147 S3626 S4719 S5361 | [[constant-and-resource-rules]] |
@@ -55,6 +55,21 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   (migrate to `java.time`), **`S2160`** (override `equals` in a subclass) and **`S1141`** (nested
   try) — all real design changes that deserve a JIRA issue, not a Sonar sweep.
 - **`S1186`** empty method — the empty body is usually a deliberate no-op hook.
+- **`javabugs:S2259`** "fix this access that will throw a NullPointerException" — the largest
+  untouched pool in every repo, and not a sweep. It is 100% `src/main`, every site needs its own
+  dataflow argument, and the fix changes behaviour. The clusters are where Sonar's analysis cannot
+  follow an indirection (the `xwiki-rendering` chaining renderers hold ~40 between them), so the
+  false-positive rate is high on exactly the densest files.
+- **`S899`** ignored `File.delete()` result and **`S4042`** "use `java.nio.file.Files#delete`" — these
+  two fire on the SAME line, so one edit looks like it clears two issues. It does not pay: the XWiki
+  pool is temp-file cleanup in a `finally`, and `Files.delete` *throws*, which masks the original
+  exception and creates a fresh **`S1163`**. The other S899 shape is `queue.offer()` on an unbounded
+  queue (always `true`), where "doing something" with the result is a design decision.
+- **`S1948`** "make this non-static field `transient` or serializable" — the exact inverse of
+  **`S2065`** and load-bearing for the same reason: XWiki serializes job statuses and requests with
+  XStream, which honours `transient`, so adding it changes what gets persisted.
+- **`S2386`** "make this member `protected`" — reduces the visibility of a public static member →
+  Revapi `java.field.visibilityReduced`, the same break as **`S5993`**.
 - **`S6213`** "rename this method/variable to not match a restricted identifier" (`record`, `yield`,
   `var`) — a rename of a public method or field is an API change, and the XWiki pool sits on
   `record(…)` methods of the `*QuestionRecorder` classes. Not a cleanup.

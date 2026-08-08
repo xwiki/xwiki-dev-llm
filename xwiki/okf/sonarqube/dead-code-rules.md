@@ -156,6 +156,13 @@ declaration and that assignment. An `@Override` setter's now-unused parameter is
   declare the wider `throws`, which stops compiling once the parent narrows its clause — and the
   in-module build you run will not catch it. Classify every site by the annotation above the flagged
   line before batching (walking up over `@…`/comment/blank lines), not by "it is under `/src/test/`".
+- **`private` IS that proof, and it is most of the un-annotated pool.** A `private` helper cannot be
+  overridden and cannot be called from outside its file, so it carries exactly the risk of an
+  annotated test method — none. Bucket un-annotated sites into `private` (fix) and everything else
+  (drop) rather than dropping the whole bucket: on one 85-site platform pool that recovered 18 of the
+  22 un-annotated sites, leaving only four `public`/`protected` helpers on abstract test bases.
+- Add `@BeforeComponent` (and the other XWiki test-framework hooks) to the safe annotation set — they
+  are invoked reflectively exactly like the JUnit ones.
 - **`src/main`: permanent drop.** Narrowing a `throws` on a published method breaks every caller that
   catches it, and on an overridable method it also breaks subclasses that declare the wider clause.
 

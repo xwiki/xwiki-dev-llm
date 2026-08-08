@@ -2,14 +2,14 @@
 title: SonarQube simplification rules
 stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the behaviour-preserving simplification
-  rules — S1066, S1125, S1126, S1155, S1264, S1488, S1602, S1612, S1858, S2130, S2864, S3012, S3024,
-  S3706, S6397, S7158.
+  rules — S1066, S1125, S1126, S1155, S1264, S1488, S1602, S1612, S1858, S2130, S2629, S2864, S3012,
+  S3024, S3358, S3706, S6397, S7158.
 ---
 
 # SonarQube simplification rules
 
-S1066 · S1125 · S1126 · S1155 · S1264 · S1488 · S1602 · S1612 · S1858 · S2130 · S2864 ·
-S3012 · S3024 · S3706 · S6397 · S7158
+S1066 · S1125 · S1126 · S1155 · S1264 · S1488 · S1602 · S1612 · S1858 · S2130 · S2629 · S2864 ·
+S3012 · S3024 · S3358 · S3706 · S6397 · S7158
 
 Behaviour-preserving rewrites that need no dataflow analysis — the best mechanical-fix fodder after
 the syntax family. Read [[index]] for the universal drop conditions first.
@@ -207,6 +207,45 @@ site is the head of an `equals()` or a `remove(Object)`, and the observed drop r
 
 Also `EMPTY_MAP`/`EMPTY_SET`. The typed factory infers its type argument from the target, so a call
 site that passed the raw constant keeps compiling; it just stops being a raw type.
+
+## S2629 — do not build the log message unless it will be logged
+
+**Only one shape of this rule is a mechanical fix: a redundant `toString()` on an argument of an
+already-parameterized SLF4J call.**
+
+```java
+- this.logger.info("Resolving extension dependency [{}]", extensionDependency.toString());
++ this.logger.info("Resolving extension dependency [{}]", extensionDependency);
+```
+
+SLF4J calls `toString()` on the argument itself, lazily, only when the statement is actually
+rendered — so deleting the explicit call is what the rule asks for, changes nothing when the log is
+emitted, and is strictly safer for a `null` argument (`null` renders as `"null"` instead of an NPE).
+
+**Every other shape is a drop.** When the flagged argument is a real computation
+(`ExceptionUtils.getRootCauseMessage(e)`, `RuntimeUtils.run("docker ps")`, a concatenation), the only
+fix is to wrap the statement in `if (logger.isDebugEnabled())`, which is a judgement call about how
+much guarding the site deserves, not a cleanup — and it is plainly wrong on a `warn`/`error`
+statement, whose level is enabled in practice anyway. Also check whether the call already sits inside
+a verbosity guard (`if (getRequest().isVerbose())`); if it does, Sonar is only seeing the argument.
+
+## S3358 — extract a nested ternary into its own statement
+
+Give the *inner* ternary a name; leave the outer one alone.
+
+```java
+- compare = included1 ? (upper ? -1 : 1) : (upper ? 1 : -1);
++ int inclusionOrder = upper ? -1 : 1;
++ compare = included1 ? inclusionOrder : -inclusionOrder;
+```
+
+Safe whenever no operand has a side effect (which is nearly always — the XWiki pool is
+comparator/ordering arithmetic). Two branches that are exact **negations** of each other collapse to
+one local plus a unary minus, which clears both flagged ternaries in one edit.
+
+The caveat is that this is a **readability judgement, not a mechanical fix**: the reviewer has to
+agree that the invented name reads better than the expression it replaces. Ship it on its own branch
+rather than inside a mechanical batch, so a disagreement about the naming cannot hold up the rest.
 
 ## Related
 
