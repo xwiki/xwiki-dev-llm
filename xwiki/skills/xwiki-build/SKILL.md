@@ -15,6 +15,42 @@ keep it on the commands below and on any new `mvn` command you run.
 per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
 hard-to-diagnose failures.
 
+## Run `xmvn` rather than `mvn` when it is available
+
+Every command below is written `mvn`; run it as `xmvn` whenever `command -v xmvn` finds one. `xmvn`
+ships with [`xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools) (`bash/xmvn`) and is a
+drop-in wrapper: it reads `xwiki.java.version` from the pom in the current directory (falling back to
+deducing it from the XWiki version in that pom), exports the matching `JAVA_HOME`, then runs `mvn`
+with the arguments you passed. Run it from the directory holding the pom — with no `pom.xml` there it
+just delegates to `mvn` unchanged.
+
+Prefer it over selecting the JDK yourself: it is one command instead of a version lookup followed by
+an explicit `JAVA_HOME`, and it cannot pick the wrong JDK for the branch. It costs a little
+wall-clock time (an extra `help:evaluate` before the real build), which is a good trade.
+
+Without `xmvn`, do not trust the machine default JDK — get the version the branch targets from the
+root pom and point `JAVA_HOME` at that JDK:
+
+```bash
+mvn -N -B -ntp -q -DforceStdout help:evaluate -Dexpression=xwiki.java.version   # e.g. 11
+JAVA_HOME=<path to a JDK of that version> mvn clean install -B -ntp -Plegacy
+```
+
+This matters because building an older branch with a too-new JDK fails in ways that read as code or
+configuration problems and are neither: JaCoCo aborts instrumenting with `Unsupported class file
+major version NN` (its bundled ASM cannot read the JDK's own classes, so *every* `-Pquality` build
+fails), and the Spoon plugin fails with `could not add URL to system classloader`. Which Java version
+each XWiki version needs is in the Java support strategy (linked from the org-wide conventions).
+
+**`sonar:sonar` has a JDK floor of its own**, higher than the level the branch's code targets on the
+older lines: the scanner refuses to run on too old a JDK. `xmvn` handles this — when it finds a sonar
+goal in the arguments (the `sonar:sonar` shortcut or the fully qualified
+`…:sonar-maven-plugin:<version>:sonar` form) it raises the Java version to the scanner's minimum — so
+running the analysis through `xmvn` is one more thing you do not have to remember. If you do select
+the JDK by hand, apply that floor yourself. Both `xmvn` and CI (`xwiki-jenkins-pipeline`'s
+`vars/configureJavaTool.groovy`) hold the current value; read it from one of them rather than trusting
+a number here, since it moves with the pinned `sonar-maven-plugin` version.
+
 ## Full build (fast, unit tests only — no integration tests)
 
 ```bash

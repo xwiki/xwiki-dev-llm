@@ -28,6 +28,13 @@ below).
 
 - For all Maven build/test commands — full build, single module, single test, profiles, skip flags,
   `clean`/`verify` gotchas — use the **`xwiki-build`** skill (the canonical reference).
+- **Build with the JDK the branch targets, not the machine default** — a too-new JDK fails in ways
+  that look like code problems (JaCoCo aborting on an `Unsupported class file major version`, the
+  Spoon plugin failing to add a URL to the system classloader). Whenever **`xmvn`** (from
+  `xwiki-dev-tools`) is on the `PATH`, use it in place of `mvn`: it picks the matching JDK from the
+  pom for you, which is one command instead of a version lookup plus an explicit `JAVA_HOME` (at the
+  price of a slightly slower start). Without it, read `xwiki.java.version` from the root pom and set
+  `JAVA_HOME` to that JDK yourself.
 - **Always pass `-B -ntp`** on every `mvn` invocation (batch mode + no-transfer-progress), to
   suppress interactive prompts and the download/progress lines that otherwise flood the output.
 - Unit test classes end with `*Test.java` (Surefire); integration test classes end with `*IT.java`
