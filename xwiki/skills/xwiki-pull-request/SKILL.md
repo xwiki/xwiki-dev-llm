@@ -43,4 +43,12 @@ Fill `.github/pull_request_template.md` (at the repo root). Complete every secti
 ## Before opening
 
 - Prove the build is green locally (see the `xwiki-build` skill).
+- **Never force-push without naming the remote and the branch** — `git push --force-with-lease origin
+  <branch>` when rewriting the PR branch (an amend or a rebase), never a refspec-less
+  `git push --force-with-lease`. In a clone configured with `push.default=matching` (git's pre-2.0
+  default, still present in older clones) a refspec-less push acts on **every** local branch whose name
+  exists on the remote, and forcing then rewinds them: a stale local `master` overwrites the remote
+  `master`. The lease does not protect you — it only checks that your remote-tracking ref is current,
+  which after a fetch it is. Then read the push output and confirm it lists only the ref you meant to
+  update.
 - Create the PR with the `gh` CLI (e.g. `gh pr create`), using the template body.
