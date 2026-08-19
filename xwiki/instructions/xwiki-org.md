@@ -94,7 +94,7 @@ OKF map (topic files under `okf/`, described in `okf/index.md`):
   overlay not an `outline`, `webm` + the `{{embed}}` macro),
   **placement confirmed with the developer up front as concrete trees**, versioning + the `{{version}}`
   macro incl. documenting a feature ahead of its release, XWiki syntax traps (incl. the links that must
-  stay absolute URLs), navigation pinning;
+  stay absolute URLs, and preserving a heading's anchor id across a rename), navigation pinning;
   applied by `xwiki-doc-writing` / `xwiki-doc-convert`), `documentation-migration`
   (migration only: handling the original page — stripping its prose, deleting its leftover
   attachments, triaging its backlinks), `page-deletion` (**before deleting ANY page on xwiki.org —

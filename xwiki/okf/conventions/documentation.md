@@ -611,8 +611,10 @@ rather than an error, which is why they are worth listing.
 - **Angle brackets inside `##…##` are safe** — `##<prefix>_xwiki-data##` renders as literal monospace.
   XWiki 2.1 does not accept raw HTML outside `{{html}}`, so `<…>` placeholders need no escaping.
 - **Section anchors work, but the syntax differs per page syntax — check which one the page uses.**
-  The anchor id is `H` + the heading text with only alphanumerics kept (so `== My heading ==` gives
-  `HMyheading`). In **xwiki/2.1** the anchor is a link *parameter*:
+  The anchor id is `H` + the heading text with spaces and most punctuation dropped (so
+  `== My heading ==` gives `HMyheading`) — but **dots survive** and each `"` becomes `22`, as in
+  `HUnsupportedmajor.minorversion51.0` and `H22Filepathtoolong22onWindowswhenunzipping`, so read ids
+  off the rendered page instead of deriving them. In **xwiki/2.1** the anchor is a link *parameter*:
   `[[label>>PageA.PageB||anchor="HMyheading"]]`. In **xwiki/2.0** it is appended to the *reference*
   itself: `[[label>>PageA.PageB#HMyheading]]`. Both forms serialize the fragment into the rendered
   `href`. Do not carry one form over to the other syntax: on a 2.1 page, `#HMyheading` appended to the
@@ -621,6 +623,14 @@ rather than an error, which is why they are worth listing.
   `GET …/rest/…/pages/{page}?media=json`, or the editor's syntax selector) before editing links.
   Anchors survive on cross-wiki references too — `[[label>>xwiki:Space.Page||anchor="HFoo"]]` from a
   subwiki keeps its fragment.
+- **Renaming or retiring a heading breaks every anchor aimed at it.** The id comes from the heading
+  text, so keep the old one alive with `{{id name="HOldheadingtext"/}}` on its own line before the new
+  heading — the parameter is `name` and is mandatory, `reference` renders an error box, and the macro
+  works in xwiki/2.0 as well as 2.1. Nothing warns you: the Information tab's Backlinks list shows no
+  anchors and never sees absolute-URL links from outside the wiki, which is why this matters most on
+  legacy pages. Check the **`faq` field too** — its entries render as headings with ids. Only preserve
+  the ids of *renamed* sections: for a deleted one the anchor would land the reader on unrelated text,
+  and for one that moved to another page an id on the old page cannot help.
 - **Copy-pasted content carries non-breaking spaces (`\xa0`)**, which defeat exact-string matching and
   look like double spaces. Match on line prefixes rather than whole-string equality.
 - **An image inside a list item must be wrapped in `(((…)))`.** Writing the `{{image}}` macro on its
