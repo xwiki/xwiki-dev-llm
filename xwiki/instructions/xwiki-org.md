@@ -24,6 +24,14 @@ below).
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
   developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
 
+## Force-pushing
+
+- **Never force-push without naming the remote and the branch**: `git push --force-with-lease origin
+  <branch>`. Where `push.default=matching` is configured, a refspec-less push acts on every local
+  branch that also exists on the remote, so with `--force` / `--force-with-lease` a stale local
+  `master` rewinds the remote one — and the lease does not prevent it. Check the output lists only the
+  ref you intended. Opening the PR itself: **`xwiki-pull-request`** skill.
+
 ## Building & tests
 
 - For all Maven build/test commands — full build, single module, single test, profiles, skip flags,
