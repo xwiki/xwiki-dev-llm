@@ -75,7 +75,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   screenshot must be captured at, **`webm` videos displayed with `{{embed}}`, never linked**, Gallery,
   PlantUML `bluegray`), location, version perspective and the `{{version}}` macro (incl. **documenting a
   feature before its release**, badged `since`), the XWiki syntax traps that silently mis-render
-  (`image:`, `--`, anchors, URLs in headings), **linking a farm subwiki by URL instead of
+  (`image:`, `--`, anchors, URLs in headings), **a renamed heading losing the anchor id its old
+  text generated unless `{{id name=…}}` declares it**, **linking a farm subwiki by URL instead of
   `doc:<wiki>:<ref>` plus the nine cases where an absolute xwiki.org URL *is* correct — and why a `url:`
   prefix is not one of them**, and navigation-order pinning. The live Documentation
   Guide is the evolving source of truth. Applied by `xwiki-doc-writing` and `xwiki-doc-convert`.
