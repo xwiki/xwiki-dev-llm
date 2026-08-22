@@ -39,7 +39,7 @@ every day.
 | S1116 S1124 S1128 S1161 S1197 S1611 S1659 S2209 S3252 S3878 S6208 S7476 | [[syntax-rules]] |
 | S1066 S1125 S1126 S1155 S1264 S1488 S1596 S1602 S1612 S1858 S1905 S2130 S2864 S3012 S3024 S3358 S3706 S4201 S6353 S6397 S7158 | [[simplification-rules]] |
 | S1604 S1640 S1643 S6126 S6201 S6204 S6211 S6485 | [[modernization-rules]] |
-| S125 S1068 S1118 S1130 S1144 S1185 S1481 S1854 | [[dead-code-rules]] |
+| S125 S1068 S1118 S1130 S1144 S1172 S1185 S1481 S1854 | [[dead-code-rules]] |
 | S1143 S1163 S1192 S2093 S2119 S2147 S3626 S4719 S5361 | [[constant-and-resource-rules]] |
 | S2133 S3415 S5778 S5783 S5785 S5786 S6068 S8714 S8924 | [[test-code-rules]] |
 
@@ -97,8 +97,10 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
 - **`S5993`** reduce a constructor to `protected` — **reduces visibility** → Revapi
   `java.method.visibilityReduced`.
-- **`S5411`** boxed → primitive `boolean`, **`S1168`** return empty instead of `null`,
-  **`S1172`** remove an unused parameter — all real behaviour or signature changes.
+- **`S5411`** boxed → primitive `boolean`, **`S1168`** return empty instead of `null` — both real
+  behaviour changes. (**`S1172`** *remove an unused parameter* used to be listed here with them; it is
+  a signature change only on a **non-`private`** method, and its private subset is a normal mechanical
+  pool — see [[dead-code-rules]].)
 - **`S6355`** / **`S1123`** `@Deprecated(since=…)` — needs the deprecating version; see [[versioning]].
 - **`S6035`** "replace this alternation with a character class" — safe in principle, but the XWiki
   pool sits on `public static final String` regex constants. The value of a **compile-time constant**
