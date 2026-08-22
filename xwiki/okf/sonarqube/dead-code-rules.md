@@ -1,15 +1,15 @@
 ---
 title: SonarQube dead-code and unused-code rules
 stability: durable
-summary: Correct fixes and XWiki-specific drop conditions for S1118, S1130, S1144, S1185, S1068,
-  S1481, S1854 and S125 — including the XWikiPluginManager reflective-dispatch false positive,
+summary: Correct fixes and XWiki-specific drop conditions for S1118, S1130, S1144, S1172, S1185,
+  S1068, S1481, S1854 and S125 — including the XWikiPluginManager reflective-dispatch false positive,
   Hibernate-mapped accessors, the Revapi/FinalClass follow-ons of adding a private constructor, and
   why most commented-out blocks are anchored by a TODO and must be kept.
 ---
 
 # SonarQube dead-code and unused-code rules
 
-S125 · S1068 · S1118 · S1130 · S1144 · S1185 · S1481 · S1854
+S125 · S1068 · S1118 · S1130 · S1144 · S1172 · S1185 · S1481 · S1854
 
 Removing code is where Sonar is least able to see XWiki's actual runtime behaviour: the framework
 reaches into classes reflectively in several places, and what looks dead to a static analyser is
@@ -109,6 +109,42 @@ Process multiple methods in the same file highest-line-first so earlier edits do
 **Check the sibling class.** A legacy `Deprecated*` class often mirrors a non-deprecated twin, usually
 in a different module outside the set you are building, carrying the *same* dead method. Re-query the
 rule project-wide by method name so both are fixed in one change rather than in a review round-trip.
+
+## S1172 — remove an unused method parameter
+
+**Only on a `private` method.** On anything else — `public`, `protected` or package-private —
+removing a parameter is a signature change a caller outside the module can be relying on, so it is a
+permanent drop. A `private` method cannot be called from outside its own compilation unit, which
+makes **the compiler the complete verification**: a missed call site, or a shortened signature that
+collides with an overload, cannot compile. Read the modifier on the flagged declaration line; that
+one token splits the pool (platform: 39 private out of 132).
+
+Sonar has already excluded the hard cases before it reports: it never fires on an override or
+interface implementation, on an annotated method, on a non-private method with an empty body or that
+only throws, or on an overridable method whose parameter is documented with Javadoc. Visibility is
+the only remaining question.
+
+Remove the parameter from the declaration, the matching argument from **every** call site, and the
+orphaned `@param` tag.
+
+**Drop conditions:**
+- **The shortened signature collides with an existing overload.** A private
+  `display(DocumentModelBridge, DocumentModelBridge, DocumentDisplayerParameters)` minus its first
+  parameter *is* the public `display(DocumentModelBridge, DocumentDisplayerParameters)` it delegates
+  from. When batching, check for a declaration of the same name with `nparams - 1` arguments, not
+  only with `nparams`.
+- **A `TODO` in the body explains the parameter** — it is there for the not-yet-written code
+  (`sendRUNNINGResponse(status)` with `// TODO: Send back a REST version of the job status`).
+- **The parameters mirror a sibling method the callers pair it with** — a test's
+  `setupForLimitQueries(limit, offset)` called next to `verifyLimitQueries(limit, offset)`. Sonar
+  flags only one of the two, so the "fix" makes the pair asymmetric.
+
+**Two follow-ons, both invisible to the compiler:**
+- Removing an argument can orphan the local that produced it — most often an `instanceof T name`
+  pattern binding, which then trips Checkstyle `UnusedLocalVariable` *after* the tests have run.
+  Drop the binding in the same edit.
+- Check the removed argument expression for side effects before dropping it. In practice they are
+  bare identifiers, literals or pure accessors, but the evaluation does disappear.
 
 ## S1068 / S1481 / S1854 — unused field, unused local, dead store
 
