@@ -3,6 +3,8 @@ name: xwiki-fix-flickering-docker-test
 description: Guide for fixing a flickering Docker-based functional test for an XWiki module.
 ---
 
+When the flicker was seen on CI (ci.xwiki.org), start with the ``develocity`` MCP rather than with Jenkins: it holds the test method's failure history across builds (how often it fails, since when) and the stack trace and output of each failed run, which is what you try to reproduce below.
+
 1. Build the modified Maven projects, excluding those with ``-docker`` and ``-tests`` suffix.
 2. Replace the ``@Test`` annotation with ``@org.junit.jupiter.api.RepeatedTest(value = 10, failureThreshold = 1)`` only for the flickering test method.
 3. Check if there is an XWiki instance already running on port 8080, in which case ask for confirmation to stop it.

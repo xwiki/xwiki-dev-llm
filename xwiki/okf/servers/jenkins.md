@@ -104,5 +104,6 @@ match. See [[versioning]] for why the version itself must always be read, never 
   See [[index]] for the server map.
 - Quality-gate failures are a Sonar concern, not a Jenkins one: use the `sonarqube` MCP and the
   `xwiki-fix-sonarqube-issue` skill.
-- A test that fails intermittently rather than deterministically is a flicker: use the
+- A test that fails intermittently rather than deterministically is a flicker: Jenkins only shows
+  the one run, so take its history across builds from the `develocity` MCP, then use the
   `xwiki-fix-flickering-docker-test` skill.
