@@ -1,16 +1,14 @@
 ---
 title: SonarQube test-code rules
 stability: durable
-summary: Correct fixes and XWiki-specific drop conditions for S5786, S5785, S3415, S5778, S5783, S6068,
-  S8714 and S8924 — including why S5785 must not be applied inside equals()/hashCode() contract
-  tests, when S3415's operand swap is safe and the two shapes that must be dropped, how far an
-  S6068 eq() unwrap may reach, and why an S5778 hoist must never move the throwing call out of the
-  lambda.
+summary: Correct fixes and XWiki-specific drop conditions for the test-code rules — including why
+  assertEquals must not replace assertTrue(a.equals(b)) inside equals()/hashCode() contract tests,
+  when the expected/actual swap is safe and the two shapes that must be dropped, how far a Mockito
+  eq() unwrap may reach, and why hoisting out of an assertThrows lambda must never move the throwing
+  call.
 ---
 
 # SonarQube test-code rules
-
-S3415 · S5778 · S5783 · S5785 · S5786 · S6068 · S8714 · S8924
 
 These touch only test code, so production behaviour is untouched and review risk is low. But the
 module's tests actually run during verification, so a wrong edit fails the build rather than shipping
@@ -114,8 +112,8 @@ and abort on any mismatch — that check is what makes the batch trustworthy. Ne
 ## S3415 — swap the expected and actual arguments
 
 **Mostly safe, but two shapes must be dropped — and both are visible in the flagged line.** A full
-sweep of the rule needed a drop on roughly one site in six, so what follows is a drop list, not a
-reason to skip the rule. The **free classifier is whether either operand reads `null`**: if one does,
+sweep of the rule needs a drop on a minority of sites, so what follows is a drop list, not a reason
+to skip the rule. The **free classifier is whether either operand reads `null`**: if one does,
 drop it; otherwise the swap is a pure re-ordering. The two shapes that depend on operand order (the
 same root cause as "never flip operands" above):
 
@@ -133,8 +131,8 @@ asserted type's `equals` implementation when the type name suggests it might be 
 itself a reason to look.
 
 **Convert the whole file, not just the flagged lines.** Sonar flags only *some* of a file's reversed
-assertions, apparently arbitrarily — one oldcore test had five times as many as were reported, and
-elsewhere the `-1.0` sibling of a flagged `1.0` line went unflagged. Shipping only the flagged half
+assertions, apparently arbitrarily — a single test can hold several times as many as were reported,
+and the `-1.0` sibling of a flagged `1.0` line goes unflagged. Shipping only the flagged half
 leaves the file reading two ways, which is what a reviewer objects to; swap all of them and count only
 the flagged keys as fixed.
 
@@ -168,9 +166,6 @@ Fully mechanical, with no per-site reading needed:
    `{@link Mockito}` must keep it.
 
 Lines only get shorter, so the 120-column check never fires.
-
-Not yet established: whether S8924 also fires for non-Mockito statics such as
-`Assertions.assertEquals`. Read the messages before assuming.
 
 ## S6068 — remove a useless Mockito `eq()` matcher
 

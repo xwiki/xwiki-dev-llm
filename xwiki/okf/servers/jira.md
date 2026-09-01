@@ -84,6 +84,21 @@ Set the transition + resolution with `jira-cli` (`jira issue move {KEY} "Close I
 available transitions first** (`GET …/transitions`) — transition names/ids vary per project and
 workflow state, and a close may be gated behind an intermediate state.
 
+## Attachments (screenshots)
+
+`jira-cli` has **no `attach` command** — attaching is REST-only, and Atlassian requires the
+`X-Atlassian-Token: no-check` header on multipart uploads:
+
+```bash
+curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" -H "X-Atlassian-Token: no-check" \
+  -F "file=@shot.png" https://jira.xwiki.org/rest/api/2/issue/XWIKI-12345/attachments
+```
+
+The response gives the attachment's `content` URL
+(`https://jira.xwiki.org/secure/attachment/<id>/<name>`), public for a public project and stable.
+That URL is also how an image reaches a **GitHub PR body**, which can only reference an already
+hosted one since `gh` cannot upload: attach to the issue first, then link it from the PR.
+
 ## Wiki-markup gotchas (descriptions and comments)
 
 Both descriptions and comments use the **JIRA wiki renderer**. Governing rule: **pick the right

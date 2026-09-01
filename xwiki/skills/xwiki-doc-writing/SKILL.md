@@ -116,7 +116,8 @@ everything a regex cannot decide.
    maintainer an update. Capture screenshots on the local instance agreed above, using the
    [Documentation Resources](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/)
    XARs for realistic content.
-9. **Handle attachments by the rules** — kebab-case name with a lowercase extension, images via the
+9. **Handle attachments by the rules** — kebab-case name with a lowercase extension and **stop words
+   removed** (the naming checker applies the page-name rules to attachments), images via the
    `{{image}}` macro with an `alt` and the mandatory `size`, **framed on the element plus the nearest
    landmark that locates it** and cropped to exactly that size's pixel width, with a red
    (`255, 0, 0`) box around the element concerned, **videos in `webm` displayed with the

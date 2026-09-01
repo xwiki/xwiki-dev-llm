@@ -22,16 +22,10 @@ https://ci.xwiki.org/api/ (append `/api/` to *any* Jenkins URL for that object's
 
 ## The Cloudflare User-Agent trap
 
-ci.xwiki.org sits behind Cloudflare, and its bot rules key off the `User-Agent`:
-
-- **plain `curl` (default `curl/x.y` UA) → `200`** and the real JSON.
-- **a spoofed browser UA** (`Mozilla/5.0 … Chrome/…`) → **`403`** with a `Just a moment...`
-  Cloudflare interstitial, for the exact same URL.
-
-So the counter-intuitive rule is **never dress the request up as a browser** — issue it as plain
-`curl` and do not set `User-Agent`. Generic HTML-fetching tooling that sends a browser UA (or a
-headless browser) gets the challenge page instead of the content; that is a Cloudflare block, not an
-auth problem, so adding credentials does not help.
+ci.xwiki.org is fronted by Cloudflare like the rest of the farm, so the **User-Agent rule in
+[[index]] applies to `/api/` too** — issue the request as plain `curl`. Generic HTML-fetching tooling
+that sends a browser UA (or a headless browser) gets the `Just a moment...` challenge page instead of
+the JSON; that is a Cloudflare block, not an auth problem, so credentials do not help.
 
 ## URL shape
 
@@ -104,8 +98,10 @@ match. See [[versioning]] for why the version itself must always be read, never 
 
 ## Related
 
-- Build **scans** (timings, cache hits, failure details from Develocity) live on ge.xwiki.org — see
-  [[index]] for the server map.
+- Build **scans** (timings, cache hits, failure details from Develocity) live on
+  community.develocity.cloud and are queryable through the `develocity` MCP — richer than the
+  Jenkins REST API for *why* a build failed, where Jenkins is the authority on *whether* it did.
+  See [[index]] for the server map.
 - Quality-gate failures are a Sonar concern, not a Jenkins one: use the `sonarqube` MCP and the
   `xwiki-fix-sonarqube-issue` skill.
 - A test that fails intermittently rather than deterministically is a flicker: use the

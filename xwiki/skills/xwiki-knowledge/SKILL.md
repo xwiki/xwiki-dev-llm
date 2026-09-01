@@ -76,13 +76,13 @@ Then:
 3. **Leave what you touched shorter than you found it.** Cut what has gone stale, what your new
    entry now says better, and what is stated twice — a knowledge base that only ever grows stops
    being read. List those cuts in the PR so they get reviewed alongside the addition.
-4. **Bump the plugin version** so installed plugins actually pull the update — Claude Code updates a
-   plugin only when its version *increases*. Increment all five synced fields
-   (`.claude-plugin/marketplace.json` `metadata.version` + the `xwiki` plugin entry's `version`,
-   `xwiki/.claude-plugin/plugin.json`, `kimi.plugin.json` — the Kimi manifest — and the `// version:`
-   comment at the top of `opencode.jsonc`); **patch** for an OKF content edit.
-   `node scripts/validate.mjs` verifies they stay in sync **and that the version actually rose above
-   the base branch's**, and is the authority if this list drifts.
+4. **Never touch the plugin version.** Five manifests carry it, so a PR that bumps it conflicts with
+   every other open PR over something that was never the change — `node scripts/validate.mjs` fails
+   the branch for it. The bump happens on `master` after the merge, in `scripts/release.mjs` (run
+   automatically by the `release` workflow), which derives the segment: an OKF or skill content edit
+   is a **patch**, a skill/MCP server/hook/opencode plugin added or removed is a **minor**. When a
+   change needs a bigger bump than its file list can show, say so with a `Release-Bump: minor` (or
+   `major`) trailer in the commit message — trailers never conflict.
 5. Open a PR using the `xwiki-pull-request` skill's conventions (JIRA/`[Misc]` prefix, squashed
    commit, AI-attribution trailers). The change is reviewed like code before it ships.
 

@@ -73,10 +73,10 @@ Do not run all eleven on every change. Route from the changed-file profile:
 | **Defensive conventions** | always | `okf/conventions/security.md` |
 | **Performance** | always | `okf/conventions/performance.md` |
 | **Tests** | always (a change with no test is itself the finding) | `okf/testing/strategy.md`, `xwiki-test-guidelines` |
-| **Accessibility** | `.vm`, `.html`, `.vue`, `.js`, `.less`, `.css`, UI `.xml` | WCAG 2.1 AA |
+| **Accessibility** | `.vm`, `.html`, `.vue`, `.js`, `.less`, `.css`, UI `.xml` | `okf/conventions/frontend.md` (it names the committed WCAG level) |
 | **i18n & UX** | any user-facing string, `.properties`, `.vm`, `.xml` sheets | `xwiki-translations` |
 | **Documentation** | new/changed public API, or user-visible behaviour | `okf/conventions/documentation.md`, `xwiki-javadoc` |
-| **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code | `okf/architecture/solr-search.md` |
+| **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code; an XClass definition, a generated page name or a wiki-page migration | `okf/architecture/solr-search.md`, `wiki-application-data.md` |
 | **Spec conformance** | a JIRA key was found | the JIRA issue itself |
 
 Announce the routing decision in one line before fanning out, so a human can see what was and was
@@ -188,18 +188,24 @@ unbounded cache, and per-request work whose result never changes.
 `xwiki-fix-flickering-docker-test` when the change touches Docker `@UITest` code, and
 `xwiki-increase-test-coverage` when a module's tests changed. Look at: what behaviour the change
 introduces and whether a test now covers it, which level of test was chosen, and — for functional
-tests — the patterns those skills call out as flicker-prone.
+tests — the patterns those skills call out as flicker-prone. A new `@Test` method, or a new `*IT`
+class, that rebuilds a fixture an existing one in the same module already builds is itself a
+finding: functional tests are scenarios, and the fixture is what costs (scenario rule in
+`okf/testing/strategy.md`).
 
 `xwiki-test-guidelines` is a pointer file: the rule for **which level of test to write** is not in
 it but on the page it links, `dev.xwiki.org/.../Community/Testing/#HTestingStrategy`. Fetch that
 page before judging a test-level choice, and cite it as the terminal source. Judging the level from
 the skill alone means judging it from nothing.
 
-**Accessibility.** *(skill-owned — the OKF has no accessibility topic yet; adding one under
-`conventions/` would let this brief shrink to a citation like the others.)*
-Judge changed UI markup and behaviour against WCAG 2.1 AA: name and role for every control, keyboard
-operability, focus management across dialogs and panels, form labelling, text alternatives, meaning
-never carried by colour alone, contrast, and heading structure.
+**Accessibility.** Load `okf/conventions/frontend.md` — its "HTML, CSS, accessibility" section names
+the WCAG version and level XWiki has committed to, and the traps for markup emitted from a wiki page
+or sheet (naming a control, `[[image:]]` alt text, `col-xs-*`). **Read the level from that file; never
+state it from memory** — it moves as XWiki re-commits, and a reviewer told the wrong version cites
+criteria against a standard the project does not hold. Then judge changed UI markup and behaviour
+against it: name and role for every control, keyboard operability, focus management across dialogs and
+panels, form labelling, text alternatives, meaning never carried by colour alone, contrast, and
+heading structure. Cite each success criterion by number, name and URL.
 
 **i18n & UX.** Load the `xwiki-translations` skill, which owns both the externalisation rules and
 the word-order rules for composing a translated sentence. *(skill-owned)* Also look at the UX of
@@ -213,12 +219,15 @@ signature; whether a user-visible change needs a documentation or release-note u
 *(skill-owned)* whether a new configuration property is documented where users will look for it, and
 whether the change has just made a statement in a `README` or `CLAUDE.md` false.
 
-**Data & migration.** Load `okf/architecture/solr-search.md` when the index is touched and the
-`xwiki-xar-pages` skill when a XAR page is touched. *(skill-owned — the stored-data rules have no
-OKF home yet; this is the strongest candidate for a new OKF topic.)* Look at: a mapping or stored
-format changed without a migration, a migration that is not idempotent or re-runs on an
-already-migrated instance, a migration whose cost scales with table size, and an index change with
-no reindex path.
+**Data & migration.** Load `okf/architecture/solr-search.md` when the index is touched, the
+`xwiki-xar-pages` skill when a XAR page is touched, and `okf/architecture/wiki-application-data.md`
+when the change touches an XClass, a generated page name or a wiki-page migration — that file owns
+the list-property storage rule, page-name allocation and the idempotency rule, so cite it rather than
+reasoning from first principles. Look at: a mapping or stored format changed without a migration, a
+migration that is not idempotent or re-runs on an already-migrated instance, a migration whose cost
+scales with table size, an XClass property whose stored type does not match the comparisons made on
+it, and an index change with no reindex path. *(skill-owned: Java store code and `*.hbm.xml` mapping
+changes still have no OKF home.)*
 
 **Spec conformance.** Compare the diff against the JIRA issue title and description. Report:
 requirements the issue asks for that the diff does not deliver; behaviour in the diff nobody asked

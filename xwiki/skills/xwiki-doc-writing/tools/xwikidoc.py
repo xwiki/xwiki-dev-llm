@@ -27,7 +27,8 @@ WWW = os.environ.get('XWIKI_BASE', 'https://www.xwiki.org/xwiki/rest/wikis/xwiki
 EXO = 'https://extensions.xwiki.org/xwiki/rest/wikis/extensions'
 VIEW = 'https://www.xwiki.org/xwiki/bin/view/'
 
-# xwiki.org REST answers 403 to a request without a User-Agent.
+# xwiki.org REST sits behind Cloudflare: it answers 403 both to a request with no User-Agent and to
+# one with a browser-like UA. A curl-style UA passes.
 _UA = 'curl/8.0'
 _JAR = http.cookiejar.CookieJar()
 _OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_JAR))

@@ -7,14 +7,45 @@ summary: What to do with the **source** page once its content has been migrated 
   not just `description`), wiring the "Documentation" button through the `ExtensionLD` URL, deleting
   the original's leftover attachments, and triaging its backlinks (which to repoint, which to leave —
   the generic "fix backlinks before deleting any page" rule and the mechanics of getting the list are
-  in [[page-deletion]]). Split out of [[documentation]], which holds the authoring rules; this file is
-  only needed when migrating, and is applied by the `xwiki-doc-convert` skill.
+  in [[page-deletion]]). Also holds **when** a migration is allowed to publish: never page by page,
+  because xwiki.org is public and a half-built tree is what readers would see. Split out of
+  [[documentation]], which holds the authoring rules; this file is only needed when migrating, and is
+  applied by the `xwiki-doc-convert` skill.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HandleExtensionPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/
 ---
+
+# A migration publishes once, at the end
+
+xwiki.org is public, and a migration of any size runs for days or weeks. Whatever is saved is
+immediately what every reader sees — so **the new pages are drafted and reviewed in full before any
+of them is saved**, and go live in a single pass.
+
+Publishing a page as soon as it is written looks harmless and is not. That page is live:
+
+- with **red links** to every sibling and hub the migration has not written yet — links a reader
+  cannot follow and cannot tell from a genuine gap;
+- often with **no parent page**, so it sits under a 404 and its breadcrumb is broken;
+- carrying any defect nobody has caught yet, for as long as the migration lasts.
+
+The rules:
+
+- **Draft the whole set first**, then publish it in one pass, **parents before children** — sort by
+  path depth, so no page is ever live under a missing parent.
+- **A Change Request is the preferred vehicle**: the pages stay invisible until it is merged, and a
+  reviewer sees the whole move at once. A migration is a major change, so the minor-change exception
+  in [[documentation]] does not apply. Saving direct is a deliberate choice to record, and it changes
+  nothing about the timing.
+- **Forward links between pages of the same batch are fine while drafting.** They resolve when the
+  batch goes live; that is what makes the batch the right unit.
+- If something has to be visible early, publish a **complete subtree** — a hub with its children —
+  never a single leaf.
+- The **live doc checker only runs on saved pages**, so a deferred publish means its findings all
+  arrive at once. Budget a fix round after the first save, and move whatever it catches into an
+  offline check when the same class of defect can be decided without the server.
 
 # Handling the original page after migration
 

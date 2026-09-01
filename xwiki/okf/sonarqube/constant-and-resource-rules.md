@@ -1,14 +1,13 @@
 ---
 title: SonarQube constant, resource and exception rules
 stability: durable
-summary: Correct fixes and XWiki-specific drop conditions for S1192 duplicated literals (with the
-  reviewer preferences that decide what the constant should be), S2093 try-with-resources — which in
-  XWiki is usually a state restore, not a close — plus S2119, S1143/S1163, S5361, S2147 and S3626.
+summary: Correct fixes and XWiki-specific drop conditions for the constant, resource and exception
+  rules — duplicated literals (with the reviewer preferences that decide what the constant should
+  be), try-with-resources, which in XWiki is usually a state restore rather than a close, the
+  throwing finally, charset constants, and combined catch clauses.
 ---
 
 # SonarQube constant, resource and exception rules
-
-S1143 · S1163 · S1192 · S2093 · S2119 · S2147 · S3626 · S5361
 
 Read [[index]] for the universal drop conditions first.
 

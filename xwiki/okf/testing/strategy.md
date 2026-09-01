@@ -2,9 +2,10 @@
 title: XWiki testing strategy (overview)
 stability: durable
 summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the prefer-the-lightest-base
-  rule, the page-object boundary (no getDriver() in a test), the don't-pay-the-timeout rule, how to
-  read a PRChecker log line, the bare @UITest on an AllIT container, coverage, and where each test
-  framework lives. Procedures live in the test skills.
+  rule, the scenario rule (no two @Test methods build the same fixture, a distinct fixture is what
+  justifies a distinct method, and @Order is not a substitute), the page-object boundary (no
+  getDriver() in a test), the don't-pay-the-timeout rule, how to read a PRChecker log line, the bare @UITest on an AllIT
+  container, coverage, and where each test framework lives. Procedures live in the test skills.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDon27tpaythetimeout
@@ -32,6 +33,24 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   with `-Dxwiki.surefire.captureconsole.skip=true` only when justified.
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
+- **A functional test is a scenario, not a unit test — never pay for the same fixture twice** — a
+  `*IT` pays a wiki start, a browser start and a page load per navigation, so what drives its runtime
+  is the number of *fixtures*, not the number of assertions. Write scenarios: a method builds its
+  fixture once and asserts the successive states that fixture goes through, rather than one method
+  per assertion as in a unit test. The operative rule is **no two methods building the same
+  fixture** — before adding a `@Test`, if a method in the class already builds the fixture your
+  assertion needs, add the assertion there; before adding a new `*IT` class, look for an existing
+  `*IT` covering the same feature and extend it. It is **not** "always a single method": a method
+  nobody can follow end to end, or one whose failure no longer says which behaviour broke, has been
+  merged too far. **A distinct fixture justifies a distinct method; a merely distinct assertion does
+  not** — that is the line, and readability decides what happens on the fixture-sharing side of it.
+  **`@Order` is not a substitute** — it fixes execution order only, it does not share a fixture, and
+  making methods depend on each other's leftover state makes them impossible to run in isolation;
+  sharing a fixture across methods needs
+  `@TestInstance(PER_CLASS)` plus shared state, which is rarely worth it below a handful of methods.
+  Whatever is fixture rather than subject is built with `TestUtils` (`createPage`, `createUser`,
+  `loginAsSuperAdmin`, REST), never by driving the UI as a user would.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HBestPractices)
 - **No `getDriver()` in a test — the page-object boundary** — a functional test (`*IT.java`) drives
   the UI only through page objects. Needing `getDriver()` in the test class (or a raw `findElement`,
   `By` lookup or `getCssValue()` on top of it) means **an API is missing from a page object

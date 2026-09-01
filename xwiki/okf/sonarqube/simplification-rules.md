@@ -2,14 +2,11 @@
 title: SonarQube simplification rules
 stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the behaviour-preserving simplification
-  rules — S1066, S1125, S1126, S1155, S1264, S1488, S1602, S1612, S1858, S2130, S2864, S3012,
-  S3024, S3358, S3706, S6397, S7158.
+  rules — collapsible ifs, boolean and ternary reductions, isEmpty(), method references, lambda
+  bodies, regex character classes, redundant casts and library copy calls.
 ---
 
 # SonarQube simplification rules
-
-S1066 · S1125 · S1126 · S1155 · S1264 · S1488 · S1602 · S1612 · S1858 · S2130 · S2864 ·
-S3012 · S3024 · S3358 · S3706 · S6397 · S7158
 
 Behaviour-preserving rewrites that need no dataflow analysis — the best mechanical-fix fodder after
 the syntax family. Read [[index]] for the universal drop conditions first.

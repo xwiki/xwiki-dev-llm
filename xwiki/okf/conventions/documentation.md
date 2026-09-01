@@ -382,7 +382,10 @@ The guide's own page is
 These rules decide whether a page renders as intended, so they belong to authoring, not to clean-up:
 
 - **Attachment names follow the page-name rules** — kebab-case, and a **lowercase extension**:
-  `Image.png` and `Image.PNG` are two different attachments with separate version histories.
+  `Image.png` and `Image.PNG` are two different attachments with separate version histories. The
+  naming checker enforces those rules on attachment names too, **stop-word removal included**:
+  `change-in-release-note.png` is rejected for `change-release-note.png`, and
+  `release-note-from-template.png` for `release-note-template.png`.
 - **Insert an image with the `{{image}}` macro**, always with an `alt` (WCAG):
   `{{image reference="…" size="large" alt="…"/}}`. Present the image *before* a description of what
   it shows. Optional `title` adds context but never replaces `alt`; optional `caption` shows brief text

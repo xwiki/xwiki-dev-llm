@@ -1,6 +1,6 @@
 {
   // XWiki shared LLM configuration for opencode (https://opencode.ai).
-  // version: 1.1.8 — keep in sync with the plugin version (see CLAUDE.md).
+  // version: 1.5.1 — keep in sync with the plugin version (see CLAUDE.md).
   //
   // Paths reference this checkout through the XWIKI_LLM_HOME environment variable so this file is
   // identical for everyone (no personal paths) and works whether it is used globally or per-project.
@@ -20,6 +20,17 @@
         "DISCOURSE_API_USERNAME": "{env:DISCOURSE_API_USERNAME}",
         "DISCOURSE_USER_API_KEY": "{env:DISCOURSE_USER_API_KEY}",
         "DISCOURSE_USER_API_CLIENT_ID": "{env:DISCOURSE_USER_API_CLIENT_ID}"
+      }
+    },
+    "develocity": {
+      "type": "remote",
+      // Develocity exposes MCP over streamable HTTP, so no local process is involved on any host.
+      // opencode has no "read the bearer token from an env var" field (Kimi's bearerTokenEnvVar),
+      // so the header is interpolated: with DEVELOCITY_MCP_ACCESS_KEY unset the server loads and every
+      // request fails 401, rather than being skipped.
+      "url": "https://community.develocity.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer {env:DEVELOCITY_MCP_ACCESS_KEY}"
       }
     },
     "sonarqube": {

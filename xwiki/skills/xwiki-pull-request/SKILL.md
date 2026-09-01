@@ -29,7 +29,12 @@ Fill `.github/pull_request_template.md` (at the repo root). Complete every secti
 - **Jira URL** — link the JIRA issue (omit only for `[Misc]` PRs).
 - **Changes → Description** — the main changes.
 - **Changes → Clarifications** — choices made, links to forum proposals / dependent issues.
-- **Screenshots & Video** — before/after for any UI change.
+- **Screenshots & Video** — whenever the change has a visible result, be it a new feature, an
+  improvement or a fix, show it: a reviewer should be able to judge the result without building the
+  branch. Add a "before" as well when the issue reports a regression. Put the same image on the JIRA
+  issue, where it serves whoever reads the issue or writes the release note later —
+  `okf/servers/jira.md` has the how, and its attachment URL is also what a PR body must reference,
+  `gh` being unable to upload an image.
 - **Executed Tests** — how the change was validated (the `mvn` commands run). Especially important
   for regression fixes.
 - **Expected merging strategy** — `Prefers squash: Yes`; list backport branches if any.
@@ -47,3 +52,23 @@ Fill `.github/pull_request_template.md` (at the repo root). Complete every secti
 
 - Prove the build is green locally (see the `xwiki-build` skill).
 - Create the PR with the `gh` CLI (e.g. `gh pr create`), using the template body.
+
+## Check what the change adds to SonarCloud
+
+**Run a SonarCloud PR analysis on any PR that changes Java, not only on a Sonar cleanup**, whenever a
+`SONARQUBE_TOKEN` is available. It applies the same quality gate as the branch and is the *only*
+pre-merge check for the rules computed server-side (`javabugs:*` dataflow findings never appear in a
+local build or in the IDE). Run it after `gh pr create`, since it needs the PR number:
+
+```bash
+mvn -B -ntp -T 1C install -DskipTests   # compile only — no tests, no -Pquality, no coverage needed
+mvn -B -ntp sonar:sonar -Dsonar.token=$SONARQUBE_TOKEN -Dsonar.pullrequest.key=<PR number> \
+  -Dsonar.pullrequest.branch=<branch> -Dsonar.pullrequest.base=master
+```
+
+Then read the verdict — `qualitygates/project_status?projectKey=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`
+— and the findings — `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>` — and fix
+what it reports before asking for review. Two facts that make this safe and cheap: a PR analysis is
+stored separately from the branch's, so it never affects `master`'s measures or issues, and on
+xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
+Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.

@@ -3,9 +3,11 @@ title: Front-end conventions (JavaScript, HTML/CSS, accessibility)
 stability: durable
 summary: JavaScript must be AMD/RequireJS modules prefixed xwiki-, shipped as WebJars or JSX, never
   inline; server-side scripting must not be mixed into minified JavaScript; deprecated JavaScript APIs
-  live in compatibility.js; XWiki commits to WCAG 2.2 level AA.
+  live in compatibility.js; CSS ships as a Skin Extension, LESS-typed to read colour-theme variables;
+  XWiki commits to WCAG 2.2 level AA.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFrontendDevelopmentPractices
+  - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
 ---
 
 # Front-end conventions
@@ -60,5 +62,20 @@ XWiki Standard distribution — **XWiki Standard must keep working with `compati
 
 - HTML and CSS follow the HTML & CSS code style on the dev wiki; icons come from the XWiki icon set
   ([[naming]]).
+- Ship CSS as a **Skin Extension** (`XWiki.StyleSheetExtension`, "On demand only", injected with
+  `$xwiki.ssx.use(…)`) — the CSS counterpart of a JSX. To style from the colour theme, set the SSX's
+  `contentType` to **LESS** and use the theme's LESS variables (`@xwiki-border-color`,
+  `@xwiki-page-content-bg`, `@border-radius-base`, `@gray-lighter`, …). `$theme` is *not* bound in
+  wiki-page Velocity, a Velocity-parsed (`parse=1`) SSX included, so reaching for it there fails
+  silently: the stylesheet compiles and emits only whatever fallbacks were written around it.
 - XWiki has committed to **WCAG 2.2 at level AA**. All features, new ones especially, must comply;
   the Accessibility Statement on xwiki.org tracks the current state.
+- Three traps specific to markup emitted from a **wiki page or sheet**:
+  - A control inside `{{html}}` needs a programmatically associated name — a `<label for>` bound to
+    the generated field id. A definition-list term (the `; label` / `: $doc.display(…)` idiom) is not
+    one, and neither is prompt text put in the input's `value`: that also *submits* as data when the
+    field is untouched, so use `placeholder`.
+  - `[[image:…]]` takes its alt text from the attachment filename unless given one. Pass
+    `||alt="…"`, and `alt=""` for an image that is decorative or a layout placeholder.
+  - `col-xs-*` never stacks, so it is not a responsive layout, and a fixed pixel width on media in
+    page content breaks SC 1.4.10 Reflow at 320px. Cap media with `max-width: 100%`.

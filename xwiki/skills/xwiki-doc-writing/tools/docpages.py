@@ -95,6 +95,11 @@ def lint(mod):
                     problems.append(f'{where} double hyphen (strikethrough trap): {line[:80]}')
                 if re.search(r'##[^#]*https?://', line):
                     problems.append(f'{where} URL inside ## monospace: {line[:80]}')
+                # A `{{macro}}` written in an f-string field arrives as `{macro}` and renders as
+                # literal text; no violation object and no rendered error box says so.
+                if re.search(r'(?<!\{)\{/', line) or re.search(r'/\}(?!\})', line):
+                    problems.append(f'{where} single-brace macro (an f-string field halves '
+                                    f'`{{{{`, double them): {line[:80]}')
                 if re.search(r'\(% *style', line):
                     problems.append(f'{where} inline style: {line[:80]}')
                 if re.search(rf'https?://({farm})\.xwiki\.org', line):
@@ -125,7 +130,7 @@ def lint(mod):
             if cap and re.search(r'\d+\.\d+', cap.group(1)):
                 problems.append(f'{name}: caption used for a version: {cap.group(1)!r}')
 
-        referenced = set(re.findall(r'reference="([^"]+)"', p['content']))
+        referenced = set(re.findall(r'reference="([^"]+)"', strip_verbatim(p['content'])))
         declared = set(p['attachments'])
         if referenced - declared:
             problems.append(f'{name}: referenced but not declared: {sorted(referenced - declared)}')

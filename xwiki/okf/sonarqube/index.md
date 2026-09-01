@@ -62,11 +62,14 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   is the wrong justification for deleting one — SLF4J is not the only consumer. The rule is only ever
   resolved here by `@SuppressWarnings("java:S2629")` plus the inline reason, never by removing the
   eager String.
-- **`javabugs:S2259`** "fix this access that will throw a NullPointerException" — the largest
-  untouched pool in every repo, and not a sweep. It is 100% `src/main`, every site needs its own
-  dataflow argument, and the fix changes behaviour. The clusters are where Sonar's analysis cannot
-  follow an indirection (the `xwiki-rendering` chaining renderers hold ~40 between them), so the
-  false-positive rate is high on exactly the densest files.
+- **`javabugs:S2259`** "fix this access that will throw a NullPointerException" — not a sweep. It is
+  100% `src/main`, every site needs its own dataflow argument, and the fix changes behaviour. Sonar
+  reports it where its analysis cannot follow an indirection, so the false-positive rate is highest on
+  the files carrying the most of them. One shape is mechanical: a helper defaulting a nullable
+  parameter (`return factory != null ? factory : DEFAULT;`) called from an overload that passes
+  `DEFAULT` in *as* that parameter — the analyzer takes the `null` branch, which constrains `DEFAULT`
+  itself to null, then reports every dereference of the helper's result. Fix it by passing `null`, the
+  documented way of asking for the default.
 - **`S899`** ignored `File.delete()` result and **`S4042`** "use `java.nio.file.Files#delete`" — these
   two fire on the SAME line, so one edit looks like it clears two issues. It does not pay: the XWiki
   pool is temp-file cleanup in a `finally`, and `Files.delete` *throws*, which masks the original
@@ -84,8 +87,6 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   mean different things is a design decision.
 - **`S115`** constant naming, **`S1214`** constants-in-interface — cross-module renames, breaking.
 - **`S1845`** name differing only by capitalization — a cross-module rename of published API.
-  (**`S3252`** used to be listed here with it; it is *not* an API change and is now documented in
-  [[syntax-rules]].)
 - **`S2447`** "return null from a Boolean method" — in XWiki **script services** returning `null` is a
   deliberate contract meaning "an error occurred, call `getLastError()`". Not a defect.
 - **`S1215`** `System.gc()` — the enclosing method is sometimes a deliberately exposed API (`$xwiki.gc()`).
@@ -95,15 +96,18 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   `PDFExportJobStatus`, …) are serialized by the job-status store with XStream, which honours
   `transient`. Removing it changes what gets persisted.
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
-- **`S5993`** reduce a constructor to `protected` — **reduces visibility** → Revapi
-  `java.method.visibilityReduced`.
+- **`S5993`** reduce an abstract class's constructor to `protected` — **only outside an `internal`
+  package**, where it is a real Revapi `java.method.visibilityReduced` break. Inside one it is a clean
+  mechanical pool: `revapi.json` excludes `**.internal.**` from the API check, and JLS §6.6.2.2 lets
+  both `super(…)` and `new AbstractX(…){…}` reach a `protected` constructor from any package while
+  plain `new AbstractX(…)` is already illegal on an abstract class, so no compilable caller can break.
+  Split the pool on `/internal/` in the path.
 - **`S5411`** boxed → primitive `boolean`, **`S1168`** return empty instead of `null` — real
   behaviour changes. **`S1172`** remove an unused parameter — a signature change on anything
   **non-`private`**; its `private` subset is a normal mechanical pool, see [[dead-code-rules]].
 - **`S1123`** "add the missing `@Deprecated` annotation / `@deprecated` Javadoc tag" — one shape needs
   prose only the API's author can write (*why*, and what to use instead); the other adds an annotation
   that changes what tools report about a published API. A product decision, not a cleanup.
-  (**`S6355`** was listed here with it and should not have been — see [[syntax-rules]].)
 - **`S6035`** "replace this alternation with a character class" — safe in principle, but the XWiki
   pool sits on `public static final String` regex constants. The value of a **compile-time constant**
   changing is a Revapi `java.field.constantValueChanged` break even when the two regexes match

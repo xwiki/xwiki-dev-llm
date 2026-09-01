@@ -2,14 +2,11 @@
 title: SonarQube modernization rules
 stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the language-modernization rules —
-  S6201 instanceof patterns, S6204/S6211 .toList(), S1640 EnumMap, S1604 lambda, S1643 StringBuilder,
-  S6126 text blocks, S6485 collection factory methods. Holds the .toList() escape analysis and the
-  EnumMap null-key break.
+  instanceof patterns, .toList()/.toSet(), EnumMap, lambdas, StringBuilder, text blocks and the
+  collection factory methods. Holds the .toList() escape analysis and the EnumMap null-key break.
 ---
 
 # SonarQube modernization rules
-
-S1604 · S1640 · S1643 · S6126 · S6201 · S6204 · S6211 · S6485
 
 These rewrite code into a newer language or API form. They are compiler-checked in shape but **not in
 behaviour** — each has a way to break at runtime that the compiler cannot see, so each has a real drop
@@ -306,8 +303,8 @@ exact content is not asserted anywhere; there a subtle whitespace slip ships sil
   space (`"            a\n" + "  a c\n" + " a c  d\n" + " e"`) loses that space. Reproducing it
   needs `\s` escapes on the shallowest lines, which reads worse than the concatenation — drop.
 
-**A whole module's pool can be a single drop.** All 13 `xwiki-rendering-wikimodel` parser-test sites
-fail one of the three conditions above; before triaging such a pool site by site, check whether its
+**A whole module's pool can be a single drop.** Every `xwiki-rendering-wikimodel` parser-test site
+fails one of the three conditions above; before triaging such a pool site by site, check whether its
 fixtures share a shape (wiki tables with trailing spaces, CRLF input, indent ladders).
 - The string's exact content is not test-asserted **and** you cannot prove byte-identity by inspection.
 
