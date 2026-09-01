@@ -36,6 +36,13 @@ The documented format is:
   in any way?"*; if yes, an issue is mandatory. A batch refactoring that changes runtime behaviour
   across many files therefore needs an issue, referenced from every commit of the campaign — not
   `[Misc]`.
+- **Dependency upgrades split on the same test:** a dependency that only ever reaches developers —
+  a `devDependencies`/`peerDependencies` entry, a build or test-scoped Maven dependency — is
+  `[Misc]`; one that ships to users (declared in `dependencies`, or a runtime Maven dependency)
+  needs an issue. Check where the dependency is actually declared before choosing: a shared version
+  catalog (pnpm `catalog:`, a `pom.xml` property) hides that distinction, and the same artifact can
+  be dev-only in one module and runtime in another — one runtime declaration is enough to require
+  the issue.
 
 Issue tracker is https://jira.xwiki.org (NOT GitHub Issues); see [[jira]] for access and the
 issue-field conventions. For the full PR/commit flow (one squashed commit per issue, PR description,

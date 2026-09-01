@@ -53,6 +53,16 @@ correct. Check what the project actually exposes before insisting on a field.
 Write the **description in JIRA wiki markup** (`h2.`, `{{monospace}}`, `*bold*`, `* bullet`) and make
 it explain the **user-visible problem**, not just the code change — but mind the markup gotchas below.
 
+## Dependency-upgrade issues
+
+A dependency upgrade that ships to users needs its own issue (the `[Misc]` split is in
+[[commit-messages]]): summary `Upgrade to <dependency> <version>`, component **Dependency Upgrades**.
+The description is the **raw release-note URLs of every version being crossed** — one line each, from
+the version after the one currently declared up to the target — not just the target's; skipping the
+intermediates hides the changes actually being pulled in. Keep them as bare URLs, which means setting
+the description over REST: `jira-cli` runs a body through its Markdown converter and rewrites a plain
+URL as `[url|url]`.
+
 ## Resolving / closing an issue
 
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
