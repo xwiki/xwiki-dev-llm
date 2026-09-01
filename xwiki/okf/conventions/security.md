@@ -2,8 +2,9 @@
 title: Secure-coding conventions (escaping, untrusted input, right checks)
 stability: durable
 summary: How to escape user input and other untrusted values in scripts/templates, why translation
-  values are untrusted, which right each scripting language requires, and the context-author
-  right-check rule for script services.
+  values are untrusted, which right each scripting language requires, the context-author right-check
+  rule for script services, and never interpolating identifiers or references into queries and
+  include/display targets.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Security/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Scripting/
@@ -45,6 +46,34 @@ word-order and escaping mechanics.)
   **not**, so you must check them yourself.
 
 Always test that the escaping actually protects (try to break out of the context you escaped for).
+
+## Structural interpolation — bind covers values, never identifiers or references
+
+Escaping and `bindValue` protect the *data* in a query and the *value* of a reference. They do
+nothing for the *structural* parts, which are a separate, easy-to-miss injection class:
+
+- **Query strings.** Bind every value with a `:named` parameter — never concatenate one in. But the
+  parts a parameter cannot stand in for — the class/space/page identifiers in an XWQL/HQL `from`,
+  `doc.object(...)`, `where doc.space = …`, an `order by` column — have no escaper and must be
+  **literal constants in the source**. `"from doc.object(${space}.Code.EntryClass)"` is an injection
+  even when every value in the same query is bound: whoever controls `$space` controls the query, and
+  it runs with the script author's rights, unfiltered by document view rights.
+- **Entity references.** The `reference` of `{{include}}` / `{{display}}`, and any class reference
+  passed to `getObject` / `newObject` / `getDocument`, choose *which* document is read or executed.
+  Built from a variable, they let whoever controls it redirect the choice; write the reference
+  literally. (`{{include}}` itself still checks the *current user's* view right on the target, so it
+  will not show a page the viewer cannot see — but the script-execution author and the query case
+  above are not gated that way.)
+
+If a variable genuinely must sit in a structural slot, it has to be **proven trusted at that point** —
+pinned to an allow-list or a strict `matches('[a-zA-Z0-9_-]+')`-style guard with a safe fallback,
+never merely "it holds a safe value today".
+
+**Know which document a `$doc`-derived value is.** `$xcontext.macro.doc` (and `$wikimacro.doc`) is
+the page where the macro is *defined* — trusted, the install location; `$doc` is the page being
+*rendered*, i.e. whatever page invoked the macro, so caller-chosen. A structural slot fed from `$doc`
+is fed by the caller; one fed from the macro's own document is not. Neither replaces writing the
+identifier literally.
 
 ## Only Velocity runs on Script Right — every other language also needs Programming Right
 
