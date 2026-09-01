@@ -128,6 +128,10 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   Solr which needs several pre-created cores (`search`, `extension_index`, `ratings`, `events`, named
   `xwiki_<core>_<solrMajor>`); configured via `solr.type=remote` + `solr.remote.baseURL`; the search
   core needs Solr's `analysis-extras` module.
+- **data-migrations** — a Hibernate migration runs once per wiki at startup;
+  `AbstractDocumentsMigration` only *queues* documents and a `TaskConsumer` changes them later; the
+  empty-string locale, `"current"` resolver hint and `length()>0` rules that otherwise make the pair a
+  silent no-op, and the real-upgrade validation that proves it.
 
 ### testing/
 - **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, the scenario rule (no two `@Test` methods build the same fixture; a distinct fixture is what justifies a distinct method; `@Order` is not a substitute), `@Order` source-ordering rule, the page-object boundary (no `getDriver()` in a test), don't-pay-the-timeout rule, reading a PRChecker log line, the bare `@UITest` on an `AllIT` container, coverage, framework locations.

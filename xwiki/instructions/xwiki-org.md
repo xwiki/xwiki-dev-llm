@@ -93,7 +93,7 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
 - `okf/architecture/` — `component-system`, `macro-refactoring`, `wiki-user-scope`, `solr-search`,
-  `wiki-application-data`.
+  `wiki-application-data`, `data-migrations`.
 - `okf/testing/` — `strategy`, `running-docker-its`.
 - `okf/sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
