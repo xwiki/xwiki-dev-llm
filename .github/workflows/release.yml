@@ -1,0 +1,56 @@
+name: release
+
+# Cuts the plugin release after a change lands on master. Pull requests deliberately never touch a
+# version field (scripts/validate.mjs enforces that) because five manifests carry the version and
+# every concurrent PR used to conflict on those same five lines; the bump happens here instead, once,
+# for whatever accumulated since the last release tag.
+on:
+  push:
+    branches: [master]
+    # Only a change under xwiki/ ships to installed machines, so only that can need a release.
+    paths: ['xwiki/**']
+  workflow_dispatch:
+    inputs:
+      segment:
+        description: 'Segment to bump ("auto" derives it from the changes; "major" is never derived)'
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
+
+# One release at a time: two merges landing together must not both compute a bump from the same base.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # The release commit itself touches xwiki/.claude-plugin/plugin.json, so it matches the path
+    # filter above. A push made with GITHUB_TOKEN does not trigger workflows, so this cannot actually
+    # loop; the guard states the intent, and release.mjs is a no-op on a second run regardless.
+    if: "!startsWith(github.event.head_commit.message, '[Misc] Release ')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history *and tags*: release.mjs diffs against the last release tag to decide both
+          # whether there is anything to release and which segment moves.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Consistency checks
+        run: node scripts/validate.mjs
+      - name: Cut the release
+        env:
+          SEGMENT: ${{ inputs.segment }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$SEGMENT" ] && [ "$SEGMENT" != "auto" ]; then
+            node scripts/release.mjs --push "--$SEGMENT"
+          else
+            node scripts/release.mjs --push
+          fi

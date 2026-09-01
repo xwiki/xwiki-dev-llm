@@ -11,10 +11,11 @@
 //   5. The injected mirror stays within its size budget. Invariant 4 can only ever demand *more*
 //      text in a file that is loaded into every session; without a ceiling the map grows by
 //      accretion, because each extension appends and none ever cuts.
-//   6. When a branch changes anything under xwiki/ (i.e. anything that ships), the plugin version
-//      is strictly greater than the base branch's. Invariant 3 only proves the manifests agree with
-//      each other — they agree just as happily on a version that never moved, and Claude Code pulls
-//      an update only when the version *increases*, so an un-bumped change silently reaches nobody.
+//   6. A branch does NOT change any version field. The bump is not a pull request's job: five
+//      manifest fields carry the version, so every concurrent PR used to conflict with every other
+//      one on the same five lines over something that was never the change itself. Instead
+//      scripts/release.mjs sets them on master after the merge (automatically, via
+//      .github/workflows/release.yml), which is what makes installed plugins pull the update.
 //   7. Every `okf/...md` path a skill cites actually exists. Skills delegate their rules to the OKF
 //      rather than restating them, so a renamed or deleted topic would otherwise leave a skill
 //      pointing at nothing — and a reviewer that cannot read its rule source fails silently.
@@ -57,19 +58,35 @@ for (const skill of skills) {
 }
 
 // ---- Invariant 3: version sync ---------------------------------------------------------------
-const marketplace = JSON.parse(read(".claude-plugin/marketplace.json"));
-const pluginJson = JSON.parse(read("xwiki/.claude-plugin/plugin.json"));
-const kimiPluginJson = JSON.parse(read("kimi.plugin.json"));
-// opencode.jsonc is JSONC (comments), and opencode's config schema has no version field, so the
-// version is carried in a `// version: X.Y.Z` comment instead.
-const opencodeVersion = read("opencode.jsonc").match(/^\s*\/\/\s*version:\s*(\d+\.\d+\.\d+)/m)?.[1];
-const versions = {
-  "marketplace.metadata.version": marketplace.metadata?.version,
-  "marketplace.plugins[xwiki].version": marketplace.plugins?.find((p) => p.name === "xwiki")?.version,
-  "xwiki/.claude-plugin/plugin.json version": pluginJson.version,
-  "kimi.plugin.json version": kimiPluginJson.version,
-  "opencode.jsonc version comment": opencodeVersion,
+// Parameterised by a reader so invariant 6 can extract the same five fields from a different commit.
+// A field that cannot be read comes back undefined rather than throwing, which both invariants
+// report as a mismatch.
+const extractVersions = (reader) => {
+  const json = (p) => {
+    try {
+      return JSON.parse(reader(p));
+    } catch {
+      return {};
+    }
+  };
+  const marketplace = json(".claude-plugin/marketplace.json");
+  // opencode.jsonc is JSONC (comments), and opencode's config schema has no version field, so the
+  // version is carried in a `// version: X.Y.Z` comment instead.
+  let opencode;
+  try {
+    opencode = reader("opencode.jsonc").match(/^\s*\/\/\s*version:\s*(\d+\.\d+\.\d+)/m)?.[1];
+  } catch {
+    opencode = undefined;
+  }
+  return {
+    "marketplace.metadata.version": marketplace.metadata?.version,
+    "marketplace.plugins[xwiki].version": marketplace.plugins?.find((p) => p.name === "xwiki")?.version,
+    "xwiki/.claude-plugin/plugin.json version": json("xwiki/.claude-plugin/plugin.json").version,
+    "kimi.plugin.json version": json("kimi.plugin.json").version,
+    "opencode.jsonc version comment": opencode,
+  };
 };
+const versions = extractVersions(read);
 if (new Set(Object.values(versions)).size !== 1) {
   errors.push(`Plugin version mismatch across manifests: ${JSON.stringify(versions)}`);
 }
@@ -125,10 +142,12 @@ if (mapStart === -1 || mapEnd === -1 || mapEnd < mapStart) {
   }
 }
 
-// ---- Invariant 6: the shipped version actually increased -------------------------------------
-// Comparing against the base branch, because "did this change ship?" is only answerable relative to
-// what is already released. Skipped, not failed, when the base ref is not fetched (a shallow clone,
-// or a checkout with no remote) so the other invariants still run.
+// ---- Invariant 6: a branch leaves the version alone ------------------------------------------
+// The version is released, not authored: scripts/release.mjs writes all five fields on master once
+// per release, so a pull request that also writes them conflicts with every other open PR for no
+// reason. Compared base -> working tree, so a stray bump is caught before it is even committed.
+// Skipped, not failed, when the base ref is not fetched (a shallow clone, or a checkout with no
+// remote) so the other invariants still run.
 const git = (args) => {
   try {
     return execFileSync("git", args, {
@@ -140,34 +159,33 @@ const git = (args) => {
     return null;
   }
 };
-const parseVersion = (v) => (v ?? "").split(".").map(Number);
-const isGreater = (a, b) => {
-  const [x, y] = [parseVersion(a), parseVersion(b)];
-  if (x.length !== 3 || x.some(Number.isNaN) || y.length !== 3 || y.some(Number.isNaN)) return null;
-  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
-  return false;
-};
 // On a PR the base is whatever it targets; otherwise assume the default branch.
-const baseRef = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : "origin/master";
+const baseBranch = process.env.GITHUB_BASE_REF || "master";
+const baseRef = `origin/${baseBranch}`;
 const baseSha = git(["rev-parse", "--verify", "--quiet", `${baseRef}^{commit}`]);
+const onBaseBranch = git(["rev-parse", "--abbrev-ref", "HEAD"]) === baseBranch;
 if (!baseSha) {
-  console.log(`validate.mjs: note - ${baseRef} is not available, skipping the version-increase check`);
-} else if (baseSha !== git(["rev-parse", "--verify", "HEAD"])) {
-  // Base -> working tree, so an un-bumped change is caught before it is even committed.
-  const changed = (git(["diff", "--name-only", baseSha, "--"]) ?? "").split("\n");
-  if (changed.some((f) => f.startsWith("xwiki/"))) {
-    const baseMarketplace = git(["show", `${baseSha}:.claude-plugin/marketplace.json`]);
-    const baseVersion = baseMarketplace && JSON.parse(baseMarketplace).metadata?.version;
-    const version = versions["marketplace.metadata.version"];
-    const greater = isGreater(version, baseVersion);
-    if (greater === null) {
-      errors.push(`Cannot compare plugin versions: '${version}' vs '${baseVersion}' on ${baseRef}`);
-    } else if (!greater) {
-      errors.push(
-        `Plugin version ${version} is not greater than ${baseVersion} on ${baseRef}, but this branch ` +
-          `changes files under xwiki/ - bump it, or installed plugins will never pull the change`
-      );
-    }
+  console.log(`validate.mjs: note - ${baseRef} is not available, skipping the version-untouched check`);
+} else if (onBaseBranch) {
+  // On the release branch itself the version is *supposed* to move - that is release.mjs at work.
+  console.log(`validate.mjs: note - on ${baseBranch}, where release.mjs owns the version; check skipped`);
+} else {
+  // No `baseSha !== HEAD` guard: the comparison is base -> *working tree*, so a version edited but
+  // not yet committed must be caught too, on a branch that has no commits of its own yet.
+  const baseVersions = extractVersions((p) => {
+    const content = git(["show", `${baseSha}:${p}`]);
+    if (content === null) throw new Error(`${p} is absent at ${baseSha}`);
+    return content;
+  });
+  const moved = Object.keys(versions).filter((k) => versions[k] !== baseVersions[k]);
+  if (moved.length) {
+    errors.push(
+      `This branch changes the plugin version (${moved.join(", ")}: ` +
+        `${baseVersions[moved[0]]} -> ${versions[moved[0]]}), but a pull request must not - it makes every ` +
+        `concurrent PR conflict. Revert the version fields to ${baseRef}'s value; the release is cut on ` +
+        `${baseBranch} by scripts/release.mjs. To force a minor/major for a change whose significance the ` +
+        `file list cannot show, put a 'Release-Bump: minor' (or major) trailer in a commit message instead`
+    );
   }
 }
 
@@ -189,4 +207,5 @@ if (errors.length) {
   for (const e of errors) console.error(`  - ${e}`);
   process.exit(1);
 }
-console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync, OKF map complete).`);
+console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync at ` +
+    `${versions["marketplace.metadata.version"]}, OKF map complete).`);

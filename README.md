@@ -345,10 +345,47 @@ XWIKI_PASSWORD=<your-xwiki.org-password>
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version sync, OKF map)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
+
+## Versioning and releases
+
+Claude Code (and Kimi, and opencode) picks up a plugin change only when the version *increases*, and
+that version is written in five places across the three host manifests. **Pull requests never touch
+it.** They used to, and the result was that every open PR conflicted with every other one on those
+same five lines — a conflict that was never about either change. `scripts/validate.mjs` now fails any
+branch whose version differs from the base branch's.
+
+The release is cut on `master` instead, by `scripts/release.mjs`, which
+[GitHub Actions runs automatically](.github/workflows/release.yml) on every push to `master` that
+touches `xwiki/`. It sets all five fields, commits `[Misc] Release X.Y.Z` and tags `vX.Y.Z`; the tag
+is how the following run knows what has already shipped. To see what would happen without changing
+anything:
+
+```
+node scripts/release.mjs --dry-run
+```
+
+**Which segment moves is derived from the change, not asked for:**
+
+- **minor** — the capability *inventory* changed: a skill, an MCP server, a hook or an opencode
+  plugin was added or removed.
+- **patch** — anything else under `xwiki/` (OKF, skill and instruction wording).
+- **major** — never derived; it has to be asked for explicitly.
+
+Two ways to override it. For a change whose significance the file list cannot show, add a trailer to
+a commit message — unlike a version field, two branches can never conflict on one:
+
+```
+Release-Bump: minor
+```
+
+Or run the `release` workflow by hand from the Actions tab (`workflow_dispatch`) and choose the
+segment. Note that automatic releases need `master` to accept a push from `github-actions[bot]`; if
+`master` is protected, either allow the bot to bypass it or run `node scripts/release.mjs --push`
+locally instead.
 
 ## Contributing
 

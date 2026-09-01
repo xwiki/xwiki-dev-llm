@@ -17,12 +17,31 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version sync + increase, OKF map, always-on budget)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, always-on budget)
 ```
 
 Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI (GitHub Actions) on
 every push and pull request. There is no build step, no test runner, and no lint — JSON manifests and
 Markdown/`.mjs` files are the entire artifact.
+
+## Release
+
+```
+node scripts/release.mjs --dry-run   # what would be released, and why that segment
+```
+
+`scripts/release.mjs` is the **only** thing that writes a version field. It runs on `master`
+(automatically, from `.github/workflows/release.yml`, on every push that touches `xwiki/`), sets all
+five fields, commits `[Misc] Release X.Y.Z` and tags `vX.Y.Z` — the tag being how the next run knows
+what has already shipped. It exits having done nothing when no file under `xwiki/` changed, so
+running it is always safe.
+
+The segment is derived, not asked for: **minor** when the capability *inventory* changes between the
+last tag and `HEAD` — a skill, an MCP server in `xwiki/.mcp.json`, a hook, or a file under
+`xwiki/opencode/plugins/` added or removed — and **patch** for everything else under `xwiki/`. A
+**major** is never derived. To override, either put a `Release-Bump: minor` (or `major`) trailer in a commit message —
+the escape hatch for a change whose significance the file list cannot show — or run the workflow by
+hand (`workflow_dispatch`) with an explicit segment.
 
 ## Architecture
 
@@ -74,16 +93,14 @@ Inside `xwiki/`:
 
 ## Conventions when editing this repo
 
-- **Bump the plugin version on every change that ships** — any edit under `xwiki/` (a skill, an OKF
-  entry, `instructions/xwiki-org.md`, `.mcp.json`, hooks). Claude Code only pulls a plugin update
-  when its version *increases*, so an un-bumped change never reaches installed machines. Which
-  segment: **patch** for content edits (OKF/skill/instruction/README wording); **minor** when
-  capabilities change (adding/removing a skill or MCP server). Keep the version in sync across all
-  host manifests: `marketplace.json` (`metadata.version` and the plugin entry's `version`),
-  `xwiki/.claude-plugin/plugin.json`, `kimi.plugin.json`, and the `// version:` comment in
-  `opencode.jsonc` — `node scripts/validate.mjs` fails if they diverge, and also fails when a branch
-  touching `xwiki/` leaves the version at the base branch's (agreeing manifests agree just as
-  happily on a version that never moved).
+- **Never change the plugin version in a pull request** — not in `marketplace.json`
+  (`metadata.version` or the plugin entry's `version`), `xwiki/.claude-plugin/plugin.json`,
+  `kimi.plugin.json`, or the `// version:` comment in `opencode.jsonc`. Five files carry one number,
+  so two branches that each bump it conflict on all five lines over something that was never either
+  change; that conflict is why the bump moved out of the PR. `node scripts/validate.mjs` fails a
+  branch whose version differs from the base branch's, and still fails when the five disagree with
+  each other. The release — including which segment moves — is cut on `master` afterwards; see
+  **Release** above.
 - **`xwiki/instructions/xwiki-org.md` is injected into every session** in every `xwiki/*` repo, so
   it has a byte budget the validator enforces. Its OKF map lists topic *names*; a topic is described
   in `xwiki/okf/index.md`. Put a rule there only when it must be obeyed without opening any OKF file.
