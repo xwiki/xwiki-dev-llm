@@ -10,6 +10,13 @@
         "DISCOURSE_USER_API_CLIENT_ID": "${DISCOURSE_USER_API_CLIENT_ID:-}"
       }
     },
+    "develocity": {
+      "type": "http",
+      "url": "https://community.develocity.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DEVELOCITY_MCP_ACCESS_KEY}"
+      }
+    },
     "sonarqube": {
       "command": "docker",
       "args": [

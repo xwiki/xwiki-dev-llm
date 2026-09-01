@@ -6,6 +6,8 @@
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { homedir } from "node:os";
+import { basename, join } from "node:path";
 
 // Kimi passes the project directory in the hook payload's `cwd`; Claude sets CLAUDE_PROJECT_DIR.
 // Fallback to the current working directory when neither is available.
@@ -52,6 +54,20 @@ for (const relativePath of ["instructions/xwiki-org.md", "xwiki/instructions/xwi
 if (!text) {
   process.exit(0);
 }
+
+// Work directory: where every file a task needs but the repo must not hold (plans, handoffs,
+// extracted source, drafts) lives, so those files are all in one place instead of scattered over
+// the repo, the system temp dir and the home directory. The rule itself is in xwiki-org.md; what is
+// appended here is only the resolved absolute path, which the model cannot compute on its own
+// (`~` and the repo name). Nothing is created: a session that writes no work file leaves no trace,
+// and `mkdir -p` at first use also repairs a directory the developer has since deleted.
+const workRoot = process.env.XWIKI_LLM_WORK || join(homedir(), ".xwiki-llm", "work");
+const repoWorkDir = join(workRoot, basename(projectDir));
+
+text += `
+**This machine's work directory:** \`${repoWorkDir}\` — the repo-scoped root for the work files
+described under "Work files" above. \`mkdir -p\` the task subdirectory when one is first needed.
+`;
 
 process.stdout.write(
   JSON.stringify({

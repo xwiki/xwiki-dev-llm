@@ -1,14 +1,13 @@
 ---
 title: SonarQube syntax and annotation rules
 stability: durable
-summary: Correct fixes and XWiki-specific drop conditions for the pure syntax/annotation rules —
-  S1116, S1124, S1128, S1161, S1197, S1611, S2209, S3252, S3878, S6208, S7476. Includes S3878's
-  infinite-recursion trap and the S2209/S3252 pair of static-access rules.
+summary: Correct fixes and XWiki-specific drop conditions for the pure syntax and annotation rules —
+  the safest family, zero dataflow. Holds the varargs-array infinite-recursion trap, the
+  static-access pair (instance-reference and declaring-class), modifier order, and the
+  @Deprecated(since) move.
 ---
 
 # SonarQube syntax and annotation rules
-
-S1116 · S1124 · S1128 · S1161 · S1197 · S1611 · S2209 · S3252 · S3878 · S6208 · S7476
 
 The safest family: zero dataflow, and (except S3878) no way for a correct edit to change behaviour.
 Read [[index]] for the universal drop conditions first.
@@ -22,8 +21,7 @@ BODY`. Requires Java 14+. Behaviour is identical — the labels shared one body 
 - **Count the group upwards from the flagged line** until a non-`case` line, and merge exactly that
   run. Several groups in one `switch` are several issues; process them highest-line-first.
 - A long run needs wrapping: fill to 120 and continue on a `+4`-indented line, closing with the `:`
-  after the last label. A 32-label group (`TagStack`'s special-symbol set) wraps to two lines and reads
-  fine.
+  after the last label. A run long enough to need two lines still reads fine.
 - **Drop the group when a case in the run has a body**, even an empty one with a comment, or when a
   `// fallthrough` comment marks a *non-empty* case falling into the run — that comment documents real
   fall-through behaviour and merging it away changes what the reader is told. Labels *after* such a
@@ -88,11 +86,10 @@ constant or method is read through a *derived* type instead of the class that de
 (`Child.COUNTER` where `Parent` declares `COUNTER`). Fix: replace the qualifier with the declaring
 class and adjust the imports.
 
-**This rule was previously on the denylist as an API change. It is not one** — nothing is declared,
-renamed or re-typed; only the qualifier of a compile-time resolution changes, and static method
-dispatch is by the compile-time type, so the same member is reached. Sonar names the *resolved*
-declaring class, so a member the subclass hides is never flagged. A pool of 123 sites across the three
-repos converted with zero drops.
+**This is not an API change** — nothing is declared, renamed or re-typed; only the qualifier of a
+compile-time resolution changes, and static method dispatch is by the compile-time type, so the same
+member is reached. Sonar names the *resolved* declaring class, so a member the subclass hides is never
+flagged. The rule converts with no observed drops.
 
 Two mechanics carry the batch:
 
@@ -111,7 +108,7 @@ Two mechanics carry the batch:
 Commons classes they are named after so that a single import serves both the Apache helpers and the
 XWiki additions. Every inherited call through them is flagged, and "fixing" one means importing the
 base class instead — a style regression, and impossible without a fully-qualified name in any file
-that also uses the XWiki-specific methods. Permanent drop (52 sites in platform + rendering).
+that also uses the XWiki-specific methods. Permanent drop.
 
 ## S1124 — modifier order
 

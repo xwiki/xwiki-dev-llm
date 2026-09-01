@@ -29,9 +29,8 @@ XWiki version), exports the matching `JAVA_HOME`, then delegates to `mvn`. It al
 when the arguments contain a sonar goal, the Sonar scanner having a JDK floor of its own — above what
 the older branches target.
 
-**`xmvn` looks for JDKs the Linux way only** (`update-alternatives`, `/usr/lib/jvm/java-*`). Anywhere
-else — macOS in particular — it finds none, silently runs `mvn` on the default JDK, and you get the
-failures above regardless. There, and wherever `xmvn` is absent, select the JDK yourself:
+Wherever `xmvn` isn't available, select the JDK yourself. If a build still fails as above under
+`xmvn`, it didn't switch the JDK — set `JAVA_HOME` yourself the same way:
 
 ```bash
 mvn -N -B -ntp -q -DforceStdout help:evaluate -Dexpression=xwiki.java.version   # e.g. 11
@@ -148,20 +147,65 @@ mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass#myMethod
 mvn verify -B -ntp -pl <module-path> -Pintegration-tests
 ```
 
-### Docker ITs: never stop an XWiki instance you did not start
+### Docker ITs
 
-`@UITest` defaults to `JETTY_STANDALONE`, which runs XWiki on the **host** and binds ports 8080/8079.
-When something already listens there — typically an XWiki the developer is running — the test's Jetty
-silently fails to bind, the test drives that instance instead, and `beforeAll` dies with
-`Failed to install Extension(s) … Response status code [401]`.
+A `-Pdocker,integration-tests` run is a **machine-wide** operation: it takes host ports or a slice of
+the Docker daemon, and writes SNAPSHOT artifacts into the shared `~/.m2`. Other agents, other
+worktrees and the developer's own wiki are all on the same machine. Why each step below exists — and
+the table that tells a starved daemon from a real defect — is in `okf/testing/running-docker-its.md`
+(in Claude Code `${CLAUDE_PLUGIN_ROOT}/okf/testing/`, in Kimi Code
+`${KIMI_SKILL_DIR}/../../okf/testing/`, in opencode `$XWIKI_LLM_HOME/xwiki/okf/testing/`).
 
-Check the port first (`lsof -nP -iTCP:8080 -sTCP:LISTEN`). Stop the instance only when **this session
-started it**; otherwise leave it running and move the whole stack into Docker instead:
+**1. Pre-flight — read the output before launching anything:**
 
 ```bash
+lsof -nP -iTCP:8080 -sTCP:LISTEN                           # who owns the standalone port
+ps -Ao command | grep "[i]ntegration-tests,docker"         # other agents' runs
+docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}'   # what the daemon already carries
+```
+
+**2. Never stop an XWiki instance you did not start.** `@UITest` defaults to `JETTY_STANDALONE`,
+which runs XWiki on the **host** and binds 8080/8079. When something already listens there, the
+test's Jetty silently fails to bind, the framework drives *that* instance, and `beforeAll` dies with
+`Failed to install Extension(s) … Response status code [401]`. Stop the instance only when **this
+session started it**; otherwise leave it running and move the servlet engine into a container.
+
+**3. Pick the engine deliberately — the two are not interchangeable.** The browser is a container in
+both, but under `JETTY_STANDALONE` it reaches the host wiki through an `/etc/hosts` `host-gateway`
+entry, while a containerised engine resolves the `xwikiweb` alias over Docker's embedded DNS. They
+exercise **different networking**, and the containerised one is what the CI matrix runs.
+
+```bash
+# Local iteration loop — fastest, and structurally cannot fail on container-to-container DNS.
+# Needs :8080 free. JETTY_STANDALONE spawns the wiki's JVM with `java` from PATH, so put the right
+# JDK there and not only in JAVA_HOME:
+export JAVA_HOME=$(/usr/libexec/java_home -v 17); export PATH="$JAVA_HOME/bin:$PATH"
+mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests
+
+# Containerised engine — required when :8080 is taken, when the change touches how the test reaches
+# the wiki (URLs, ports, host names, shared files, uploads/downloads), and before calling a green
+# local run CI-safe.
 mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests \
   -Dxwiki.test.ui.servletEngine=tomcat -Dxwiki.test.ui.database=postgresql
 ```
+
+**4. Take a slot, so concurrent agents queue instead of starving the daemon.** Wrap the **whole**
+Maven invocation (the `install` of the SNAPSHOTs is part of what is being serialised). The slot is
+released however the command ends, and a slot whose holder died is reclaimed automatically:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" -- \
+  mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests
+
+node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" --status   # who is holding what
+```
+
+Two runs at a time by default (`--max N`, or `XWIKI_LLM_IT_SLOTS`). Exit code **75** means no slot
+came free within `--wait` (3600s default) — report which run holds it rather than launching anyway.
+
+**5. A failure in `beforeAll` is never evidence about your change.**
+`RuntimeException: Error setting up the XWiki testing environment` means no test method ran. Repair
+the machine and re-run; the symptom table in the OKF topic says which cause each line points at.
 
 ## Common profiles
 

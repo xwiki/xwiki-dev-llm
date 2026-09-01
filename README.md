@@ -96,6 +96,26 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   (which ships with Claude Code), so it works on Windows, macOS and Linux without a bash or `jq`
   dependency. In opencode it is loaded via the `instructions` config entry (not remote-scoped — see
   the opencode install note above).
+- **A single work directory** — every file a task needs but the repo must not hold (plan and
+  handoff files, extracted source, drafts, notes, screenshots) goes under one root instead of being
+  scattered over the repo, the system temp directory and your home directory. The default is
+  `~/.xwiki-llm/work`, overridable with `XWIKI_LLM_WORK`; each piece of work gets its own
+  `<work>/<repo>/<YYYY-MM-DD>-<slug>/` directory, so it is findable later and removable in one
+  command. Nothing is created up front — a session that writes no work file leaves no trace — and
+  the `SessionStart` hook appends the resolved absolute path to the injected conventions so the
+  model does not have to guess it. Files that only matter until the end of the current session stay
+  in the host's own session scratch directory.
+- **Docker IT slot limiter** (`xwiki/scripts/xwiki-it-slot.mjs`) — a wrapper that caps how many
+  XWiki functional-test runs (`-Pdocker,integration-tests`) execute at once on one machine, two by
+  default (`--max N`, or `XWIKI_LLM_IT_SLOTS`). Such a run holds a servlet engine, a browser
+  container of a couple of gigabytes and a ryuk, and writes SNAPSHOT artifacts into the shared
+  `~/.m2`; several agents launching one at the same time starve the Docker daemon, and starvation
+  surfaces as a failure in `beforeAll` that reads like a product bug rather than as an
+  out-of-resources error. Wrap the whole Maven invocation —
+  `node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" -- mvn verify …` — and later runs queue
+  instead of colliding; `--status` shows who holds what, the slot is released however the command
+  ends, and one whose holder died is reclaimed. Not a hook: the `xwiki-build` skill tells Claude to
+  use it, so it costs nothing in sessions that run no functional test.
 - **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — a `PostToolUse` hook on
   `Write`/`Edit` that checks every file written against the explicit `eol` declared by the repo's
   `.gitattributes` (via `git check-attr`). On a CRLF/LF mismatch it fails with a clear message so
@@ -111,6 +131,11 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   - `discourse` — forum.xwiki.org. Search/read topics and posts with no credentials. Set
     `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the user-key pair) and the same server also
     gets write tools, so Claude can post and reply on the forum — see "Forum write access" below.
+  - `develocity` — community.develocity.cloud, the Develocity instance holding XWiki's build
+    scans: failure details, test outcomes, build-cache effectiveness. It is a remote server
+    (streamable HTTP), so nothing runs locally; the Develocity access key is read from
+    `DEVELOCITY_MCP_ACCESS_KEY`. Optional: with the variable unset, Claude Code and Kimi Code
+    simply skip the server.
   - `sonarqube` — SonarCloud code-quality analysis (Docker). Reads `SONARQUBE_TOKEN` and the
     repo-specific `SONARQUBE_PROJECT_KEY` from the environment; no secrets are committed.
     `SONARQUBE_PROJECT_KEY` is optional (it defaults to empty), so repos that have no SonarCloud
@@ -147,9 +172,9 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
   - `xwiki-translations` — externalize and render i18n strings safely.
   - `xwiki-doc-writing` — write, update or review a page of xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
-  - `xwiki-doc-convert` — convert old documentation (the `Documentation` space or the Extensions wiki) into the new `/documentation` tree.
+  - `xwiki-doc-convert` — convert old documentation (the `Documentation` space or the Extensions wiki) into the new `/documentation` tree, as a resumable plan of one-session tasks (also used to resume a conversion already under way).
   - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
-  - `xwiki-fix-sonarqube-issue` — find and fix SonarCloud issues, open a PR, mark them Accepted; the
+  - `xwiki-fix-sonarqube-issue` — find and fix SonarCloud issues and open a PR; the
     per-rule fix correctness and drop conditions it applies live in `xwiki/okf/sonarqube/`.
   - `xwiki-backport` — backport any change to an older branch: cherry-pick `-x`, adapt to the branch (module pom versions, Java level, style/API), verify, open the PR.
   - `xwiki-backport-testneeded` — backport `testneeded`-labelled tests to supported stable branches, adjust `@since` across branches, open the PRs (builds on `xwiki-backport`).
@@ -159,8 +184,10 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 | Variable                | Used by   | Notes                                              |
 |-------------------------|-----------|----------------------------------------------------|
 | `XWIKI_LLM_HOME`        | opencode  | Absolute path to your `xwiki-dev-llm` checkout. **opencode only** (Claude Code and Kimi Code resolve paths themselves). |
+| `XWIKI_LLM_WORK`        | all hosts | Absolute path to the work directory for plans, handoffs, drafts and other cross-session state. Optional — defaults to `~/.xwiki-llm/work`. |
 | `SONARQUBE_TOKEN`       | sonarqube | Your personal SonarCloud token (same for all repos). |
 | `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
+| `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
 | `JIRA_API_TOKEN`        | `xwiki-jira` (jira-cli / REST) | Your jira.xwiki.org personal access token. Optional — only needed to act on JIRA issues. See "JIRA access" below. |
 | `JIRA_AUTH_TYPE`        | jira-cli  | Set to `bearer` (PAT auth) for the self-hosted XWiki JIRA.       |
 | `DISCOURSE_API_KEY`     | discourse | A forum.xwiki.org **admin** API key. Optional — without it the forum MCP is read-only. See "Forum write access" below. |
@@ -229,6 +256,43 @@ If the forum refuses the credential (revoked, expired, wrong username), the laun
 stderr and starts the server read-only, rather than letting it fail to start and take the search and
 read tools down with it.
 
+## Develocity access (for the `develocity` MCP server)
+
+[community.develocity.cloud](https://community.develocity.cloud) is the Develocity instance that
+stores the build scans of every CI build and provides the remote build cache. It is Gradle's free
+instance for open-source projects, shared with other projects, so XWiki's data is scoped by the
+project ID `xwiki` (set in each repo's `.mvn/develocity.xml`). Its MCP server exposes that data —
+exception details and stack traces for a failed build, test outcomes and flaky-test history, build
+timings and cache hit rates, and diffs between two builds — so you can investigate a CI failure
+without leaving the terminal.
+
+This is **optional**, and unlike the other servers it needs a credential just to list its tools: the
+access key is validated on *every* request. So leave `DEVELOCITY_MCP_ACCESS_KEY` unset if you don't have a
+key — Claude Code and Kimi Code then skip the server instead of erroring on each session.
+
+To set it up, sign in to https://community.develocity.cloud, open **Settings → Access keys**
+(https://community.develocity.cloud/settings/access-keys), generate a key, and export it:
+
+```bash
+export DEVELOCITY_MCP_ACCESS_KEY="<the-access-key>"
+```
+
+**Why not `DEVELOCITY_ACCESS_KEY`?** There is only one kind of Develocity credential — the access
+key you just created — but that name is already taken by the Maven and Gradle Develocity
+extensions, which require the value to be host-scoped:
+`DEVELOCITY_ACCESS_KEY=community.develocity.cloud=<key>`
+(the host prefix exists so the key can't be sent to a server it wasn't issued for). An HTTP
+`Authorization: Bearer` header needs the bare key instead, so one variable cannot serve both. The
+separate name lets you keep both, with the same key in each:
+
+```bash
+export DEVELOCITY_ACCESS_KEY="community.develocity.cloud=<the-access-key>"  # Maven/Gradle build
+export DEVELOCITY_MCP_ACCESS_KEY="<the-access-key>"                         # this plugin's MCP server
+```
+
+The key's Develocity user needs the *Access build data via the API and MCP* permission (included in
+the default Developer role).
+
 ## JIRA access (for the `xwiki-jira` skill)
 
 The `xwiki-jira` skill lets Claude view, search, create, update and transition issues on
@@ -281,10 +345,47 @@ XWIKI_PASSWORD=<your-xwiki.org-password>
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version sync, OKF map)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
+
+## Versioning and releases
+
+Claude Code (and Kimi, and opencode) picks up a plugin change only when the version *increases*, and
+that version is written in five places across the three host manifests. **Pull requests never touch
+it.** They used to, and the result was that every open PR conflicted with every other one on those
+same five lines — a conflict that was never about either change. `scripts/validate.mjs` now fails any
+branch whose version differs from the base branch's.
+
+The release is cut on `master` instead, by `scripts/release.mjs`, which
+[GitHub Actions runs automatically](.github/workflows/release.yml) on every push to `master` that
+touches `xwiki/`. It sets all five fields, commits `[Misc] Release X.Y.Z` and tags `vX.Y.Z`; the tag
+is how the following run knows what has already shipped. To see what would happen without changing
+anything:
+
+```
+node scripts/release.mjs --dry-run
+```
+
+**Which segment moves is derived from the change, not asked for:**
+
+- **minor** — the capability *inventory* changed: a skill, an MCP server, a hook or an opencode
+  plugin was added or removed.
+- **patch** — anything else under `xwiki/` (OKF, skill and instruction wording).
+- **major** — never derived; it has to be asked for explicitly.
+
+Two ways to override it. For a change whose significance the file list cannot show, add a trailer to
+a commit message — unlike a version field, two branches can never conflict on one:
+
+```
+Release-Bump: minor
+```
+
+Or run the `release` workflow by hand from the Actions tab (`workflow_dispatch`) and choose the
+segment. Note that automatic releases need `master` to accept a push from `github-actions[bot]`; if
+`master` is protected, either allow the bot to bypass it or run `node scripts/release.mjs --push`
+locally instead.
 
 ## Contributing
 

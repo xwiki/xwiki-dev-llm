@@ -17,6 +17,17 @@ below).
   not the machine default; the **`xwiki-build`** skill has how. See
   https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/JavaSupportStrategy/#HByXWikiVersions
 
+## Work files
+
+- Every file a task needs that the **repo must not hold** — plan and handoff files, extracted
+  source, drafts, notes, screenshots, anything that has to survive the session — goes under the
+  **work directory**: `$XWIKI_LLM_WORK` when set, else `~/.xwiki-llm/work`. Never in the repo (it
+  gets committed by accident), never in a session-scoped temp directory (it is gone next session).
+- One directory per piece of work: `<work>/<repo>/<YYYY-MM-DD>-<slug>/`. `mkdir -p` it the first
+  time it is needed and tell the developer the path once, so the state is findable and deletable.
+- Files that only matter until the end of the *current* session stay in the host's own session
+  scratch directory instead — the work directory is for state that outlives a session.
+
 ## Commit messages
 
 - When there is an issue, the summary line is the key followed by **the issue's title, verbatim** —
@@ -82,8 +93,8 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
 - `okf/architecture/` — `component-system`, `macro-refactoring`, `wiki-user-scope`, `solr-search`,
-  `data-migrations`.
-- `okf/testing/` — `strategy`.
+  `wiki-application-data`, `data-migrations`.
+- `okf/testing/` — `strategy`, `running-docker-its`.
 - `okf/sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
   rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,

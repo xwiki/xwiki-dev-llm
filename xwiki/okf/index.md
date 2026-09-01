@@ -35,7 +35,10 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   `@xwiki/platform-*`), `xwiki.properties` property naming, UIXP/UIX ids, skins (bird names), icons.
 - **frontend** — JavaScript as AMD/RequireJS modules prefixed `xwiki-`, shipped as WebJars/JSX
   ("On demand only"), never inline; the minifier trap when Velocity is mixed into JavaScript and the
-  wrapper that separates them; deprecating a JS API via `compatibility.js`; WCAG 2.2 AA.
+  wrapper that separates them; deprecating a JS API via `compatibility.js`; CSS as a Skin Extension
+  and the LESS `contentType` needed to read colour-theme variables; WCAG 2.2 AA and the wiki-page
+  accessibility traps (naming a control emitted from a page, image alt text, `col-xs-*` is not
+  responsive).
 - **translations** — the key lifecycle: only en_US is committer-maintained (US spelling), where a
   bundle lives and the l10n.xwiki.org + Weblate-script registration a new one needs, deprecating a key
   in the `#@deprecatedstart` section, renaming with `#@deprecated`, and why keys are never moved.
@@ -70,7 +73,7 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   writing each carefully), page-structure xobject fields with the exact semantics of
   Highlights / More / Related, style (incl. **never hard-wrapping prose** — one paragraph is one
   unbroken line, on xwiki.org pages and forum.xwiki.org posts alike; 120 chars is a Java-source rule),
-  attachment/image/video rules (kebab-case names, `{{image}}` +
+  attachment/image/video rules (kebab-case names — stop words stripped from these too, `{{image}}` +
   `alt`, **`size` mandatory and `width` forbidden in the `documentation` space**, which fixes the width a
   screenshot must be captured at, **`webm` videos displayed with `{{embed}}`, never linked**, Gallery,
   PlantUML `bluegray`), location, version perspective and the `{{version}}` macro (incl. **documenting a
@@ -85,7 +88,9 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   e.x.o extension page without deleting it (**every** xproperty that holds prose, not just
   `description`) and wiring its "Documentation" button via the `ExtensionLD` URL, **deleting its
   leftover attachments** (the one place the never-delete-an-attachment rule is inverted), and
-  **triaging its backlinks** (which to repoint, which to leave). Applied by `xwiki-doc-convert`.
+  **triaging its backlinks** (which to repoint, which to leave). Also **when** a migration may
+  publish — the whole set at once, parents first, never page by page, because xwiki.org is public and
+  a half-built tree is what readers get. Applied by `xwiki-doc-convert`.
 - **page-deletion** — the rule that applies to **deleting any page on xwiki.org**, whatever the reason
   (migrated page, duplicate, obsolete extension/blog page, or an intermediate page you created
   yourself): **list and fix the backlinks before deleting**, since the breakage lands on *other* pages
@@ -111,6 +116,12 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 - **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation.
 - **macro-refactoring** — `MacroRefactoring` role (keyed by macro id) rewrites a macro's references on
   rename/move and extracts them for backlinks; `DefaultMacroRefactoring` is content-only (ignores parameters).
+- **wiki-application-data** — stored data in an XClass+wiki-page application: a non-multiSelect
+  `StaticListClass`/`DBListClass` property is a VARCHAR, so HQL/XWQL range filters on it compare
+  lexicographically (hidden while values are single characters); allocate a generated `Entry001` name
+  by creating the page, since deriving it from existing pages races for the whole editing session; a
+  wiki-page migration is idempotent only if it drops the object it matched on; and an entry template
+  must carry the marker class its queries locate it by.
 - **wiki-user-scope** — a subwiki's user scope (local/global/both) is stored on its own
   `WikiManager.WikiUserConfiguration` doc (not the descriptor) and defaults to `GLOBAL_ONLY` when absent.
 - **solr-search** — XWiki's Solr backend: embedded by default, externalisable to a remote/standalone
@@ -123,7 +134,15 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   silent no-op, and the real-upgrade validation that proves it.
 
 ### testing/
-- **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, `@Order` source-ordering rule, the page-object boundary (no `getDriver()` in a test), don't-pay-the-timeout rule, reading a PRChecker log line, coverage, framework locations.
+- **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, the scenario rule (no two `@Test` methods build the same fixture; a distinct fixture is what justifies a distinct method; `@Order` is not a substitute), `@Order` source-ordering rule, the page-object boundary (no `getDriver()` in a test), don't-pay-the-timeout rule, reading a PRChecker log line, the bare `@UITest` on an `AllIT` container, coverage, framework locations.
+
+- **running-docker-its** — running `-Pdocker,integration-tests` on a developer machine rather than a
+  CI agent: how the browser container reaches XWiki under each servlet engine (host-gateway
+  `/etc/hosts` entry vs `xwikiweb` alias over Docker DNS) and why that makes the two configurations
+  exercise different networking, which engine the local loop should use and when the containerised
+  one is mandatory, the setup-failure symptom table (a `beforeAll` failure is never evidence about
+  your change), and what several agents on one machine contend for (host :8080, the daemon budget,
+  the shared `~/.m2`). Commands in `xwiki-build`.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
@@ -134,30 +153,34 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
   XWiki idioms Sonar misreads: `S2447` null-from-a-script-service, `S1215` `$xwiki.gc()`, `S2065`
   XStream-honoured `transient`); and the drop conditions common to every rule (120 chars, Revapi,
   JaCoCo, an explanatory comment, an existing suppression, the ~15-minute ceiling).
-- **syntax-rules** — S1116 S1124 S1128 S1161 S1197 S1611 S3878 S7476. Holds S3878's
-  **infinite-recursion trap** (spreading `new Object[]{…}` re-binds to a same-name fixed-arity
-  overload — often the enclosing method, the whole commons `logging-*` SLF4J family).
-- **simplification-rules** — S1066 S1125 S1126 S1155 S1488 S1602 S1612 S1858 S2130 S2864 S3706 S7158.
-  S1612's method-ref-needs-the-type-imported build-breaker; S7158 fires on `String` receivers too;
-  S1066's outer-`else` and comment-between-the-`if`s drops plus the brace-balance check.
-- **modernization-rules** — S1604 S1640 S1643 S6126 S6201 S6204/S6211. The big ones: S6201's
-  flow-scoping shapes and one-issue-per-cast; **S6204's escape analysis** (`.toList()` is
+- **syntax-rules** — the pure syntax and annotation rules. Holds the **infinite-recursion trap**
+  (spreading `new Object[]{…}` re-binds to a same-name fixed-arity overload — often the enclosing
+  method, the whole commons `logging-*` SLF4J family).
+- **simplification-rules** — the behaviour-preserving rewrites. The method-reference
+  needs-the-type-imported build-breaker; `isEmpty()` fires on `String` receivers too; the
+  collapsible-`if` outer-`else` and comment-between-the-`if`s drops plus the brace-balance check.
+- **modernization-rules** — the language/API modernizations. The big ones: the instanceof-pattern
+  flow-scoping shapes and one-issue-per-cast; **the `.toList()` escape analysis** (it is
   unmodifiable — trace to the outermost public/`ScriptService` method, since Velocity callers are
   untraceable; the sibling-branch safe signal; the defensive-copy setter) and its `Collectors`
-  orphaned-import build-breaker; S1640's `EnumMap` **null-key runtime break**; S1643's prepend and
-  StringBuilder-vs-mock-equality traps; S6126's text-block byte-identity rules.
-- **dead-code-rules** — S1068 S1118 S1144 S1185 S1481 S1854. The highest false-positive family:
+  orphaned-import build-breaker; the `EnumMap` **null-key runtime break**; the `StringBuilder`
+  prepend and mock-equality traps; the text-block byte-identity rules.
+- **dead-code-rules** — removing unused code, and the highest false-positive family:
   **`XWikiPluginManager.initPlugin()` reflective `getDeclaredMethods()` dispatch** makes every
-  `com.xpn.xwiki.plugin.*` super-only override load-bearing (S1185); `.hbm.xml`-mapped accessors
-  (S1144); S1118's `FinalClass` follow-on, Revapi `visibilityReduced` and the `-legacy` re-export;
-  removal cascades.
-- **constant-and-resource-rules** — S1143+S1163 S1192 S2093 S2119 S2147 S3626 S5361. S1192's
+  `com.xpn.xwiki.plugin.*` super-only override load-bearing; `.hbm.xml`-mapped accessors; the
+  private-constructor `FinalClass` follow-on, Revapi `visibilityReduced` and the `-legacy`
+  re-export; the private-only subsets of the unused-parameter and narrowed-`throws` rules; removal
+  cascades.
+- **constant-and-resource-rules** — constants, resources and exceptions. The duplicated-literal
   reviewer preferences (parameterized SLF4J over a constant, the owning `*DocumentInitializer`
-  constant, `@since` on a widened field) and forward-reference gotcha; **S2093 in XWiki is usually a
-  state *restore*, not a close** — that batch is near-100% drops.
-- **test-code-rules** — S3415 S5785 S5786 S8924. **S5785 must not be applied inside
-  `equals()`/`hashCode()` contract tests** (reviewer-rejected — suppress instead) and receiver-first /
-  never-flip-operands; S3415's default-drop on asymmetric `equals`; S5786's cross-module test-jar check.
+  constant, `@since` on a widened field) and forward-reference gotcha; **try-with-resources in XWiki
+  is usually a state *restore*, not a close** — that batch is near-100% drops; the charset-constant
+  unreachable-catch build-breaker.
+- **test-code-rules** — the test-only rules. **`assertEquals` must not replace
+  `assertTrue(a.equals(b))` inside `equals()`/`hashCode()` contract tests** (reviewer-rejected —
+  suppress instead), and receiver-first / never-flip-operands; the expected/actual swap's default-drop
+  on asymmetric `equals`; the package-private cross-module test-jar check; and why an `assertThrows`
+  hoist must never move the throwing call out of the lambda.
 - **verification** — what makes a Sonar fix *verified*: never skip the tests, `-Plegacy,quality` is
   mandatory, why removing covered instructions **always** lowers a JaCoCo ratio `(c−k)/(t−k) < c/t`
   (so drop the module, never the pinned ratio), and how to tell your reactor failure from a
@@ -165,12 +188,14 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 
 ### servers/
 - **index** — the xwiki.org server ecosystem (JIRA, CI, Nexus, SonarCloud, forum, …) and how to
-  access/verify each (MCP vs. WebFetch); plus writing via REST (only `/rest` honors Basic auth, the
-  `XWiki-Form-Token` CSRF header, and the `extensions` subwiki id) and the `~/.xwiki-credentials`
-  convention (never printed, only sourced).
+  access/verify each (MCP vs. WebFetch); plus reading/writing via REST (the **Cloudflare block on a
+  browser-like User-Agent**, only `/rest` honors Basic auth, the `XWiki-Form-Token` CSRF header, and
+  the `extensions` subwiki id) and the `~/.xwiki-credentials` convention (never printed, only
+  sourced).
 - **jira** — accessing jira.xwiki.org (jira-cli or REST), the durable issue-field conventions
   (Component, Affects Version = oldest affected/else last LTS, Fix Version); values are volatile;
-  resolving/closing (Fixed vs. Cannot Reproduce for already-covered issues, assign to yourself); and
+  resolving/closing (Fixed vs. Cannot Reproduce for already-covered issues, assign to yourself);
+  attachments (REST-only, and the attachment URL is how an image reaches a GitHub PR body); and
   wiki-markup gotchas (wrap literals in `{{…}}`, don't over-escape prose, never escape inside `{code}`).
 - **jenkins** — querying ci.xwiki.org through the Jenkins REST API (`/api/json?tree=…`, anonymous
   read) instead of scraping the UI: the multibranch URL shape, the endpoints for builds / failing

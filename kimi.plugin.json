@@ -1,6 +1,6 @@
 {
   "name": "xwiki",
-  "version": "1.1.7",
+  "version": "1.5.1",
   "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
   "interface": {
     "displayName": "XWiki",
@@ -12,6 +12,10 @@
     "discourse": {
       "command": "node",
       "args": ["./xwiki/scripts/start-discourse-mcp.mjs"]
+    },
+    "develocity": {
+      "url": "https://community.develocity.cloud/mcp",
+      "bearerTokenEnvVar": "DEVELOCITY_MCP_ACCESS_KEY"
     },
     "sonarqube": {
       "command": "node",

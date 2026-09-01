@@ -33,7 +33,9 @@
 # then fails rather than shooting if a box falls outside what is being captured, since the capture
 # itself would cut it. A selector matching several elements gets one box each; prefix it with
 # `union:` for a single box around them all (a list of links, say).
-# Run `checkredbox.py` afterwards to prove the saved PNG holds a closed rectangle.
+# The script then runs `checkredbox.py` on the shot itself, proving the saved PNG holds a closed
+# rectangle, so a capture reports its own verdict and there is never a reason to open the PNG to
+# find out whether it worked. CHECK=0 skips that.
 set -e
 
 SESSION="${AB_SESSION:-doc}"
@@ -141,3 +143,12 @@ if [ "$RW" != "$WIDTH" ]; then
 fi
 sips -g pixelWidth -g pixelHeight "$OUT" | tr '\n' ' '
 echo "-> $OUT"
+
+# Check the box here rather than leaving it to the caller. Whether the box survived the capture is a
+# mechanical question, and the alternative — opening the PNG to judge it — costs a turn per attempt
+# and leaves a full-size image in context for the rest of the session, which is what turns a
+# screenshot into a shoot/look/adjust loop. `CHECK=0` skips it (a shot with no box has nothing to
+# prove, and is skipped automatically).
+if [ -n "$BOX" ] && [ "${CHECK:-1}" != "0" ]; then
+  SHOTS="$DIR" AB_SESSION="$SESSION" python3 "$(dirname "$0")/checkredbox.py" "$1"
+fi
