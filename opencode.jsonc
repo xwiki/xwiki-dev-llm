@@ -1,6 +1,6 @@
 {
   // XWiki shared LLM configuration for opencode (https://opencode.ai).
-  // version: 1.1.8 — keep in sync with the plugin version (see CLAUDE.md).
+  // version: 1.1.7 — keep in sync with the plugin version (see CLAUDE.md).
   //
   // Paths reference this checkout through the XWIKI_LLM_HOME environment variable so this file is
   // identical for everyone (no personal paths) and works whether it is used globally or per-project.
