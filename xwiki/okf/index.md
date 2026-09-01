@@ -52,7 +52,9 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   evolve interfaces via default methods.
 - **security** — escaping APIs, untrusted user input & translations, only Velocity runs on Script
   Right (every other language also needs Programming Right, but a script service does not),
-  context-author right checks in script services, configurable HTML sanitizer.
+  context-author right checks in script services, configurable HTML sanitizer, and never
+  interpolating identifiers/references into queries or include/display targets ($doc vs
+  $xcontext.macro.doc).
 - **performance** — prefer streaming over buffering; never load an unbounded payload (attachment,
   body, upload, export, query result) fully into memory.
 - **logging** — a log argument is an **object**: it is captured in the `LogEvent`, XStream-serialized
