@@ -26,7 +26,9 @@ The documented format is:
   `XRENDERING-…`, or the contrib extension's key.
 - **What *this* commit does belongs in the body**, as `*` bullets. That is what distinguishes several
   commits sharing one issue — an umbrella issue for a campaign, or a change split across repos or
-  modules — since their summary lines are by definition identical.
+  modules — since their summary lines are by definition identical. It is **not** a restatement of the
+  mechanical steps the summary already implies: a lone "Upgrade to X 1.2.3" commit that bumped the
+  version and regenerated the lockfile has nothing to add, and needs no body at all.
 - Corollary: the title is reused verbatim on every commit referencing the issue, so **it must read
   well as a commit summary**. Word it with that in mind (JIRA's own "use nice user-friendly titles"
   rule pushes the same way), and do not reword it casually afterwards.
