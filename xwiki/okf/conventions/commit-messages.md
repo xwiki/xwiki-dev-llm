@@ -44,7 +44,10 @@ The documented format is:
   needs an issue. Check where the dependency is actually declared before choosing: a shared version
   catalog (pnpm `catalog:`, a `pom.xml` property) hides that distinction, and the same artifact can
   be dev-only in one module and runtime in another — one runtime declaration is enough to require
-  the issue.
+  the issue. **Follow that chain all the way up.** A `dependencies` entry is only runtime if the
+  package holding it is itself reached at runtime: the `dependencies` of a lint/build/test package
+  (a shared eslint config, say) are dev-only however they are declared, and a published `package.json`
+  is not evidence otherwise — what settles it is how its consumers depend on it.
 
 Issue tracker is https://jira.xwiki.org (NOT GitHub Issues); see [[jira]] for access and the
 issue-field conventions. For the full PR/commit flow (one squashed commit per issue, PR description,
