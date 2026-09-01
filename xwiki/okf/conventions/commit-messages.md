@@ -26,7 +26,9 @@ The documented format is:
   `XRENDERING-…`, or the contrib extension's key.
 - **What *this* commit does belongs in the body**, as `*` bullets. That is what distinguishes several
   commits sharing one issue — an umbrella issue for a campaign, or a change split across repos or
-  modules — since their summary lines are by definition identical.
+  modules — since their summary lines are by definition identical. It is **not** a restatement of the
+  mechanical steps the summary already implies: a lone "Upgrade to X 1.2.3" commit that bumped the
+  version and regenerated the lockfile has nothing to add, and needs no body at all.
 - Corollary: the title is reused verbatim on every commit referencing the issue, so **it must read
   well as a commit summary**. Word it with that in mind (JIRA's own "use nice user-friendly titles"
   rule pushes the same way), and do not reword it casually afterwards.
@@ -36,6 +38,16 @@ The documented format is:
   in any way?"*; if yes, an issue is mandatory. A batch refactoring that changes runtime behaviour
   across many files therefore needs an issue, referenced from every commit of the campaign — not
   `[Misc]`.
+- **Dependency upgrades split on the same test:** a dependency that only ever reaches developers —
+  a `devDependencies`/`peerDependencies` entry, a build or test-scoped Maven dependency — is
+  `[Misc]`; one that ships to users (declared in `dependencies`, or a runtime Maven dependency)
+  needs an issue. Check where the dependency is actually declared before choosing: a shared version
+  catalog (pnpm `catalog:`, a `pom.xml` property) hides that distinction, and the same artifact can
+  be dev-only in one module and runtime in another — one runtime declaration is enough to require
+  the issue. **Follow that chain all the way up.** A `dependencies` entry is only runtime if the
+  package holding it is itself reached at runtime: the `dependencies` of a lint/build/test package
+  (a shared eslint config, say) are dev-only however they are declared, and a published `package.json`
+  is not evidence otherwise — what settles it is how its consumers depend on it.
 
 Issue tracker is https://jira.xwiki.org (NOT GitHub Issues); see [[jira]] for access and the
 issue-field conventions. For the full PR/commit flow (one squashed commit per issue, PR description,
