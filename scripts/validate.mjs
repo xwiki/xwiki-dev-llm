@@ -11,11 +11,12 @@
 //   5. The injected mirror stays within its size budget. Invariant 4 can only ever demand *more*
 //      text in a file that is loaded into every session; without a ceiling the map grows by
 //      accretion, because each extension appends and none ever cuts.
-//   6. A branch does NOT change any version field. The bump is not a pull request's job: five
-//      manifest fields carry the version, so every concurrent PR used to conflict with every other
-//      one on the same five lines over something that was never the change itself. Instead
-//      scripts/release.mjs sets them on master after the merge (automatically, via
-//      .github/workflows/release.yml), which is what makes installed plugins pull the update.
+//   6. A branch does NOT change any version field, compared against its *merge base* with the base
+//      branch. The bump is not a pull request's job: five manifest fields carry the version, so
+//      every concurrent PR used to conflict with every other one on the same five lines over
+//      something that was never the change itself. Instead scripts/release.mjs sets them on master
+//      after the merge (automatically, via .github/workflows/release.yml), which is what makes
+//      installed plugins pull the update.
 //   7. Every `okf/...md` path a skill cites actually exists. Skills delegate their rules to the OKF
 //      rather than restating them, so a renamed or deleted topic would otherwise leave a skill
 //      pointing at nothing — and a reviewer that cannot read its rule source fails silently.
@@ -145,7 +146,11 @@ if (mapStart === -1 || mapEnd === -1 || mapEnd < mapStart) {
 // ---- Invariant 6: a branch leaves the version alone ------------------------------------------
 // The version is released, not authored: scripts/release.mjs writes all five fields on master once
 // per release, so a pull request that also writes them conflicts with every other open PR for no
-// reason. Compared base -> working tree, so a stray bump is caught before it is even committed.
+// reason. Compared merge base -> working tree, so a stray bump is caught before it is even
+// committed. The merge base and not the base branch's tip, because the question is what *this branch*
+// did: master keeps releasing while a branch is open, so a branch that forked at 1.1.7 and touched
+// nothing still differs from a master that has since reached 1.5.1 - measured against the tip, every
+// long-lived branch would be told to revert a bump it never made.
 // Skipped, not failed, when the base ref is not fetched (a shallow clone, or a checkout with no
 // remote) so the other invariants still run.
 const git = (args) => {
@@ -162,7 +167,8 @@ const git = (args) => {
 // On a PR the base is whatever it targets; otherwise assume the default branch.
 const baseBranch = process.env.GITHUB_BASE_REF || "master";
 const baseRef = `origin/${baseBranch}`;
-const baseSha = git(["rev-parse", "--verify", "--quiet", `${baseRef}^{commit}`]);
+const baseTip = git(["rev-parse", "--verify", "--quiet", `${baseRef}^{commit}`]);
+const baseSha = baseTip && git(["merge-base", baseTip, "HEAD"]);
 const onBaseBranch = git(["rev-parse", "--abbrev-ref", "HEAD"]) === baseBranch;
 if (!baseSha) {
   console.log(`validate.mjs: note - ${baseRef} is not available, skipping the version-untouched check`);
@@ -182,9 +188,10 @@ if (!baseSha) {
     errors.push(
       `This branch changes the plugin version (${moved.join(", ")}: ` +
         `${baseVersions[moved[0]]} -> ${versions[moved[0]]}), but a pull request must not - it makes every ` +
-        `concurrent PR conflict. Revert the version fields to ${baseRef}'s value; the release is cut on ` +
-        `${baseBranch} by scripts/release.mjs. To force a minor/major for a change whose significance the ` +
-        `file list cannot show, put a 'Release-Bump: minor' (or major) trailer in a commit message instead`
+        `concurrent PR conflict. Restore the version fields to the ${baseVersions[moved[0]]} they have at ` +
+        `the merge base with ${baseBranch} (${baseSha.slice(0, 8)}); the release is cut on ${baseBranch} by ` +
+        `scripts/release.mjs. To force a minor/major for a change whose significance the file list cannot ` +
+        `show, put a 'Release-Bump: minor' (or major) trailer in a commit message instead`
     );
   }
 }
