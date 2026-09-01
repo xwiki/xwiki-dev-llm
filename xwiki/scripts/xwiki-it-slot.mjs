@@ -30,12 +30,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { itSlotDir } from './state-dir.mjs';
+
 const NO_SLOT_EXIT = 75;
 const POLL_MS = 5000;
 const REPORT_EVERY_MS = 60000;
 
-const slotDir = process.env.XWIKI_LLM_IT_SLOT_DIR
-  || path.join(os.homedir(), '.xwiki-llm', 'it-slots');
+const slotDir = itSlotDir();
 
 function parseArgs(argv) {
   const options = { max: null, wait: 3600, label: null, status: false };

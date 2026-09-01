@@ -10,9 +10,8 @@ what to do.
 
 Everything lives in the conversion **working directory** — the same directory that holds the
 `pages.py` and `shots/` the `xwiki-doc-writing` tools use. One working directory per conversion, and
-it is a task directory under the work directory the org-wide conventions define
-(`$XWIKI_LLM_WORK`, else `~/.xwiki-llm/work`), never inside the repo: none of this is publishable
-and none of it belongs in a commit.
+it is a task directory under the work directory the org-wide conventions define, never inside the
+repo: none of this is publishable and none of it belongs in a commit.
 
 ```
 <work>/<repo>/<YYYY-MM-DD>-<slug>/

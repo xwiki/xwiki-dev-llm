@@ -67,6 +67,14 @@ Inside `xwiki/`:
   Personal repos and non-git dirs get nothing. Written in Node (which Claude Code ships) so it is
   cross-platform with no bash/`jq` dependency. If you change the scoping rule, it is the single
   regex in this script.
+- **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
+  outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
+  (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
+  by `xwiki-it-slot.mjs`). Never recompute those paths in another script, and never restate the
+  platform rules in a doc — README.md's `XWIKI_LLM_WORK` table row is the one human-readable copy,
+  and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
+  work directory". Run directly, the script prints that work root: that is how opencode gets it,
+  having no `SessionStart` hook and reading `xwiki-org.md` verbatim.
 - **`.mcp.json`** — MCP servers: `discourse` (forum.xwiki.org) and `sonarqube` (SonarCloud via
   Docker). Both read their credentials from the environment via `${VAR}` expansion — never hardcode
   these. `SONARQUBE_PROJECT_KEY` and the `DISCOURSE_*` variables use the `${VAR:-}` default form on

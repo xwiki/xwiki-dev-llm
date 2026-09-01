@@ -4,10 +4,20 @@
 // belongs to the `xwiki` or `xwiki-contrib` GitHub org. Personal repos get nothing.
 // Written in Node (ships with Claude Code and Kimi Code) so it works on Windows, macOS and Linux.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { homedir } from "node:os";
 import { basename, join } from "node:path";
+
+import { LEGACY_WORK_ROOT, workRoot } from "./state-dir.mjs";
+
+/** Whether `dir` exists and holds anything. A missing or unreadable directory counts as empty. */
+function hasEntries(dir) {
+  try {
+    return readdirSync(dir).length > 0;
+  } catch {
+    return false;
+  }
+}
 
 // Kimi passes the project directory in the hook payload's `cwd`; Claude sets CLAUDE_PROJECT_DIR.
 // Fallback to the current working directory when neither is available.
@@ -57,17 +67,30 @@ if (!text) {
 
 // Work directory: where every file a task needs but the repo must not hold (plans, handoffs,
 // extracted source, drafts) lives, so those files are all in one place instead of scattered over
-// the repo, the system temp dir and the home directory. The rule itself is in xwiki-org.md; what is
-// appended here is only the resolved absolute path, which the model cannot compute on its own
-// (`~` and the repo name). Nothing is created: a session that writes no work file leaves no trace,
-// and `mkdir -p` at first use also repairs a directory the developer has since deleted.
-const workRoot = process.env.XWIKI_LLM_WORK || join(homedir(), ".xwiki-llm", "work");
-const repoWorkDir = join(workRoot, basename(projectDir));
+// the repo, the system temp dir and the home directory. The rule itself is in xwiki-org.md and the
+// root is resolved in state-dir.mjs; what is appended here is only the resolved absolute path,
+// which the model cannot compute on its own (env vars, `~` and the repo name). Nothing is created:
+// a session that writes no work file leaves no trace, and `mkdir -p` at first use also repairs a
+// directory the developer has since deleted.
+const root = workRoot();
+const repoWorkDir = join(root, basename(projectDir));
 
 text += `
 **This machine's work directory:** \`${repoWorkDir}\` — the repo-scoped root for the work files
 described under "Work files" above. \`mkdir -p\` the task subdirectory when one is first needed.
 `;
+
+// The work root used to be ~/.xwiki-llm/work on every OS. Moving what a developer left there is
+// their call, not ours — but going quiet about it would strand the state, so say so for as long as
+// anything is still in it.
+if (root !== LEGACY_WORK_ROOT && hasEntries(LEGACY_WORK_ROOT)) {
+  text += `
+**Work files left in the old location:** \`${LEGACY_WORK_ROOT}\` still holds files — it was the
+default before this plugin followed the platform's state directory, and nothing reads it any more.
+Early in the session, ask the developer to move its contents to \`${root}\` and delete it (or to set
+\`XWIKI_LLM_WORK\` to the old path if they would rather keep it). Do not move or delete it yourself.
+`;
+}
 
 process.stdout.write(
   JSON.stringify({
