@@ -22,6 +22,22 @@ authoritative source of truth.
   depends on the file type: `/* … */` for Java & JavaScript, `<!-- … -->` for XML & Vue, `#` for shell
   scripts, `.properties` and YAML, `REM` for `.bat`, `##` for Velocity.
 
+## Comment formatting
+
+- **A Javadoc comment is always multi-line, never the one-line `/** text */` form** — even for a
+  single sentence on a private constant, and even in a test:
+
+  ```java
+  /**
+   * Characters that might break the layout.
+   */
+  private static final Pattern BAD_CHARACTERS = …;
+  ```
+
+  This is not on the dev wiki's CodeStyle page (every example there merely happens to be multi-line)
+  but it is enforced in review. **When you touch a file that still uses the one-line form, convert
+  that file's comments as part of your change.**
+
 ## File encoding
 
 - **Java sources: ASCII characters only** — use Unicode escapes inside strings and XML entities in
