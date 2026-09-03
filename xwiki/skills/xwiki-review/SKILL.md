@@ -1,6 +1,6 @@
 ---
 name: xwiki-review
-description: "EXPLICIT INVOCATION ONLY — never load this skill for a plain review request. A deliberately expensive multi-angle, XWiki-aware review of a change set (pull request, commit range, or working tree): it fans out one specialist reviewer per angle (conventions, architecture, backward compatibility, security, performance, tests, accessibility, i18n/UX, documentation, data & migration, spec conformance), confidence-scores every finding, drops everything below the bar, and posts one grouped comment. Use ONLY when the user names it — `/xwiki-review`, \"run xwiki-review\", \"do the multi-angle/full/deep review\" — or when a CI routine invokes it by name. Do NOT use it for \"review this PR\", \"review my changes\", \"review the working tree\" or any other unqualified review request: those are answered directly, without this skill, because it costs far more tokens and time than a normal review. For opening the PR itself use xwiki-pull-request; for the conventions it enforces use xwiki-knowledge; for Sonar findings use xwiki-fix-sonarqube-issue."
+description: "EXPLICIT INVOCATION ONLY — never load this skill for a plain review request. A deliberately expensive multi-angle, XWiki-aware review of a change set (pull request, commit range, or working tree): it fans out one specialist reviewer per angle (conventions, architecture, backward compatibility, security, performance, tests, accessibility, i18n/UX, documentation, data & migration, spec conformance), puts every finding through an independent skeptic, drops the ones that do not survive, and posts one grouped comment. Use ONLY when the user names it — `/xwiki-review`, \"run xwiki-review\", \"do the multi-angle/full/deep review\" — or when a CI routine invokes it by name. Do NOT use it for \"review this PR\", \"review my changes\", \"review the working tree\" or any other unqualified review request: those are answered directly, without this skill, because it costs far more tokens and time than a normal review. For opening the PR itself use xwiki-pull-request; for the conventions it enforces use xwiki-knowledge; for Sonar findings use xwiki-fix-sonarqube-issue."
 ---
 
 # XWiki multi-angle review
@@ -33,23 +33,28 @@ Also resolve, once, up front:
 - The JIRA key(s) in the commit subjects (`XWIKI-`, `XCOMMONS-`, `XRENDERING-`, contrib keys).
 - The list of changed files, with their extensions and modules.
 
-## 1. Eligibility gate (Haiku, cheap, first)
+## 1. Eligibility gate — the deterministic checks first
 
-Stop immediately — post nothing — if any of these holds:
+These are shell checks: run them in the orchestrator before spending a model call. Stop
+immediately — post nothing — if any holds:
 
-- The PR is closed, merged or a draft.
-- The change is machine-generated with no human judgement to review: Renovate/Dependabot
-  version bumps, `mvn license:format` header-only diffs, pure `xar:format` reformatting,
-  translation-file syncs from l10n.
-- The diff is trivially safe (typo in a comment, a single `@since` fix).
+- The PR is closed, merged or a draft (`gh pr view --json state,isDraft`).
 - A review comment from this routine already exists **for the current head SHA**.
-- The diff exceeds the sanity ceiling (default 3000 changed lines across more than 150 files) —
-  post a single line saying the change was too large to review automatically, and stop.
+- The diff exceeds the sanity ceiling (default 3000 changed lines across more than 150 files, from
+  `git diff --shortstat`) — post a single line saying the change was too large to review
+  automatically, and stop.
+- The author is Renovate or Dependabot and the diff is only version bumps.
 
-## 2. Context pack (Haiku, once, shared by every reviewer)
+One judgement call is left, and it is the only model call in this step: decide from the diff alone
+whether the change carries human judgement worth reviewing. A `mvn license:format` header-only
+diff, pure `xar:format` reformatting, an l10n translation sync, or a trivially safe change (a typo
+in a comment, a single `@since` fix) all stop the routine here.
 
-Build a compact context pack. Every reviewer receives exactly this and nothing else, so that
-eleven agents do not each re-derive it:
+## 2. Context pack — assembled in code, once, shared by every reviewer
+
+Every item below comes from `git`, `gh`, the poms or the JIRA API, so assemble it with commands
+rather than a model call. Every reviewer receives exactly this and nothing else, so that eleven
+agents do not each re-derive it:
 
 - The diff, and the commit subjects/bodies.
 - The **paths** (not contents) of every `CLAUDE.md` that applies: repo root plus any in the
@@ -90,9 +95,9 @@ other's context. Each gets the context pack, its own brief below, and this share
 > You are reviewing an XWiki change along ONE axis. Read the diff, plus at most the surrounding
 > code you need to judge it — do not go exploring the codebase.
 >
-> Report **at most 5** findings, each as: `severity | file:line | one-sentence claim | the rule it
-> breaks, cited by path or URL | why it matters in practice`. Severity is `blocker`, `major` or
-> `minor`.
+> Report every finding that meets the bar below, most severe first, each as:
+> `severity | file:line | one-sentence claim | the rule it breaks, cited by path or URL | why it
+> matters in practice`. Severity is `blocker`, `major` or `minor`.
 >
 > Cite the **terminal** source — the file or page where the rule's words actually are. Some skills
 > are only *pointer* files: they hold a list of URLs rather than the rules themselves. When your
@@ -121,7 +126,7 @@ other's context. Each gets the context pack, its own brief below, and this share
 **A reviewer's first act is to read its sources.** The rules an angle enforces live in the OKF and
 in the other skills; they are *not* reproduced here, and must never be. A paraphrase in this file
 would be a second copy of a rule that can drift from the first, and the drift fails in the worst
-direction: §5's skeptic scores a finding 0 whenever the cited file does not say what was claimed, so
+direction: §5's skeptic returns `false` whenever the cited file does not say what was claimed, so
 a stale paraphrase does not produce loud wrong findings — it silently produces none, and the angle
 goes dark while still reporting "no issues found".
 
@@ -240,37 +245,37 @@ issue title verbatim, that is a finding here.
 Collect every finding from every angle. Deduplicate: when two angles report the same line, keep the
 one whose rule citation is more specific and merge the reasoning.
 
-Then, for each surviving finding **in parallel**, run an independent skeptic (Haiku) that is given
-the finding, the diff and the `CLAUDE.md` paths, and whose job is to **refute** it. It returns a
-confidence score 0–100 using this rubric verbatim:
+Then, for each surviving finding **in parallel**, run an independent skeptic that is given the
+finding, the diff and the `CLAUDE.md` paths, and whose job is to **refute** it. It returns one of
+these verdicts, using this wording verbatim:
 
-- **0** — false positive under light scrutiny, or a pre-existing issue on an untouched line.
-- **25** — might be real, could not be verified. Stylistic, and not explicitly called out by any
-  cited rule.
-- **50** — verified real, but a nitpick or rare in practice; unimportant relative to the change.
-- **75** — verified, very likely to be hit in practice, the current approach is insufficient — or
-  it is a rule stated explicitly in a cited OKF file / `CLAUDE.md`.
-- **100** — confirmed by direct evidence, will happen in practice.
+- **`false`** — false positive under light scrutiny, or a pre-existing issue on an untouched line.
+- **`unverified`** — might be real, could not be verified. Stylistic, and not explicitly called out
+  by any cited rule.
+- **`nitpick`** — verified real, but rare in practice; unimportant relative to the change.
+- **`confirmed`** — verified, very likely to be hit in practice and the current approach is
+  insufficient, or it is a rule stated explicitly in a cited OKF file / `CLAUDE.md`.
+- **`certain`** — confirmed by direct evidence, will happen in practice.
 
 For a finding citing a rule, the skeptic must **open the cited file and confirm the rule actually
-says that**. A citation that does not check out scores 0.
+says that**. A citation that does not check out is `false`.
 
 Two ways that check goes wrong, both of which have happened, and both of which fail toward a silent
 0 rather than a visible mistake:
 
 - **The cited file is a pointer.** If the words are not in it, look for a link that would carry them
   — a `dev.xwiki.org` URL in the skill, a `verify:` recipe in an OKF topic — and follow **one**
-  hop before scoring. Only score 0 for a bad citation once the pointer has been followed and the
-  rule is still not there. A rule quoted accurately from the page a skill points at is properly
-  cited even when the finding labelled it with the skill's path; score the substance, and note the
+  hop before judging. Only return `false` for a bad citation once the pointer has been followed and
+  the rule is still not there. A rule quoted accurately from the page a skill points at is properly
+  cited even when the finding labelled it with the skill's path; judge the substance, and note the
   mislabelling.
 - **The quote is real but truncated.** Read the whole sentence and the lines around it. A rule that
   opens broadly and then narrows ("… in `.xml`, `.vm`, `Translations` documents, or
   `ApplicationResources*.properties`") does not support a finding about a file type it excludes. If
-  the restriction is what decides the finding, say so explicitly and score 0.
+  the restriction is what decides the finding, say so explicitly and return `false`.
 
-**Drop everything below 80.** If nothing survives, say so — that is a good review, not a failed one.
-Cap the report at the 10 highest-scoring findings and state the count that was truncated.
+**Keep `confirmed` and `certain`; drop the rest.** If nothing survives, say so — that is a good
+review, not a failed one.
 
 ## 6. Post
 

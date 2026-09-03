@@ -79,23 +79,18 @@ per `okf/servers/jira.md`. Multi-line descriptions: use `--template -` and pipe 
 2. Show current vs. proposed values.
 3. Get approval, apply, then verify by re-reading the issue.
 
-## Before any operation — ask yourself
+## Before you write to JIRA
 
-1. **What is the current state?** Always fetch the issue first.
-2. **Is this reversible?** Description edits have no undo; some transitions are one-way gates and may
-   require an intermediate state.
-3. **Do I have the right identifiers?** Issue key, project key, transition name (transition/status
-   names vary and are not universal — list the available transitions before moving an issue).
+Each of these guards an operation that cannot be undone or that reaches other people:
 
-## NEVER
-
-- **NEVER transition without fetching the current status first** — a workflow may require an
-  intermediate state, and the move can fail (or misfire) otherwise.
-- **NEVER edit a description without showing the original** — JIRA has no undo.
-- **NEVER bulk-modify without explicit approval** — each change notifies watchers.
-- **NEVER leave Component empty, or set Affects Version to merely the latest release** — follow
+- **Show the original before editing a description** — JIRA has no undo.
+- **List the available transitions before moving an issue** — transition and status names vary
+  between projects and are not universal, and a workflow may require an intermediate state, so a
+  blind move can fail or misfire.
+- **Get explicit approval before a bulk modification** — each change notifies watchers.
+- **Component is never left empty, and Affects Version is not merely the latest release** — follow
   `okf/servers/jira.md`.
-- **NEVER print the token value.** `JIRA_API_TOKEN` is a secret; reference it by name only, never
+- **Never print the token value.** `JIRA_API_TOKEN` is a secret; reference it by name only, never
   echo it or pass it where it would be logged.
 
 ## Safety
