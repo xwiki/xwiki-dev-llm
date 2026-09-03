@@ -39,6 +39,11 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   and the LESS `contentType` needed to read colour-theme variables; WCAG 2.2 AA and the wiki-page
   accessibility traps (naming a control emitted from a page, image alt text, `col-xs-*` is not
   responsive).
+- **server-side-rendering** — code running inside a wiki page, sheet or template that produces wiki
+  syntax or HTML: blocks are separated by blank lines, which Velocity's space gobbling (a line ending
+  with a directive loses its newline) and `$doc.display` (a single-line `{{html}}` macro where the raw
+  property value was multi-line) silently remove, nesting a paragraph or leaving a standalone-only
+  macro such as `{{gallery}}` used inline.
 - **translations** — the key lifecycle: only en_US is committer-maintained (US spelling), where a
   bundle lives and the l10n.xwiki.org + Weblate-script registration a new one needs, deprecating a key
   in the `#@deprecatedstart` section, renaming with `#@deprecated`, and why keys are never moved.
