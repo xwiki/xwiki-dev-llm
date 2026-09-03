@@ -31,10 +31,19 @@ Fill `.github/pull_request_template.md` (at the repo root). Complete every secti
 - **Changes → Clarifications** — choices made, links to forum proposals / dependent issues.
 - **Screenshots & Video** — whenever the change has a visible result, be it a new feature, an
   improvement or a fix, show it: a reviewer should be able to judge the result without building the
-  branch. Add a "before" as well when the issue reports a regression. Put the same image on the JIRA
-  issue, where it serves whoever reads the issue or writes the release note later —
-  `okf/servers/jira.md` has the how, and its attachment URL is also what a PR body must reference,
-  `gh` being unable to upload an image.
+  branch. Put the same image on the JIRA issue, where it serves whoever reads the issue or writes
+  the release note later — `okf/servers/jira.md` has the how, and its attachment URL is also what a
+  PR body must reference, `gh` being unable to upload an image.
+  - One screenshot of the result is the norm, and is all a new feature or a redesign needs.
+  - Add a **"before"** when the change is a fix to *existing* UI, so the reader can see what was
+    wrong. Usually you can just screenshot the bug on a running instance before applying the fix.
+  - Only when the branch can **no longer produce** that "before" — the fix is already in the
+    working tree — and the difference is **too subtle to see in a single screenshot** (a corner
+    radius, a 2px alignment shift, a colour), the `xwiki-capture-ui-change` skill builds and
+    deploys the pre-fix code to capture it. It costs a Maven build and two instance restarts, so
+    **never invoke it on your own initiative: propose it, state the cost, and wait for the user's
+    explicit approval.** If they decline, ship the "after" screenshot alone and say in the PR what
+    the before looked like.
 - **Executed Tests** — how the change was validated (the `mvn` commands run). Especially important
   for regression fixes.
 - **Expected merging strategy** — `Prefers squash: Yes`; list backport branches if any.
