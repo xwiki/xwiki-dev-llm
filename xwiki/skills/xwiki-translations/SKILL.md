@@ -8,7 +8,7 @@ description: How to externalize and render translations in XWiki sheets, templat
 Use this skill whenever you add, change, or externalize user-facing text in XWiki sheets/pages
 (`.xml`), templates (`.vm`), `Translations` wiki documents, or JAR resource bundles
 (`ApplicationResources*.properties`). It covers both i18n correctness and the security rules that
-MUST be followed.
+apply to a translated string.
 
 ## Where translation values live
 
@@ -54,7 +54,7 @@ every translation value as untrusted**, for two reasons:
 - **Broken display.** A translation value may legitimately contain characters that are wiki syntax or
   HTML (`*`, `[[`, `<`, `{{`, …). Unless escaped, they break the rendering of the translation.
 
-### Rule 1 — in a wiki markup context, ALWAYS use the `{{translation}}` macro
+### Rule 1 — in a wiki markup context, use the `{{translation}}` macro
 
 In wiki content (sheets, wiki pages, any `.vm`/velocity output that becomes wiki syntax) use the
 macro. It is the **safest** (the value is rendered in an isolated context — script macros in it do NOT
