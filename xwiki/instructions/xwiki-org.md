@@ -28,13 +28,15 @@ below).
 - Files that only matter until the end of the *current* session stay in the host's own session
   scratch directory instead — the work directory is for state that outlives a session.
 
-## Commit messages
+## Commits, issues & PRs
 
 - When there is an issue, the summary line is the key followed by **the issue's title, verbatim** —
   not a summary you write: `XWIKI-12345: <the JIRA issue title>` (use the repo's own key —
   `XCOMMONS-…`, `XRENDERING-…`, etc.). What *this* commit does goes in the body as `*` bullets.
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
   developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
+- **A change with a visible result carries before/after images** — on its JIRA issue, and in the PR
+  body when there is one. Producing them is also how you check it works: `okf/servers/jira.md`.
 
 ## Building & tests
 
