@@ -207,9 +207,11 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 ### processes/
 - **release** — how XWiki versions/releases (Commons+Rendering+Platform together); detailed steps are
   volatile pointers to the dev wiki.
-- **security-policy** — CVSS-4 severity scoring (volatile; verify) and the durable rule never to
-  reveal a vulnerability publicly until disclosure (obfuscated commits, restricted JIRA issues); plus
-  merging a non-committer's security PR by hand from the advisory's private fork, never via the UI.
+- **security-policy** — CVSS-4 severity scoring: never score from memory, every metric comes from the
+  policy's "Best practices for computing CVSS" section, plus which metrics XWiki fixes and their traps;
+  the durable rule never to reveal a vulnerability publicly until disclosure (obfuscated commits,
+  restricted JIRA issues); merging a non-committer's security PR by hand from the advisory's private
+  fork, never via the UI.
 - **module-lifecycle** — moving code between repos with its history: `git subtree split` to extract
   (and what changes when the target is xwiki-contrib — contrib parent at the LTS version,
   `xwiki.extension.features`, same version), `git subtree add` to merge in, retiring to the
