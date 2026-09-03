@@ -70,7 +70,8 @@ XWiki Standard distribution — **XWiki Standard must keep working with `compati
   silently: the stylesheet compiles and emits only whatever fallbacks were written around it.
 - XWiki has committed to **WCAG 2.2 at level AA**. All features, new ones especially, must comply;
   the Accessibility Statement on xwiki.org tracks the current state.
-- Three traps specific to markup emitted from a **wiki page or sheet**:
+- Three traps specific to markup emitted from a **wiki page or sheet** (whose rendering side is
+  [[server-side-rendering]]):
   - A control inside `{{html}}` needs a programmatically associated name — a `<label for>` bound to
     the generated field id. A definition-list term (the `; label` / `: $doc.display(…)` idiom) is not
     one, and neither is prompt text put in the input's `value`: that also *submits* as data when the

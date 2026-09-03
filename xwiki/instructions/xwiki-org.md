@@ -89,6 +89,7 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `performance`, `logging`, `naming`, `frontend`,
+  `server-side-rendering`,
   `translations`, `dependencies`; and the xwiki.org documentation rules — `documentation`,
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
