@@ -28,6 +28,7 @@ import importlib
 import os
 import re
 import sys
+import time
 
 import xwikidoc as x
 
@@ -58,19 +59,29 @@ def shots_dir(mod):
     return getattr(mod, 'SHOTS', 'shots')
 
 
+INLINE_VERBATIM = re.compile(r'\{\{(code|plantuml)\b[^}]*\}\}.*?\{\{/\1\}\}')
+
+
 def strip_verbatim(text):
     """Blank the body of `{{plantuml}}` / `{{code}}` blocks: their content is not XWiki syntax and
-    must not be linted as such (a PlantUML arrow is a legitimate `--`)."""
+    must not be linted as such (a PlantUML arrow is a legitimate `--`).
+
+    Complete inline pairs are dropped from a line *before* deciding whether it opens a block. The
+    house style writes `... {{code}}man{{/code}} ...` in nearly every paragraph, and a scanner that
+    tests the opening pattern first matches that as an opener and never clears the flag, blanking
+    every following line of the field: false "declared but not referenced" on images that are right
+    there, and — worse — real defects on those lines hidden from every check."""
     out, inside = [], False
     for line in text.split('\n'):
-        if re.search(r'\{\{(plantuml|code)\b', line):
+        bare = INLINE_VERBATIM.sub('', line)
+        if re.search(r'\{\{(plantuml|code)\b', bare):
             inside = True
             out.append('')
-        elif re.search(r'\{\{/(plantuml|code)\}\}', line):
+        elif re.search(r'\{\{/(plantuml|code)\}\}', bare):
             inside = False
             out.append('')
         else:
-            out.append('' if inside else line)
+            out.append('' if inside else bare)
     return '\n'.join(out)
 
 
@@ -83,6 +94,7 @@ def lint(mod):
     problems = []
     farm = ('www|extensions|dev|design|snippets|rendering|commons|contrib|cristal|test')
     refs = {p['ref'] for p in mod.ALL}
+    hubs = {'.'.join(p['space'][:-1]) + '.WebHome' for p in mod.ALL} & refs
     for p in mod.ALL:
         name = p['ref']
 
@@ -149,13 +161,29 @@ def lint(mod):
                 problems.append(f'{name}: {p["type"]} without a numbered list')
             if re.search(r'^== ', p['content'], re.M):
                 problems.append(f'{name}: {p["type"]} with a level-2 heading in Content')
-            if steps and '{{image' not in steps[-1]:
-                problems.append(f'{name}: result step shows no screenshot')
-            shown = len([s for s in steps if '{{image' in s])
+            # What a step has to *show* depends on the audience: a Developer page is carried by code
+            # examples and its result step shows the produced output, not a screenshot of a UI it
+            # does not have. Asking a Developer procedure for screenshots is what makes it
+            # unfixable, so the rule is type-scoped rather than waived.
+            visual, shows = (('{{code', 'code example') if p['target'] == 'developer'
+                             else ('{{image', 'screenshot'))
+            if steps and visual not in steps[-1]:
+                problems.append(f'{name}: result step shows no {shows}')
+            shown = len([s for s in steps if visual in s])
             if steps and shown * 2 < len(steps):
-                problems.append(f'{name}: only {shown}/{len(steps)} steps carry a screenshot')
+                problems.append(f'{name}: only {shown}/{len(steps)} steps carry a {shows}')
             if '>>doc:' not in p['content'].split('\n1. ')[0]:
                 problems.append(f'{name}: intro links to no Explanation page')
+
+        # "Shows, not only tells" for an Explanation: a design or architecture page with a structure,
+        # a flow or a lifecycle to show needs a diagram. Advisory — the guide's "do not force it" is
+        # explicit, and a risk narrative, a definition or an FAQ-shaped page legitimately has none.
+        # Hub pages are excluded: their job is routing, and a visual there shows nothing.
+        if p['type'] == 'explanation' and name not in hubs \
+                and not re.search(r'\{\{(plantuml|image|code)', p['content']):
+            problems.append(f'{name}: explanation shows nothing (no diagram, image or code '
+                            f'example) — add one where there is a structure, a flow, a lifecycle '
+                            f'or a choice between alternatives to show')
 
         if name in (p['ref'] for p in mod.ALL):
             parent = '.'.join(p['space'][:-1]) + '.WebHome'
@@ -382,6 +410,36 @@ def verify(mod):
         for a in p['attachments']:
             if a not in html:
                 problems.append(f'{ref}: image {a} is not in the rendered HTML')
+        diagrams = p['content'].count('{{plantuml')
+        if diagrams:
+            problems.extend(check_diagrams(ref, diagrams, html))
+    return problems
+
+
+def check_diagrams(ref, expected, html):
+    """Prove a page's `{{plantuml}}` diagrams actually rendered.
+
+    The macro renders asynchronously: the first HTML carries only `<div class="xwiki-async">`, so
+    `verify`'s `Failed to execute the [` and `rendering-error` markers can never fire on a diagram
+    and a page publishes green with a diagram that shows nothing. Re-fetch until the macro output is
+    inlined, then fetch the image it points at.
+    """
+    problems, images = [], []
+    for _ in range(10):
+        images = re.findall(r'src="([^"]*/tmp/plantuml/[^"]+)"', html)
+        if len(images) >= expected:
+            break
+        time.sleep(3)
+        st, _, b = x.call(x.viewurl(ref), accept='text/html')
+        if st == 200:
+            html = b.decode('utf-8', 'replace')
+    if len(images) < expected:
+        problems.append(f'{ref}: {len(images)}/{expected} plantuml diagram(s) rendered')
+    for src in images:
+        url = src if src.startswith('http') else '/'.join(x.VIEW.split('/')[:3]) + src
+        st, _, body = x.call(url, accept='*/*')
+        if st != 200 or len(body) < 500:
+            problems.append(f'{ref}: diagram {src} -> {st} ({len(body)} bytes)')
     return problems
 
 

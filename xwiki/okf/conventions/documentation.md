@@ -164,13 +164,12 @@ replace a paragraph:
 - **Developer pages: code examples.** A runnable snippet (script macro, Java API call, REST request,
   configuration file) shows in five lines what a paragraph struggles to say. Use the code macro with an
   explicit `language`.
-- **Explanation pages: a diagram, when there is a structure to show.** An Explanation has no UI steps to
-  screenshot, but one that discusses **design or architecture** is often carried by an **architecture
-  diagram** — components and what flows between them — especially for a Developer audience. For a User
-  audience, prefer a diagram that reads without technical vocabulary: a lifecycle, a state or workflow
-  diagram, a decision tree between alternatives, a before/after. Be creative about what actually
-  clarifies the concept. Diagrams use the **PlantUML macro with the `bluegray` theme** (see below), so
-  the source stays editable in the page.
+- **Explanation pages: a diagram, when there is a structure to show.** Four shapes need one: a
+  **component structure** (the parts and what flows between them), a **request or data flow**, a
+  **lifecycle or state machine**, and a **decision between alternatives**. Three do not: a risk or
+  policy narrative, a page defining a single idea, and a FAQ-shaped page. Decide by shape, not by
+  audience — but for a User audience draw it without technical vocabulary. Diagrams use the
+  **PlantUML macro with the `bluegray` theme** (see below), so the source stays editable in the page.
 - **Do not force it.** This is a strong default, not a checkbox: a short Explanation of a single concept,
   a small Reference table, a FAQ-shaped page can be perfectly complete with no visual at all. A
   decorative screenshot, a diagram of something that is not a structure, or a snippet added to satisfy
@@ -393,7 +392,9 @@ These rules decide whether a page renders as intended, so they belong to authori
   in**, a misuse the guide's
   [WCAG](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/wcag/) page names
   explicitly (the capture version belongs nowhere on the page: a stale screenshot is replaced, not
-  dated).
+  dated). **Trap: xwiki.org stores the `alt` but renders the file name in its place** — on every page
+  of the tree, not only new ones — so alt text currently reaches no screen reader. Write it anyway:
+  it is the documented form, and the text is in the page for the day the macro honours it.
 - **In the `documentation` space `size` is mandatory and `width` is forbidden.** The quality checker
   rejects the image otherwise: *"Best practice: The Image macro, when used in the "documentation"
   space, must specify a 'size' parameter and no 'width' one."* A screenshot therefore **cannot** be

@@ -112,11 +112,19 @@ through the rest of the block, a URL inside `##…##`, a single-brace `{macro}` 
 halves every `{{`, and the halved macro renders as literal text), an absolute URL to a farm subwiki
 (renders external and is **never indexed as a backlink**), a `caption` carrying the capture version,
 a title repeating the page type or the audience, an image without `size`/`alt`, an attachment
-declared but not shown (or shown but not declared), a How-to with no result-step screenshot or with
-a screenshot on only a minority of its steps, a topic page that is not an Explanation linking to its
-Extensions-wiki page. Its last two checks are **cross-page** — several pages opening with the same
-step, one attachment name declared by several pages — and are why the whole set is linted rather than
-one page.
+declared but not shown (or shown but not declared), a How-to with no result-step visual or with one
+on only a minority of its steps, a topic page that is not an Explanation linking to its
+Extensions-wiki page. What counts as that visual follows the audience: a **screenshot**, except on a
+`target=developer` page, where it is a **code example** — a Developer procedure has no UI to shoot,
+and asking it for screenshots is what leaves a correct page permanently reported as broken. One rule
+is advisory: an Explanation that is not a hub and shows nothing at all. Its last two checks are
+**cross-page** — several pages opening with the same step, one attachment name declared by several
+pages — and are why the whole set is linted rather than one page.
+
+`lint` reads the fields with `{{code}}`/`{{plantuml}}` bodies blanked, and that blanking has to drop
+**complete inline pairs from a line before deciding whether the line opens a block**: the house style
+writes an inline `{{code}}man{{/code}}` in most paragraphs, and a scanner testing the opening pattern
+first treats one as an opener that never closes, blanking the rest of the field from every check.
 
 **`save`** — writes attachments *before* content, so no revision is ever saved with a dangling image;
 then reads every field back, because **a `202` does not mean the write landed** (a property write
@@ -132,7 +140,11 @@ stored string back only proves it was stored.
 **`verify`** — checks title, content, syntax, hidden flag, object counts and every structure field
 against the source, then **both** checker surfaces: the `DocumentationViolationClass` objects, *and*
 the rendered HTML — some findings, the mandatory-`size` rule among them, create no object and appear
-only as an inline error box, so an object-only check calls a broken page clean.
+only as an inline error box, so an object-only check calls a broken page clean. A `{{plantuml}}`
+diagram needs a third pass: the macro renders **asynchronously**, so the first HTML holds only
+`<div class="xwiki-async">` and neither error marker can ever fire on a diagram. `verify` re-fetches
+until the macro output is inlined and then fetches the image itself, which is the only way a page
+published with a diagram that renders nothing does not pass every check.
 
 **`docplan.py`** — a conversion runs one task per session, so every session opens by re-deriving
 where it is. Done by hand that is `PLAN.md` read in five or six `sed` chunks plus the task file,

@@ -24,3 +24,6 @@ CLAUDE.md
 # Eval suite — untracked while the harness is being tried out. It carries its own package.json,
 # so the repo itself stays dependency-free in git.
 evals/
+
+# Python bytecode from running the skills' tools
+__pycache__/
