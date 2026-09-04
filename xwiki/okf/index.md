@@ -211,7 +211,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
   `parent-platform` moving `${platform.version}`.
 
 ### processes/
-- **release** — how XWiki versions/releases (Commons+Rendering+Platform together); detailed steps are
+- **release** — how XWiki versions/releases (Commons+Rendering+Platform together), and which stable
+  branches a fix may be backported to (the cycle−2 branch is security-only); detailed steps are
   volatile pointers to the dev wiki.
 - **security-policy** — CVSS-4 severity scoring (volatile; verify) and the durable rule never to
   reveal a vulnerability publicly until disclosure (obfuscated commits, restricted JIRA issues); plus
