@@ -392,9 +392,11 @@ These rules decide whether a page renders as intended, so they belong to authori
   in**, a misuse the guide's
   [WCAG](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/wcag/) page names
   explicitly (the capture version belongs nowhere on the page: a stale screenshot is replaced, not
-  dated). **Trap: xwiki.org stores the `alt` but renders the file name in its place** — on every page
-  of the tree, not only new ones — so alt text currently reaches no screen reader. Write it anyway:
-  it is the documented form, and the text is in the page for the day the macro honours it.
+  dated). **Trap: the `alt` is accepted and then dropped.** On xwiki.org `{{image}}` is a wiki macro
+  of the Documentation Application (`DocApp.Code.ImageMacro`) that declares an `alt` parameter and
+  never passes it to the image it renders, so every page of the tree renders its *file name* as the
+  alt text. Write it anyway: it is the documented form, and it is in the page for the day the macro
+  emits it.
 - **In the `documentation` space `size` is mandatory and `width` is forbidden.** The quality checker
   rejects the image otherwise: *"Best practice: The Image macro, when used in the "documentation"
   space, must specify a 'size' parameter and no 'width' one."* A screenshot therefore **cannot** be
