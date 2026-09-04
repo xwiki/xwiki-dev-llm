@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // SessionStart hook for the xwiki plugin.
 // Injects org-wide XWiki conventions as additionalContext, but ONLY when the current repo
-// belongs to the `xwiki` or `xwiki-contrib` GitHub org. Personal repos get nothing.
+// belongs to the `xwiki` or `xwiki-contrib` GitHub org, or to an org the developer named in
+// XWIKI_LLM_ORGS. Personal repos get nothing.
 // Written in Node (ships with Claude Code and Kimi Code) so it works on Windows, macOS and Linux.
 
 import { readFileSync } from "node:fs";
@@ -35,8 +36,17 @@ try {
   process.exit(0);
 }
 
-// Scope: only xwiki/* and xwiki-contrib/* repos (handles both SSH and HTTPS remotes).
-if (!/github\.com[:/](xwiki|xwiki-contrib)\//.test(remote)) {
+// Scope: the two upstream orgs, plus any the developer adds in XWIKI_LLM_ORGS (comma- or
+// whitespace-separated) — for a company or fork that follows the same conventions in its own
+// GitHub org. Names are taken literally (regex-escaped) and matched case-insensitively, since
+// GitHub org names are; the match handles both SSH and HTTPS remotes.
+const orgs = [
+  "xwiki",
+  "xwiki-contrib",
+  ...(process.env.XWIKI_LLM_ORGS || "").split(/[,\s]+/).filter(Boolean)
+];
+const orgPattern = orgs.map(org => org.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+if (!new RegExp(`github\\.com[:/](?:${orgPattern})/`, "i").test(remote)) {
   process.exit(0);
 }
 

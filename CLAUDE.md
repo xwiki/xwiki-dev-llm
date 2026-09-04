@@ -63,10 +63,11 @@ Inside `xwiki/`:
   Code; it is injected at runtime (see hook below).
 - **`scripts/inject-org-instructions.mjs`** + **`hooks/hooks.json`** — a `SessionStart` hook that
   injects `xwiki-org.md` as `additionalContext`, **scoped by git remote**: it runs `git remote
-  get-url origin` and only injects when the remote matches `github.com[:/](xwiki|xwiki-contrib)/`.
-  Personal repos and non-git dirs get nothing. Written in Node (which Claude Code ships) so it is
-  cross-platform with no bash/`jq` dependency. If you change the scoping rule, it is the single
-  regex in this script.
+  get-url origin` and only injects when the remote's org is `xwiki`, `xwiki-contrib`, or one the
+  developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
+  case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
+  Code ships) so it is cross-platform with no bash/`jq` dependency. If you change the scoping rule,
+  it is the `orgs` array and the regex built from it in this script.
 - **`.mcp.json`** — MCP servers: `discourse` (forum.xwiki.org), `develocity`
   (community.develocity.cloud — XWiki's build scans) and `sonarqube` (SonarCloud via Docker). All
   three read their credentials from the environment via `${VAR}` expansion — never hardcode

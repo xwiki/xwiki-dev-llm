@@ -83,7 +83,8 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 ```
 
 > **Note — no git-remote scoping in opencode.** In Claude Code the org conventions are injected only
-> inside `xwiki/*` / `xwiki-contrib/*` repos (a remote-scoped `SessionStart` hook). opencode has no
+> inside `xwiki/*` / `xwiki-contrib/*` repos — and any org listed in `XWIKI_LLM_ORGS` — via a
+> remote-scoped `SessionStart` hook. opencode has no
 > equivalent hook, so with the *global* config the conventions load in every repo. Use the
 > *per-project* config if you need them scoped to XWiki repos only.
 
@@ -92,7 +93,8 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 - **Org-wide conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all
   repos". In Claude Code and Kimi Code it is injected into every session by a `SessionStart` hook
   (`xwiki/scripts/inject-org-instructions.mjs`), **scoped by git remote** so it only applies inside
-  `xwiki/*` and `xwiki-contrib/*` repos (never in personal projects). The hook is written in Node
+  `xwiki/*` and `xwiki-contrib/*` repos (never in personal projects) — plus any other GitHub org you
+  name in `XWIKI_LLM_ORGS`, for a company or fork following the same conventions. The hook is written in Node
   (which ships with Claude Code), so it works on Windows, macOS and Linux without a bash or `jq`
   dependency. In opencode it is loaded via the `instructions` config entry (not remote-scoped — see
   the opencode install note above).
@@ -185,6 +187,7 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 | Variable                | Used by   | Notes                                              |
 |-------------------------|-----------|----------------------------------------------------|
 | `XWIKI_LLM_HOME`        | opencode  | Absolute path to your `xwiki-dev-llm` checkout. **opencode only** (Claude Code and Kimi Code resolve paths themselves). |
+| `XWIKI_LLM_ORGS`        | Claude Code, Kimi Code | Extra GitHub orgs, comma- or whitespace-separated (e.g. `acme-corp,acme-labs`), whose repos should also get the org conventions injected. Optional — `xwiki` and `xwiki-contrib` always match. Not used by opencode, which has no remote scoping. |
 | `XWIKI_LLM_WORK`        | all hosts | Absolute path to the work directory for plans, handoffs, drafts and other cross-session state. Optional — defaults to `~/.xwiki-llm/work`. |
 | `SONARQUBE_TOKEN`       | sonarqube | Your personal SonarCloud token (same for all repos). |
 | `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
