@@ -160,8 +160,13 @@ the procedure, what the deletion wizard does and does not repoint, and the triag
 
 ## Review checklist
 
-When reviewing a page, verify and report against these (each finding should cite the rule it relates
-to; confirm against the live guide when borderline):
+Apply it **page by item**: every item against every page, and record the ones that came back clean
+alongside the findings. A checklist run as a list of things to look for stops at the pages that
+already have findings, and "not looked at" then reads exactly like "no finding". `docpages.py lint`
+covers only the mechanical subset, so an item it cannot decide — duplication, verbosity, whether a
+visual is missing — is only covered if this pass covers it.
+
+Each finding cites the rule it relates to; confirm against the live guide when borderline.
 
 - [ ] **Type** — clearly one Diataxis type (not mixing How-to + Reference + …) with a target audience.
 - [ ] **Title** — follows the verb rule for its type; Tutorial titles are specific.
@@ -170,10 +175,16 @@ to; confirm against the live guide when borderline):
       inline explanations.
 - [ ] **Result step** — a How-to/Tutorial's **last step shows the result** (what the reader should now
       see), normally with a screenshot; the list does not stop at the final action.
-- [ ] **Shows, not only tells** — User/Administrator pages have **screenshots** of the UI they describe;
-      Developer pages have **code examples**; an Explanation about design/architecture has a diagram where
-      there is a structure to show. Flag a *missing* visual only where it would replace or clarify prose —
-      and flag a **gratuitous** one too.
+- [ ] **Shows — User/Administrator** — **screenshots** of the UI the page describes, on the steps that
+      need them.
+- [ ] **Shows — Developer** — **code examples**, and a result step showing the **produced output**
+      rather than a screenshot of a UI the page does not have.
+- [ ] **Shows — Explanation** — a **diagram** where there is a component structure, a request or data
+      flow, a lifecycle or a decision between alternatives; none for a risk narrative, a
+      single-concept definition or a FAQ-shaped page.
+- [ ] **No gratuitous visual** — flag a decorative screenshot, a diagram of something that is not a
+      structure, or a snippet added to satisfy a rule. The test is whether it replaces or clarifies
+      something the prose does badly.
 - [ ] **Verbosity** — no sentence survives that the reader does not need in order to act; no paragraph
       restates the next section, motivates the feature at length, or describes what a screenshot shows.
 - [ ] **Hub pages link** — a landing/hub page **names and links every page it introduces** (in the prose
