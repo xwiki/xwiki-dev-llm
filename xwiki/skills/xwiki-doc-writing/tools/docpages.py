@@ -185,6 +185,42 @@ def lint(mod):
                             f'example) — add one where there is a structure, a flow, a lifecycle '
                             f'or a choice between alternatives to show')
 
+        # "Prefer tables" for a Reference. Both rules are advisory, and both catch one defect in the
+        # two shapes it takes: member-by-member data written as prose. The guide's Reference clause
+        # is two-sided — prefer tables, use code examples for API references — and the second half
+        # reads as licence for the prose shape until you notice that a bare signature is a *column*,
+        # not an example: what that clause asks an API reference to document (parameters, types,
+        # defaults, return value) is exactly a row.
+        if p['type'] == 'reference':
+            body = strip_verbatim(p['content'])
+            # One section per member and no table anywhere. `{{code` deliberately does NOT clear
+            # this — a page of headings each holding one signature is the defect, not the cure. An
+            # image or a diagram does clear it: a section per member earns its place when each one
+            # carries something no cell can hold, as on a Reference showing one screenshot per
+            # option.
+            if not re.search(r'(?m)^\|', p['content']) \
+                    and not re.search(r'\{\{(image|plantuml)', p['content']):
+                levels = {}
+                for m in re.finditer(r'(?m)^(=+) ', body):
+                    levels[m.group(1)] = levels.get(m.group(1), 0) + 1
+                level, sections = max(levels.items(), key=lambda kv: kv[1], default=('', 0))
+                if sections >= 3:
+                    problems.append(f'{name}: reference has {sections} `{level}` sections and no '
+                                    f'table — member-by-member data is a table, and a signature is '
+                                    f'a column, not a code example')
+            # A `name: meaning` bullet list is a two-column table written as prose. This catches the
+            # page that has tables elsewhere, which the rule above cannot see. It reads the raw
+            # content, not `body`: the inline `{{code}}` pairs this matches on are exactly what
+            # `strip_verbatim` drops from a line.
+            runs, run = [0], 0
+            for line in p['content'].split('\n'):
+                run = run + 1 if re.match(r'^\* \{\{code\}\}[^{]+\{\{/code\}\}[^:]{0,20}:',
+                                          line) else 0
+                runs.append(run)
+            if max(runs) >= 3:
+                problems.append(f'{name}: reference states {max(runs)} members as a '
+                                f'`name: meaning` bullet list — that is a table')
+
         if name in (p['ref'] for p in mod.ALL):
             parent = '.'.join(p['space'][:-1]) + '.WebHome'
             if parent not in refs:            # a root of this page set = a topic page

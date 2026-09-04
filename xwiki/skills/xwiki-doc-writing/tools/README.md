@@ -116,8 +116,13 @@ declared but not shown (or shown but not declared), a How-to with no result-step
 on only a minority of its steps, a topic page that is not an Explanation linking to its
 Extensions-wiki page. What counts as that visual follows the audience: a **screenshot**, except on a
 `target=developer` page, where it is a **code example** — a Developer procedure has no UI to shoot,
-and asking it for screenshots is what leaves a correct page permanently reported as broken. One rule
-is advisory: an Explanation that is not a hub and shows nothing at all. Its last two checks are
+and asking it for screenshots is what leaves a correct page permanently reported as broken. Three
+rules are advisory: an Explanation that is not a hub and shows nothing at all, and the two shapes in
+which a Reference writes member-by-member data as prose instead of a table — a section per member
+(heading, signature, one line, repeated) and a `name: meaning` bullet list. A page whose repeated
+sections each carry an **image or a diagram** is exempt from the first of those, because that content
+does not fit a cell; `{{code}}` deliberately does **not** exempt it, since a page of bare signatures
+is the defect rather than the cure. Its last two checks are
 **cross-page** — several pages opening with the same step, one attachment name declared by several
 pages — and are why the whole set is linted rather than one page.
 

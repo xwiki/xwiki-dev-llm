@@ -142,6 +142,16 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
   check says so.
 - **Reference** — prefer **tables**, keep information concise; use **code examples** for API
   references, documenting each element's parameters, types, supported/default values and return value.
+  The two halves of that sentence are not alternatives, and reading the second as licence to drop the
+  first is the observed failure: **a bare signature is a table *column*, not a code example**. Parameters,
+  types, defaults and return value are precisely what a row holds, so an API reference's members go in
+  **one table** (`|=Member |=Returns |=Default |=What it does`), and the code example is reserved for
+  something a cell cannot hold — a usage snippet, a builder call, a whole role interface. A **section per
+  member** (heading + signature + a line of prose, repeated) is the shape to avoid: it costs a page seven
+  screens to say what a seven-row table says in one, and it stays invisible to review because each section
+  reads fine on its own. It earns its place only when every section carries something no cell can hold, such
+  as a screenshot per option. Same defect, second shape: a `name: meaning` **bullet list** is a two-column
+  table written as prose. Both are flagged, advisory, by `docpages.py lint`.
 - **Explanation** — explain concepts, limitations, consequences, and background; link to the How-tos
   applying the concept and the References pinning down its details.
 - **A topic page** — top of a tree, with children — **must be an Explanation whose first sentence
@@ -232,8 +242,8 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   delete it, and do not "compress" it into a subordinate clause. Restating what the next section
   already says, motivating the feature at length, and describing what the reader can see on screen are
   the three that inflate a page most. Prefer a **screenshot or a code example** over a paragraph
-  wherever one will do (see "Every page shows something" above), a **table** over prose in a Reference,
-  and a **link** over a summary.
+  wherever one will do (see "Every page shows something" above), a **table** over prose in a Reference
+  (see "Content rules per type" for the two prose shapes that hide a table), and a **link** over a summary.
 - **A hub page's job is to route, not to narrate.** An extension/topic landing page that explains the
   feature in several paragraphs but never links to its own How-to, Reference and Explanation pages has
   failed at the one thing it exists for. Every page it introduces is **named and linked** (in the prose,
