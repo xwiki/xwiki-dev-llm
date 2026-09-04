@@ -163,6 +163,7 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
     **Explicit invocation only** — it is not used for a plain "review this" (that stays a normal,
     cheap review); ask for it by name (`/xwiki-review`) when you want the expensive full pass.
   - `xwiki-jira` — view/search/create/update/transition issues on jira.xwiki.org (jira-cli or REST).
+  - `xwiki-openproject` — search/view/create/update/comment on work packages in op.xwiki.org (OpenProject) over REST API v3, with the `/form` dry run before every write.
   - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.
   - `xwiki-javadoc` — write clear, useful Javadoc following the XWiki Java Code Style and Oracle conventions.
   - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
