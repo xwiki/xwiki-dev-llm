@@ -83,8 +83,11 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S6213`** "rename this method/variable to not match a restricted identifier" (`record`, `yield`,
   `var`) — a rename of a public method or field is an API change, and the XWiki pool sits on
   `record(…)` methods of the `*QuestionRecorder` classes. Not a cleanup.
-- **`S4144`** "implementation is identical to method X" — deduplicating two methods that legitimately
-  mean different things is a design decision.
+- **`S4144`** "implementation is identical to method X" — **not a whole-rule drop; the pool splits on
+  the flagged pair's NAMES.** When the two names describe the *same* operation the duplication is
+  deliberate and extracting one private helper clears it with no signature or behaviour change. When
+  they describe *different* operations the identical body is a defect, not duplication, and fixing it
+  is a behaviour change: report it in the PR body and leave the issue open.
 - **`S115`** constant naming, **`S1214`** constants-in-interface — cross-module renames, breaking.
 - **`S1845`** name differing only by capitalization — a cross-module rename of published API.
 - **`S2447`** "return null from a Boolean method" — in XWiki **script services** returning `null` is a
