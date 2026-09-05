@@ -178,6 +178,27 @@ The dense sites are the declaration preamble of long legacy methods (`XWiki.java
 un-wrap it entirely rather than keeping a half-split declaration. Nothing about scoping or
 initialisation order changes, so there is no drop condition beyond a comment on the line.
 
+## S5993 — an `abstract` class's constructor should not be `public`
+
+`public Foo(` → `protected Foo(` on the flagged line, one keyword, nothing else. **This is not a
+backward-compatibility break, in any package.** For an abstract class there are exactly two ways to
+reach a constructor and [JLS §6.6.2.2] permits both on a `protected` one from *any* package: a
+`super(…)` call in a subclass, and `new AbstractX(…){…}`. The one form it forbids across packages,
+plain `new AbstractX(…)`, is already illegal on an abstract class — so no compilable caller exists
+that the change can break. `revapi:check` agrees on published, non-`internal` API: XWiki's
+`revapi.json` reclassifies all *source*-compatibility differences to EQUIVALENT severity, and this is
+a source-only change.
+
+- The line grows by 3 characters — re-check the 120-column rule and re-wrap the parameter list if
+  needed (~1 site in 40).
+- Assert the enclosing class really is `abstract` before writing.
+- Nothing else changes: no import, no signature, no `@since`.
+- Only drop condition beyond the universal ones: the flagged **declaration line already carries an
+  open method-metric issue** (`S3776`, `S107`, `S1541`), which rewriting it would hand to your own
+  PR's quality gate. See [[verification]].
+
+[JLS §6.6.2.2]: https://docs.oracle.com/javase/specs/jls/se21/html/jls-6.html#jls-6.6.2.2
+
 ## S6355 — `@Deprecated` should carry `since`
 
 **Fixable whenever the element's own `@deprecated` Javadoc tag names the version** — which in XWiki it
