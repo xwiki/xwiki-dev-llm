@@ -6,9 +6,9 @@ summary: How XWiki rates security issues (CVSS 4) and the rule that a vulnerabil
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
 verify: |
-  The CVSS thresholds and the privileges-required mapping can be refined by the community — do not
-  quote the numbers below as gospel. Re-read the Security Policy page (the `sources:` URL) when the
-  exact scoring matters.
+  Every CVSS metric value and the Critical/Major threshold are set by policy and can be refined by
+  the community. Never score from the values below: read the Security Policy's "Best practices for
+  computing CVSS" section (linked in the scoring section) and take each metric from it.
 ---
 
 # Security severity & disclosure process
@@ -49,18 +49,30 @@ git remote remove ghsa-xxxx-xxxx-xxxx
 The squash commit's message defaults to every original message concatenated — replace it with one
 clean (obfuscated) message. Finish with **"Delete temporary private fork"** on the GitHub advisory.
 
-## Severity scoring — CVSS 4 (volatile thresholds — verify)
+## Severity scoring — CVSS 4 (read the source before scoring)
 
-Severity is computed with a CVSS 4 calculator. As policy *structure* (re-verify the exact numbers):
+XWiki **fixes several metric values by policy**, and they do not match a calculator's defaults or
+generic CVSS instinct. So never score from memory: read
+[Best practices for computing CVSS](https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/#HBestpracticesforcomputingCVSS)
+first and take **every** metric from it, then compute with a CVSS 4 calculator. What follows is the
+shape to expect, and where the traps are — not a substitute for that read.
 
-- **Critical** vs **Major** is split by the CVSS score (Critical at the higher band); a committer may
-  raise to Critical below the threshold for high system impact or another strong argument, and an
-  actively-exploited issue may be classed **Blocker**.
+- **Attack Vector** is always **Network**.
 - **Privileges Required** maps CVSS's discrete scale to XWiki's continuum of rights:
   *None* = doable by Guest (incl. Guest with Comment right); *Low* = a registered user with standard
   rights; *High* = needs more than standard rights (e.g. Script right on 14.10+, space admin, wiki
   Delete). "Standard rights" means the bundled XWiki Standard scheme.
-- For an **XSS** vulnerability, Confidentiality and Integrity impact are both set to **High**.
+- **XSS** fixes the impacts on *both* systems: vulnerable-system C/I/A all **High**, but
+  subsequent-system C/I **Low** and A **None**. The trap: high *subsequent* impact asserts the
+  finding is code execution rather than XSS, so it must be established, never assumed.
+- When **Script right is required to exploit** (or a right implying it), **all** impacts drop to
+  **Low** — script right is powerful already, so escalating from it is not scored as critical. This
+  is about the right the attack *needs*, not the right it *yields*.
+- **Attack Complexity**, **Attack Requirements** and **User Interaction** have no XWiki best practice
+  — use the official CVSS definitions. Merely *viewing* a page is **passive** interaction, not none.
+- **Critical** vs **Major** is split by the CVSS score (Critical at the higher band); a committer may
+  raise to Critical below the threshold for high system impact or another strong argument, and an
+  actively-exploited issue may be classed **Blocker**.
 
 ## Related
 
