@@ -63,12 +63,19 @@ contain the tag it uses. Nothing warns; it has to be got right by hand.
 
 ## Reading the enforced rights back in a test
 
-Assert what the platform will enforce, not the shape of the XML. `DocumentRequiredRightsManager`
-works in a `PageTest` with no mocks given three components on `@ComponentList`:
-`DefaultDocumentRequiredRightsManager`, `DocumentRequiredRightsReader` and
-`DefaultSimpleDocumentCache` (the manager injects a `SimpleDocumentCache`, absent from the page-test
-set). `getRequiredRights(reference)` returns an `Optional<DocumentRequiredRights>`, a record of
-`enforce()` plus a set of `DocumentRequiredRight(Right, EntityType)` — so an expectation reads as
+Assert what the platform will enforce, not the shape of the XML. In a `PageTest`, inject
+`DocumentRequiredRightsManager` and `loadPage` the page — **declare nothing on `@ComponentList`**:
+`MockitoOldcore` already mocks the manager with a stub that delegates to the real
+`DocumentRequiredRightsReader`, which `PageComponentList` already provides. Only the cache is mocked
+away, so the assertion still exercises the real object-to-right mapping.
+
+**Trap:** naming `DefaultDocumentRequiredRightsManager` on `@ComponentList` *replaces* that working
+mock with the real implementation, which then fails to instantiate — `Can't find descriptor for the
+component with type [SimpleDocumentCache]`. Adding `DefaultSimpleDocumentCache` to satisfy it works,
+but is three declarations bought to undo the first one.
+
+`getRequiredRights(reference)` returns an `Optional<DocumentRequiredRights>`, a record of `enforce()`
+plus a set of `DocumentRequiredRight(Right, EntityType)` — so an expectation reads as
 `(Right.ADMIN, EntityType.WIKI)` rather than as the string `"wiki_admin"`.
 
 ## Related
