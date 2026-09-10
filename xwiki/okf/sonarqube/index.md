@@ -78,8 +78,11 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S1948`** "make this non-static field `transient` or serializable" — the exact inverse of
   **`S2065`** and load-bearing for the same reason: XWiki serializes job statuses and requests with
   XStream, which honours `transient`, so adding it changes what gets persisted.
-- **`S2386`** "make this member `protected`" — reduces the visibility of a public static member →
-  Revapi `java.field.visibilityReduced`, the same break as **`S5993`**.
+- **`S2386`** "make this member `protected`" — that *one* remediation reduces the visibility of a
+  public static member → Revapi `java.field.visibilityReduced`. But the rule fires on the member's
+  **value** being mutable, so making the value immutable (`Arrays.asList(…)` → `List.of(…)`,
+  `new HashSet<>()` + a `static` block → `Set.of(…)` or `Collections.unmodifiableSet(…)`) clears it
+  with no declaration change at all. Not a denylisted rule: only the message's own suggestion is.
 - **`S6213`** "rename this **method**…" (`record`, `yield`, `var`) — a rename of a public method is an
   API change, and the pool sits on the `record(…)` methods of the `*QuestionRecorder` classes. The
   rule's *variable* half is a different matter and is **not** denylisted — see [[syntax-rules]].
