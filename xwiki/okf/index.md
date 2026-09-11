@@ -123,7 +123,9 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   `{{display}}`. The generic REST calls live in the `xwiki-rest-api` skill.
 
 ### architecture/
-- **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation.
+- **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation;
+  `AbstractEventListener` (fires on remote/cluster-replicated events too) vs. `AbstractLocalEventListener`
+  (local-node-only, override `processLocalEvent`) — ask when the right choice isn't obvious.
 - **macro-refactoring** — `MacroRefactoring` role (keyed by macro id) rewrites a macro's references on
   rename/move and extracts them for backlinks; `DefaultMacroRefactoring` is content-only (ignores parameters).
 - **wiki-application-data** — stored data in an XClass+wiki-page application: a non-multiSelect

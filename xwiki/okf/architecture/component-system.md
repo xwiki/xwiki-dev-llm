@@ -2,7 +2,8 @@
 title: The XWiki component system
 stability: durable
 summary: XWiki's dependency-injection model — roles (@Role interfaces), implementations (@Component),
-  registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints.
+  registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints. Also
+  covers choosing AbstractEventListener vs. AbstractLocalEventListener for cluster/remote-event behavior.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ComponentsTutorial
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Component+Module
@@ -51,6 +52,17 @@ dependency is known at development time.
 module, or a new one. A new module may depend on oldcore (the reverse would be a cycle); when oldcore
 turns out to need the new module, the oldcore code that uses it moves out instead. The end state is
 oldcore holding only the old Model, until the New Model replaces it and oldcore disappears.
+
+## Event listeners: local-only vs. cluster-wide
+
+An `org.xwiki.observation.EventListener` (typically via `AbstractEventListener`) runs for **every**
+occurrence of its event, including one that happened on another node of a cluster and was replicated
+remotely. When the listener's action must run only for the node where the event actually originated —
+because remote nodes will already reach the same effect independently (e.g. through their own copy of
+replicated data), or because running it again elsewhere would duplicate/misfire a side effect — extend
+`AbstractLocalEventListener` (`xwiki-platform-observation-remote`) instead and implement
+`processLocalEvent(Event, Object, Object)`; it silently drops remote-originated events for you. When it
+is not obvious which behavior an action needs, ask rather than defaulting to `AbstractEventListener`.
 
 ## Monitoring: expose it as a JMX MBean
 
