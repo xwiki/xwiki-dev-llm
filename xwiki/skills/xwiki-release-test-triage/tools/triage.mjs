@@ -5,10 +5,11 @@
  * branches. Fetching and correlating only: the judgement calls belong to the SKILL.md that runs it.
  */
 
-const CI = 'https://ci.xwiki.org';
+import {
+  buildRevision, enc, getJSON, isPseudoTest, outcomes, releaseTrainJobs, testResults, testedBuilds
+} from '../../../scripts/jenkins.mjs';
+
 const JIRA = 'https://jira.xwiki.org';
-// Cloudflare serves a challenge page to browser user-agents; see okf/servers/jenkins.md.
-const HEADERS = { 'User-Agent': 'curl/8.7.1', Accept: 'application/json' };
 // "Flickering tests" (filter 14240), the list the Release Plan links to.
 const FLICKER_JQL = 'labels = flickering AND status in (Open, "In Progress", Reopened)';
 // The JIRA field holding the fully-qualified test, e.g. a.b.AllIT$NestedFooIT#bar.
@@ -42,111 +43,16 @@ function parseArgs(argv) {
   return out;
 }
 
-async function getJSON(url) {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const res = await fetch(url, { headers: HEADERS });
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch (e) {
-      if (attempt === 3) throw new Error(`${url}: ${e.message}`);
-      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-    }
-  }
-}
-
-const enc = s => encodeURIComponent(s);
-const tree = s => s.replace(/\[/g, '%5B').replace(/\]/g, '%5D');
-
-/** The jobs that gate a release: the main build of each repo, plus platform's environment matrix. */
-function jobs(repos, branch) {
-  const list = repos.map(repo => ({ label: repo, url: `${CI}/job/XWiki/job/${repo}/job/${enc(branch)}` }));
-  if (repos.includes('xwiki-platform')) {
-    list.push({
-      label: 'env-tests',
-      url: `${CI}/job/XWiki%20Environment%20Tests/job/xwiki-platform/job/${enc(branch)}`
-    });
-  }
-  return list;
-}
-
-/** The last `count` builds that produced test results, newest first: ABORTED builds report none. */
-async function testedBuilds(jobUrl, count) {
-  const data = await getJSON(`${jobUrl}/api/json?tree=${tree('builds[number,result,actions[failCount,totalCount]]')}`);
-  const builds = [];
-  for (const build of data?.builds || []) {
-    const junit = (build.actions || []).find(action => action && action.totalCount != null);
-    if (junit) builds.push({ number: build.number, result: build.result, ...junit });
-    if (builds.length === count) break;
-  }
-  return builds;
-}
-
-/** Which tests ran, and which of them failed, in one build. Cheaper than the full report. */
-async function outcomes(buildUrl) {
-  const data = await getJSON(`${buildUrl}/testReport/api/json?tree=${tree('suites[cases[className,name,status]]')}`);
-  const ran = new Set();
-  const failed = new Set();
-  for (const suite of data?.suites || []) {
-    for (const testCase of suite.cases || []) {
-      const id = idOf(testCase.className, testCase.name);
-      if (testCase.status !== 'SKIPPED') ran.add(id);
-      if (testCase.status === 'FAILED' || testCase.status === 'REGRESSION') failed.add(id);
-    }
-  }
-  return { ran, failed };
-}
-
-/** The environment of a suite, e.g. "MariaDB latest, Jetty 12-jdk25, S3, Firefox". */
-function environmentOf(suite) {
-  const blocks = suite.enclosingBlockNames || [];
-  const name = blocks[blocks.length - 1] || '';
-  const env = name.split(' - Docker tests')[0].trim();
-  return env && env !== name ? env : 'default';
-}
-
-/**
- * Jenkins names a case "method(Arg, Arg)", and "[2]" for one invocation of a parameterized test.
- * The bare "class#method" is what the JIRA field holds and what makes the invocations one row.
- */
-const idOf = (className, name) => `${className}#${name.replace(/\([^)]*\)/g, '').replace(/\[\d+\]$/, '')}`;
-// A whole-class setup failure or a forbidden-log assertion, not a test method.
-const isPseudoTest = id => /#(initializationError|executionError)$/.test(id);
-
-async function testResults(buildUrl) {
-  const data = await getJSON(
-    `${buildUrl}/testReport/api/json?tree=${tree('suites[enclosingBlockNames,cases[className,name,status,errorDetails]]')}`);
-  const byTest = new Map();
-  for (const suite of data?.suites || []) {
-    const env = environmentOf(suite);
-    for (const testCase of suite.cases || []) {
-      const id = idOf(testCase.className, testCase.name);
-      if (!byTest.has(id)) byTest.set(id, { id, failed: new Set(), ran: new Set(), skipped: new Set(), detail: '' });
-      const test = byTest.get(id);
-      if (testCase.status === 'SKIPPED') test.skipped.add(env);
-      else test.ran.add(env);
-      if (testCase.status === 'FAILED' || testCase.status === 'REGRESSION') {
-        test.failed.add(env);
-        if (!test.detail) test.detail = (testCase.errorDetails || '').split('\n')[0].slice(0, 200);
-      }
-    }
-  }
-  return byTest;
-}
-
-/** The commit the build actually ran, and how far the branch has moved since (when run in the repo). */
-async function revision(buildUrl, branch) {
-  const data = await getJSON(`${buildUrl}/api/json?tree=${tree('actions[lastBuiltRevision[SHA1,branch[name]]]')}`);
-  const revisions = (data?.actions || []).filter(action => action?.lastBuiltRevision).map(a => a.lastBuiltRevision);
-  const rev = revisions.find(r => (r.branch || []).some(b => (b.name || '').endsWith(branch)));
-  if (!rev) return null;
+/** The commit the build ran, and how far the branch has moved since (when run inside the clone). */
+async function revision(buildUrl, repo, branch) {
+  const sha = await buildRevision(buildUrl, repo);
+  if (!sha) return null;
   const { execSync } = await import('node:child_process');
   try {
-    const behind = execSync(`git rev-list --count ${rev.SHA1}..origin/${branch}`, { stdio: ['ignore', 'pipe', 'ignore'] });
-    return { sha: rev.SHA1, behind: Number(behind.toString().trim()) };
+    const behind = execSync(`git rev-list --count ${sha}..origin/${branch}`, { stdio: ['ignore', 'pipe', 'ignore'] });
+    return { sha, behind: Number(behind.toString().trim()) };
   } catch {
-    return { sha: rev.SHA1, behind: null };
+    return { sha, behind: null };
   }
 }
 
@@ -185,11 +91,11 @@ async function collect(branch, repos, history = 0) {
     }
     return tests.get(id);
   };
-  for (const job of jobs(repos, branch)) {
+  for (const job of releaseTrainJobs(repos, branch)) {
     const [build, ...older] = await testedBuilds(job.url, Math.max(1, history));
     if (!build) { builds.push({ ...job, build: null }); continue; }
     const buildUrl = `${job.url}/${build.number}`;
-    builds.push({ ...job, build, history: older.length + 1, rev: await revision(buildUrl, branch) });
+    builds.push({ ...job, build, history: older.length + 1, rev: await revision(buildUrl, job.repo, branch) });
     for (const test of (await testResults(buildUrl)).values()) {
       const target = row(test.id);
       // Environments are namespaced by job so that the two jobs' "default" ones stay distinct.
