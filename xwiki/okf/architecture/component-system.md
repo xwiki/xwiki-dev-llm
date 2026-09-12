@@ -52,6 +52,14 @@ module, or a new one. A new module may depend on oldcore (the reverse would be a
 turns out to need the new module, the oldcore code that uses it moves out instead. The end state is
 oldcore holding only the old Model, until the New Model replaces it and oldcore disappears.
 
+## Event listeners: local-only vs. cluster-wide
+
+`AbstractEventListener` fires for every occurrence of its events, **including ones replicated from
+another cluster node**. When the action must run only where the event originated — remote nodes reach
+the same effect on their own, or re-running it there duplicates a side effect — extend
+`AbstractLocalEventListener` (`xwiki-platform-observation-remote`, so it adds that dependency) and
+implement `processLocalEvent` instead. Ask when the right choice is not obvious.
+
 ## Monitoring: expose it as a JMX MBean
 
 All XWiki monitoring APIs are implemented and exposed as **JMX MBeans**. Register them with XWiki's
