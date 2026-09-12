@@ -139,6 +139,20 @@ repos/<owner>/<repo>/security-advisories/<ghsa_id> --jq '.vulnerabilities'`, sam
   `org.xwiki.platform:xwiki-platform-oldcore`, `org.xwiki.platform:xwiki-platform-office-viewer`,
   `org.xwiki.platform:xwiki-platform-repository-rest-server`. More than one module affected → one
   **Affected product** entry per module, not a single combined one.
+- **Legacy counterpart:** when the vulnerable module has a backward-compatibility module that also
+  ships the vulnerable code, list it as its own **Affected product**, mirroring the main module's
+  ranges and patched versions one-for-one. These modules live under
+  `xwiki-platform-core/xwiki-platform-legacy/` and insert `legacy-` as an *infix* — the counterpart
+  of `xwiki-platform-oldcore` is `xwiki-platform-legacy-oldcore`, not `xwiki-platform-oldcore-legacy`.
+  It matters because the legacy artifact AspectJ-weaves the wrapped module's classes into itself
+  (`weaveDependencies` in its pom, with the wrapped module at `provided` scope), so it carries its
+  own copy of the vulnerable bytecode: an instance running the legacy jar is vulnerable, and a
+  scanner matching only the main artifact would report it as clean. Confirm it actually wraps the
+  vulnerable module rather than assuming from the name —
+  `grep -A5 weaveDependencies xwiki-platform-core/xwiki-platform-legacy/<legacy-module>/pom.xml` —
+  and skip it when the legacy module only re-exports unrelated deprecated APIs. Published precedent:
+  GHSA-57q2-6cp4-9mq3, GHSA-r38m-cgpg-qj69 and GHSA-3738-p9x3-mv9r all pair
+  `xwiki-platform-oldcore` with `xwiki-platform-legacy-oldcore` over identical ranges.
 - **Vulnerable version range:** XWiki advisories are consistently a single open-ended lower bound,
   `>= <oldest known affected version>`, with **no upper bound** — the flaw is present in every
   release up to the fix. Only add an upper bound if the vulnerable code path was independently
