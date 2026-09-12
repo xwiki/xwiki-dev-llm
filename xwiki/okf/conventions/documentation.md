@@ -395,9 +395,8 @@ Use the guide for the authoring rules, and that page for what each structure fie
   line structure, since there the code's formatting rules apply.
 - **Do not overuse the em dash (`—`)** — it is not a substitute for a comma, a period, a colon or
   parentheses. Use the mark the sentence actually needs; keep the em dash for a sharp interruption or
-  a genuine aside. **Exception:** inside a direct quote, dashes stay exactly as the source has them.
-  (Team authoring rule, not yet written up in the guide's DocumentationStyle page — do not drop it as
-  drift when syncing with the guide.)
+  a genuine aside. **Exception:** inside a direct quote, punctuation stays exactly as the quoted
+  source has it. Same source page, "Punctuation" section.
 
 ## Attachments, images and videos
 
