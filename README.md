@@ -177,6 +177,19 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   - `xwiki-legacy` — move a deprecated public API out of a main module into its `-legacy` companion (migrate callers, remove, re-add via a plain class or an AspectJ aspect, Revapi ignore).
   - `xwiki-fix-flickering-docker-test` — fix a flickering Docker-based functional test.
   - `xwiki-release-test-triage` — before a release, triage a branch's failing tests on ci.xwiki.org: rated across environments and recent builds, known flickers vs. unknown ones vs. real breakages, and whether each breakage is already fixed on another branch.
+  - `xwiki-ci-check` — **explicit invocation only**, and the only skill in the plugin that *acts* on
+    CI: the daily sweep of every maintained branch, turning what is red into incidents (test
+    breakage, build break, infra blip, absence), attributing each to the commit that caused it,
+    commenting on that commit, opening PRs for mechanical fixes, filing flicker issues that have
+    proven themselves, and posting a short digest to Matrix pointing at a PrivateBin paste. Designed
+    to be run by a scheduled routine before the working day; **writes are off unless the invocation
+    says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
+    acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —
+    that default mode analyses to the terminal, never posts the Matrix digest, asks before each of
+    the four writes it may make (paste, commit comment, flicker issue, fix PR), and needs no bot
+    credential to be useful.
+    Read-only CI questions go to `xwiki-release-test-triage` instead. See
+    `xwiki/skills/xwiki-ci-check/routine-prompt.md`.
   - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
   - `xwiki-rest-api` — read/write a running XWiki over REST: get page content & xobjects, update pages & object properties, create pages (with xobjects), Solr search.
   - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
@@ -211,6 +224,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 | `DISCOURSE_API_KEY`     | discourse | A forum.xwiki.org **admin** API key. Optional — without it the forum MCP is read-only. See "Forum write access" below. |
 | `DISCOURSE_API_USERNAME`| discourse | The forum username the admin API key acts as (e.g. your own). Required together with `DISCOURSE_API_KEY`. |
 | `DISCOURSE_USER_API_KEY` + `DISCOURSE_USER_API_CLIENT_ID` | discourse | Alternative to the admin key: a forum **user** API key, which any account can hold. |
+| `GH_TOKEN_BOT`          | `xwiki-ci-check` | The **bot** GitHub account's token, used for the commit comments and nothing else. Reads (commit/compare, existing comments) fall back to `GITHUB_TOKEN` / `GH_TOKEN`, since a read has no identity; **writing has no fallback** — `commit-comment.mjs` posts with this variable or refuses, so running the skill locally can never comment under your own name. **Issue a classic token with `public_repo`** (the `xwiki` org also rejects a fine-grained token whose lifetime exceeds 366 days, with a 403 on every request including plain reads). It is *not* what opens a fix PR: the bot has no push access to `xwiki/*`, and the PR is pushed by the Claude GitHub App installed on the org, as it is for the SonarQube routine. |
+| `MATRIX_USER_BOT`, `MATRIX_PASSWORD_BOT` | `xwiki-ci-check` | The bot's Matrix account, for the daily digest. **Prefer these over a token:** matrix.org issues short-lived access tokens (the `mat_` ones) that a client refreshes continuously, so one copied out of Element is dead within minutes and a 06:00 routine finds it expired every morning. `matrix.mjs` logs in per run instead, on a fixed device, and joins the room if it is not in it. |
+| `MATRIX_TOKEN_BOT`      | `xwiki-ci-check` | An access token, as an alternative — honoured when the homeserver still accepts it (Synapse's own tokens do not expire), and fallen back from to the password when it does not. Without either, the digest is printed instead of posted. |
+| `MATRIX_HOMESERVER`, `MATRIX_ROOM` | `xwiki-ci-check` | Optional — default to `https://matrix.org` (where the bot's *account* is) and `#xwiki:matrix.xwiki.com` (where the *room* is, whatever the account's server). A `#alias` is resolved to the internal room id automatically; an alias with no `:server` part gets the homeserver's, which is why the default is fully qualified. |
+| `JIRA_TOKEN_BOT`        | `xwiki-ci-check` | The bot's jira.xwiki.org token, for auto-filed flicker issues. The `xwiki-jira` skill reads `JIRA_API_TOKEN`, so the routine exports it from this one — keeping the bot's credential distinct from the developer's on the same machine. |
+| `XWIKI_CI_PASTE_URL`    | `xwiki-ci-check` | The PrivateBin instance the digest's detail is pasted to. Optional — defaults to `https://bin.xwikisas.com/`. |
 
 ### Setting `SONARQUBE_PROJECT_KEY` per repo
 

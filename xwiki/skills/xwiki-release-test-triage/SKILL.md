@@ -1,6 +1,6 @@
 ---
 name: xwiki-release-test-triage
-description: Triage the failing functional tests of an XWiki branch on ci.xwiki.org and say whether they block a release — the Release Plan's "verify that no tests are failing on the CI server, or that the failures are understood" step. Separates known flickers (open JIRA issues) from unknown flickers and from real breakages, checks whether each real breakage is already fixed on the other maintained branches, then reports and asks what to do. Use when preparing a release, or when asked to check/triage the CI or test status of a branch. To then fix one flicker use xwiki-fix-flickering-docker-test, to file its issue use xwiki-jira, to land a fix missing from a branch use xwiki-backport.
+description: Triage the failing functional tests of an XWiki branch on ci.xwiki.org and say whether they block a release — the Release Plan's "verify that no tests are failing on the CI server, or that the failures are understood" step. Separates known flickers (open JIRA issues) from unknown flickers and from real breakages, checks whether each real breakage is already fixed on the other maintained branches, then reports and asks what to do. Use when preparing a release, or when asked to check/triage the CI or test status of a branch — including any read-only question such as "is master green?" or "why is this test failing?". This skill never writes: to instead *act* on what is red across every maintained branch — attribute each failure to its commit, comment on it, file the flicker issue, open a fix PR — use xwiki-ci-check, which is explicit-invocation only. To then fix one flicker use xwiki-fix-flickering-docker-test, to file its issue use xwiki-jira, to land a fix missing from a branch use xwiki-backport.
 ---
 
 # Triage a branch's failing tests before releasing it
@@ -85,3 +85,7 @@ One table — test, verdict, known/unknown, where else it fails, and for each sy
 cause and whether it is test-only or product. Then state plainly whether anything blocks the
 release, and ask what to do. Hand off from there: `xwiki-fix-flickering-docker-test` to stabilise a
 flicker, `xwiki-jira` to file an unknown one, `xwiki-backport` for a fix missing from a branch.
+
+Everything above stops at the report. The skill that does any of it on its own — daily, across every
+maintained branch, commenting on the culprit commit — is `xwiki-ci-check`; it shares this skill's
+Jenkins client but not its contract.
