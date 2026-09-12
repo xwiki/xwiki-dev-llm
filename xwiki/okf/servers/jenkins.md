@@ -94,7 +94,15 @@ Consequences when reading their `testReport`:
   and `failedSince: <this build>` appear even though those earlier builds ran the same tests fine.
   Confirm a regression window by reading the preceding builds' own test summaries.
 - **`changeSets` can be empty** even for a build that picked up new commits. Get the truth from
-  `actions[lastBuiltRevision[SHA1]]` and diff that SHA against the previous build's.
+  `lastBuiltRevision` and diff that SHA against the previous build's — picking the right one of the
+  two, per the next trap.
+- **Every build carries *two* `lastBuiltRevision` actions**, because every job checks out the shared
+  `xwiki-jenkins-pipeline` library alongside the project it builds. **Select on the remote URL** —
+  ask for `actions[remoteUrls,lastBuiltRevision[SHA1]]` and keep the action whose `remoteUrls` names
+  the repo. Selecting on the *branch* name instead returns the library's revision, because the
+  library is itself built from `master`: reading a `master` build then yields the same constant SHA
+  for every build of every repo, and no error. The shared client in `scripts/jenkins.mjs`
+  (`buildRevision()`) does this correctly — use it rather than re-deriving the query.
 
 ## Diagnosing a functional (docker) test failure
 
