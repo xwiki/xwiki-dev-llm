@@ -2,8 +2,7 @@
 title: The XWiki component system
 stability: durable
 summary: XWiki's dependency-injection model — roles (@Role interfaces), implementations (@Component),
-  registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints. Also
-  covers choosing AbstractEventListener vs. AbstractLocalEventListener for cluster/remote-event behavior.
+  registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ComponentsTutorial
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Component+Module
@@ -55,14 +54,11 @@ oldcore holding only the old Model, until the New Model replaces it and oldcore 
 
 ## Event listeners: local-only vs. cluster-wide
 
-An `org.xwiki.observation.EventListener` (typically via `AbstractEventListener`) runs for **every**
-occurrence of its event, including one that happened on another node of a cluster and was replicated
-remotely. When the listener's action must run only for the node where the event actually originated —
-because remote nodes will already reach the same effect independently (e.g. through their own copy of
-replicated data), or because running it again elsewhere would duplicate/misfire a side effect — extend
-`AbstractLocalEventListener` (`xwiki-platform-observation-remote`) instead and implement
-`processLocalEvent(Event, Object, Object)`; it silently drops remote-originated events for you. When it
-is not obvious which behavior an action needs, ask rather than defaulting to `AbstractEventListener`.
+`AbstractEventListener` fires for every occurrence of its events, **including ones replicated from
+another cluster node**. When the action must run only where the event originated — remote nodes reach
+the same effect on their own, or re-running it there duplicates a side effect — extend
+`AbstractLocalEventListener` (`xwiki-platform-observation-remote`, so it adds that dependency) and
+implement `processLocalEvent` instead. Ask when the right choice is not obvious.
 
 ## Monitoring: expose it as a JMX MBean
 
