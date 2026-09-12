@@ -72,13 +72,14 @@ Take the `content` field (xwiki/2.1 syntax). Two parts of it matter:
   (`### Impact`, `#### CVSS Score Computation Details` table, `### Patches`, `### Workarounds`,
   `### References`, `### For more information`, `### Attribution`) verbatim; don't invent, drop, or
   reorder sections.
-- The **`= Severity =`** section above it has the CVSS banding (Critical at score ≥ 7, "Blocker" for
-  actively-exploited issues) and per-metric best practices — notably: Attack Vector is always
-  Network; the Privileges-Required mapping from XWiki rights to None/Low/High; the rule that any
-  vulnerability needing Script right (or higher) caps every impact metric at Low; and fixed
-  defaults for XSS (Confidentiality/Integrity/Availability = High, Subsequent = Low/Low/None) and
-  SSRF (Subsequent Confidentiality/Integrity = Low, Availability = Low). Use these to justify each
-  row of the CVSS table with a one-line comment, the way past advisories do.
+- The **`= Severity =`** section above it has the CVSS banding and the per-metric best practices.
+  Take every value from it, never from this skill or from generic CVSS instinct — the policy
+  constrains more metrics than a calculator's defaults suggest: Attack Vector, the mapping from
+  XWiki rights to Privileges Required, the cap that a right required to exploit puts on the impacts,
+  and the impact defaults fixed per vulnerability class (XSS and SSRF each have one, covering the
+  subsequent system as well as the vulnerable one). Use these to justify each row of the CVSS table
+  with a one-line comment, the way past advisories do. `okf/processes/security-policy.md` has the
+  traps to watch for when reading them.
 
 If the page has moved (404), rediscover it instead of guessing a new path:
 
