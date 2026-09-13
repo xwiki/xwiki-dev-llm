@@ -94,9 +94,16 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S1215`** `System.gc()` — the enclosing method is sometimes a deliberately exposed API (`$xwiki.gc()`).
 - **`S2696`** writing to a static field from an instance method — usually a lazy-init needing sync.
 - **`S2157`** "add `clone()`", **`S1113`** `finalize()` — API changes, not cleanups.
-- **`S2065`** remove `transient` — **load-bearing in XWiki**: job-status classes (`IndexerJob`,
-  `PDFExportJobStatus`, …) are serialized by the job-status store with XStream, which honours
-  `transient`. Removing it changes what gets persisted.
+- **`S2065`** remove `transient` — **load-bearing in XWiki, which makes it a SUPPRESSION pool, not a
+  drop**: `JobStatusSerializer#write` serializes a job status with `SafeXStream`, whose
+  `SafeReflectionProvider` delegates to the JVM reflection provider and therefore skips `transient`
+  — without ever reading `java.io.Serializable`. So the rule's premise is false here and removing the
+  modifier changes what gets persisted. Resolve it the way *Retiring an issue* below prescribes:
+  `@SuppressWarnings("java:S2065")` plus that reason, in the code. The per-site test is what is **not**
+  transient one level up (`AbstractJobStatus#progress`, `DistributionJobStatus#stepList`,
+  `AbstractExtension#repository`); where nothing above the field is serialized there is no true reason
+  to write, so leave those open — `AbstractJob`'s own `@Inject`ed fields are not `transient`, i.e. a
+  `Job` (as opposed to its *status*) is not serialized.
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
 - **`S5993`** reduce an abstract class's constructor to `protected` — **only outside an `internal`
   package**, where it is a real Revapi `java.method.visibilityReduced` break. Inside one it is a clean
