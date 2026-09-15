@@ -68,9 +68,9 @@ follows.
   `ByteArrayOutputStream`), which OOMs on real data. Full guidance: `okf/conventions/performance.md`.
 - `-legacy` modules only re-export deprecated APIs; public API changes are checked by Revapi. Rules:
   `okf/conventions/code-style.md`, `okf/conventions/backward-compatibility.md`.
-- **Comments:** describe the code as it is *now* and state the real reason inline; never justify by
-  history ("as it was before") or link transient resources (JIRA keys, forum/PR/commit URLs) — those
-  rot. Full policy: `okf/conventions/code-comments.md`.
+- **Comments:** describe the code as it is *now*, with the real reason inline so the comment outlives
+  its links; never justify by history ("as it was before"). An issue reference is optional and
+  carries the key *and* title. Full policy: `okf/conventions/code-comments.md`.
 
 ## Versioning new/deprecated APIs
 
@@ -92,7 +92,7 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `script-services`, `performance`, `logging`, `naming`,
-  `frontend`, `server-side-rendering`,
+  `frontend`, `server-side-rendering`, `velocity-code-style`,
   `translations`, `dependencies`; and the xwiki.org documentation rules — `documentation`,
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
