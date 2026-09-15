@@ -36,7 +36,9 @@ log call and silently changes what gets written into the job log.
 
 The cost here is almost entirely file reads while evaluating candidates. Rules:
 
-* **Discover cheaply before listing bodies.** First get the rule distribution without issue bodies:
+* **Discover cheaply before listing bodies.** First get the rule distribution without issue bodies
+  (the `issueStatuses=OPEN` filter is load-bearing — it is what hides the issues an open PR has
+  already claimed):
   `curl -s -u "$SONARQUBE_TOKEN:" "https://sonarcloud.io/api/issues/search?organization=xwiki&componentKeys=$SONARQUBE_PROJECT_KEY&issueStatuses=OPEN&severities=BLOCKER,CRITICAL&facets=rules&ps=1"`
   For an exact per-rule count read the response `total` from a `&rules=java:SXXXX&ps=1` query, not a
   facet value.
@@ -155,14 +157,20 @@ not blanket-denylist a rule that is fine elsewhere.
 
 ## Closing the issues
 
-**Never transition an issue the PR fixes.** SonarCloud closes it as FIXED on its own at the next
+**Accept the issues the PR fixes, as a claim on them.** Discovery filters on `issueStatuses=OPEN`,
+so an issue left open while a PR already handles it is picked up and fixed a second time by the next
+sweep. Accepting is what reserves it. SonarCloud still closes it as FIXED on its own at the next
 branch analysis after the merge — a `@SuppressWarnings` fix included, since the rule then stops
-raising it. *Accepted* means "won't fix": on a fixed issue it buys nothing, and hides a real defect
-from the quality gate if the PR never lands. Turning a red gate green before the merge is the
+raising it. Turning a red quality gate green before the merge is a separate question and is the
 developer's call — ask.
 
-Transition only a finding the code keeps as it is — `falsepositive` for one that is wrong,
-`accept` for one that is real but deliberately not worth fixing — with a comment saying why:
+**A claim is provisional: whatever the PR stops covering goes back to OPEN.** Reopen every issue it
+claimed when the PR is closed or abandoned, and exactly the dropped sites' issues when review or a
+quality-gate condition narrows it. A stale *Accepted* is worse than never having claimed: neither a
+later sweep nor a developer browsing open issues will ever see that finding again.
+
+Transition a finding the code keeps as it is with the same call — `falsepositive` for one that is
+wrong, `accept` for one that is real but deliberately not worth fixing — with a comment saying why:
 
 ```bash
 curl -s -u "$SONARQUBE_TOKEN:" -X POST "https://sonarcloud.io/api/issues/add_comment" \
@@ -171,7 +179,9 @@ curl -s -u "$SONARQUBE_TOKEN:" -X POST "https://sonarcloud.io/api/issues/do_tran
   --data-urlencode "issue=$ISSUE_KEY" --data-urlencode "transition=accept"
 ```
 
-(The `sonarqube` MCP server's `change_sonar_issue_status` is an alternative to the transition call.)
+Releasing a claim is the same call with `transition=reopen`. (The `sonarqube` MCP server's
+`change_sonar_issue_status` is an alternative to the transition call, with `status` `accept`,
+`falsepositive` or `reopen`.)
 
 For many issues: each one costs ~2 requests, so a 20+ issue loop will blow a short command timeout —
 run it in the background and make it idempotent by re-querying which keys are still OPEN.
