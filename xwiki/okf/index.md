@@ -29,6 +29,10 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 
 ### conventions/
 - **code-style** — line length (120), LGPL headers, component system, javax→jakarta, `-legacy` rules.
+- **velocity-code-style** — the `.vm` / wiki-page equivalent: `#set ($discard = $call)` for a call
+  whose return value is not rendered (a bare call leaks it into the output), the space after a
+  directive name but not after a macro name (`#template('x.vm')`), camelCase, single quotes for
+  non-interpolated strings, the `_` prefix on non-API macros since 15.10RC1, and the comment rules.
 - **code-comments** — comment about the code as-is; never reference history or transient links.
 - **naming** — Maven groupId/artifactId (+ the `-api`/`-ui`/`-webjar`/`-node-*`/`-test*` qualifier
   meanings, directory = artifactId, singular form), npm package rules (private vs. public
