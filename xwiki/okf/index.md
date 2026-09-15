@@ -33,25 +33,30 @@ in the topic file. Read the entry to choose, then read the file — never act on
 ### conventions/
 - **code-style** — the source-level rules for Java and build files: line length, license headers,
   comment formatting, javax→jakarta, `-legacy` modules.
-- **velocity-code-style** — the same for `.vm` templates, skin resources and wiki-page Velocity; also
-  indexes the Velocity rules the topics below hold.
+- **velocity-code-style** — the same for `.vm` templates, skin resources and wiki-page Velocity,
+  including the `$discard` capture that stops a bare call leaking into the output; also indexes the
+  Velocity rules the topics below hold.
 - **code-comments** — what a comment must say, in every language: history, and referencing an issue.
 - **naming** — what to call a Maven artifact, an npm package, a property, a UIX id, a skin, an icon.
 - **frontend** — client-side code: JavaScript modules and WebJars, CSS as a skin extension, JS
   backward compatibility, accessibility.
-- **server-side-rendering** — what a wiki page, sheet or template emits, and the two things that
-  silently eat the blank lines separating generated blocks.
-- **translations** — the lifecycle of a translation key: where a bundle lives, which locale is
-  maintained, deprecating and renaming.
-- **dependencies** — the checklist a third-party project must pass before a distribution depends on it.
+- **server-side-rendering** — what a wiki page, sheet or template emits: space gobbling and
+  `$doc.display` silently eat the blank lines between generated blocks, nesting a paragraph or
+  failing a macro with *"cannot be used inline"*.
+- **translations** — the lifecycle of a translation key: which file a bundle lives in, the
+  l10n/Weblate registration a *new* one needs, which locale committers maintain, deprecating and
+  renaming.
+- **dependencies** — the checklist a third-party project must pass before a distribution depends on
+  it; and upgrading a JavaScript one, whose lockfile the build's pinned pnpm rewrites.
 - **commit-messages** — the format of a commit summary and body, and when `[Misc]` is allowed.
 - **versioning** — which version string `@since` and `@Deprecated(since=…)` take.
 - **backward-compatibility** — what a public API may change, what Revapi checks and does not, and the
   `@Unstable` lifecycle.
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with, injection.
-- **script-services** — how a script service reports errors and takes arguments, and why an existing
-  signature cannot change.
+- **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
+  it does not return `null` for a `getLastError()` read-back) and takes arguments, and why an
+  existing signature cannot change.
 - **performance** — the memory rule for user-sized data: stream it, never buffer it.
 - **logging** — what to pass a log call and at which level, and why an explicit `toString()` is
   usually deliberate.
@@ -61,18 +66,22 @@ in the topic file. Read the entry to choose, then read the file — never act on
   has moved, and when the migrated tree may be published.
 - **page-deletion** — read before deleting any xwiki.org page, whatever the reason: its backlinks are
   fixed first, and the deletion wizard repoints less than it appears to.
-- **documentation-mechanics** — the storage behind such a page (its xobjects, the quality checker,
-  navigation order), for editing one programmatically or diagnosing its warning banner.
+- **documentation-mechanics** — the storage behind such a page (xobjects, quality checker,
+  navigation order): editing one programmatically, its wordless red banner, or a
+  `DocumentationClass` sweep that silently skipped landing pages.
 
 ### architecture/
 - **component-system** — declaring, injecting and instantiating components, and the two kinds of event
   listener.
-- **macro-refactoring** — how a macro's references are rewritten when what they point at is renamed.
-- **wiki-application-data** — data held by an XClass + wiki-page application: property types in
-  queries, entry naming, migrations.
-- **required-rights** — declaring the rights a page shipped by an extension needs, and why
-  under-declaring disables the page instead of failing.
-- **wiki-user-scope** — where a subwiki's user scope is stored, and what it defaults to.
+- **macro-refactoring** — how a macro's references are rewritten when what they point at is renamed,
+  and why one held in a macro *parameter* is left pointing at the old name.
+- **wiki-application-data** — data held by an XClass + wiki-page application: why a range filter on a
+  list property compares lexicographically, entry naming, migrations.
+- **required-rights** — declaring the rights a page shipped by an extension needs: under-declaring
+  disables the page silently instead of failing — a wiki macro goes unregistered and its users
+  render `Unknown macro: <id>`.
+- **wiki-user-scope** — why a subwiki offers only main-wiki users and groups: where its user scope is
+  stored (not on the descriptor) and what it defaults to.
 - **solr-search** — XWiki's Solr backend, and what running it against a remote Solr requires.
 
 ### testing/
