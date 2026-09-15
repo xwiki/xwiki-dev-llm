@@ -152,6 +152,10 @@ When an issue is a genuine false positive, the resolution is **in the code, not 
 *Accepted* in SonarCloud alone hides the reasoning from the next developer, who will try to "fix" it
 again. The full convention is in [[code-style]].
 
+*Accepted* has a second and unrelated use: **claiming** the issues an open PR already fixes, so that
+the next sweep — which discovers work with `issueStatuses=OPEN` — does not redo them. That claim says
+nothing about the code and is provisional: issues a PR drops or abandons must be reopened.
+
 ## Related
 
 - [[verification]] — what makes a Sonar fix *verified* (the build gates that catch a bad one).
