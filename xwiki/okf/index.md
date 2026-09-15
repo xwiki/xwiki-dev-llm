@@ -27,240 +27,106 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
 
 ## Topics
 
+An entry says what a topic is and when to open it instead of its neighbour; the rules themselves are
+in the topic file. Read the entry to choose, then read the file — never act on the entry alone.
+
 ### conventions/
-- **code-style** — line length (120), LGPL headers, component system, javax→jakarta, `-legacy` rules.
-- **velocity-code-style** — the `.vm` / wiki-page equivalent, and the index of the Velocity rules
-  held by other topics: `#set ($discard = $call)` for a call whose return value is not rendered (a
-  bare one leaks it into the output), the space after a directive name but not after a macro name
-  (`#template('x.vm')`), camelCase, single quotes, the `_` prefix on non-API macros, comment rules.
-- **code-comments** — every language: comment about the code as-is, self-contained once its links
-  are dead; never justify by history; an issue reference is optional and gives the ID and title.
-- **naming** — Maven groupId/artifactId (+ the `-api`/`-ui`/`-webjar`/`-node-*`/`-test*` qualifier
-  meanings, directory = artifactId, singular form), npm package rules (private vs. public
-  `@xwiki/platform-*`), `xwiki.properties` property naming, UIXP/UIX ids, skins (bird names), icons.
-- **frontend** — JavaScript as AMD/RequireJS modules prefixed `xwiki-`, shipped as WebJars/JSX
-  ("On demand only"), never inline; the minifier trap when Velocity is mixed into JavaScript and the
-  wrapper that separates them; deprecating a JS API via `compatibility.js`; CSS as a Skin Extension
-  and the LESS `contentType` needed to read colour-theme variables; WCAG 2.2 AA and the wiki-page
-  accessibility traps (naming a control emitted from a page, image alt text, `col-xs-*` is not
-  responsive).
-- **server-side-rendering** — code running inside a wiki page, sheet or template that produces wiki
-  syntax or HTML: blocks are separated by blank lines, which Velocity's space gobbling (a line ending
-  with a directive loses its newline) and `$doc.display` (a single-line `{{html}}` macro where the raw
-  property value was multi-line) silently remove, nesting a paragraph or leaving a standalone-only
-  macro such as `{{gallery}}` used inline.
-- **translations** — the key lifecycle: only en_US is committer-maintained (US spelling), where a
-  bundle lives and the l10n.xwiki.org + Weblate-script registration a new one needs, deprecating a key
-  in the `#@deprecatedstart` section, renaming with `#@deprecated`, and why keys are never moved.
-- **dependencies** — the checklist a third-party project must pass to enter a distribution (license is
-  non-negotiable, longevity, cadence, support, ≥3/≥1 active contributors, docs, security) + the VOTE
-  waiver.
-- **commit-messages** — summary = JIRA key + the issue's title *verbatim*, details as `*` bullets in
-  the body; `[Misc]` only when there is genuinely no issue.
-- **versioning** — `@since`/`@Deprecated(since=…)` use `<X.Y.0>RC1`; current version is volatile.
-- **backward-compatibility** — Revapi (incl. where it does *not* look), the `@Unstable` lifecycle,
-  evolve interfaces via default methods.
-- **security** — escaping APIs, untrusted user input & translations, only Velocity runs on Script
-  Right (every other language also needs Programming Right, but a script service does not),
-  context-author right checks in script services, configurable HTML sanitizer, and never
-  interpolating identifiers/references into queries or include/display targets ($doc vs
-  $xcontext.macro.doc).
-- **script-services** — a new script service throws (callers use `#try()`); an existing null-returning
-  signature must not be changed; the Method Arguments Uberspector plus a `Converter` is why a service
-  never needs bean-factory methods.
-- **performance** — prefer streaming over buffering; never load an unbounded payload (attachment,
-  body, upload, export, query result) fully into memory.
-- **logging** — a log argument is an **object**: it is captured in the `LogEvent`, XStream-serialized
-  into the job log and rendered later by type. So an explicit `toString()` is usually deliberate and
-  must not be "cleaned up" — with the decision table for when to pass the object (references,
-  extension ids, enums) and when to force the String (arbitrary sources, live resources, builders,
-  requests, a masked `toString()`, a `Class` from an extension jar), and the `java:S2629` exemptions.
-- **documentation** — xwiki.org documentation rules: Diataxis types & audiences, title/page-name
-  rules (incl. title case), per-type content rules — including the **result step** that must close a
-  How-to/Tutorial **with a screenshot**, a **screenshot on most steps** of a UI procedure, and the
-  **topic page** being an Explanation linking to its Extensions-wiki page,
-  and **show, don't only tell** (aim for screenshots on User/Administrator pages, code
-  examples on Developer ones, an architecture or concept diagram on an Explanation — plus when not to
-  force a visual), how much belongs on one page (a How-to is one procedure with a
-  one-paragraph intro; one fact, one page; **keep verbosity low** since readers skim, and a **hub page
-  routes rather than narrates** — it links every page it introduces — plus how duplication is actually
-  detected, by comparing pages rather than
-  writing each carefully), page-structure xobject fields with the exact semantics of
-  Highlights / More / Related, style (incl. **never hard-wrapping prose** — one paragraph is one
-  unbroken line, on xwiki.org pages and forum.xwiki.org posts alike; 120 chars is a Java-source rule),
-  attachment/image/video rules (kebab-case names — stop words stripped from these too, `{{image}}` +
-  `alt`, **`size` mandatory and `width` forbidden in the `documentation` space**, which fixes the width a
-  screenshot must be captured at, **`webm` videos displayed with `{{embed}}`, never linked**, Gallery,
-  PlantUML `bluegray`), location, version perspective and the `{{version}}` macro (incl. **documenting a
-  feature before its release**, badged `since`), the XWiki syntax traps that silently mis-render
-  (`image:`, `--`, anchors incl. **keeping a renamed heading's old id**, URLs in headings), **linking
-  a farm subwiki by URL instead of `doc:<wiki>:<ref>` plus the nine cases where an absolute xwiki.org
-  URL *is* correct — and why a `url:` prefix is not one of them**, and navigation-order pinning.
-  The live Documentation Guide is the evolving source of truth. Applied by `xwiki-doc-writing` and `xwiki-doc-convert`.
-- **documentation-migration** — the last step of a *migration* only, split out of the above so an
-  ordinary authoring task need not load it: handling the **original** page once its content has moved
-  — repointing an old `Documentation`-space page (keeping the anchors), stripping the prose from an
-  e.x.o extension page without deleting it (**every** xproperty that holds prose, not just
-  `description`) and wiring its "Documentation" button via the `ExtensionLD` URL, **deleting its
-  leftover attachments** (the one place the never-delete-an-attachment rule is inverted), and
-  **triaging its backlinks** (which to repoint, which to leave). Also **when** a migration may
-  publish — the whole set at once, parents first, never page by page, because xwiki.org is public and
-  a half-built tree is what readers get. Applied by `xwiki-doc-convert`.
-- **page-deletion** — the rule that applies to **deleting any page on xwiki.org**, whatever the reason
-  (migrated page, duplicate, obsolete extension/blog page, or an intermediate page you created
-  yourself): **list and fix the backlinks before deleting**, since the breakage lands on *other* pages
-  that nothing names for you. What the deletion wizard does repoint (**only** with a "New target" +
-  "Update links", plus the `XWiki.RedirectClass` redirect option) and what it never does — a REST
-  `DELETE`, absolute-URL links, macro parameters without `MacroRefactoring`, xproperty-stored
-  references; how to get the backlink list (Information tab → Backlinks, farm-wide) and why it must be
-  completed with a farm-wide search; the triage table; and how to recover from a premature delete via
-  the trash. Applied by `xwiki-doc-writing` / `xwiki-doc-convert` / `xwiki-rest-api` and by any task
-  that removes a wiki page.
-- **documentation-mechanics** — the storage side of the above, for editing xwiki.org pages
-  programmatically or diagnosing a warning banner: the `DocApp` xobjects (structure fields,
-  Technical ID, quality-checker violations), **the separate `LandingPageClass` that landing pages carry
-  instead of `DocumentationClass` — which makes any sweep selecting on `DocumentationClass` skip every
-  landing page silently**, how to read the checker's real findings instead of guessing
-  at the red banner — **and why listing the violation objects is not enough, since some findings appear
-  only as an inline error box in the rendered page** — how navigation order is pinned on the parent
-  space's `WebPreferences` page (and why it must be verified through the Document Tree service), and the
-  hidden-fragment pattern behind
-  `{{display}}`. The generic REST calls live in the `xwiki-rest-api` skill.
+- **code-style** — the source-level rules for Java and build files: line length, license headers,
+  comment formatting, javax→jakarta, `-legacy` modules.
+- **velocity-code-style** — the same for `.vm` templates, skin resources and wiki-page Velocity,
+  including the `$discard` capture that stops a bare call leaking into the output; also indexes the
+  Velocity rules the topics below hold.
+- **code-comments** — what a comment must say, in every language: history, and referencing an issue.
+- **naming** — what to call a Maven artifact, an npm package, a property, a UIX id, a skin, an icon.
+- **frontend** — client-side code: JavaScript modules and WebJars, CSS as a skin extension, JS
+  backward compatibility, accessibility.
+- **server-side-rendering** — what a wiki page, sheet or template emits: space gobbling and
+  `$doc.display` silently eat the blank lines between generated blocks, nesting a paragraph or
+  failing a macro with *"cannot be used inline"*.
+- **translations** — the lifecycle of a translation key: which file a bundle lives in, the
+  l10n/Weblate registration a *new* one needs, which locale committers maintain, deprecating and
+  renaming.
+- **dependencies** — the checklist a third-party project must pass before a distribution depends on
+  it; and upgrading a JavaScript one, whose lockfile the build's pinned pnpm rewrites.
+- **commit-messages** — the format of a commit summary and body, and when `[Misc]` is allowed.
+- **versioning** — which version string `@since` and `@Deprecated(since=…)` take.
+- **backward-compatibility** — what a public API may change, what Revapi checks, the `@Unstable`
+  lifecycle, and evolving an interface with default methods.
+- **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
+  a script runs with, injection.
+- **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
+  it does not return `null` for a `getLastError()` read-back) and takes arguments, and why an
+  existing signature cannot change.
+- **performance** — the memory rule for user-sized data: stream it, never buffer it.
+- **logging** — what to pass a log call and at which level, and why an explicit `toString()` is
+  usually deliberate.
+- **documentation** — writing a page in the xwiki.org documentation tree: Diataxis type, naming,
+  structure, style, visuals, versioning, linking. Applied by `xwiki-doc-writing` / `xwiki-doc-convert`.
+- **documentation-migration** — a migration only: what becomes of the *original* page once its content
+  has moved, and when the migrated tree may be published.
+- **page-deletion** — read before deleting any xwiki.org page, whatever the reason: its backlinks are
+  fixed first, and the deletion wizard repoints less than it appears to.
+- **documentation-mechanics** — the storage behind such a page (xobjects, quality checker,
+  navigation order): editing one programmatically, its wordless red banner, or a
+  `DocumentationClass` sweep that silently skipped landing pages.
 
 ### architecture/
-- **component-system** — `@Role`/`@Component`/`components.txt`, `@Inject`/`@Named` hints, instantiation;
-  local-only vs. cluster-wide event listeners.
-- **macro-refactoring** — `MacroRefactoring` role (keyed by macro id) rewrites a macro's references on
-  rename/move and extracts them for backlinks; `DefaultMacroRefactoring` is content-only (ignores parameters).
-- **wiki-application-data** — stored data in an XClass+wiki-page application: a non-multiSelect
-  `StaticListClass`/`DBListClass` property is a VARCHAR, so HQL/XWQL range filters on it compare
-  lexicographically (hidden while values are single characters); allocate a generated `Entry001` name
-  by creating the page, since deriving it from existing pages races for the whole editing session; a
-  wiki-page migration is idempotent only if it drops the object it matched on; and an entry template
-  must carry the marker class its queries locate it by.
-- **required-rights** — declaring required rights on a page an extension ships: enforcement caps the
-  page *author*, so an under-declared level disables the page's function silently instead of failing.
-  The analyzer only knows that registering an object is privileged for the object types someone wrote
-  an analyzer for — **`XWiki.WikiMacroClass` had none** up to 18.6 (XWIKI-24822), so a wiki-visible
-  macro was reported as `script` while registration demands wiki admin of the macro document's
-  author, and declaring `script` left it unregistered (`Unknown macro`); such a page can only be
-  validated by a fresh install, never on a wiki that already has it. Plus the
-  mandatory `<xwikidoc version="1.6">`, enforcement being read per-document (so it caps neither an
-  `{{include}}` nor a wiki macro, but a *script* save does force it onto what it saves, and an empty
-  enforced set makes a Velocity title display as source), and reading the rights back in a `PageTest`
-  through `DocumentRequiredRightsManager`.
-- **wiki-user-scope** — a subwiki's user scope (local/global/both) is stored on its own
-  `WikiManager.WikiUserConfiguration` doc (not the descriptor) and defaults to `GLOBAL_ONLY` when absent.
-- **solr-search** — XWiki's Solr backend: embedded by default, externalisable to a remote/standalone
-  Solr which needs several pre-created cores (`search`, `extension_index`, `ratings`, `events`, named
-  `xwiki_<core>_<solrMajor>`); configured via `solr.type=remote` + `solr.remote.baseURL`; the search
-  core needs Solr's `analysis-extras` module.
+- **component-system** — declaring, injecting and instantiating components, and the two kinds of event
+  listener.
+- **macro-refactoring** — how a macro's references are rewritten when what they point at is renamed,
+  and why one held in a macro *parameter* is left pointing at the old name.
+- **wiki-application-data** — data held by an XClass + wiki-page application: why a range filter on a
+  list property compares lexicographically, entry naming, migrations.
+- **required-rights** — declaring the rights a page shipped by an extension needs: under-declaring
+  disables the page silently instead of failing — a wiki macro goes unregistered and its users
+  render `Unknown macro: <id>`.
+- **wiki-user-scope** — why a subwiki offers only main-wiki users and groups: where its user scope is
+  stored (not on the descriptor) and what it defaults to.
+- **solr-search** — XWiki's Solr backend, and what running it against a remote Solr requires.
 
 ### testing/
-- **strategy** — test kinds & naming, no-stdout rule, lightest-base rule, the scenario rule (no two `@Test` methods build the same fixture; a distinct fixture is what justifies a distinct method; `@Order` is not a substitute), `@Order` source-ordering rule, the page-object boundary (no `getDriver()` in a test), don't-pay-the-timeout rule, reading a PRChecker log line, the bare `@UITest` on an `AllIT` container, coverage, framework locations.
-
-- **running-docker-its** — running `-Pdocker,integration-tests` on a developer machine rather than a
-  CI agent: how the browser container reaches XWiki under each servlet engine (host-gateway
-  `/etc/hosts` entry vs `xwikiweb` alias over Docker DNS) and why that makes the two configurations
-  exercise different networking, which engine the local loop should use and when the containerised
-  one is mandatory, the setup-failure symptom table (a `beforeAll` failure is never evidence about
-  your change), and what several agents on one machine contend for (host :8080, the daemon budget,
-  the shared `~/.m2`). Commands in `xwiki-build`.
+- **strategy** — the kinds of test XWiki has, how they are named, and the rules a test must satisfy.
+  Procedures live in the test skills.
+- **running-docker-its** — running the Docker functional tests on a developer machine: container
+  networking, setup failures, what parallel runs contend for. Commands in `xwiki-build`.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
 mechanical but silently break something. Read `sonarqube/index.md`, then **only** the one family file
 for the rule being fixed. Pool sizes are deliberately absent (volatile — query the rule facet).
 Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
-- **index** (`sonarqube/index.md`) — rule → family-file map; the rules never worth fixing (incl. the
-  XWiki idioms Sonar misreads: `S2447` null-from-a-script-service, `S1215` `$xwiki.gc()`, `S2065`
-  XStream-honoured `transient`); and the drop conditions common to every rule (120 chars, Revapi,
-  JaCoCo, an explanatory comment, an existing suppression, the ~15-minute ceiling).
-- **syntax-rules** — the pure syntax and annotation rules. Holds the **infinite-recursion trap**
-  (spreading `new Object[]{…}` re-binds to a same-name fixed-arity overload — often the enclosing
-  method, the whole commons `logging-*` SLF4J family).
-- **simplification-rules** — the behaviour-preserving rewrites. The method-reference
-  needs-the-type-imported build-breaker; `isEmpty()` fires on `String` receivers too; the
-  collapsible-`if` outer-`else` and comment-between-the-`if`s drops plus the brace-balance check.
-- **modernization-rules** — the language/API modernizations. The big ones: the instanceof-pattern
-  flow-scoping shapes and one-issue-per-cast; **the `.toList()` escape analysis** (it is
-  unmodifiable — trace to the outermost public/`ScriptService` method, since Velocity callers are
-  untraceable; the sibling-branch safe signal; the defensive-copy setter) and its `Collectors`
-  orphaned-import build-breaker; the `EnumMap` **null-key runtime break**; the `StringBuilder`
-  prepend and mock-equality traps; the text-block byte-identity rules.
-- **dead-code-rules** — removing unused code, and the highest false-positive family:
-  **`XWikiPluginManager.initPlugin()` reflective `getDeclaredMethods()` dispatch** makes every
-  `com.xpn.xwiki.plugin.*` super-only override load-bearing; `.hbm.xml`-mapped accessors; the
-  private-constructor `FinalClass` follow-on, Revapi `visibilityReduced` and the `-legacy`
-  re-export; the private-only subsets of the unused-parameter and narrowed-`throws` rules; removal
-  cascades.
-- **constant-and-resource-rules** — constants, resources and exceptions. The duplicated-literal
-  reviewer preferences (parameterized SLF4J over a constant, the owning `*DocumentInitializer`
-  constant, `@since` on a widened field) and forward-reference gotcha; **try-with-resources in XWiki
-  is usually a state *restore*, not a close** — that batch is near-100% drops; the charset-constant
-  unreachable-catch build-breaker.
-- **test-code-rules** — the test-only rules. **`assertEquals` must not replace
-  `assertTrue(a.equals(b))` inside `equals()`/`hashCode()` contract tests** (reviewer-rejected —
-  suppress instead), and receiver-first / never-flip-operands; the expected/actual swap's default-drop
-  on asymmetric `equals`; the package-private cross-module test-jar check; and why an `assertThrows`
-  hoist must never move the throwing call out of the lambda.
-- **verification** — what makes a Sonar fix *verified*: never skip the tests, `-Plegacy,quality` is
-  mandatory, why removing covered instructions **always** lowers a JaCoCo ratio `(c−k)/(t−k) < c/t`
-  (so drop the module, never the pinned ratio), and how to tell your reactor failure from a
-  pre-existing one.
+- **index** (`sonarqube/index.md`) — which family file holds a rule, the rules never worth fixing, and
+  the drop conditions that apply to every rule.
+- **syntax-rules** — the pure syntax and annotation rules.
+- **simplification-rules** — the behaviour-preserving rewrites.
+- **modernization-rules** — the language and API modernizations.
+- **dead-code-rules** — removing unused code: the family with the most false positives.
+- **constant-and-resource-rules** — constants, resources and exceptions.
+- **test-code-rules** — the rules that fire only in test code.
+- **verification** — what makes a Sonar fix verified rather than merely compiled.
 
 ### servers/
-- **index** — the xwiki.org server ecosystem (JIRA, CI, Nexus, SonarCloud, forum, …) and how to
-  access/verify each (MCP vs. WebFetch); plus reading/writing via REST (the **Cloudflare block on a
-  browser-like User-Agent**, only `/rest` honors Basic auth, the `XWiki-Form-Token` CSRF header, and
-  the `extensions` subwiki id) and the `~/.xwiki-credentials` convention (never printed, only
-  sourced).
-- **jira** — accessing jira.xwiki.org (jira-cli or REST), the before/after images a visibly changing
-  fix owes its issue whether or not it has a PR, **whether an issue should be filed at all** (a defect
-  in code the unreleased dev version introduced reopens that issue instead — the tell is an Affects
-  Version nobody could have hit the bug in), the durable issue-field conventions
-  (Component, Affects Version = oldest affected/else last LTS, Fix Version, and the `flickering`
-  label + "Flickering Test" field that let a CI failure be joined to its issue, and the two
-  documentation fields); values are volatile;
-  resolving/closing (Fixed vs. Cannot Reproduce for already-covered issues, assign to yourself);
-  attachments (REST-only, and the attachment URL is how an image reaches a GitHub PR body); and
-  wiki-markup gotchas (wrap literals in `{{…}}`, don't over-escape prose, never escape inside `{code}`).
-- **jenkins** — querying ci.xwiki.org through the Jenkins REST API (`/api/json?tree=…`, anonymous
-  read) instead of scraping the UI: the multibranch URL shape, the two functional-test jobs and the
-  environment matrix behind them, the endpoints for builds / failing
-  tests / changesets / built SHA / artifacts / `consoleText`, and the **Cloudflare trap where a
-  spoofed browser User-Agent gets a 403 while plain `curl` gets 200**. Plus the traps in reading a
-  result: `FAILURE` (broke outside the tests) vs `UNSTABLE` (tests failed), why a test case's
-  `age`/`failedSince` is not a reliable first-failure, empty `changeSets`, and diagnosing a docker-test
-  failure from its archived screenshot — including a UI failure with no source change caused by
-  `parent-platform` moving `${platform.version}`.
+- **index** (`servers/index.md`) — the xwiki.org servers, how to reach each, and the traps of reading
+  and writing over REST.
+- **jira** — working with jira.xwiki.org: whether to file at all, the issue fields, resolving,
+  attachments, wiki markup.
+- **jenkins** — querying ci.xwiki.org over its REST API, and how to read a result without drawing the
+  wrong conclusion.
 
 ### processes/
-- **release** — how XWiki versions/releases (Commons+Rendering+Platform together), and which stable
-  branches a fix may be backported to (the cycle−2 branch is security-only); detailed steps are
-  volatile pointers to the dev wiki.
-- **security-policy** — CVSS-4 severity scoring: which metric values XWiki's policy fixes and where
-  generic CVSS instinct gets them wrong (volatile; verify); the durable rule never to reveal a
-  vulnerability publicly until disclosure (obfuscated commits, restricted JIRA issues); merging a
-  non-committer's security PR by hand from the advisory's private fork, never via the UI.
-- **module-lifecycle** — moving code between repos with its history: `git subtree split` to extract
-  (and what changes when the target is xwiki-contrib — contrib parent at the LTS version,
-  `xwiki.extension.features`, same version), `git subtree add` to merge in, retiring to the
-  (unsupported) Attic, and the top-level-extension criteria.
-- **release-notes** — how the Release Notes Application stores a release note (the page it lives in,
-  the `Entry###` children that *are* the "New and Noteworthy" list, why entries belong to the RC and
-  not to the final release), the REST endpoints that create and list them and the traps a client
-  must know, the drifting category vocabulary, where an entry's screenshot must come from, and how
-  its reference becomes the URL the JIRA documentation fields want — plus why an extension **not**
-  bundled in XWiki Standard uses none of it and owes no entry, its release notes being the
-  Repository application's per-version ones on extensions.xwiki.org. Applied by
+- **release** — how the three repos are versioned and released together, and which branches a fix may
+  still reach.
+- **security-policy** — scoring a vulnerability, keeping it private until disclosure, and merging its
+  fix.
+- **module-lifecycle** — moving a module between repos with its history, and retiring one.
+- **release-notes** — how a release note is stored and created, and which releases owe one. Applied by
   `xwiki-release-documentation`.
 
 ### decisions/ (ADRs)
 Architectural Decision Records — the *why* behind durable choices (context, decision, consequences),
 each grounded in a cited source. `_template.md` holds the format and the grounding rule.
-- **check-binary-not-source-compatibility** — why Revapi enforces binary/semantic but not source
-  compatibility.
+- **check-binary-not-source-compatibility** — why Revapi stays silent on a change that breaks a
+  caller's *source*: binary and semantic compatibility are enforced, source compatibility is not.
 
 ## Related skills (procedures, not knowledge)
 

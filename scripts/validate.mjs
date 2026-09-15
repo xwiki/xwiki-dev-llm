@@ -20,6 +20,9 @@
 //   7. Every `okf/...md` path a skill cites actually exists. Skills delegate their rules to the OKF
 //      rather than restating them, so a renamed or deleted topic would otherwise leave a skill
 //      pointing at nothing — and a reviewer that cannot read its rule source fails silently.
+//   8. The OKF index stays a map: each entry, and the file, within a size budget. An entry exists to
+//      pick a topic, so it says what the topic is and when to open it; a description long enough to
+//      restate the rules gets acted on in place of the file it points at, at a third of the detail.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -206,6 +209,44 @@ for (const skill of skills) {
       errors.push(`xwiki/skills/${skill}/SKILL.md: cites '${ref}', which does not exist`);
     }
   }
+}
+
+// ---- Invariant 8: the OKF index stays a map ---------------------------------------------------
+// okf/index.md is read whenever the OKF is consulted, and every topic is already described by its
+// own `summary:` frontmatter, so a long entry is the same text a third time. Budgets, not good
+// intentions, are what stop it growing back: extending the OKF always appends here and never cuts.
+const OKF_INDEX_MAX_BYTES = 11000;
+const OKF_ENTRY_MAX_BYTES = 240;
+if (Buffer.byteLength(okfIndex) > OKF_INDEX_MAX_BYTES) {
+  errors.push(
+    `xwiki/okf/index.md: ${Buffer.byteLength(okfIndex)} bytes exceeds the ${OKF_INDEX_MAX_BYTES}-byte budget — ` +
+      `an entry picks a topic, it does not summarise it; the rules belong in the topic file`
+  );
+}
+{
+  let entry = null;
+  const flush = () => {
+    if (entry && Buffer.byteLength(entry.text) > OKF_ENTRY_MAX_BYTES) {
+      errors.push(
+        `xwiki/okf/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
+          `${OKF_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
+          `and leave the rules to xwiki/okf/**/${entry.name}.md`
+      );
+    }
+    entry = null;
+  };
+  for (const line of okfIndex.split("\n")) {
+    const head = line.match(/^- \*\*([a-z0-9-]+)\*\* —/);
+    if (head) {
+      flush();
+      entry = { name: head[1], text: line };
+    } else if (entry && /^ {2}\S/.test(line)) {
+      entry.text += "\n" + line;                         // a wrapped continuation of the same entry
+    } else {
+      flush();
+    }
+  }
+  flush();
 }
 
 // ---- Report ----------------------------------------------------------------------------------
