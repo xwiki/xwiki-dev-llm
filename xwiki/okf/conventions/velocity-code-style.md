@@ -48,7 +48,7 @@ as a **parameter** — otherwise the call site cannot see what the macro changes
 - Start with an uppercase letter; a full sentence ends with a dot.
 - A multi-line comment is **several `##` lines**, never `#* … *#`.
 - A larger script opens with a `##` block saying what the code does.
-- [[code-comments]] applies here too: comment the code as it is, no issue keys or links.
+- The generic [[code-comments]] policy applies here too.
 
 ## Related — the Velocity rules that live in another topic
 

@@ -33,7 +33,8 @@ The full how-to-read-and-extend protocol is the `xwiki-knowledge` skill.
   held by other topics: `#set ($discard = $call)` for a call whose return value is not rendered (a
   bare one leaks it into the output), the space after a directive name but not after a macro name
   (`#template('x.vm')`), camelCase, single quotes, the `_` prefix on non-API macros, comment rules.
-- **code-comments** — comment about the code as-is; never reference history or transient links.
+- **code-comments** — every language: comment about the code as-is, self-contained once its links
+  are dead; never justify by history; an issue reference is optional and gives the ID and title.
 - **naming** — Maven groupId/artifactId (+ the `-api`/`-ui`/`-webjar`/`-node-*`/`-test*` qualifier
   meanings, directory = artifactId, singular form), npm package rules (private vs. public
   `@xwiki/platform-*`), `xwiki.properties` property naming, UIXP/UIX ids, skins (bird names), icons.
