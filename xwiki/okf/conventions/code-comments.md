@@ -23,10 +23,12 @@ the code when everything it points to is gone.
   see [[commit-messages]].
 - **A link never carries the explanation.** Referencing the issue a comment is about — JIRA, GitHub,
   a forum thread — is *optional* and acceptable **in addition** to the self-contained reason, never
-  instead of it. When one is given, write the issue's **ID and its title**, so the comment stays
-  informative once the link rots or the tracker is decommissioned:
+  instead of it: an issue title states the symptom, which is not why the code does what it does. When
+  a reference is given, write the issue's **ID and its title**, so that much survives the link
+  rotting or the tracker being decommissioned:
 
   ```java
-  // The parser keeps the trailing newline, which the serializer then doubles: strip it before
-  // handing the block over. See XWIKI-12345 "Blank line added when saving a page twice".
+  // The parser keeps the newline that closes a macro block and the serializer emits its own, so a
+  // page saved twice grows a blank line. Drop it here until the parser stops producing it.
+  // More details: XWIKI-12345 "Blank line added when saving a page twice".
   ```
