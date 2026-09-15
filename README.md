@@ -189,6 +189,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
     per-rule fix correctness and drop conditions it applies live in `xwiki/okf/sonarqube/`.
   - `xwiki-backport` — backport any change to an older branch: cherry-pick `-x`, adapt to the branch (module pom versions, Java level, style/API), verify, open the PR.
   - `xwiki-backport-testneeded` — backport `testneeded`-labelled tests to supported stable branches, adjust `@since` across branches, open the PRs (builds on `xwiki-backport`).
+  - `xwiki-presentation` — build a slide deck about XWiki (conference talk, meetup, project or
+    release review) as a `.pptx` from a Python build script, in a consistent XWiki look, then
+    publish it to PDF and optionally per-slide PNGs, Keynote and a speaker-notes file. Ships
+    `tools/xwiki_deck/`, the only part of this plugin with **third-party Python dependencies**
+    (`python-pptx`, `matplotlib`, `Pillow` — see `tools/requirements.txt`) and the only one that
+    needs **LibreOffice**, which it checks for before building rather than at the conversion step.
 
 ## Required environment variables
 

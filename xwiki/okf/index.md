@@ -135,7 +135,7 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 `xwiki-legacy`, `xwiki-deploy-extension`, `xwiki-rest-api`, `xwiki-xar-pages`, `xwiki-doc-writing`, `xwiki-doc-convert`, `xwiki-translations`,
 `xwiki-contrib-release-blog-post`, `xwiki-fix-sonarqube-issue`, `xwiki-backport`,
 `xwiki-backport-testneeded`, `xwiki-jira`, `xwiki-security-advisory`, `xwiki-openproject`,
-`xwiki-release-test-triage`, `xwiki-release-documentation`, `xwiki-review`.
+`xwiki-release-test-triage`, `xwiki-release-documentation`, `xwiki-review`, `xwiki-presentation`.
 
 ## How to extend the OKF (EXTEND)
 
