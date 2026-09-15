@@ -30,7 +30,8 @@ the Macro Transformation or the template catches it and displays it.
 ```
 
 `#try()` exists since 6.3M1; naming the variable holding the exception — `#try("myexception")`,
-default `$exception` — since 8.3M2, 7.4.5 and 8.1.2.
+default `$exception` — since 8.3M2, 7.4.5 and 8.1.2. The `$discard` above is the Velocity idiom for a
+return value that must not reach the output ([[velocity-code-style]]).
 
 **Existing** script APIs keep their signature: changing a method that returns `null` into one that
 throws breaks backward compatibility. Add a new signature, deprecate the old one and move it to

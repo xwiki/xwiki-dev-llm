@@ -48,12 +48,13 @@ as a **parameter** — otherwise the call site cannot see what the macro changes
 - Start with an uppercase letter; a full sentence ends with a dot.
 - A multi-line comment is **several `##` lines**, never `#* … *#`.
 - A larger script opens with a `##` block saying what the code does.
-- The page also asks for the issue ID *and* title wherever a comment quotes an issue; note that
-  [[code-comments]] is stricter and keeps issue references out of code entirely.
+- [[code-comments]] applies here too: comment the code as it is, no issue keys or links.
 
-## Related
+## Related — the Velocity rules that live in another topic
 
-- [[code-style]] — the Java and build-level equivalent.
-- [[server-side-rendering]] — what Velocity's space gobbling does to generated wiki syntax.
-- [[frontend]] — Velocity mixed into JavaScript, and the minifier trap.
+- [[server-side-rendering]] — space gobbling, and the blank lines that separate generated blocks.
+- [[script-services]] — calling a script service: `#try()` rather than a `getLastError()` check.
+- [[translations]] — rendering a translation, and escaping its parameters.
 - [[security]] — escaping a value before it reaches the output.
+- [[frontend]] — Velocity mixed into JavaScript, and the minifier trap.
+- [[code-style]] — the Java and build-level equivalent.
