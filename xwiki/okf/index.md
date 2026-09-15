@@ -50,8 +50,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   it; and upgrading a JavaScript one, whose lockfile the build's pinned pnpm rewrites.
 - **commit-messages** — the format of a commit summary and body, and when `[Misc]` is allowed.
 - **versioning** — which version string `@since` and `@Deprecated(since=…)` take.
-- **backward-compatibility** — what a public API may change, what Revapi checks and does not, and the
-  `@Unstable` lifecycle.
+- **backward-compatibility** — what a public API may change, what Revapi checks, the `@Unstable`
+  lifecycle, and evolving an interface with default methods.
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with, injection.
 - **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
@@ -125,8 +125,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 ### decisions/ (ADRs)
 Architectural Decision Records — the *why* behind durable choices (context, decision, consequences),
 each grounded in a cited source. `_template.md` holds the format and the grounding rule.
-- **check-binary-not-source-compatibility** — why Revapi enforces binary and semantic compatibility
-  but not source compatibility.
+- **check-binary-not-source-compatibility** — why Revapi stays silent on a change that breaks a
+  caller's *source*: binary and semantic compatibility are enforced, source compatibility is not.
 
 ## Related skills (procedures, not knowledge)
 
