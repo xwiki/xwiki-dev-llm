@@ -49,9 +49,13 @@ python -m xwiki_deck.publish --check
 deck is built**. Discovering at the conversion step that LibreOffice is absent costs a full
 rebuild and reads like a bug in the deck.
 
+Only the formats asked for are delivered. The `.pptx` is always *built* — every other format is
+converted from it — but it reaches the destination only when it was requested, so an author who
+wanted a PDF does not also get the intermediate.
+
 | Format | Needs | Notes |
 |---|---|---|
-| `pptx` | — | What the script writes |
+| `pptx` | — | What the script writes; the source of every other format |
 | `pdf` | **LibreOffice** | Required. macOS `brew install --cask libreoffice`, Debian `apt install libreoffice` |
 | `png` | LibreOffice + `pdftoppm` (poppler) | One image per slide, for checking the build |
 | `key` | macOS + Keynote + LibreOffice | Optional; see the trap below |

@@ -183,6 +183,10 @@ def publish(pptx, dest_dir, formats=('pptx', 'pdf'), work_out='out', slide_count
             notes_header=None):
     """Produce `formats` from `pptx` and place them in `dest_dir`. Returns {format: path}.
 
+    Only the requested formats are delivered. The `.pptx` is always *built* — it is what every
+    other format is converted from — but it is only copied to the destination when it was asked
+    for, so an author who wanted a PDF does not also get the intermediate.
+
     The PNGs stay in `work_out`: they are for checking the build, not for the audience.
     """
     require(formats)
@@ -190,9 +194,11 @@ def publish(pptx, dest_dir, formats=('pptx', 'pdf'), work_out='out', slide_count
     stem = os.path.splitext(os.path.basename(pptx))[0]
     made = {}
 
-    if os.path.abspath(os.path.dirname(pptx)) != os.path.abspath(dest_dir):
-        shutil.copy(pptx, os.path.join(dest_dir, stem + '.pptx'))
-    made['pptx'] = os.path.join(dest_dir, stem + '.pptx')
+    if 'pptx' in formats:
+        target = os.path.join(dest_dir, stem + '.pptx')
+        if os.path.abspath(pptx) != os.path.abspath(target):
+            shutil.copy(pptx, target)
+        made['pptx'] = target
 
     if 'pdf' in formats or 'png' in formats:
         pdf = to_pdf(pptx, work_out)
