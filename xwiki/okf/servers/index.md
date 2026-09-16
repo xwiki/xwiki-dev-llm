@@ -73,12 +73,16 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   an `ls`-then-dump of its directory, not a "keys only" probe: the format is documented right here, so
   opening it teaches nothing, while anything printed enters the context *and* the session transcript
   on disk, which outlives the file. Test the *effect* instead: `test -f ~/.xwiki-credentials` answers
-  "is it there", an authenticated `/rest` GET answers "does it work". Source it **inside** each command
-  that needs it (shell state does not persist between commands), so the password never reaches the
-  context: `set -a; . ~/.xwiki-credentials; set +a` then `curl -u "$XWIKI_USER:$XWIKI_PASSWORD" …`.
-  If a password does leak into the conversation, say so plainly and tell the developer to rotate it —
-  a transcript cannot be un-sent. Same rule for any other secret store the developer points at
-  (`~/.netrc`, an env file, a password-manager export).
+  "is it there", an authenticated `/rest` GET answers "does it work". **Parse the file, never `source`
+  it.** The values are unquoted, so a password containing `(`, `)`, `$`, `` ` ``, `&`, `;` or a space —
+  ordinary in a generated password — makes `. ~/.xwiki-credentials` a shell **syntax error**, and bash
+  quotes the offending line, password and all, into the output: sourcing is the one method that leaks
+  the secret precisely when the secret is strong. Read the two `KEY=VALUE` lines in the language doing
+  the request instead, splitting on the first `=` only, and keep the value in a variable you never
+  print — in Python, `dict(l.split('=', 1) for l in open(...) if '=' in l)` feeding an
+  `Authorization: Basic` header. If a password does leak into the conversation, say so plainly and
+  tell the developer to rotate it — a transcript cannot be un-sent. Same rule for any other secret
+  store the developer points at (`~/.netrc`, an env file, a password-manager export).
 
 ## Verifying volatile facts
 
