@@ -4,7 +4,8 @@ stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the constant, resource and exception
   rules — duplicated literals (with the reviewer preferences that decide what the constant should
   be), try-with-resources, which in XWiki is usually a state restore rather than a close, the
-  throwing finally, charset constants, and combined catch clauses.
+  throwing finally, charset constants, combined catch clauses, and the constant interface, whose
+  answer depends on whether the interface is published API.
 ---
 
 # SonarQube constant, resource and exception rules
@@ -174,6 +175,34 @@ flagged call sites inside its own class.
 
 Adding `import java.nio.charset.StandardCharsets;` may also orphan `java.nio.charset.Charset` or
 `java.io.UnsupportedEncodingException`; check both before committing.
+
+## S1214 — move the constants defined in this interface to another class or enum
+
+**The answer depends on whether the interface is published API.** The only remediation Sonar offers
+is to delete the interface and republish the constants elsewhere, which on a published interface is a
+break — and one the legacy strategy can absorb (constants holder in the main module, interface
+re-added in the `-legacy` module) but at a poor price: an API break, a deprecation cycle and a
+permanently duplicated interface, for no runtime or readability gain. When classes `implements` the
+interface to inherit its constants — the usual shape of the anti-pattern — it additionally costs one
+`Compatibility*` interface and one `declare parents` aspect per implementing class.
+
+So, by rule of the team:
+
+- **Published API** (anything outside an `internal` package) → **do not refactor**. Record the
+  decision in the code: `@SuppressWarnings("java:S1214")` on the interface with a one-line comment
+  above it stating that moving the constants would break the published API. Do not merely mark the
+  issue *Accepted* in SonarCloud, where the reasoning is invisible to the next developer who comes
+  along to "fix" it. `org.xwiki.rendering.wikimodel.IWemConstants` is the reference shape.
+- **`internal` package** → there is no backward-compatibility constraint, so **fix it properly**:
+  turn the interface into a `final` class with a private constructor (or an enum), and update the
+  callers. No suppression, no exclusion.
+- **`-legacy` module** → nothing to do. `xwiki-commons-pom` excludes the rule pom-wide for
+  `**/xwiki-*-legacy-*/**/*.java`, since such interfaces are exactly what a legacy module exists to
+  keep publishing.
+
+This split is specific to S1214. It is not a general licence to suppress every rule whose only
+remediation on a published API is breaking — that stays a case-by-case judgement weighing how likely
+a breakage is to reach anyone, how complex the legacy move is, and how much the code actually gains.
 
 ## Related
 
