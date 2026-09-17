@@ -10,6 +10,38 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr*)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(bash *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(sh *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(zsh *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",

@@ -49,6 +49,19 @@ The documented format is:
   (a shared eslint config, say) are dev-only however they are declared, and a published `package.json`
   is not evidence otherwise — what settles it is how its consumers depend on it.
 
+- **Backtick every `@` token and every hand-written `#123` in a commit body or PR body.** GitHub
+  autolinks them: `@since` links to and notifies the GitHub account of that name — an unrelated
+  third party, as are `param`, `deprecated`, `Inject`, `Component`, `Override`, `Deprecated`,
+  `UITest` and `Nested` — and `#123` resolves against the GitHub repo, while XWiki's issues live in
+  JIRA. Java messages are full of Javadoc tags and annotations, so this is easy to hit. Backticks
+  suppress the autolink even though a commit message renders no other markup, and stay visible as
+  literal characters. Get it right *before* committing: **a pushed commit message cannot be fixed**
+  except by rewriting a shared branch, which is worse than the mention. The `check-commit-text` hook
+  blocks it, but only for what it can parse out of the command — not a guarantee.
+  - **Two things are exempt.** The summary line is the issue title verbatim, so it cannot take
+    backticks; avoid bare `@` tokens when *writing the JIRA issue title* instead. And the `(#6304)`
+    GitHub's squash merge appends is its own correct reference to the merged PR, not yours to escape.
+
 Issue tracker is https://jira.xwiki.org (NOT GitHub Issues); see [[jira]] for access and the
 issue-field conventions. For the full PR/commit flow (one squashed commit per issue, PR description,
 backports) use the `xwiki-pull-request` skill.

@@ -75,11 +75,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/skills" ~/.config/opencode/skills
 - *Per project.* Copy `opencode.jsonc` to `opencode.json` in an XWiki repo (it needs no editing —
   it reads `XWIKI_LLM_HOME`). This scopes the config to that repo only.
 
-**Line-ending guard (optional).** Symlink the plugin into an opencode plugin directory:
+**Guard plugins (optional).** Symlink them into an opencode plugin directory:
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/opencode/plugins/xwiki-line-endings.js
+ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/opencode/plugins/xwiki-commit-text.js
 ```
 
 > **Note — no git-remote scoping in opencode.** In Claude Code the org conventions are injected only
@@ -133,6 +134,16 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   act on the warning itself. In opencode the same check runs as a plugin
   (`xwiki/opencode/plugins/xwiki-line-endings.js`, a `tool.execute.after` hook reusing the same
   logic).
+- **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — a `PreToolUse` hook on `Bash`
+  that blocks a `git commit` or `gh pr create`/`gh pr edit` whose message body holds a bare `@token`
+  or `#123`, which GitHub autolinks into a mention of an unrelated account or a reference to the
+  wrong issue tracker; the commit summary line is exempt. The rule itself is
+  `okf/conventions/commit-messages.md`. It is a hook rather than a documented convention because a
+  pushed commit message cannot be corrected without rewriting a shared branch. Like the line-ending
+  guard it is silent unless violated, Node-based, observation-only under Kimi Code, and available to
+  opencode as a plugin (`xwiki/opencode/plugins/xwiki-commit-text.js`). It adds no per-command
+  overhead: an `if` filter on each handler means Node is spawned only for a command that could be
+  writing a message, not on every `Bash` call.
 - **MCP servers** (`xwiki/.mcp.json` for Claude; mirrored in `kimi.plugin.json` and `opencode.jsonc`):
   - `discourse` — forum.xwiki.org. Search/read topics and posts with no credentials. Set
     `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the user-key pair) and the same server also

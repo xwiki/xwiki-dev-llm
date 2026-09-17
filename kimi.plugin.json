@@ -37,6 +37,11 @@
       "event": "PostToolUse",
       "matcher": "Write|Edit",
       "command": "node \"./xwiki/scripts/check-line-endings.mjs\""
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "command": "node \"./xwiki/scripts/check-commit-text.mjs\""
     }
   ]
 }
