@@ -73,6 +73,9 @@ in the topic file. Read the entry to choose, then read the file — never act on
 ### architecture/
 - **component-system** — declaring, injecting and instantiating components, and the two kinds of event
   listener.
+- **platform-modules** — how xwiki-platform is laid out and which module new code belongs in: the
+  tools/core/distribution split, the modules worth knowing by name, and what
+  `xwiki.extension.features` advertises.
 - **macro-refactoring** — how a macro's references are rewritten when what they point at is renamed,
   and why one held in a macro *parameter* is left pointing at the old name.
 - **wiki-application-data** — data held by an XClass + wiki-page application: why a range filter on a

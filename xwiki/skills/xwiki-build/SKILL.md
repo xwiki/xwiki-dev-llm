@@ -72,6 +72,25 @@ here unless you explicitly want to bypass those checks. It does **not**, however
 test-coverage check — add `-Pquality` for that (see Notes); do so whenever the change touches
 production code.
 
+## JavaScript: the pnpm workspace
+
+The front-end packages of xwiki-platform are an **Nx monorepo over a pnpm workspace**, and their
+sources live *inside* the core modules that ship them — `xwiki-platform-livedata`,
+`xwiki-platform-ckeditor`, `xwiki-platform-blocknote`. So a Maven build of one of those modules
+builds its JavaScript too, and a JavaScript-only change can be iterated far faster outside Maven:
+
+```bash
+pnpm install                                # from the repo root, once
+pnpm run build                              # every package
+pnpm --filter @xwiki/blocknote run build     # one package
+```
+
+Use `pnpm`, not `npm`: the workspace is defined by a pnpm lockfile, and `npm install` in it produces
+a different tree that then fails in ways the lockfile was there to prevent. The Maven build remains
+the oracle — a change that passes `pnpm run build` still has to pass its module's `mvn` build, which
+is what runs the linters and packages the WebJar. Front-end *conventions* (AMD modules, WebJars,
+skin extensions, accessibility) are `okf/conventions/frontend.md`, not this skill.
+
 ## Validate **every** module the change touched
 
 A change that spans many modules (a cross-cutting sweep, a refactoring) is only verified for the

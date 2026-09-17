@@ -199,7 +199,9 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
   - `xwiki-release-documentation` — **explicit invocation only.** Audit the documentation of fixed issues, for a whole Fix Version or for one issue: decide from the actual diff whether each needs a documentation page and/or a release-note entry, write them (entries through the Release Notes Application REST endpoints), and fill the `Documentation` / `Documentation in Release Notes` JIRA fields with the URLs.
   - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
   - `xwiki-fix-sonarqube-issue` — find and fix SonarCloud issues and open a PR; the
-    per-rule fix correctness and drop conditions it applies live in `xwiki/okf/sonarqube/`.
+    per-rule fix correctness and drop conditions it applies live in `xwiki/okf/sonarqube/`. Run
+    daily by a scheduled routine, recorded in
+    `xwiki/skills/xwiki-fix-sonarqube-issue/routine-prompt.md`.
   - `xwiki-backport` — backport any change to an older branch: cherry-pick `-x`, adapt to the branch (module pom versions, Java level, style/API), verify, open the PR.
   - `xwiki-backport-testneeded` — backport `testneeded`-labelled tests to supported stable branches, adjust `@since` across branches, open the PRs (builds on `xwiki-backport`).
   - `xwiki-presentation` — build a slide deck about XWiki (conference talk, meetup, project or
