@@ -45,13 +45,12 @@ follows.
   `clean`/`verify` gotchas — use the **`xwiki-build`** skill (the canonical reference).
 - **Always pass `-B -ntp`** on every `mvn` invocation (batch mode + no-transfer-progress), to
   suppress interactive prompts and the download/progress lines that otherwise flood the output.
-- Unit test classes end with `*Test.java` (Surefire); integration test classes end with `*IT.java`
-  (Failsafe).
 - Tests must **not** write to stdout/stderr — enforced by Surefire's `CaptureConsole` listener.
   Skip per-module with `-Dxwiki.surefire.captureconsole.skip=true`.
+- **Load the `xwiki-test-guidelines` skill before creating or changing any test**, down to adding a
+  single `@Test`/`@UITest` method to an existing class — the size of the change is not a reason to skip it.
 - After adding or changing unit tests in a module, run the **`xwiki-increase-test-coverage`** skill
-  as part of that change. Deeper testing guidance: **`xwiki-test-guidelines`** skill /
-  `okf/testing/strategy.md`.
+  as part of that change.
 
 ## Code conventions
 
