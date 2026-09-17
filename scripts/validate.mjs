@@ -23,6 +23,13 @@
 //   8. The OKF index stays a map: each entry, and the file, within a size budget. An entry exists to
 //      pick a topic, so it says what the topic is and when to open it; a description long enough to
 //      restate the rules gets acted on in place of the file it points at, at a third of the detail.
+//   9. Every SKILL.md frontmatter parses as YAML. A `name`/`description` is written as an unquoted
+//      (plain) scalar, in which `: ` and ` #` are structural — `: ` anywhere in the value makes the
+//      block unparseable, and ` #` silently truncates the value at that point. The host then loads
+//      the skill with EMPTY (or truncated) metadata rather than failing loudly, so the description
+//      Claude matches against is gone and the skill simply never triggers. This is NOT covered by
+//      `claude plugin validate`: measured against the `yaml` package, three skills here were
+//      unparseable while that command reported only one of them and then passed the repo.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -207,6 +214,68 @@ for (const skill of skills) {
   for (const ref of new Set(skillMd.match(okfRefPattern) ?? [])) {
     if (!existsSync(join(repoRoot, "xwiki", ref))) {
       errors.push(`xwiki/skills/${skill}/SKILL.md: cites '${ref}', which does not exist`);
+    }
+  }
+}
+
+// ---- Invariant 9: skill frontmatter parses as YAML -------------------------------------------
+// A skill whose frontmatter does not parse loads with empty metadata instead of reporting anything,
+// so its description — the only thing Claude matches on to invoke it — is gone and the skill simply
+// never fires. The descriptions here are long English sentences written as unquoted (plain) scalars,
+// where the two characters YAML treats as structural, `: ` and ` #`, are easy to type by accident:
+// `: ` makes the block unparseable, ` #` truncates the value from there on. A plain scalar also
+// continues onto indented lines, so the offending text is often nowhere near the `description:` line.
+//
+// This does not duplicate `claude plugin validate`, which is weaker: with all three offenders present
+// it named one and passed the repo, while the `yaml` package rejected all three. Rather than depend
+// on a YAML library (this script is Node built-ins only), check the constructs that break a plain
+// scalar. A quoted or block scalar is left alone — being explicitly delimited, it may contain them,
+// and several descriptions here rely on that.
+for (const skill of skills) {
+  const skillMd = read(`xwiki/skills/${skill}/SKILL.md`);
+  const fm = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fm) {
+    errors.push(`xwiki/skills/${skill}/SKILL.md: no YAML frontmatter block`);
+    continue;
+  }
+  const lines = fm[1].split(/\r?\n/);
+  let key = null; // the key whose plain scalar we are inside, or null
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const keyed = line.match(/^([A-Za-z_][\w-]*):(?:[ \t]+(.*))?$/);
+    let text; // the part of this line that belongs to a plain scalar value
+    if (keyed) {
+      const value = keyed[2] ?? "";
+      // Quoted and block scalars delimit themselves, so they may hold anything.
+      if (/^["'|>]/.test(value)) {
+        key = null;
+        continue;
+      }
+      if (/^[-?:,[\]{}#&*!%@`]/.test(value)) {
+        errors.push(
+          `xwiki/skills/${skill}/SKILL.md: frontmatter '${keyed[1]}' starts with the YAML indicator ` +
+            `'${value[0]}' — quote the value`
+        );
+      }
+      key = keyed[1];
+      text = value;
+    } else if (key && /^\s+\S/.test(line)) {
+      text = line; // a continuation line of the plain scalar started above
+    } else {
+      key = null;
+      continue;
+    }
+    for (const [pattern, what] of [
+      [/:(?:\s|$)/, "a colon followed by a space or end of line"],
+      [/\s#/, "a space followed by '#'"],
+    ]) {
+      if (pattern.test(text)) {
+        errors.push(
+          `xwiki/skills/${skill}/SKILL.md: frontmatter '${key}' contains ${what} inside an unquoted ` +
+            `value (line ${i + 1} of the frontmatter) — YAML cannot parse it and the skill would ` +
+            `load with empty metadata; rewrite it (an em dash reads the same) or quote the value`
+        );
+      }
     }
   }
 }

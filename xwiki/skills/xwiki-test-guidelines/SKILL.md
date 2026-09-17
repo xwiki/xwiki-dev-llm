@@ -3,7 +3,7 @@ name: xwiki-test-guidelines
 description: Rules and XWiki-specific framework documentation for writing tests. Load it BEFORE creating or
   changing any test — a new test class, a single added @Test/@UITest method in an existing class, or an edit
   to an existing method — and for unit, integration and functional (Docker @UITest) tests alike. "It is only
-  one method", "the class already exists" and "this one is simple" are not reasons to skip it: the traps it
+  one method", "the class already exists" and "this one is simple" are not reasons to skip it — the traps it
   carries (rights granted to the content a test creates, the page-object boundary, waits, ordering) bite the
   smallest additions. For CONVERTING existing tests use xwiki-convert-tests (unit) or xwiki-convert-tests-docker
   (functional); for a flickering test use xwiki-fix-flickering-docker-test.

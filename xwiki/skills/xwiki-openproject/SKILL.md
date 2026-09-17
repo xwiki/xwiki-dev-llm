@@ -1,6 +1,6 @@
 ---
 name: xwiki-openproject
-description: Interact with XWiki's OpenProject instance (op.xwiki.org) over its REST API v3 — search, view, create, update and comment on work packages (Bug / Improvement / New Feature / Task) and list projects, types, statuses and versions. Use when the user mentions op.xwiki.org, an OpenProject work package, or asks to file/triage/update one. This is NOT the issue tracker: bugs and tasks about XWiki code live in jira.xwiki.org — use xwiki-jira for those. For reading/writing wiki pages on a running XWiki use xwiki-rest-api; for the commit/PR conventions use xwiki-pull-request.
+description: Interact with XWiki's OpenProject instance (op.xwiki.org) over its REST API v3 — search, view, create, update and comment on work packages (Bug / Improvement / New Feature / Task) and list projects, types, statuses and versions. Use when the user mentions op.xwiki.org, an OpenProject work package, or asks to file/triage/update one. This is NOT the issue tracker — bugs and tasks about XWiki code live in jira.xwiki.org — use xwiki-jira for those. For reading/writing wiki pages on a running XWiki use xwiki-rest-api; for the commit/PR conventions use xwiki-pull-request.
 ---
 
 # XWiki OpenProject
