@@ -65,7 +65,12 @@ curl -s "https://dev.xwiki.org/xwiki/rest/wikis/dev/spaces/Community/spaces/Secu
   -H "Accept: application/json"
 ```
 
-Take the `content` field (xwiki/2.1 syntax). Two parts of it matter:
+Take the `content` field (xwiki/2.1 syntax). Three parts of it matter:
+
+- The **`= What's the process to handle security issues? =`** section is the committer checklist the
+  whole job is measured against — it carries steps that live nowhere else, in particular the
+  Security Advisory Application import and the CVE request of Step 6. Read it, don't stop at the two
+  sections below.
 
 - The **`= Security Advisory template and information =`** section holds the literal markdown
   template, inside a `{{code language="markdown"}} … {{/code}}` block — copy its section structure
@@ -207,6 +212,17 @@ assumed. When the user asks for that step:
 - Do **not** merge any fix through the advisory's temporary private fork via the GitHub UI — that
   leaks the JIRA title into the commit log. Use the manual merge recipe in
   [[security-policy]] (`okf/processes/security-policy.md`) instead.
+- **Import the advisory into the Security Advisory Application on xwiki.org** — the step that is
+  easiest to forget and the one with a deadline attached, because it is what computes the embargo
+  duration and fires the disclosure reminders; skip it and nothing ever reminds anyone to disclose.
+  Import from https://www.xwiki.org/xwiki/bin/view/SecurityAdvisoryApplication/Code/SingleAdvisoryImportPage
+  once the GHSA content is final, then check the imported data, set the state to **completed**, and
+  then to **announced** — the latter notifies everyone subscribed to new advisories. Re-import the
+  same way whenever the advisory is edited afterwards. The app lives on xwiki.org and needs the
+  `XWikiSecurityGroup` membership, so this is the user's action, not something to do for them:
+  remind them of it, with the link, rather than treating the GHSA draft as the end of the job.
+- **Request the CVE early.** A CVE ID can take a while to arrive and publication is blocked without
+  one, so it is requested well before the embargo date is reached — not at disclosure time.
 - Publishing/disclosing the advisory (making it public) happens only once the embargo date is
   reached **and** a CVE ID has been received — never publish opportunistically.
 
