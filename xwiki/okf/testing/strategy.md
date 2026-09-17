@@ -4,8 +4,9 @@ stability: durable
 summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the prefer-the-lightest-base
   rule, the scenario rule (no two @Test methods build the same fixture, a distinct fixture is what
   justifies a distinct method, and @Order is not a substitute), the page-object boundary (no
-  getDriver() in a test), the don't-pay-the-timeout rule, how to read a PRChecker log line, the bare @UITest on an AllIT
-  container, coverage, and where each test framework lives. Procedures live in the test skills.
+  getDriver() in a test), the don't-pay-the-timeout rule, how to read a PRChecker log line and how to grant
+  Programming Rights to a test's own content, the bare @UITest on an AllIT container, coverage, and where each
+  test framework lives. Procedures live in the test skills.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDon27tpaythetimeout
@@ -78,13 +79,17 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   authorization manager so that wiki content never obtains Programming Right, and logs
   `PRChecker: Block programming right for page [X]`. It fires whenever *any* code evaluates the
   Programming Right while `X` is the context's secure document (`sdoc`) — including callers that merely
-  ask in order to choose between a privileged and a non-privileged branch and that behave correctly on
-  the latter. The line therefore means "the right was asked for here and denied", **not** "`X` requires
+  probe to choose between a privileged and an unprivileged branch and behave correctly on the latter.
+  The line therefore means "the right was asked for here and denied", **not** "`X` requires
   Programming Right". Before treating one as a defect, locate the actual call and check whether the
   denied branch is harmful. Each secure document is logged only once per instance, so one line can hide
-  further probes from the same page. A page that legitimately needs the right is allowlisted with the
-  `test.prchecker.excludePattern` property (a regex matched against the serialized secure-document
-  reference), which logs `PRChecker: Skipping check for [X] since it's excluded` instead.
+  further probes from the same page. Conversely, when content **your own test creates** needs the right
+  — a `{{groovy}}` macro rendering `You need Programming Rights to execute the script macro [groovy]`,
+  a sheet silently taking its unprivileged branch — allowlist its page on the test class, which really
+  grants the right (and logs `PRChecker: Skipping check for [X] since it's excluded`):
+  `@UITest(properties = {"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MySpace\\.MyPage"})`.
+  The regex must match the **whole** serialized reference, wiki included (`xwiki:Space.Page`); the
+  patterns of several merged `@UITest`s are OR-ed together.
 - **An `AllIT` container class carries a bare `@UITest`** — the Docker framework resolves the
   `@UITest` of the container class **and of every nested class** (walking each nested class's
   superclass chain) and merges them all into one configuration
