@@ -18,6 +18,10 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
   Amending it means force-pushing: **always name the remote and the branch** (`git push
   --force-with-lease origin <branch>`). Where `push.default=matching` is set, a refspec-less force
   push rewrites *every* local branch that also exists on the remote, and the lease does not stop it.
+- **Backtick `@` tokens and `#123` in the commit body and the PR body** — a bare `@since` there
+  notifies the GitHub account of that name, and a pushed message cannot be corrected. The summary
+  line is exempt, being the issue title verbatim. Rule and exceptions:
+  `okf/conventions/commit-messages.md`; the `check-commit-text` hook also blocks it.
 - When the change was authored with AI assistance, add AI attribution: a `Co-Authored-By: Claude
   <model> <noreply@anthropic.com>` trailer on the commit and a "Generated with Claude Code" line in
   the PR body.
