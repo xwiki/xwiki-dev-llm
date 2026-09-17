@@ -1,0 +1,1419 @@
+#!/usr/bin/env node
+/*
+ * Sweeps the CI jobs of every maintained XWiki branch and emits a pre-digested JSON work order:
+ * one entry per *incident* — a distinct cause, not a distinct symptom — already classified, aged,
+ * attributed to a commit and checked against what was said about it last time.
+ *
+ * Read-only by construction: it talks to ci.xwiki.org, jira.xwiki.org and the GitHub read API and
+ * writes nothing anywhere. Everything this tool decides is deterministic, so it costs no model
+ * tokens; the judgement calls — root-causing, wording a message to a human, writing a fix — are
+ * the SKILL.md's, and the writes are the writer tools'. See skills/xwiki-ci-check/SKILL.md.
+ *
+ * The output is deliberately small: matched error lines, candidate commits and ages, never a
+ * console log and never a full test report. That is what keeps a bad morning a 5k-token run.
+ */
+
+import {
+  branchesOf, buildRevision, buildSummaries, ENV_TESTS_FOLDER, failedNodesOf, isPseudoTest,
+  jobUrl, MAIN_FOLDER, outcomes, stagesOf, stepConsole, stepLog, testResults
+} from '../../../scripts/jenkins.mjs';
+import { knownFlickers } from '../../../scripts/jira-flickers.mjs';
+import { readFileSync } from 'node:fs';
+
+const USAGE = `Usage: node ci-check.mjs [options]
+
+  --repos <a,b,c>     Repos to sweep (default: xwiki-commons,xwiki-rendering,xwiki-platform)
+  --branch <name>     Only this branch (default: every master/stable-* branch Jenkins has)
+  --horizon <days>    Blame horizon: no write is proposed for an older incident (default 7)
+  --budget <n>        Incidents marked for deep treatment (default 5)
+  --history <n>       Builds of history to age and rate a failure over (default 8)
+  --absence <days>    Days without a build that make a dev/LTS branch an incident (default 3)
+  --max-console <n>   Consecutive broken builds whose log is read, per job (default 4)
+  --no-github         Skip blame attribution and the "already commented?" check
+  --full              Emit every field of every incident (debugging; the default is digested)
+  --pretty            Human-readable summary instead of the JSON work order
+  --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
+                      instead of sweeping. Add --live to drop the "dry run" header.
+
+Reads GitHub through GH_TOKEN_BOT (or GITHUB_TOKEN / GH_TOKEN — reads are identity-neutral).
+Without one, blame and comment-dedupe are unavailable and every incident comes back tier "unknown".
+`;
+
+function parseArgs(argv) {
+  const out = {
+    repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
+    budget: 5, history: 8, absence: 3, maxConsole: 4, github: true, full: false, pretty: false,
+    renderDetail: null, live: false
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const key = argv[i];
+    if (key === '--repos') out.repos = argv[++i].split(',').filter(Boolean);
+    else if (key === '--branch') out.branch = argv[++i];
+    else if (key === '--horizon') out.horizon = Number(argv[++i]);
+    else if (key === '--budget') out.budget = Number(argv[++i]);
+    else if (key === '--history') out.history = Number(argv[++i]);
+    else if (key === '--absence') out.absence = Number(argv[++i]);
+    else if (key === '--max-console') out.maxConsole = Number(argv[++i]);
+    else if (key === '--no-github') out.github = false;
+    else if (key === '--full') out.full = true;
+    else if (key === '--pretty') out.pretty = true;
+    else if (key === '--render-detail') out.renderDetail = argv[++i];
+    else if (key === '--live') out.live = true;
+    else if (key === '--help' || key === '-h') { console.log(USAGE); process.exit(0); }
+    else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
+  }
+  return out;
+}
+
+const DAY = 86400000;
+const daysSince = timestamp => Math.floor((Date.now() - timestamp) / DAY);
+const dayOf = timestamp => new Date(timestamp).toISOString().slice(0, 10);
+
+// ---- Branch policy ---------------------------------------------------------------------------
+// master is where the next version is developed; a `*.4.x` / `*.10.x` stable branch is an LTS,
+// maintained for a long time; every other stable branch is transient — cut at a release and rarely
+// touched again, so *silence on it is health, not a symptom*. Alerting stops two cycles back: an
+// XWiki cycle is a major version, so with 18.x current, 16.x is the oldest branch worth a ping.
+
+const CYCLE_DEPTH = 2;
+
+/** @returns {{class: 'dev'|'lts'|'transient', cycle: number|null}} */
+export function classifyBranch(branch) {
+  if (branch === 'master') return { class: 'dev', cycle: null };
+  const version = branch.match(/^stable-(\d+)\.(\d+)\.x$/);
+  if (!version) return { class: 'transient', cycle: null };
+  const [, major, minor] = version.map(Number);
+  // The long-term-supported minors. They are the cycle's last release (`.10`) and its mid-cycle
+  // one (`.4`); everything else in the same cycle is a transient stable branch.
+  const lts = minor === 4 || minor === 10;
+  return { class: lts ? 'lts' : 'transient', cycle: major };
+}
+
+/** Annotates each branch with its class and whether this run is allowed to raise an alert on it. */
+function withPolicy(branches) {
+  const cycles = branches.map(b => classifyBranch(b).cycle).filter(c => c != null);
+  const currentCycle = cycles.length ? Math.max(...cycles) : null;
+  return branches.map(branch => {
+    const { class: branchClass, cycle } = classifyBranch(branch);
+    const inWindow = cycle == null || currentCycle == null || cycle >= currentCycle - CYCLE_DEPTH;
+    return { branch, branchClass, cycle, alerting: branchClass !== 'transient' && inWindow };
+  });
+}
+
+// ---- What a red build says about itself ------------------------------------------------------
+// Narrow, explicitly listed patterns, matched in-script against the console log. Anything they do
+// not match falls through to "unclassified" — a legitimate outcome that gets reported rather than
+// guessed at, because a broad pattern against Testcontainers' image dumps matches everything.
+
+const INFRA_PATTERNS = [
+  { id: 'docker-rate-limit', re: /toomanyrequests|You have reached your pull rate limit/ },
+  { id: 'github-unreachable', re: /fatal: unable to access 'https:\/\/github\.com|Failed to connect to github\.com/ },
+  {
+    id: 'repository-unreachable',
+    re: /Could not transfer artifact .* (Connection timed out|Connection reset|502|503)/
+  },
+  { id: 'agent-lost', re: /Agent went offline|channel is already closed|Connection was broken: java\.io\.IOException/ },
+  { id: 'disk-full', re: /No space left on device/ }
+];
+
+// Ordered: the first matcher that hits names the break. Each one's `locate` turns the matched line
+// into a signature stable across builds — the tool plus *where*, never the message, which often
+// carries a count or a timestamp.
+const BREAK_MATCHERS = [
+  {
+    tool: 'checkstyle',
+    re: /\[ERROR\]\s+(\S+\.java):\[(\d+)[,:]\d*\]\s+(?:\(\S+\)\s+)?(\S+):/,
+    locate: m => `checkstyle:${basename(m[1])}:${m[2]}`,
+    file: m => m[1]
+  },
+  {
+    tool: 'compile',
+    re: /\[ERROR\]\s+(\S+\.java):\[(\d+),\d+\]\s+(.+)/,
+    locate: m => `compile:${basename(m[1])}:${m[2]}`,
+    file: m => m[1]
+  },
+  {
+    tool: 'license',
+    re: /Missing header in:\s*(\S+)|\[ERROR\].*license.*Some files do not have the expected license header/,
+    locate: m => `license:${m[1] ? basename(m[1]) : 'multiple'}`,
+    file: m => m[1] || null
+  },
+  {
+    tool: 'revapi',
+    re: /\[ERROR\].*(?:revapi|API problems found|java\.(?:class|method|field)\.\S+)/,
+    locate: () => 'revapi:api-break',
+    file: () => null
+  },
+  {
+    // `[ERROR]` is deliberately not required: Maven prints this message twice, once prefixed in the
+    // build output and once bare inside the `MojoExecutionException` it dumps — and the bare one is
+    // what survives in the 10 KiB log tail this tool reads first. Requiring the prefix left the tail
+    // unclassified and paid for the whole console page to learn the same thing.
+    tool: 'enforcer',
+    // Only the first alternative may appear unprefixed: `Rule N: <class> failed with message` is
+    // written by a failure and by nothing else. The other two keep `[ERROR]`, because
+    // `[INFO] --- enforcer:…:enforce (enforcer-rules) @ … ---` is printed by every successful
+    // Maven build, and matching it would sign half the breaks in the project as enforcer failures.
+    re: /(?:Rule \d+: \S+ failed with message)|\[ERROR\].*(?:enforcer-rules|banned dependencies)/,
+    locate: () => 'enforcer:rule-failed',
+    file: () => null
+  },
+  {
+    // Two wordings, because a gate failure surfaces in two places: the scanner prints
+    // `QUALITY GATE STATUS: FAILED` into the Maven log, while Jenkins' own `waitForQualityGate`
+    // step reports `Pipeline aborted due to quality gate failure: ERROR` as the stage's
+    // `error.message` — and the stage error is what this tool reads, the console log being ~80 MB.
+    // Matching only the scanner's wording leaves every gate failure `unclassified`, and so signed
+    // by its raw message — while the marker that suppresses tomorrow's duplicate, and the window
+    // that ages the break, both join on the signature.
+    tool: 'sonar-gate',
+    re: new RegExp(['QUALITY GATE STATUS: FAILED',
+      'Quality gate (?:is|status is) (?:red|FAILED)',
+      'Pipeline aborted due to quality gate failure'].join('|'), 'i'),
+    locate: () => 'sonar-gate:failed',
+    file: () => null
+  },
+  {
+    tool: 'test-infrastructure',
+    re: /\[ERROR\].*(?:There are test failures|Execution default-test of goal|surefire).*(?:forked VM|crashed)/,
+    locate: () => 'surefire:vm-crash',
+    file: () => null
+  },
+  {
+    // Names the module but not the cause, which every matcher above does better — so it is `weak`:
+    // tried only once they have all failed on the *full* log. Without that it would win by being
+    // early, since Maven prints this resume line at the very end of a failed reactor and it is
+    // therefore the one error that always survives inside the 10 KiB tail — hiding the goal that
+    // actually failed, which sits further up. As a last resort it still beats `unclassified`: a
+    // named module is what blame needs to score commits by file overlap.
+    tool: 'maven-reactor',
+    weak: true,
+    re: /\[ERROR\]\s+mvn .*-rf :(\S+)/,
+    locate: m => `maven:${m[1]}`,
+    file: () => null
+  }
+];
+
+const basename = path => path.split(/[\\/]/).pop();
+
+// The same blips as INFRA_PATTERNS, but as they appear in a *test's* error detail rather than in a
+// log: when the environment a docker test needs never comes up, every test of every module in that
+// run reports a setup failure. That is one infra event, not forty broken modules — and forty
+// broken modules is what it looks like until this is matched.
+const INFRA_TEST_PATTERNS = [
+  { id: 'agent-environment', re: /Error setting up the XWiki testing environment on agent/ },
+  { id: 'docker-rate-limit', re: /toomanyrequests|pull rate limit/ },
+  { id: 'container-start', re: /Could not start container|Timed out waiting for container|ContainerLaunchException/ }
+];
+
+const infraInDetail = details => {
+  for (const pattern of INFRA_TEST_PATTERNS) {
+    if (details.some(detail => pattern.re.test(detail || ''))) return pattern.id;
+  }
+  return null;
+};
+
+// The union of everything worth keeping from a log, plus a bare `[ERROR]` net so an unmatched
+// break still comes back with its first error line to report.
+// Never anchored to the start of a line: Jenkins prefixes every console line with a timestamp
+// (`21:45:33,216 [ERROR] ...`), so `/^\[ERROR\]/` matches nothing at all on a real build.
+const LOG_PATTERNS = [
+  ...INFRA_PATTERNS.map(p => p.re), ...BREAK_MATCHERS.map(m => m.re), /\[ERROR\]/
+];
+
+/** The stage name, stripped of the part that changes between builds, to make it a signature. */
+const stageKey = name => (name || 'unknown stage')
+  .replace(/\s+for\s+.*$/, '')            // "Build for IT #11 for xwiki-…, xwiki-…" -> "Build"
+  .replace(/#\d+/g, '#N')
+  .trim()
+  .slice(0, 60);
+
+/**
+ * Reads one broken build and says what broke it.
+ *
+ * Goes through the *stages*, never the console log: the failing stage names itself, its failing
+ * step carries an `error.message`, and that step's own log is a few KB against the build's ~80 MB.
+ * Reading the console instead would cost more bandwidth per build than this whole sweep.
+ *
+ * @returns {{kind: 'infra'|'build-break'|'timeout'|'unclassified', signature: string,
+ *   file: string|null, stage: string|null, evidence: string[]}}
+ */
+async function diagnose(buildUrl) {
+  const broken = (await stagesOf(buildUrl))
+    .filter(stage => stage.status === 'FAILED' || stage.status === 'ABORTED');
+  // One bag per failed stage, never merged. A broken build usually fails in a *cascade* — Main
+  // breaks, so TestRelease breaks, so the quality gate breaks — and pooling their logs lets the
+  // highest-priority matcher anywhere in the pile decide, which makes the answer depend on how far
+  // the cascade happened to run. Two builds of one unchanged break then sign differently, and
+  // `breakWindow` reads that as "a different cause", cuts the blame window to the last build's
+  // commits, and names whoever is in it. The first failed stage is the cause; the rest follow it.
+  const stages = [];
+  for (const candidate of broken.slice(0, 2)) {
+    const bag = { name: candidate.name, lines: [], truncated: [], nodeError: null };
+    for (const node of (await failedNodesOf(candidate)).slice(0, 3)) {
+      if (!bag.nodeError && node.error?.message) bag.nodeError = node.error.message.split('\n')[0].slice(0, 200);
+      const { lines: log, hasMore, consoleUrl } = await stepLog(node);
+      bag.lines.push(...keep(log));
+      // Remember where the rest of a cut-off log is, without reading it: most breaks are named in
+      // the tail, and the ones that are not are worth a second request only once that is known.
+      if (hasMore && consoleUrl) bag.truncated.push(consoleUrl);
+    }
+    stages.push(bag);
+  }
+  const stage = stages[0]?.name ?? null;
+  const nodeError = stages.find(bag => bag.nodeError)?.nodeError ?? null;
+  const lines = stages.flatMap(bag => bag.lines);
+  const at = key => (stage ? `${stageKey(stage)}/${key}` : key);
+
+  for (const pattern of INFRA_PATTERNS) {
+    const hit = lines.find(line => pattern.re.test(line)) || (nodeError?.match(pattern.re) ? nodeError : null);
+    if (hit) return { kind: 'infra', signature: pattern.id, file: null, stage, evidence: [hit] };
+  }
+  // A stage that ran out of time is neither a broken build nor an infra blip, and pretending it is
+  // one of those is worse than saying so. v1 reports it and stops there — no blame, no fix.
+  if (/Timeout has been exceeded|script returned exit code 143/i.test(nodeError || '')) {
+    return { kind: 'timeout', signature: at('timeout'), file: null, stage, evidence: [nodeError] };
+  }
+  let matched = null;
+  for (const bag of stages) {
+    matched = classify(bag.lines, bag.nodeError ?? nodeError, at, stage);
+    // Maven prints `Failed to execute goal … on project X` above the stack trace it then dumps, so
+    // on a long build that headline is exactly what falls out of the 10 KiB tail. Paying for the
+    // full step log here is what turns "script returned exit code 1" into a named goal and module —
+    // and it is paid only on a stage the tail could not explain.
+    if (!matched && bag.truncated.length) {
+      for (const consoleUrl of bag.truncated) bag.lines.push(...keep(await stepConsole(consoleUrl)));
+      matched = classify(bag.lines, bag.nodeError ?? nodeError, at, stage);
+    }
+    if (matched) break;
+  }
+  // Only now, with every real matcher having failed on every stage's whole log, is the reactor's
+  // resume line worth taking: it says which module broke and nothing about why.
+  matched ??= classify(stages.flatMap(bag => bag.lines), nodeError, at, stage, { weak: true });
+  if (matched) return matched;
+
+  // Re-read from the bags rather than the snapshot above: a stage whose full log was fetched on the
+  // way here has error lines the snapshot never saw, and they are the ones worth reporting.
+  const errors = stages.flatMap(bag => bag.lines).filter(line => line.includes('[ERROR]')).slice(0, 5);
+  const first = nodeError || errors[0] || 'no error line';
+  return {
+    kind: 'unclassified',
+    // Normalised so the same unexplained break is the same incident tomorrow: digits vary between
+    // builds (paths, counts, durations) and would otherwise make every run look like a new cause.
+    signature: at(`unclassified:${first.slice(0, 80).replace(/\d+/g, 'N')}`),
+    file: null,
+    stage,
+    evidence: nodeError ? [nodeError, ...errors]
+      : (errors.length ? errors : ['(no error line found in the failing stage)'])
+  };
+}
+
+/**
+ * Only the lines worth matching against, bounded and trimmed the way a log grep would leave them —
+ * plus, after each *named* pattern, the lines that continue it.
+ *
+ * A matched line is usually the headline of the error and not the error: Maven's enforcer prints
+ * `Rule 0: … failed with message:` and puts the module, the dependency and the two versions on the
+ * lines below, which match no pattern at all. Keeping the match alone kept the one line of the
+ * failure that says nothing, and left a build break that names its cause looking anonymous. The
+ * continuation stops at the next Maven log line, at a blank line and at a stack frame, which is
+ * where such a message ends; the bare `[ERROR]` net drags nothing along, or a stack dump would
+ * fill the budget on its own.
+ */
+const CONTINUATION_LINES = 14;
+const NAMED_PATTERNS = [...INFRA_PATTERNS.map(p => p.re), ...BREAK_MATCHERS.map(m => m.re)];
+const endsContinuation = line =>
+  !line.trim() || /\[(?:INFO|WARNING|DEBUG)\]/.test(line) || /^\s*at\s+\S+\(/.test(line);
+
+const keep = lines => {
+  const wanted = new Set();
+  lines.forEach((line, index) => {
+    if (!LOG_PATTERNS.some(pattern => pattern.test(line))) return;
+    wanted.add(index);
+    if (!NAMED_PATTERNS.some(pattern => pattern.test(line))) return;
+    for (let next = index + 1; next < lines.length && next <= index + CONTINUATION_LINES; next++) {
+      if (endsContinuation(lines[next])) break;
+      wanted.add(next);
+    }
+  });
+  // `trimEnd`, not `trim`: a dependency tree is indented, and flattening it turns "who pulls what"
+  // into an unreadable list of coordinates.
+  return [...wanted].sort((a, b) => a - b).map(index => lines[index].trimEnd().slice(0, 300)).slice(0, 240);
+};
+
+/**
+ * The first `BREAK_MATCHERS` entry that hits, or null when none does — separate from `diagnose` so
+ * that it can be run repeatedly: on the cheap log tail, on the full log if that failed, and finally
+ * with the `weak` matchers, which name a break too vaguely to be allowed to pre-empt the others.
+ */
+function classify(lines, nodeError, at, stage, { weak = false } = {}) {
+  // The step's `error.message` is searched alongside its log because some breaks appear only
+  // there: a Jenkins step that fails the build by itself — `waitForQualityGate` — writes its
+  // reason into the node's error and nothing into any Maven log. It goes last so that a log line,
+  // which carries the file and the position, still names the break when there is one.
+  const candidates = nodeError ? [...lines, nodeError] : lines;
+  for (const matcher of BREAK_MATCHERS.filter(m => Boolean(m.weak) === weak)) {
+    for (let index = 0; index < candidates.length; index++) {
+      const match = candidates[index].match(matcher.re);
+      if (match) {
+        return {
+          kind: 'build-break', signature: at(matcher.locate(match)), file: matcher.file(match), stage,
+          evidence: evidenceFrom(candidates, index, matcher)
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * The matched line, whatever continues it, and any further line the *same* matcher hits — a javac
+ * run reports twenty errors and the second one is as much the break as the first. It stops at the
+ * first line belonging to a different pattern, because past that point the log has moved on to
+ * another failure and quoting it under this one's heading would misdescribe both.
+ */
+function evidenceFrom(lines, start, matcher) {
+  const evidence = [];
+  let budget = 1600;
+  for (let index = start; index < lines.length && evidence.length < 16 && budget > 0; index++) {
+    const line = lines[index];
+    // Only a *named* pattern ends the quote. The bare `[ERROR]` net must not: Maven prefixes every
+    // line of a multi-line message with `[ERROR]`, so breaking on it would cut the message off
+    // after its first line — which is the whole point of quoting more than one.
+    const continues = !NAMED_PATTERNS.some(pattern => pattern.test(line)) || matcher.re.test(line);
+    if (index > start && !continues) break;
+    evidence.push(line);
+    budget -= line.length;
+  }
+  return evidence;
+}
+
+// ---- GitHub (read-only) ----------------------------------------------------------------------
+
+const GITHUB = 'https://api.github.com';
+// Reads may use whatever token is around — a developer running this by hand has their own, and the
+// GitHub read API does not care whose it is. Writing is the opposite: `commit-comment.mjs` accepts
+// the bot's token and nothing else, so no fallback here can ever put a human's name on a comment.
+const tokens = [process.env.GH_TOKEN_BOT, process.env.GITHUB_TOKEN, process.env.GH_TOKEN].filter(Boolean);
+let token = tokens[0];
+let tokenFallback = null;
+
+/**
+ * One GitHub read.
+ *
+ * The bot's token can be refused wholesale rather than per-request — the `xwiki` org rejects a
+ * fine-grained token whose lifetime exceeds 366 days, answering 403 to *every* call including a
+ * plain public-repo read. That is a misconfiguration to fix, not a reason for the morning sweep to
+ * report "no blame available" for days, so a read falls through to the next token available and
+ * says so in the report. Writes have no such path.
+ */
+async function github(path) {
+  for (let index = tokens.indexOf(token); ; index++) {
+    const attempt = tokens[index];
+    const res = await fetch(`${GITHUB}${path}`, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'xwiki-ci-check',
+        ...(attempt ? { Authorization: `Bearer ${attempt}` } : {})
+      }
+    });
+    if (res.status === 404) return null;
+    if (res.ok) return res.json();
+    const refused = (res.status === 401 || res.status === 403) && index < tokens.length - 1;
+    if (!refused) throw new Error(`GitHub ${path}: HTTP ${res.status}`);
+    tokenFallback ??= `the first GitHub token was refused (HTTP ${res.status}); reads fell back to `
+      + 'the next one. Reads are identity-neutral, but writes will fail until GH_TOKEN_BOT works.';
+    token = tokens[index + 1];
+  }
+}
+
+/**
+ * The commits between two builds' *project* revisions, with their real authors and the files they
+ * touched.
+ *
+ * GitHub, not Jenkins: `changeSets` is empty on every recent xwiki-commons build, and where it is
+ * populated its `author.fullName` is frequently `noreply`, GitHub's merge-commit author. One
+ * mechanism that works everywhere beats two that each work somewhere.
+ */
+async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) {
+  const data = await github(`/repos/xwiki/${repo}/compare/${baseSha}...${headSha}`);
+  if (!data?.commits) return [];
+  const commits = data.commits.filter(c => (c.parents || []).length < 2).slice(-maxCommits);
+  return Promise.all(commits.map(async commit => {
+    const detail = await github(`/repos/xwiki/${repo}/commits/${commit.sha}`);
+    return {
+      sha: commit.sha,
+      short: commit.sha.slice(0, 10),
+      // `author` is the GitHub account; `commit.author` is the git identity, which for a merged PR
+      // is often GitHub's `noreply` robot. Prefer the account, and never ping a `noreply`.
+      author: commit.author?.login || null,
+      gitAuthor: commit.commit?.author?.name || null,
+      title: (commit.commit?.message || '').split('\n')[0].slice(0, 120),
+      url: commit.html_url,
+      files: (detail?.files || []).map(f => f.filename).slice(0, 200)
+    };
+  }));
+}
+
+/** Whether this incident was already commented on, and in what state. */
+async function priorComment(repo, sha, incidentId) {
+  const comments = await github(`/repos/xwiki/${repo}/commits/${sha}/comments`);
+  for (const comment of comments || []) {
+    const marker = (comment.body || '').match(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/);
+    if (marker && marker[1] === incidentId) {
+      return { state: marker[2], url: comment.html_url, at: comment.created_at };
+    }
+  }
+  return null;
+}
+
+/**
+ * How many commits the branch has that CI has never built.
+ *
+ * @returns {{behind: number|null, reason: string}} `0` = CI is up to date and the silence is
+ *   simply nobody committing; `null` = it could not be established (no token), which is reported
+ *   as such rather than assumed either way.
+ */
+async function unbuiltCommits(target, jobs, args) {
+  const main = jobs.find(job => job.label === 'main') || jobs[0];
+  const latest = main?.builds[0];
+  if (!latest) return { behind: null, reason: 'the job has no build at all' };
+  if (!args.github || !token) return { behind: null, reason: 'unverified: no GitHub token to check the branch head' };
+  try {
+    const built = await buildRevision(`${main.url}/${latest.number}`, target.repo);
+    const head = await github(`/repos/xwiki/${target.repo}/branches/${encodeURIComponent(target.branch)}`);
+    const headSha = head?.commit?.sha;
+    if (!built || !headSha) {
+      return { behind: null, reason: 'unverified: the branch head or the built revision is unknown' };
+    }
+    if (built === headSha) return { behind: 0, reason: `CI is up to date with ${headSha.slice(0, 10)}` };
+    const diff = await github(`/repos/xwiki/${target.repo}/compare/${built}...${headSha}`);
+    const behind = diff?.ahead_by ?? null;
+    return behind === 0
+      ? { behind: 0, reason: `CI is up to date with ${headSha.slice(0, 10)}` }
+      : { behind, reason: `${behind ?? 'some'} commit(s) pushed since build #${latest.number} have never been built` };
+  } catch (error) {
+    return { behind: null, reason: `unverified: ${error.message}` };
+  }
+}
+
+// ---- Blame -----------------------------------------------------------------------------------
+// Tier decides the wording, and the wording is the whole credibility of the system: a machine that
+// asserts wrongly is switched off, one that asks is forgiven. `certain` may state, `likely` must
+// only ask, `ambiguous` must not ping at all.
+
+const touches = (commit, needle) =>
+  !!needle && commit.files.some(file => file.toLowerCase().includes(needle.toLowerCase()));
+
+// A Maven coordinate, `groupId:artifactId`, as every dependency report prints it — and an XWiki
+// module id, which is the one token that appears both in a coordinate and in a repository path.
+const COORDINATE_RE = /\b([a-z][\w.-]*\.[\w.-]+):([A-Za-z][\w.-]{2,})\b/g;
+const MODULE_RE = /\bxwiki-[a-z0-9]+(?:-[a-z0-9]+)+\b/g;
+// Words too generic to attribute anything: they are in most XWiki coordinates and most commit
+// subjects, so scoring on them would make every commit in the window relevant, which is the same
+// as none of them being.
+const GENERIC = new Set(['xwiki', 'maven', 'java', 'core', 'test', 'tests', 'api', 'plugin', 'parent',
+  'project', 'common', 'commons', 'platform', 'rendering', 'build', 'main', 'util', 'utils', 'jakarta',
+  'javax', 'jdk', 'pom', 'model', 'legacy', 'oldcore', 'web']);
+
+/**
+ * What the failure itself names, split by how a commit can be shown to be about it.
+ *
+ * `paths` are matched against a commit's changed files; `words` against its subject line. The
+ * second exists because the failures this tool sees most are dependency failures, and a dependency
+ * bump changes a `pom.xml` and nothing else — the path says only "a pom", and the subject
+ * ("Upgrade to Selenium 4.49.0") is the sole place the library is named. Without it every enforcer,
+ * revapi and reactor break came back `ambiguous` with the commit that caused it in the list.
+ */
+function blameKeys(incident) {
+  if (incident.file) return { paths: [basename(incident.file)], words: [] };
+  // A test's own file, and the package directory it lives in — which is where its page objects and
+  // fixtures sit too, and those break a test as readily as the test itself.
+  const paths = (incident.tests || []).slice(0, 20).flatMap(id => {
+    const className = id.split('#')[0];
+    const simple = className.split(/[.$]/).pop();
+    const packagePath = className.split('.').slice(0, -1).join('/');
+    return [`${simple}.java`, packagePath].filter(Boolean);
+  });
+  const words = new Set();
+  const text = [...(incident.evidence || []), incident.signature || ''].join('\n');
+  for (const [, , artifact] of text.matchAll(COORDINATE_RE)) {
+    if (artifact.startsWith('xwiki-')) paths.push(artifact);
+    else {
+      const word = artifact.split('-')[0].toLowerCase();
+      if (word.length >= 4 && !GENERIC.has(word)) words.add(word);
+    }
+  }
+  for (const module of text.matchAll(MODULE_RE)) paths.push(module[0]);
+  return { paths: [...new Set(paths)], words: [...words] };
+}
+
+const names = (commit, word) =>
+  new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(commit.title || '');
+
+function attribute(incident, commits) {
+  if (!commits.length) return { tier: 'ambiguous', reason: 'no commit in the window', suspects: [] };
+  const { paths, words } = blameKeys(incident);
+  const byPath = commits.filter(commit => paths.some(key => touches(commit, key)));
+  const byWord = commits.filter(commit => words.some(word => names(commit, word)));
+  const pingable = byPath.filter(commit => commit.author);
+  const named = byWord.filter(commit => commit.author);
+  const authors = new Set(commits.map(commit => commit.author).filter(Boolean));
+
+  // The failure names a file and exactly one commit in the window touched it. Nothing else in the
+  // window can have caused it, so this one may be stated rather than asked.
+  if (incident.file && pingable.length === 1) {
+    return {
+      tier: 'certain', culprit: pingable[0], suspects: commits,
+      reason: `the only commit in the window touching ${basename(incident.file)}`
+    };
+  }
+  if (pingable.length === 1) {
+    return {
+      tier: 'likely', culprit: pingable[0], suspects: commits,
+      reason: incident.class === 2
+        ? `the only commit in the window touching ${paths.find(key => touches(pingable[0], key))}, which the failure names`
+        : 'the only commit in the window touching the failing test or its package'
+    };
+  }
+  // Nothing touched the right path — but the failure named a library and exactly one commit in the
+  // window says it changed that library. It stays `likely`, never `certain`: a subject line is what
+  // an author wrote, not what the build observed, so this may only ask.
+  if (named.length === 1) {
+    return {
+      tier: 'likely', culprit: named[0], suspects: commits,
+      reason: `the only commit in the window whose subject names ${words.find(word => names(named[0], word))},` +
+        ' which the failure reports'
+    };
+  }
+  if (authors.size === 1 && commits.length <= 6) {
+    const culprit = commits.find(commit => commit.author);
+    return {
+      tier: 'likely', culprit, suspects: commits,
+      reason: `every one of the ${commits.length} commits in the window is by the same author`
+    };
+  }
+  const relevant = new Set([...byPath, ...byWord]);
+  return {
+    tier: 'ambiguous', suspects: commits,
+    reason: `${commits.length} commits by ${authors.size} author(s), ${relevant.size} of them relevant`
+  };
+}
+
+// ---- Sweep -----------------------------------------------------------------------------------
+
+/** Every job of every maintained branch, discovered from Jenkins rather than hardcoded. */
+async function discover(repos, only) {
+  const targets = new Map();
+  const add = (repo, branch, label, folder) => {
+    const key = `${repo}/${branch}`;
+    if (!targets.has(key)) targets.set(key, { repo, branch, jobs: [] });
+    targets.get(key).jobs.push({ label, url: jobUrl(folder, repo, branch) });
+  };
+  for (const repo of repos) {
+    for (const branch of await branchesOf(MAIN_FOLDER, repo)) {
+      // feature-* branches are experiments whose red is nobody's emergency.
+      if (branch !== 'master' && !branch.startsWith('stable-')) continue;
+      if (only && branch !== only) continue;
+      add(repo, branch, 'main', MAIN_FOLDER);
+    }
+  }
+  if (repos.includes('xwiki-platform')) {
+    for (const branch of await branchesOf(ENV_TESTS_FOLDER, 'xwiki-platform')) {
+      if (targets.has(`xwiki-platform/${branch}`)) add('xwiki-platform', branch, 'env-tests', ENV_TESTS_FOLDER);
+    }
+  }
+  const policy = new Map(withPolicy([...new Set([...targets.values()].map(t => t.branch))])
+    .map(entry => [entry.branch, entry]));
+  return [...targets.values()].map(target => ({ ...target, ...policy.get(target.branch) }));
+}
+
+/** One job's recent completed builds, newest first, plus the ones that produced test results. */
+const historyCache = new Map();
+function jobHistory(job, history) {
+  if (!historyCache.has(job.url)) {
+    historyCache.set(job.url, (async () => {
+      const builds = (await buildSummaries(job.url, history + 2)).filter(build => !build.building && build.result);
+      return { ...job, builds, tested: builds.filter(build => build.totalCount != null) };
+    })());
+  }
+  return historyCache.get(job.url);
+}
+
+/**
+ * Per test: where it failed now, and how it has behaved over the recent builds.
+ *
+ * The history walk skips builds that produced no test results, which is the point: a `FAILURE`
+ * build between two `UNSTABLE` ones ran no test, and counting it as "did not fail" would make
+ * every breakage look like it started today. (Jenkins' own `age`/`failedSince` make that mistake.)
+ */
+async function testHistory(job, args) {
+  const [latest, ...older] = job.tested.slice(0, args.history);
+  if (!latest) return new Map();
+
+  // Only what is failing in the *latest* build can be an incident. A test that failed three builds
+  // ago and passes today is history, not news — seeding the map from the older builds too is how
+  // a sweep ends up reporting a dozen already-fixed failures as this morning's problem.
+  const tests = new Map();
+  for (const test of (await testResults(`${job.url}/${latest.number}`)).values()) {
+    if (!test.failed.size) continue;
+    tests.set(test.id, {
+      id: test.id,
+      job: job.label,
+      jobUrl: job.url,
+      failedEnvs: new Set([...test.failed].map(env => `${job.label}/${env}`)),
+      ranEnvs: new Set([...test.ran].map(env => `${job.label}/${env}`)),
+      detail: test.detail,
+      failedBuilds: [latest],
+      seenBuilds: [latest]
+    });
+  }
+  if (!tests.size) return tests;
+
+  for (const build of older) {
+    const { ran, failed } = await outcomes(`${job.url}/${build.number}`);
+    for (const [id, row] of tests) {
+      if (!ran.has(id)) continue;
+      row.seenBuilds.push(build);
+      if (failed.has(id)) row.failedBuilds.push(build);
+    }
+  }
+  return tests;
+}
+
+/**
+ * Failing every environment that ran it is a breakage; failing some of them is a flicker. One
+ * environment cannot tell the two apart on its own — but failing every build since it started can.
+ */
+function verdictOf(row) {
+  const seen = row.perJob.reduce((total, job) => total + job.seenBuilds.length, 0);
+  const failed = row.perJob.reduce((total, job) => total + job.failedBuilds.length, 0);
+  const alwaysFails = seen > 1 && failed === seen;
+  // The environment count has to be tested first. With a single environment "failed every
+  // environment that ran it" is trivially true of anything failing at all, so reading it as
+  // systematic would make every unit-test failure a breakage on the evidence of one run.
+  if (row.ranEnvs.size < 2) {
+    if (alwaysFails) return 'systematic';
+    // One environment and no history to rate it over: the data says nothing yet. Calling that a
+    // flicker is the mistake — a failure seen once is an event, and half of them are a breakage
+    // that has simply not had a second build to prove itself in.
+    return seen > 1 ? 'single env' : 'first seen';
+  }
+  return row.failedEnvs.size === row.ranEnvs.size || alwaysFails ? 'systematic' : 'intermittent';
+}
+
+/**
+ * The build this test started failing in — the oldest of the unbroken run of failures ending now.
+ *
+ * Strictly per job: the main job and the Environment Tests job number their builds independently,
+ * so a window walked over the two lists merged would compare build #57 of one with #57 of the
+ * other and land anywhere.
+ *
+ * @returns {{job: string, firstBad: object, lastGood: object|null, atLeast: boolean}} `atLeast`
+ *   when the walk ran out of history before finding a green build, so the age is a lower bound.
+ */
+function regressionWindow(row) {
+  // seenBuilds is newest-first, as the history is fetched, and [0] is a failure by construction.
+  const failed = new Set(row.failedBuilds.map(build => build.number));
+  const at = (firstBad, lastGood, atLeast) => ({ job: row.job, jobUrl: row.jobUrl, firstBad, lastGood, atLeast });
+  let firstBad = row.seenBuilds[0];
+  for (const build of row.seenBuilds) {
+    if (!failed.has(build.number)) return at(firstBad, build, false);
+    firstBad = build;
+  }
+  return at(firstBad, null, true);
+}
+
+/** A failure seen once is an event; seen in two builds on two days it has earned an issue. */
+const flickerProven = row => {
+  const failures = row.perJob.flatMap(job => job.failedBuilds.map(build => ({ ...build, job: job.job })));
+  const builds = new Set(failures.map(build => `${build.job}#${build.number}`));
+  const days = new Set(failures.map(build => dayOf(build.timestamp)));
+  return builds.size >= 2 && days.size >= 2;
+};
+
+/** Walks back through the consecutive broken builds that share the latest one's signature. */
+async function breakWindow(job, latest, signature, maxConsole) {
+  const at = (firstBad, lastGood, atLeast) => ({ job: job.label, jobUrl: job.url, firstBad, lastGood, atLeast });
+  let firstBad = latest;
+  let read = 1;
+  for (const build of job.builds.slice(job.builds.indexOf(latest) + 1)) {
+    if (build.result === 'SUCCESS' || build.result === 'UNSTABLE') return at(firstBad, build, false);
+    if (read >= maxConsole) return at(firstBad, null, true);
+    read++;
+    const { signature: older } = await diagnose(`${job.url}/${build.number}`);
+    // A different cause: the current break starts at the build after this one.
+    if (older !== signature) return at(firstBad, build, false);
+    firstBad = build;
+  }
+  return at(firstBad, null, true);
+}
+
+// ---- Incident assembly -----------------------------------------------------------------------
+
+const incidentId = (target, signature) => `${target.repo.replace(/^xwiki-/, '')}/${target.branch}/${signature}`;
+
+async function incidentsOf(target, args, flickerFor) {
+  const incidents = [];
+  const jobs = await Promise.all(target.jobs.map(job => jobHistory(job, args.history)));
+
+  // --- Class 5: absence. Only a branch that is supposed to move can be too quiet.
+  const newest = Math.max(...jobs.flatMap(job => job.builds.map(build => build.timestamp)), 0);
+  if (target.alerting && (!newest || daysSince(newest) >= args.absence)) {
+    const unbuilt = await unbuiltCommits(target, jobs, args);
+    // Quiet is not the symptom — *behind* is. A maintained branch nobody has committed to for a
+    // week has a week-old build and is perfectly healthy; alerting on the clock alone fires on
+    // every calm LTS branch every morning, which is how a digest gets ignored.
+    if (unbuilt.behind !== 0) {
+      incidents.push({
+        ...base(target, 5, 'absence', 'no-build'),
+        state: 'absent',
+        evidence: [
+          newest ? `last build ${daysSince(newest)} day(s) ago` : 'no build at all',
+          unbuilt.reason
+        ],
+        ageDays: newest ? daysSince(newest) : null,
+        unconfirmed: unbuilt.behind == null,
+        blame: { tier: 'none', reason: 'nobody breaks a branch by not building it', suspects: [] }
+      });
+    }
+  }
+
+  // --- Classes 2 & 3: a job that broke before (or outside) its tests.
+  for (const job of jobs) {
+    const latest = job.builds[0];
+    if (!latest || latest.result !== 'FAILURE') continue;
+    const diagnosis = await diagnose(`${job.url}/${latest.number}`);
+    const window = await breakWindow(job, latest, diagnosis.signature, args.maxConsole);
+    incidents.push({
+      // The job is part of the identity: the main job and the environment matrix break
+      // independently, and two incidents sharing an id would share a comment marker too, so one
+      // would silence the other for good.
+      ...base(target, CLASS_OF[diagnosis.kind], diagnosis.kind, `${job.label}:${diagnosis.signature}`),
+      job: job.label,
+      stage: diagnosis.stage,
+      state: diagnosis.kind,
+      file: diagnosis.file,
+      evidence: diagnosis.evidence,
+      ...ageOf(window),
+      window
+    });
+  }
+
+  // --- Class 1: tests. Aggregated across the main job and the environment matrix, because one
+  // broken test showing up in five environments is one incident, not five. The per-job rows are
+  // kept alongside the aggregate: the envs merge, the build histories cannot (see regressionWindow).
+  const rows = new Map();
+  for (const job of jobs) {
+    for (const [id, row] of await testHistory(job, args)) {
+      if (!rows.has(id)) rows.set(id, { id, perJob: [], failedEnvs: new Set(), ranEnvs: new Set(), detail: '' });
+      const aggregate = rows.get(id);
+      aggregate.perJob.push(row);
+      for (const env of row.failedEnvs) aggregate.failedEnvs.add(env);
+      for (const env of row.ranEnvs) aggregate.ranEnvs.add(env);
+      if (!aggregate.detail) aggregate.detail = row.detail;
+    }
+  }
+
+  const breakages = [];
+  for (const [id, row] of rows) {
+    const verdict = verdictOf(row);
+    // The job that saw it break first owns the window: it is the one whose build revisions bound
+    // the change that caused it.
+    const window = row.perJob.map(regressionWindow)
+      .reduce((oldest, current) => (current.firstBad.timestamp < oldest.firstBad.timestamp ? current : oldest));
+    // Intermittent *is* the definition of a flicker: it passes sometimes. A single-environment
+    // failure needs the evidence threshold instead — recurring across builds and days — before it
+    // may be called one. Systematic is never a flicker, however often it has recurred; nor is a
+    // whole class failing to set up (`initializationError`), which hides every test of its module.
+    const flickers = !isPseudoTest(id)
+      && (verdict === 'intermittent' || (verdict === 'single env' && flickerProven(row)));
+    if (flickers) {
+      const jira = flickerFor(id);
+      incidents.push({
+        ...base(target, 1, 'flicker', id),
+        state: verdict,
+        tests: [id],
+        evidence: [row.detail || '(no error detail)'],
+        failedIn: `${row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0)}/` +
+          `${row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0)} builds, ` +
+          `${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
+        // *Which* environments, not only how many: "fails on the two MySQL rows and passes on the
+        // PostgreSQL ones" is a diagnosis, while "2/4 envs" is a statistic — and the matrix is the
+        // only place that distinction can be read.
+        envs: [...row.failedEnvs].map(env => env.replace(/^env-tests\//, '')),
+        jira,
+        proven: flickerProven(row),
+        ...ageOf(window),
+        window,
+        blame: { tier: 'none', reason: 'a flicker rarely has a culprit commit', suspects: [] }
+      });
+    } else {
+      breakages.push({ id, row, window, verdict, pseudo: isPseudoTest(id) });
+    }
+  }
+
+  // Tests that started failing in the same build broke together, and one cause deserves one
+  // incident and one comment — never forty.
+  const groups = new Map();
+  for (const entry of breakages) {
+    // Namespaced by job, since the two jobs number their builds independently.
+    const key = `${entry.window.job}#${entry.window.firstBad.number}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
+  }
+  for (const [, group] of groups) {
+    const ids = group.map(entry => entry.id).sort();
+    const window = group[0].window;
+    const infra = infraInDetail(group.map(entry => entry.row.detail));
+    if (infra) {
+      // Reclassified, not just relabelled: an infra event has no culprit commit, so this also
+      // stops the whole deep-treatment budget being spent looking for one.
+      incidents.push({
+        ...base(target, 3, 'infra', `${window.job}:${infra}`),
+        state: infra,
+        tests: ids,
+        testCount: ids.length,
+        evidence: [`${ids.length} test(s)/module(s) failed with: ${group[0].row.detail}`],
+        ...ageOf(window),
+        window,
+        blame: { tier: 'none', reason: 'an infrastructure failure has no culprit commit', suspects: [] }
+      });
+      continue;
+    }
+    incidents.push({
+      // The smallest test id names the group: stable from day to day, unlike a count or a hash,
+      // which would change the moment the breakage spreads by one test and re-ping everybody.
+      ...base(target, 1, 'test-breakage', ids[0]),
+      // The weakest evidence in the group governs the wording: "first seen" must not be reported
+      // as "systematic" just because it shares a build with something that is.
+      state: group.some(entry => entry.verdict === 'systematic') && group.every(entry => entry.verdict !== 'first seen')
+        ? 'systematic' : group[0].verdict,
+      tests: ids,
+      testCount: ids.length,
+      setupFailures: group.filter(entry => entry.pseudo).map(entry => entry.id),
+      evidence: group.slice(0, 3).map(entry => `${entry.id}: ${entry.row.detail || '(no error detail)'}`),
+      jira: flickerFor(ids[0]),
+      ...ageOf(window),
+      window
+    });
+  }
+  return incidents;
+}
+
+// Which numbered failure class each diagnosis belongs to (see SKILL.md).
+const CLASS_OF = { infra: 3, 'build-break': 2, timeout: 4, unclassified: 2 };
+
+const base = (target, failureClass, kind, signature) => ({
+  id: incidentId(target, signature),
+  repo: target.repo,
+  branch: target.branch,
+  branchClass: target.branchClass,
+  alerting: target.alerting,
+  class: failureClass,
+  kind,
+  signature
+});
+
+const ageOf = window => ({
+  firstBadBuild: window.firstBad?.number ?? null,
+  buildUrl: window.jobUrl && window.firstBad ? `${window.jobUrl}/${window.firstBad.number}` : null,
+  lastGoodBuild: window.lastGood?.number ?? null,
+  ageDays: window.firstBad ? daysSince(window.firstBad.timestamp) : null,
+  ageIsLowerBound: window.atLeast
+});
+
+// ---- Blame + dedupe pass ---------------------------------------------------------------------
+
+/**
+ * Attribution and the "did we already say this?" check, for the incidents that earned the budget.
+ *
+ * Beyond the horizon nothing is attributed: feedback is only feedback while it is actionable, and
+ * a fortnight-old breakage is archaeology the team already knows about. It also bounds the blast
+ * radius on day one, when the branch has been red for weeks.
+ */
+async function investigate(incident, job, args) {
+  if (incident.blame) return;
+  if (incident.kind === 'timeout') {
+    incident.blame = { tier: 'none', reason: 'a stage that ran out of time has no single culprit', suspects: [] };
+    return;
+  }
+  if (incident.beyondHorizon) {
+    incident.blame = { tier: 'none', reason: `older than the ${args.horizon}-day horizon`, suspects: [] };
+    return;
+  }
+  if (!args.github || !token) {
+    incident.blame = { tier: 'unknown', reason: 'no GitHub token: blame unavailable', suspects: [] };
+    return;
+  }
+  // An open flicker issue means the team has already seen this test fail and decided it flickers.
+  // Attributing today's occurrence to whoever last touched the area would ping someone for a fault
+  // that is known not to be theirs. The exception is a *systematic* failure, where the evidence
+  // outranks the issue: the test now fails every time, so the issue no longer describes it.
+  if (incident.jira && incident.state !== 'systematic') {
+    incident.blame = {
+      tier: 'none', suspects: [],
+      reason: `already tracked as a known flicker (${incident.jira.key}) — reported, nobody pinged`
+    };
+    return;
+  }
+  // A quality gate fails on aggregate coverage and issue counts over the whole project, not on a
+  // change — so file overlap has nothing to overlap and the five commits in the window are five
+  // people named under a failure none of them can be shown to have caused. SKILL.md reports a gate
+  // failure and never fixes it; naming nobody is the honest end of that.
+  if (/sonar-gate:failed$/.test(incident.signature || '')) {
+    incident.blame = {
+      tier: 'none', suspects: [],
+      reason: 'a quality gate fails on aggregate metrics, not on one change — read the gate on SonarCloud'
+    };
+    return;
+  }
+  const { firstBad, lastGood } = incident.window || {};
+  if (!firstBad || !lastGood) {
+    incident.blame = { tier: 'ambiguous', reason: 'no green build in the fetched history', suspects: [] };
+    return;
+  }
+  try {
+    const headSha = await buildRevision(`${job.url}/${firstBad.number}`, incident.repo);
+    const baseSha = await buildRevision(`${job.url}/${lastGood.number}`, incident.repo);
+    if (!headSha || !baseSha || headSha === baseSha) {
+      incident.blame = { tier: 'ambiguous', reason: 'the two builds ran the same revision', suspects: [] };
+      return;
+    }
+    const commits = await commitsBetween(incident.repo, baseSha, headSha);
+    incident.window.baseSha = baseSha;
+    incident.window.headSha = headSha;
+    incident.blame = attribute(incident, commits);
+    if (incident.blame.culprit) {
+      incident.notified = await priorComment(incident.repo, incident.blame.culprit.sha, incident.id);
+      // A flicker that has become systematic is news, whatever was said about it before.
+      incident.silent = !!incident.notified && incident.notified.state === incident.state;
+    }
+  } catch (error) {
+    incident.blame = { tier: 'unknown', reason: `attribution failed: ${error.message}`, suspects: [] };
+  }
+}
+
+// ---- Budget ----------------------------------------------------------------------------------
+// A ceiling, not a target: everything below the line is still reported, just without root-cause
+// analysis. Ordered by what blocks the most people first, and — for the top entry — by what is
+// also cheapest to attribute, since a build break names the file it broke.
+
+function severity(incident) {
+  const onMaintained = incident.branchClass !== 'transient';
+  if (!onMaintained) return 6;
+  // Out of scope for v1: detected and reported honestly, but it gets no root-cause budget.
+  if (incident.kind === 'timeout') return 5.5;
+  // Reported, never fixed (SKILL.md §3) and now attributed to nobody — so root-causing it buys
+  // nothing, and it must not hold a slot a breakage could use. It is still reported, in the paste
+  // and in the digest, like every incident below the line.
+  if (/sonar-gate:failed$/.test(incident.signature || '')) return 2.75;
+  if (incident.class === 2) return 1;
+  // A test the team has triaged as a flicker that now fails *every* time is either a real
+  // regression or a stale triage, and it is the one case §4 has an explicit rule for. Budget
+  // pressure must not be able to hide it behind plain breakages.
+  if (incident.class === 1 && incident.state === 'systematic' && incident.jira) return 1.5;
+  if (incident.class === 1 && incident.kind === 'test-breakage') return 2;
+  if (incident.class === 5) return 3;
+  if (incident.class === 1 && incident.kind === 'flicker' && !incident.jira) return 4;
+  if (incident.class === 3) return 5;
+  return 5.5;
+}
+
+// ---- The paste ---------------------------------------------------------------------------------
+// Rendered here, not by the model, for one reason: the paste is read every morning, and a document
+// whose shape is re-invented each day is read as a new document each day. Everything below is a
+// mechanical restatement of the work order — the counts, the ages, the windows, the lists — in a
+// fixed order with fixed wording. What it cannot produce is the root cause of a `deep` incident, so
+// it leaves an `<!-- ANALYSIS: id -->` line where each one goes and SKILL.md fills them in.
+
+const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+const agedAs = incident => (incident.ageDays == null
+  ? 'age unknown'
+  : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`);
+
+/**
+ * When the failure started — or, honestly, that it is not known.
+ *
+ * `firstBadBuild` with no `lastGoodBuild` means the sweep ran out of history (or of log budget)
+ * before it found a green build, so that number is how far it looked and not when the break began.
+ * Printing it as "since #N" is how the same unchanged incident comes out dated differently every
+ * morning, and a digest whose dates move is one nobody checks.
+ */
+function windowOf(incident) {
+  if (incident.firstBadBuild == null) return null;
+  return incident.lastGoodBuild == null
+    ? `failing in every build examined, back to #${incident.firstBadBuild} — start not established`
+    : `since #${incident.firstBadBuild}, last good #${incident.lastGoodBuild}`;
+}
+
+const testName = id => {
+  const [className, method] = String(id).split('#');
+  const simple = className.split(/[.$]/).pop().replace(/^Nested/, '');
+  return method ? `${simple}#${method}` : simple;
+};
+const shortName = incident => testName(incident.id.split('/').slice(2).join('/'));
+const tracked = incident => (incident.jira ? ` — tracked as ${incident.jira}` : '');
+const elsewhere = incident => (incident.alsoOn ? ` — also failing on ${incident.alsoOn.join(', ')}` : '');
+const seen = incident => (incident.failedIn ? `, failed in ${incident.failedIn}` : '');
+const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
+/** What a `deep` incident carries wherever it is listed — its budget bought this, so it is shown. */
+const deepTail = incident => (incident.deep
+  ? [...evidenceBlock(incident), ...blameBlock(incident), ...analysis(incident), '']
+  : []);
+
+function evidenceBlock(incident) {
+  if (!incident.evidence?.length) return [];
+  // ` | ` between them, never a comma: one environment is itself a comma-separated row ("MySQL
+  // latest, Tomcat 11-jdk25, Filesystem, Chrome"), so joining two with commas makes eight facets
+  // of one imaginary environment.
+  return ['', '```', ...incident.evidence, '```', ...(incident.envs?.length
+    ? [`Failing environments: ${incident.envs.join(' | ')}`] : [])];
+}
+
+function blameBlock(incident) {
+  const blame = incident.blame;
+  if (!blame) return [];
+  const out = [];
+  if (blame.culprit) {
+    out.push('', `Blame **${blame.tier}** — ${blame.reason}.`,
+      `Culprit: \`${blame.culprit.short}\` **${blame.culprit.author || '(unknown)'}** — ` +
+      `${blame.culprit.title} [${plural(blame.culprit.filesChanged ?? 0, 'file')}]`);
+  } else {
+    out.push('', `Blame **${blame.tier}** — ${blame.reason}.`);
+  }
+  for (const suspect of blame.suspects || []) out.push(`- ${suspect}`);
+  if (incident.silent) out.push(`_Already commented in this state (${incident.notified?.state}) — saying nothing._`);
+  return out;
+}
+
+function renderDetail(report, { live }) {
+  const { summary, incidents } = report;
+  const date = report.generatedAt.slice(0, 10);
+  const redRepos = new Set(report.jobs.filter(job => job.result && job.result !== 'SUCCESS').map(job => job.repo));
+  const green = [...new Set(report.jobs.map(job => job.repo))].filter(repo => !redRepos.has(repo));
+  const of = filter => incidents.filter(filter);
+  const out = [
+    `# CI sweep — ${date}${live ? '' : ' (not a live run — no digest posted, no issue filed)'}`,
+    '',
+    `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → **${plural(summary.incidents, 'incident')}**: ` +
+    `${summary.deep} deep-treated, ${summary.beyondHorizon} beyond the ${report.horizonDays}-day horizon, ` +
+    `${summary.alreadyCommented} already commented.`
+  ];
+  if (green.length) out.push(`${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch.`);
+  if (report.githubTokenWarning) out.push('', `⚠️ ${report.githubTokenWarning}`);
+  // A green morning is one line in the room and no paste at all (SKILL.md §6); rendering the empty
+  // sections of a document nobody will open is the kind of output that teaches people to skim.
+  if (!incidents.length) return [...out, '', 'Nothing red, nothing written.'].join('\n');
+
+  const breaks = of(incident => incident.class === 2);
+  if (breaks.length) {
+    out.push('', '## Build breaks');
+    for (const incident of breaks) {
+      const window = windowOf(incident);
+      out.push('', `### ${incident.branch} — ${incident.signature ? incident.signature.split('/').pop() : 'build break'}`,
+        [`**${agedAs(incident)}**`, window, incident.stage ? `stage _${incident.stage}_` : null,
+          incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · '),
+        ...evidenceBlock(incident), ...blameBlock(incident));
+      if (/sonar-gate:failed$/.test(incident.signature || '')) {
+        out.push('', '_Quality-gate failures are reported here and fixed nowhere: see `okf/sonarqube/` and' +
+          ' the `xwiki-fix-sonarqube-issue` skill._');
+      }
+      out.push(...analysis(incident));
+    }
+  }
+
+  const breakages = of(incident => incident.class === 1 && incident.kind === 'test-breakage');
+  if (breakages.length) {
+    out.push('', '## Test breakages');
+    for (const incident of breakages) {
+      out.push('', `### ${incident.branch} — \`${shortName(incident)}\``,
+        [`**${incident.state}**, ${agedAs(incident)}`, windowOf(incident),
+          `${plural(incident.testCount || 1, 'test')}${seen(incident)}`,
+          incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ') +
+        `${tracked(incident)}${elsewhere(incident)}` +
+        `${incident.beyondHorizon ? ' — **beyond the horizon: reported, never written about**' : ''}`);
+      if (incident.jira && incident.state === 'systematic') {
+        out.push(`_Tracked as a flicker but failing every time: either a real regression or a stale` +
+          ` triage, and ${incident.jira} no longer describes it (SKILL.md §4)._`);
+      }
+      out.push(...evidenceBlock(incident), ...blameBlock(incident), ...analysis(incident));
+    }
+  }
+
+  const toFile = of(incident => incident.flickerGroup);
+  if (toFile.length) {
+    const groups = new Map();
+    for (const incident of toFile) groups.set(incident.flickerGroup, [...(groups.get(incident.flickerGroup) || []), incident]);
+    out.push('', `## Proven flickers not yet filed — ${plural(groups.size, 'issue')} to open`);
+    for (const [, group] of groups) {
+      const [first] = group;
+      const branches = [...new Set([first.branch, ...(first.alsoOn || [])])];
+      out.push('', `- **${testName(first.id.split('/').slice(2).join('/')).split('#')[0]}** on ` +
+        `${branches.join(', ')} — ${plural(group.length, 'method')}, streak ${agedAs(first)}${seen(first)}`);
+      for (const incident of group) out.push(`    - \`${shortName(incident)}\``);
+    }
+    out.push('', '_One issue per test class per regression window, listing every branch it fails on:' +
+      ' one flaky suite is one issue, and an auto-filer that opens five is switched off in a week._');
+  }
+
+  // A test already covered by a group above is not also a candidate: the issue that group files
+  // lists this branch, so printing it again reads as two different flickers.
+  const filed = new Set(toFile.map(incident => incident.id.split('/').slice(2).join('/')));
+  const candidates = of(incident => incident.kind === 'flicker' && !incident.jira && !incident.flickerGroup &&
+    !filed.has(incident.id.split('/').slice(2).join('/')));
+  if (candidates.length) {
+    out.push('', '## Flicker candidates below the evidence threshold — listed, not filed');
+    for (const incident of candidates) {
+      out.push(`- ${incident.branch} \`${shortName(incident)}\` — ${agedAs(incident)}${seen(incident)}${elsewhere(incident)}`,
+        ...deepTail(incident));
+    }
+  }
+
+  const known = of(incident => incident.jira && !(incident.class === 1 && incident.kind === 'test-breakage'));
+  if (known.length) {
+    out.push('', '## Already tracked in JIRA — nobody pinged');
+    for (const incident of known) {
+      out.push(`- ${incident.branch} \`${shortName(incident)}\` → ${incident.jira} ` +
+        `(${incident.kind}, ${incident.state}, ${agedAs(incident)})${elsewhere(incident)}`,
+        ...deepTail(incident));
+    }
+  }
+
+  const infra = of(incident => incident.class === 3);
+  if (infra.length) {
+    out.push('', '## Infrastructure');
+    for (const incident of infra) {
+      out.push(`- ${incident.branch} — \`${incident.state}\`, ${agedAs(incident)}` +
+        `${incident.testCount ? `, ${plural(incident.testCount, 'test')} affected` : ''}`,
+        ...deepTail(incident));
+    }
+    out.push('', '_Infra incidents name no author: nobody in the window caused the agent, the registry or the' +
+      ' network to fail._');
+  }
+
+  const rest = of(incident => ![1, 2, 3].includes(incident.class) ||
+    (incident.class === 1 && !['test-breakage', 'flicker'].includes(incident.kind)));
+  if (rest.length) {
+    out.push('', '## Other');
+    for (const incident of rest) {
+      out.push(`- ${incident.branch} — ${incident.kind}, ${incident.state}, ${agedAs(incident)}` +
+        `${incident.buildUrl ? ` ([build](${incident.buildUrl}))` : ''}`);
+    }
+  }
+
+  const deep = of(incident => incident.deep);
+  const noOwner = deep.filter(incident => ['ambiguous', 'none', 'unknown'].includes(incident.blame?.tier));
+  out.push('', '## Not written, and why', '',
+    `- **${noOwner.length} of the ${deep.length} deep-treated** have no attributable author` +
+    `${noOwner.length ? ' — listed here, nobody pinged:' : '.'}`);
+  for (const incident of noOwner) {
+    out.push(`    - ${incident.branch} \`${shortName(incident)}\` — ${incident.blame.tier}: ${incident.blame.reason}`);
+  }
+  out.push(
+    `- **${summary.alreadyCommented}** already carry a comment in the same state — saying it twice is how a` +
+    ' routine becomes noise.',
+    `- **${summary.beyondHorizon}** older than ${report.horizonDays} days — counted, never written about.`,
+    `- **${Math.max(0, summary.incidents - deep.length)}** below the deep budget of ${report.budget} —` +
+    ' reported without analysis, by design.');
+  return out.join('\n');
+}
+
+// ---- Run -------------------------------------------------------------------------------------
+
+const args = parseArgs(process.argv.slice(2));
+
+// Rendering reads a work order and sweeps nothing, so the paste can be re-rendered — after a fix to
+// the wording, or on another machine — without a second pass over Jenkins.
+if (args.renderDetail) {
+  const source = readFileSync(args.renderDetail === '-' ? 0 : args.renderDetail, 'utf8');
+  console.log(renderDetail(JSON.parse(source), args));
+  process.exit(0);
+}
+
+const flickerFor = await knownFlickers();
+const targets = await discover(args.repos, args.branch);
+
+const byId = new Map();
+const jobsById = new Map();
+for (const target of targets) {
+  const jobs = await Promise.all(target.jobs.map(job => jobHistory(job, args.history)));
+  for (const incident of await incidentsOf(target, args, flickerFor)) {
+    incident.beyondHorizon = incident.ageDays != null && incident.ageDays > args.horizon;
+    // The id is what a comment marker carries, so it has to be unique: two incidents sharing one
+    // would share a marker, and the first of them to be commented on would silence the other for
+    // good. The same signature twice means the same cause seen in two regression windows — one
+    // incident, dated from the older of the two.
+    const existing = byId.get(incident.id);
+    if (existing) {
+      existing.tests = [...new Set([...(existing.tests || []), ...(incident.tests || [])])];
+      if (existing.testCount != null) existing.testCount = existing.tests.length;
+      if ((incident.ageDays ?? -1) > (existing.ageDays ?? -1)) {
+        Object.assign(existing, {
+          ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
+          firstBadBuild: incident.firstBadBuild, lastGoodBuild: incident.lastGoodBuild,
+          window: incident.window, beyondHorizon: incident.beyondHorizon
+        });
+      }
+      continue;
+    }
+    byId.set(incident.id, incident);
+    // Every incident of a target shares its jobs; blame reads the one it came from, or the main one.
+    const label = incident.window?.job || incident.job || 'main';
+    jobsById.set(incident.id, jobs.find(job => job.label === label) || jobs[0]);
+  }
+}
+const incidents = [...byId.values()];
+
+// Two views a per-incident walk cannot produce, both about not filing the same thing twice.
+// `alsoOn`: one flaky test failing on three branches is one flaky test — filing an issue per branch
+// is how an auto-filer discredits itself in a week. `flickerGroup`: several methods of one test
+// class that started failing in the same build broke together, whatever the cause, so they are one
+// issue as well — five issues for five methods of one nested suite is the same mistake, per morning.
+const branchesOfTest = new Map();
+for (const incident of incidents) {
+  if (incident.class !== 1 || !incident.signature) continue;
+  branchesOfTest.set(incident.signature, [...(branchesOfTest.get(incident.signature) || []), incident.branch]);
+}
+for (const incident of incidents) {
+  if (incident.class !== 1 || !incident.signature) continue;
+  const others = [...new Set((branchesOfTest.get(incident.signature) || [])
+    .filter(branch => branch !== incident.branch))];
+  if (others.length) incident.alsoOn = others;
+  if (incident.kind === 'flicker' && incident.proven && !incident.jira && !incident.beyondHorizon) {
+    const className = incident.signature.split('#')[0].split(/[.$]/).pop();
+    incident.flickerGroup = `${incident.repo}/${incident.branch}/${className}@${incident.firstBadBuild}`;
+  }
+}
+
+incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.testCount || 1));
+// Beyond the horizon nothing may be written, so spending root-cause budget there buys nothing:
+// those incidents are aggregated into one digest line and that is all.
+const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon).slice(0, args.budget);
+for (const incident of deep) {
+  incident.deep = true;
+  await investigate(incident, jobsById.get(incident.id), args);
+}
+for (const incident of incidents) {
+  incident.deep ??= false;
+  incident.blame ??= { tier: 'none', reason: 'below the per-run budget: reported, not investigated', suspects: [] };
+  delete incident.window?.firstBad;
+  delete incident.window?.lastGood;
+}
+
+const jobStatus = [];
+for (const target of targets) {
+  for (const job of await Promise.all(target.jobs.map(j => jobHistory(j, args.history)))) {
+    const latest = job.builds[0];
+    jobStatus.push({
+      repo: target.repo, branch: target.branch, job: job.label, branchClass: target.branchClass,
+      build: latest?.number ?? null, result: latest?.result ?? null,
+      failed: latest?.failCount ?? null, age: latest ? daysSince(latest.timestamp) : null,
+      url: latest ? `${job.url}/${latest.number}` : job.url
+    });
+  }
+}
+
+/**
+ * What the model is given.
+ *
+ * An incident inside the budget is handed everything needed to root-cause it; one below the line is
+ * a single line, because it is going to be reported and not analysed. The difference is not
+ * cosmetic — the untrimmed work order for one red morning is ~90 KB, most of it the file lists of
+ * commits nobody is going to read, and spending that on context is the one cost this whole design
+ * exists to avoid.
+ */
+function digest(incident, keys) {
+  const compact = {
+    id: incident.id, repo: incident.repo, branch: incident.branch, branchClass: incident.branchClass,
+    class: incident.class, kind: incident.kind, state: incident.state,
+    ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
+    beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
+    jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // How often, over the whole window, as against `ageDays`, which is the current streak: a
+    // flicker filed on "0d" reads as a contradiction until both numbers are there.
+    failedIn: incident.class === 1 ? incident.failedIn : undefined,
+    alsoOn: incident.alsoOn,
+    flickerGroup: incident.flickerGroup,
+    // What a class-1 incident is, is its test, and the id already carries it. Anything else is
+    // named by its signature and by nothing else, so below the deep line it would otherwise be
+    // reported as an untitled heading with an age under it.
+    signature: incident.class === 1 ? undefined : incident.signature,
+    buildUrl: incident.class === 1 ? undefined : incident.buildUrl
+  };
+  if (!incident.deep) return compact;
+  return {
+    ...compact,
+    signature: incident.signature,
+    job: incident.job,
+    stage: incident.stage,
+    firstBadBuild: incident.firstBadBuild,
+    lastGoodBuild: incident.lastGoodBuild,
+    buildUrl: incident.buildUrl,
+    failedIn: incident.failedIn,
+    // Enough tests to see the shape of the breakage; the count above is what matters, and the full
+    // list is in the build's own test report if anyone needs it.
+    tests: incident.tests?.slice(0, 12),
+    envs: incident.envs,
+    setupFailures: incident.setupFailures?.length || undefined,
+    evidence: incident.evidence,
+    silent: incident.silent,
+    notified: incident.notified,
+    blame: incident.blame && {
+      ...incident.blame,
+      culprit: incident.blame.culprit && {
+        ...incident.blame.culprit,
+        filesChanged: incident.blame.culprit.files.length,
+        files: incident.blame.culprit.files.slice(0, 20)
+      },
+      // One line per suspect, ready to drop into the paste. A suspect is only ever *listed* —
+      // the one that may be acted on is `culprit`, which keeps its full shape. Emitting each
+      // suspect's 200 changed files instead costs thousands of tokens to say nothing.
+      suspects: (incident.blame.suspects || []).slice(0, 20).map(commit => {
+        const relevant = commit.files
+          .filter(file => keys.paths.some(key => file.toLowerCase().includes(key.toLowerCase())));
+        const named = keys.words.filter(word => names(commit, word));
+        const marks = [
+          relevant.length ? `relevant: ${relevant.slice(0, 3).map(basename).join(', ')}` : null,
+          named.length ? `names ${named.join(', ')}` : null
+        ].filter(Boolean);
+        return `${commit.short} ${commit.author || commit.gitAuthor || '(unknown)'} — ${commit.title}` +
+          ` [${commit.files.length} file(s)${marks.length ? `, ${marks.join(', ')}` : ''}]`;
+      })
+    }
+  };
+}
+
+const report = {
+  generatedAt: new Date().toISOString(),
+  horizonDays: args.horizon,
+  budget: args.budget,
+  githubAuthenticated: !!token && args.github,
+  githubTokenWarning: tokenFallback,
+  jobs: jobStatus,
+  summary: {
+    jobs: jobStatus.length,
+    red: jobStatus.filter(job => job.result && job.result !== 'SUCCESS').length,
+    incidents: incidents.length,
+    deep: deep.length,
+    beyondHorizon: incidents.filter(incident => incident.beyondHorizon).length,
+    alreadyCommented: incidents.filter(incident => incident.silent).length
+  },
+  incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
+};
+
+if (!args.pretty) {
+  console.log(JSON.stringify(report, (_key, value) => (value instanceof Set ? [...value] : value), 2));
+} else {
+  const { summary } = report;
+  console.log(`CI sweep ${report.generatedAt.slice(0, 10)} — ${summary.red}/${summary.jobs} jobs red, ` +
+    `${summary.incidents} incident(s), ${summary.deep} deep-treated`);
+  for (const incident of incidents) {
+    const age = incident.ageDays == null ? 'age?' : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`;
+    const who = incident.blame?.culprit
+      ? `${incident.blame.tier} → ${incident.blame.culprit.short} (${incident.blame.culprit.author})`
+      : incident.blame?.tier || '—';
+    console.log(`${incident.deep ? '*' : ' '} [${incident.kind}] ${incident.id} — ${age}, ${who}` +
+      `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}`);
+  }
+}
