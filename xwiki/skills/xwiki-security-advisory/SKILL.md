@@ -154,13 +154,25 @@ repos/<owner>/<repo>/security-advisories/<ghsa_id> --jq '.vulnerabilities'`, sam
   and skip it when the legacy module only re-exports unrelated deprecated APIs. Published precedent:
   GHSA-57q2-6cp4-9mq3, GHSA-r38m-cgpg-qj69 and GHSA-3738-p9x3-mv9r all pair
   `xwiki-platform-oldcore` with `xwiki-platform-legacy-oldcore` over identical ranges.
-- **Vulnerable version range:** XWiki advisories are consistently a single open-ended lower bound,
+- **Vulnerable version range:** usually a single open-ended lower bound,
   `>= <oldest known affected version>`, with **no upper bound** — the flaw is present in every
-  release up to the fix. Only add an upper bound if the vulnerable code path was independently
-  removed or replaced before the security fix landed.
-- **Patched version(s):** list **every maintained branch's fix version** on the same entry — XWiki
-  backports a security fix to all currently supported branches at once, so one Affected product
-  typically carries several patched versions (one per branch), not just the newest.
+  release up to the fix. Add an upper bound only when the range genuinely has to stop: the
+  vulnerable code path was independently removed or replaced before the security fix landed, or you
+  are splitting the affected releases into one bounded band per maintained branch
+  (`>= 17.9.0-rc-1, < 17.10.14`, `>= 18.0.0-rc-1, < 18.4.6`, …) to show where each branch's fix
+  landed. Bands must tile the whole affected span with no gap, and each band's upper bound must
+  itself be one of the patched versions (the OSV rule in **Operator syntax** below).
+- **Patched version(s):** every entry lists **every fix version at or above its own range** — not
+  only the one from its own branch. XWiki backports a security fix to all maintained branches at
+  once, and this field answers "what can someone sitting on an affected release upgrade to", so it
+  is an upgrade-target list, not an attribution of which branch fixed what. With fixes in 17.10.14,
+  18.4.6 and 18.8.0, the band `>= 17.9.0-rc-1, < 17.10.14` carries `17.10.14, 18.4.6, 18.8.0`, the
+  band above it carries `18.4.6, 18.8.0`, and the newest carries `18.8.0` alone; a single
+  open-ended entry carries all three. Giving a band only its own fix (`17.10.14`) is the recurring
+  mistake — it hides every other upgrade target from the users in that band.
+  **Do not take this field from a published advisory**: some (e.g. GHSA-rh28-mqj4-8x59) list one
+  fix per band, so the Step 3 precedent-reading that is right for section structure and comment
+  wording will mislead you here.
 - **Version string format:** the dashed dev-version notation, e.g. `18.7.0-rc-1`, never the
   JIRA/`@since`-style `18.7.0RC1` — GitHub's comparator treats a hyphenated suffix as a prerelease
   (`2.0.0-a` sorts *before* `2.0.0`), so getting this wrong silently breaks the range.
