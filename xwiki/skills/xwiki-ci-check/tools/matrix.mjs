@@ -14,10 +14,21 @@
  * posted. The room is read by the whole development team, so a mistaken invocation must cost
  * nothing — and this tool runs on machines where the bot's Matrix password is always exported.
  *
+ * The room is also the **ledger**. A digest that repeats what it said yesterday is what the CI
+ * dashboard already is, so each one is compared against the last, and a morning that moved nothing
+ * is not posted at all. The comparison needs yesterday's incident ids, which the digest's prose
+ * cannot carry — twenty of them are 1.5 KB — so the message carries them in a marker appended to
+ * its `formatted_body`, base64 so that nothing in a test name can end the HTML comment early.
+ * Clients render a whitelist of tags and drop comments; bridges relay the plain `body`, which stays
+ * exactly what was written. Nothing else is needed: the state rides on the message it describes, so
+ * the two cannot drift apart, and a morning that posts nothing changes neither.
+ *
  * Usage:
- *   node matrix.mjs --file <digest.md> --write
+ *   node matrix.mjs --file <digest.md> --state <delta.json> --write
  *   echo "..." | node matrix.mjs        # rehearsal: prints, sends nothing
  *   node matrix.mjs --whoami            # which account the credentials in the environment are
+ *   node matrix.mjs --last-digest       # the bot's most recent message in the room (read-only)
+ *   node matrix.mjs --last-state        # the state that message carries, for --previous
  *
  * Environment: MATRIX_USER_BOT + MATRIX_PASSWORD_BOT, or MATRIX_TOKEN_BOT; MATRIX_HOMESERVER and
  * MATRIX_ROOM are both defaulted below.
@@ -162,8 +173,83 @@ async function join(server, token, roomId) {
   }
 }
 
-/** @returns {Promise<string>} the event id of the posted message. */
-export async function send(text, { server = homeserver, token = null, roomId = room } = {}) {
+// ---- The state the digest carries forward ----------------------------------------------------
+
+const MARKER = /<!--\s*ci-state:([A-Za-z0-9+/=]*)\s*-->/;
+
+/** The HTML body of a digest, with the state it carries appended where no client will show it. */
+export function withState(html, state) {
+  if (state == null) return html;
+  return `${html}\n<!-- ci-state:${Buffer.from(JSON.stringify(state), 'utf8').toString('base64')} -->`;
+}
+
+/**
+ * The state a digest carries, or null when it carries none — which is what every message posted
+ * before this existed, and every human message, looks like.
+ *
+ * Never throws: a marker that does not decode is a marker from a version that wrote it differently,
+ * and the caller's answer to both is the same one it has for an unreadable room.
+ */
+export function stateOf(html) {
+  const marker = MARKER.exec(html || '');
+  if (!marker) return null;
+  try {
+    return JSON.parse(Buffer.from(marker[1], 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The bot's own most recent message in the room, with whatever state it carries.
+ *
+ * Filtered on the sender server-side, so the humans talking in the room cost nothing to skip. A
+ * filtered read returns the matches of one scrollback chunk, not of the whole room, so an empty
+ * page with a continuation token is followed — a quiet week of the bot is otherwise indistinguishable
+ * from a bot that has never posted.
+ *
+ * @returns {Promise<{eventId: string, at: string, body: string, state: object|null}|null>} null
+ *   when the bot has posted nothing within reach.
+ */
+export async function lastDigest({ server = homeserver, roomId = room, pages = 5, token = null } = {}) {
+  // A login with a fixed device id replaces the token the device already had, so a caller that
+  // holds one passes it: logging in a second time inside the same script kills the first.
+  let userId = token && await whoami(server, token);
+  if (!userId) ({ token, userId } = await credential(server));
+  const id = await resolveRoom(roomId, server, token);
+  const filter = JSON.stringify({ senders: [userId], types: ['m.room.message'] });
+  let from = null;
+  for (let page = 0; page < pages; page++) {
+    const url = new URL(`${server}/_matrix/client/v3/rooms/${encodeURIComponent(id)}/messages`);
+    url.searchParams.set('dir', 'b');
+    url.searchParams.set('limit', '20');
+    url.searchParams.set('filter', filter);
+    if (from) url.searchParams.set('from', from);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    }
+    const body = await res.json();
+    const event = (body.chunk || []).find(entry => entry.sender === userId && entry.type === 'm.room.message');
+    if (event) {
+      return {
+        eventId: event.event_id,
+        at: new Date(event.origin_server_ts).toISOString(),
+        body: event.content?.body || '',
+        state: stateOf(event.content?.formatted_body)
+      };
+    }
+    if (!body.end || body.end === from) break;
+    from = body.end;
+  }
+  return null;
+}
+
+/**
+ * @param {object|null} state carried forward for the next run's comparison; see `withState`.
+ * @returns {Promise<string>} the event id of the posted message.
+ */
+export async function send(text, { server = homeserver, token = null, roomId = room, state = null } = {}) {
   for (const [name, value] of [['MATRIX_HOMESERVER', server], ['MATRIX_ROOM', roomId]]) {
     if (!value) throw new Error(`${name} is not set — the digest cannot be posted`);
   }
@@ -173,7 +259,7 @@ export async function send(text, { server = homeserver, token = null, roomId = r
     msgtype: 'm.text',
     body: text,
     format: 'org.matrix.custom.html',
-    formatted_body: toHtml(text)
+    formatted_body: withState(toHtml(text), state)
   });
   // A transaction id makes the send idempotent per attempt, so the retry below cannot double-post.
   const put = () => fetch(
@@ -194,14 +280,19 @@ export async function send(text, { server = homeserver, token = null, roomId = r
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
   let file = null;
+  let stateFile = null;
   // Default-safe: sending is opt-in. `--dry-run` remains accepted for saying so explicitly.
   let write = false;
   let identify = false;
+  let read = null;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--file') file = argv[++i];
+    else if (argv[i] === '--state') stateFile = argv[++i];
     else if (argv[i] === '--write') write = true;
     else if (argv[i] === '--dry-run') write = false;
     else if (argv[i] === '--whoami') identify = true;
+    else if (argv[i] === '--last-digest') read = 'digest';
+    else if (argv[i] === '--last-state') read = 'state';
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
   // A credential problem is the expected failure of this tool, so it reports it as a sentence. A
@@ -213,11 +304,31 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       .catch(fail);
     process.exit(0);
   }
+  if (read) {
+    // Both reads exit 0 whatever happens, because both are consumed by a routine that must still
+    // produce a digest when the room cannot be read. `available` is the whole difference between
+    // "nothing has changed" and "nothing is known", and only the caller can tell them apart.
+    const last = await lastDigest().catch(error => error);
+    if (read === 'digest') {
+      if (last instanceof Error) console.error(`matrix.mjs: ${last.message}`);
+      else console.log(last ? last.body : '');
+    } else if (last instanceof Error) {
+      console.log(JSON.stringify({ available: false, reason: last.message }, null, 2));
+    } else {
+      console.log(JSON.stringify(
+        { available: true, at: last?.at || null, state: last?.state || {} }, null, 2));
+    }
+    process.exit(0);
+  }
   const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
   if (!text.trim()) { console.error('Nothing to post'); process.exit(2); }
+  // The delta report can be handed over as it is: what the next run needs from it is its `state`.
+  const carried = stateFile ? (JSON.parse(readFileSync(stateFile, 'utf8')) ?? {}) : null;
+  const state = carried && (carried.state ?? carried);
   if (write) {
-    await send(text).then(eventId => console.log(eventId)).catch(fail);
+    await send(text, { state }).then(eventId => console.log(eventId)).catch(fail);
   } else {
-    console.log(`--- would post to ${room} on ${homeserver} (pass --write to send) ---\n${text}`);
+    console.log(`--- would post to ${room} on ${homeserver} (pass --write to send) ---\n${text}`
+      + (state ? `\n--- carrying the state of ${Object.keys(state).length} incident(s) ---` : ''));
   }
 }
