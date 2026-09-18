@@ -18,6 +18,7 @@ import {
   jobUrl, MAIN_FOLDER, outcomes, stagesOf, stepConsole, stepLog, testResults
 } from '../../../scripts/jenkins.mjs';
 import { JIRA, knownFlickers } from '../../../scripts/jira-flickers.mjs';
+import { develocityFacts } from './dv-test-history.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -30,6 +31,7 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --absence <days>    Days without a build that make a dev/LTS branch an incident (default 3)
   --max-console <n>   Consecutive broken builds whose log is read, per job (default 4)
   --no-github         Skip blame attribution and the "already commented?" check
+  --no-develocity     Skip the Develocity history of deep class-1 incidents (one call each)
   --full              Emit every field of every incident (debugging; the default is digested)
   --pretty            Human-readable summary instead of the JSON work order
   --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
@@ -48,7 +50,8 @@ Without one, blame and comment-dedupe are unavailable and every incident comes b
 function parseArgs(argv) {
   const out = {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
-    budget: 5, history: 8, absence: 3, maxConsole: 4, github: true, full: false, pretty: false,
+    budget: 5, history: 8, absence: 3, maxConsole: 4, github: true, develocity: true,
+    full: false, pretty: false,
     renderDetail: null, live: false, delta: null, previous: null, chat: null
   };
   for (let i = 0; i < argv.length; i++) {
@@ -61,6 +64,7 @@ function parseArgs(argv) {
     else if (key === '--absence') out.absence = Number(argv[++i]);
     else if (key === '--max-console') out.maxConsole = Number(argv[++i]);
     else if (key === '--no-github') out.github = false;
+    else if (key === '--no-develocity') out.develocity = false;
     else if (key === '--full') out.full = true;
     else if (key === '--pretty') out.pretty = true;
     else if (key === '--render-detail') out.renderDetail = argv[++i];
@@ -1988,9 +1992,55 @@ const chatBlock = incident => (said(incident).length
  * looking for.
  */
 const deepTail = incident => (incident.deep
-  ? [...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
-    ...analysis(incident), '']
+  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...blameBlock(incident),
+    ...chatBlock(incident), ...analysis(incident), '']
   : [...fixLine(incident), ...chatLine(incident)]);
+
+/**
+ * What 28 days of executions say about this test, as against what tonight's job says.
+ *
+ * Printed above the blame on purpose: it is the block that decides whether there is a culprit to
+ * look for at all. A test that has been failing 2% of the time since August was not broken by a
+ * commit in tonight's window, however well that commit's files overlap — and the configuration
+ * enrichment ("only on Chrome") is a cause, where a red square is only a symptom.
+ *
+ * The analyser's own sentences are quoted, not paraphrased: they carry p-values, and rewording a
+ * p-value is how a hedge becomes a claim.
+ */
+function develocityBlock(incident) {
+  const facts = incident.develocity;
+  if (!facts) return [];
+  const started = facts.firstSeen
+    ? `first failed ${facts.firstSeen} (${facts.firstSeenDays}d ago), last ${facts.lastSeen}`
+    : 'start not established';
+  const out = ['',
+    `**Develocity — ${facts.windowDays} days, every branch** (\`${testName(facts.test)}\`` +
+    `${incident.testCount > 1 ? ', the test naming this incident' : ''}): ` +
+    `${facts.failures} failures in ${facts.runs} executions (${facts.failRate}), ${started}.`,
+    // The one line that reconciles the two ages, because they look like a contradiction otherwise.
+    `_The age above is the current streak in the builds Jenkins retains; this is when the failure ` +
+    `started._`];
+  // Only where it disambiguates: with one distinct failure the findings below say so in a sentence,
+  // and a line repeating it in numbers is the kind of padding that makes a paste stop being read.
+  if (facts.group && facts.distinct > 1) {
+    out.push(`- This incident is ${facts.group.label} \`${facts.group.exception}\` — ` +
+      `${facts.group.count} of ${facts.failures} failures (${facts.group.share}), ` +
+      `${facts.distinct} distinct failures in all`);
+  }
+  for (const finding of facts.findings) out.push(`- ${finding}`);
+  // The per-configuration *rates*, which the findings do not carry: "3/26 on Chrome+PostgreSQL" is
+  // what a repeat run has to reproduce, and S8's oracle needs the configuration to run it on.
+  if (facts.configs.length) out.push(`- Concentrated in: ${facts.configs.join(' | ')}`);
+  if (facts.scans.length) out.push(`- Build scans: ${facts.scans.join(' · ')}`);
+  if (facts.artifacts) {
+    out.push(`- Archived by Jenkins (${facts.artifacts.config}): ` +
+      [facts.artifacts.screenshot && `[screenshot](${facts.artifacts.screenshot})`,
+        facts.artifacts.video && `[video](${facts.artifacts.video})`].filter(Boolean).join(' · '));
+  }
+  out.push(`- Full report on this machine: \`${facts.report}\` — read the \`### ${facts.group?.label || 'F1'}\`` +
+    ' section of it for the representative stack and the per-configuration table; it costs no request.');
+  return out;
+}
 
 function evidenceBlock(incident) {
   if (!incident.evidence?.length) return [];
@@ -2138,6 +2188,11 @@ function renderDetail(report, { live }) {
       out.push('', `- **${testName(first.id.split('/').slice(2).join('/')).split('#')[0]}** on ` +
         `${branches.join(', ')} — ${plural(methods.length, 'method')}, streak ${agedAs(first)}${seen(first)}`);
       for (const method of methods) out.push(`    - \`${method}\``);
+      // A flicker in a group can still be `deep`, and then it has spent a slot — its evidence, its
+      // Develocity history and its analysis slot belong under it, exactly as they do everywhere
+      // else. Listing it as a method of a class to file and nothing more is how the budget gets
+      // spent on an incident the paste never shows.
+      for (const incident of group) if (incident.deep) out.push(...deepTail(incident));
     }
     out.push('', '_One issue per test class, listing every method and every branch it fails on: one' +
       ' flaky suite is one issue, and an auto-filer that opens five is switched off in a week._');
@@ -2492,6 +2547,39 @@ for (const incident of deep) {
   incident.deep = true;
   await investigate(incident, jobsById.get(incident.id), args);
 }
+
+// ---- Develocity: the 28 days Jenkins does not keep --------------------------------------------
+//
+// The sweep's own numbers are a statistic about one job's retained history — `1/7 builds, 1/4 envs`
+// — and they are all Jenkins can give: it holds eight builds of one branch. Develocity holds every
+// execution of that test for 28 days, on every branch, browser, database and servlet container,
+// grouped by what actually failed, and says instead "6 failures in 347 executions, every one of
+// them on Chrome (p=0.0008), and about 30 consecutive clean runs would be needed before a fix could
+// be claimed". `dv-test-history` derives that (SKILL.md §3); this puts it in the work order, so the
+// paste and the commit comment carry the facts whether or not a model ever runs, and so the model
+// reports them instead of inferring them from one stage log.
+//
+// **It is also what makes `ageDays` honest.** That number is the current streak in the builds
+// Jenkins still has; `develocity.firstSeen` is the day the failure actually started. A flicker
+// whose streak is one build and whose first failure was three weeks ago did not come from a commit
+// in tonight's window, and no amount of Jenkins history can say so.
+//
+// Deep class-1 incidents only — ~120 requests and ~10 s each — and off at the first refusal: no
+// checkout, no `python3`, no key, no network, and the sweep carries on with what Jenkins gave it,
+// which is the whole of its behaviour before this pass existed.
+let develocityOff = args.develocity ? null : 'disabled with --no-develocity';
+for (const incident of deep) {
+  if (develocityOff || incident.class !== 1 || !incident.tests?.length) continue;
+  // The test that names the incident, and the incident's own error line so that a test failing two
+  // different ways is described by the failure *this* incident is about.
+  const facts = develocityFacts(incident.tests[0], { match: incident.evidence?.[0] });
+  if (facts.unavailable) {
+    develocityOff = facts.unavailable;
+    process.stderr.write(`develocity history unavailable: ${facts.unavailable}\n`);
+    continue;
+  }
+  incident.develocity = facts;
+}
 for (const incident of incidents) {
   incident.deep ??= false;
   incident.blame ??= { tier: 'none', reason: 'below the per-run budget: reported, not investigated', suspects: [] };
@@ -2567,6 +2655,9 @@ function digest(incident, keys) {
     envs: incident.envs,
     setupFailures: incident.setupFailures?.length || undefined,
     evidence: incident.evidence,
+    // 28 days of this test's executions, everywhere it runs: the failure rate, the configurations
+    // it concentrates in, the day it started, and the analyser's own conclusions in its words.
+    develocity: incident.develocity,
     silent: incident.silent,
     notified: incident.notified,
     blame: incident.blame && {
@@ -2609,6 +2700,11 @@ const report = {
     beyondHorizon: incidents.filter(incident => incident.beyondHorizon).length,
     alreadyCommented: incidents.filter(incident => incident.silent).length,
     answered: incidents.filter(settled).length,
+    // Named, not silently absent: "no Develocity facts today" and "this failure has no history" are
+    // different mornings, and the second one is news.
+    develocity: develocityOff
+      ? { unavailable: develocityOff }
+      : { enriched: incidents.filter(incident => incident.develocity).length },
     collapsed: incidents.filter(incident => incident.primary === false).length
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
@@ -2629,6 +2725,8 @@ if (!args.pretty) {
       `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}` +
       `${incident.fixState ? ` (${settled(incident) ? 'possibly answered' : 'partly answered'} by ` +
         `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}` +
-      `${incident.primary === false ? ` (same cause as ${incident.alsoOn[0]} — collapsed)` : ''}`);
+      `${incident.primary === false ? ` (same cause as ${incident.alsoOn[0]} — collapsed)` : ''}` +
+      `${incident.develocity ? ` [dv ${incident.develocity.failures}/${incident.develocity.runs} in ` +
+        `${incident.develocity.windowDays}d, since ${incident.develocity.firstSeen}]` : ''}`);
   }
 }

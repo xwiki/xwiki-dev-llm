@@ -118,7 +118,7 @@ together.
 |---|---|
 | `class` / `kind` | 1 `test-breakage`/`flicker`, 2 `build-break`/`unclassified`, 3 `infra`, 4 `timeout`, 5 `absence` |
 | `state` | `systematic`, `intermittent`, `single env`, `first seen`, the infra pattern, `absent` |
-| `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first |
+| `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first. The **current streak** in the builds Jenkins retains — `develocity.firstSeen` is when the failure started |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
 | `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** |
@@ -127,6 +127,7 @@ together.
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
+| `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs — `failures`/`runs` and `failRate`, `firstSeen` (when it *started*, as against `ageDays`), the failure group this incident is, the configurations it concentrates in with their rates, the analyser's own `findings` with their p-values, build scans, any archived screenshot/video, and `report`, the full report already on disk. Absent when Develocity is unreachable — `summary.develocity` says why |
 | `jira` | the open flicker issue, if the test already has one |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |
 | `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
@@ -241,41 +242,65 @@ For each one:
   in. If you genuinely need more, take the narrowest thing there is: for a failing *test*, the
   Develocity history below, which knows more than any one build's log; for a build break, that
   build's `testReport` for one test, or an archived screenshot (`okf/servers/jenkins.md`).
-- **A class 1 incident starts at Develocity, not at Jenkins.** Jenkins retains eight builds of one
-  branch; Develocity holds every execution of that test for 28 days, across every branch, browser,
-  database and servlet container, grouped by what actually failed. One command, at most once per
-  deep class 1 incident:
+- **A class 1 incident arrives with its Develocity history already in it.** Jenkins retains eight
+  builds of one branch; Develocity holds every execution of that test for 28 days, across every
+  branch, browser, database and servlet container, grouped by what actually failed — and the sweep
+  reads it for you, once per deep class 1 incident, into `develocity`. **Reason from that field,
+  not from the stage log**, and report its numbers rather than inferring your own: they carry
+  p-values, and a rephrased p-value is a hedge turned into a claim.
+
+  On `AllIT$NestedImageIT#editImage` the sweep's own count says `1/7 builds, 1/4 envs`; `develocity`
+  says 6 failures in **347** executions, every one of them on **Chrome** (p=0.0008), first seen on
+  2026-08-25, with ~30 consecutive clean runs needed before a fix could be claimed. That is the
+  difference between naming a red square and knowing what to do about it — and it is also what makes
+  the age honest: `ageDays` is the streak in the builds Jenkins still has, `develocity.firstSeen` is
+  the day the failure started. **A failure older than the regression window was not caused by a
+  commit inside it**, however well that commit's files overlap; say so, and let the blame stand as
+  the weak evidence it is.
+
+  `develocity.report` is the full report, already written to disk by that same run: read its
+  `### F<n>` section (`sed`/`awk`) for the representative stack — deeper than the sweep's single
+  evidence line, it names the page object and not just the selector — and the per-configuration
+  table. **It costs no request**, because the run that produced it is already paid for.
+
+  Run the analyser by hand only for what the field does not hold — another window (`--days 60`), a
+  different grouping, or a test that is not this incident:
 
   ```bash
-  node <skill>/tools/dv-test-history.mjs '<the test named in `tests`>'   # --section F1 for one group
+  node <skill>/tools/dv-test-history.mjs '<test>'   # --section F1 for one group, --full for everything
   ```
 
-  It gives the failure rate over the window, the configurations the failure concentrates in with a
-  p-value, the week it started, the change points, and how many clean runs it would take before
-  "fixed" means anything. **Reason from that, not from the stage log.** On
-  `AllIT$NestedImageIT#editImage` the sweep says `1/7 builds, 1/4 envs`, and this says 6 failures in
-  **347** executions, every one of them on **Chrome** (p=0.0008), with ~30 consecutive clean runs
-  needed before a fix could be claimed — which is the difference between naming a red square and
-  knowing what to do about it. The tool lives in `xwiki/xwiki-dev-tools`, and the division of labour
-  is worth stating plainly wherever this comes up: **`dv-test-history` establishes the facts,
-  `xwiki-ci-check` decides and acts on them.** The wrapper finds a checkout or clones one
-  and passes the Develocity key the plugin already has.
+  The tool is `dv-test-history`, in `xwiki/xwiki-dev-tools`, and the division of labour is worth
+  stating plainly wherever this comes up: **`dv-test-history` establishes the facts, `xwiki-ci-check`
+  decides and acts on them.** The wrapper finds a checkout or clones one, and passes the Develocity
+  key the plugin already has.
 
-  `--section F<n>` prints the one failure group that matches the incident: the representative stack
-  (deeper than the sweep's single evidence line — it names the page object, not just the selector),
-  the per-configuration table, and the **build scan links**. A scan URL is the most useful link
-  there is to put in a commit comment or a flicker issue, so take it from there whenever the
-  incident earns a write.
-
-  **It costs real requests** — 123 Develocity and 19 Jenkins for that one test — so it is spent on a
-  deep class 1 incident, once, and never on class 2/3/4 or on anything carrying a `fixState`. It
-  **fails soft**: exit 3 is no checkout and no `python3`, any other non-zero is the analyser's own
-  (a missing key, most often), and both mean the same thing — no Develocity facts this morning,
-  carry on with what Jenkins gave you.
+  **It costs real requests** — ~120 Develocity and ~19 Jenkins per test — which is why the sweep
+  spends it on deep class 1 incidents only, never on class 2/3/4 and never on one carrying a
+  `fixState`. It **fails soft**: the first refusal (no checkout, no `python3`, no key, no network)
+  switches the pass off for the whole run and `summary.develocity.unavailable` says which — no
+  Develocity facts this morning, carry on with what Jenkins gave you. Do not go fetching them by hand to fill the gap.
 - **`develocity` MCP: for a class 2 break whose stage log came back `unclassified`, and nothing
   else.** The build scan names the failing goal and module directly, which is exactly what that log
   did not — a bounded second attempt on the one path where the tokens are earned. Every class 1
-  question belongs to `dv-test-history` above, which answers it with 28 days of executions behind it.
+  question belongs to `develocity` above, which answers it with 28 days of executions behind it.
+
+  The scan of a Jenkins build is one `execute_query` away, and it is the link worth putting in a
+  commit comment about a build break:
+
+  ```sql
+  SELECT COALESCE(mavenAttributes.id, gradleAttributes.id) AS id
+  FROM build WHERE build_start_date BETWEEN DATE '<the day before>' AND DATE '<the day after>'
+    AND COALESCE(mavenAttributes.hasFailed, gradleAttributes.hasFailed) = true
+    AND array_join(transform(filter(COALESCE(mavenAttributes.links, gradleAttributes.links),
+        l -> l.label = 'Jenkins build'), l -> l.url), ' ') LIKE '%/job/<branch>/<build number>/%'
+  ```
+
+  The scan is then `https://community.develocity.cloud/s/<id>`. **No failing scan is a finding, not
+  a failure of the query**: one Jenkins build runs Maven many times and none of those runs failed,
+  so what broke is the pipeline itself — a quality gate, an archive step, an agent — and not a
+  build. That is why the sweep does not do this lookup for you: on most class 2 incidents it would
+  add an empty field.
 - **Sonar quality-gate failures (`sonar-gate:failed`): report, never fix.** Per-rule fix correctness
   lives in `okf/sonarqube/` and belongs to `xwiki-fix-sonarqube-issue`; a gate failure is rarely one
   commit's fault, so the blame would be weak anyway.
@@ -457,6 +482,12 @@ so this needs no state file and survives the sandbox being new every morning.
 - List `new`, `changed` and `fixed`, one line each. **`fixed` is the line the dashboard can never
   show**: it says what went green, and it is the only place anyone learns that.
 - Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
+- **Where a line has a Develocity fact, it carries it, in one clause.** *"6/347 over 28d, Chrome
+  only"* or *"first failed 2026-08-25, not in tonight's window"* is the other half of the answer to
+  "the dashboard is faster": the dashboard has tonight's red square, and no dashboard has the
+  28-day rate, the configuration the failure concentrates in, or the day it started. Take the clause
+  from `develocity` — never restate a p-value in your own words, and never put one on a line the
+  field does not support.
 - `previous.available: false` — the room could not be read — classifies **nothing**. Fall back to
   the state snapshot of every incident and **say so in the last line**: *"(could not read the last
   digest — this is a full snapshot)"*. A routine silenced by a failed read is indistinguishable from
