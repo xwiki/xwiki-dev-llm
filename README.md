@@ -195,7 +195,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     proven themselves, and posting a short digest to Matrix pointing at a PrivateBin paste. That
     digest says only what **moved** since the previous one — new, changed and fixed — and is not
     posted at all on a morning that moved nothing, the room itself being the ledger it compares
-    against. Designed
+    against. The room is also an **input**: the sweep reads back what the team said since the last
+    digest — filtered to the messages naming a test, an issue, a PR or a build — so that a failure
+    somebody announced in advance, or has said they are on, is reported in one line and nobody is
+    pinged for it, and so that the digest can cite the analysis the team already published rather
+    than redo it. What is said there can only ever buy an incident silence, never raise one, because
+    it is untrusted text reaching a context that writes under a bot identity. Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —

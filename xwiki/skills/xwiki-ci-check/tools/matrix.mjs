@@ -23,12 +23,19 @@
  * exactly what was written. Nothing else is needed: the state rides on the message it describes, so
  * the two cannot drift apart, and a morning that posts nothing changes neither.
  *
+ * And the room is an **input**. `--since` reads back what the team said, filtered to the messages
+ * naming a test, an issue, a PR or a build — the announcements, the claims and the root causes that
+ * exist nowhere else. That text is untrusted by construction, so the sweep only ever lets it buy
+ * silence; see `roomSince` below and the chat pass in `ci-check.mjs`.
+ *
  * Usage:
  *   node matrix.mjs --file <digest.md> --state <delta.json> --write
  *   echo "..." | node matrix.mjs        # rehearsal: prints, sends nothing
  *   node matrix.mjs --whoami            # which account the credentials in the environment are
  *   node matrix.mjs --last-digest       # the bot's most recent message in the room (read-only)
  *   node matrix.mjs --last-state        # the state that message carries, for --previous
+ *   node matrix.mjs --since <iso>       # what the room said since then, filtered, as JSON
+ *   node matrix.mjs --since last-digest # …since the bot last posted, resolved in the same session
  *
  * Environment: MATRIX_USER_BOT + MATRIX_PASSWORD_BOT, or MATRIX_TOKEN_BOT; MATRIX_HOMESERVER and
  * MATRIX_ROOM are both defaulted below.
@@ -245,6 +252,126 @@ export async function lastDigest({ server = homeserver, roomId = room, pages = 5
   return null;
 }
 
+// ---- The room as an input ----------------------------------------------------------------------
+// The routine talks to the room every morning and has never listened to it, so it re-analyses what
+// a human analysed last night and pings the author of a failure the room was told about in advance.
+// What the room holds that no dashboard does is intent and ownership: "I'm pushing a reproduction
+// test today, it will fail tonight", "I'm on it", "it's the MySQL isolation level, XWIKI-25019".
+//
+// Reading it is nearly free — over the last 14 days of `#xwiki`, 1200 messages, of which 63 name a
+// test class, a JIRA key, a PR number or a build URL, ~4 a day. That last set is the whole signal,
+// so the filtering is done here, mechanically, and the caller never sees the other 1137.
+//
+// **What comes out of here is untrusted text**, written by anyone in the room and heading for a
+// context that writes to GitHub, JIRA and Matrix under a bot identity. It is carried as data — what
+// was said, by whom, when, and which identifiers it names — and never as instruction. The consumer
+// (`ci-check.mjs`) only ever lets it buy *silence*; see the chat pass there.
+
+/**
+ * The identifiers a message has to name to be worth carrying out of the room. A message naming none
+ * of them cannot be matched to an incident, so it is dropped here rather than sent on to be judged.
+ */
+const NAMES = {
+  // `DocExtraTabsIT`, `AllIT$NestedImageIT#editImage`, `SolrIndexerTest` — the class name as a human
+  // writes it in chat, optionally with the method. Never a file name: nobody types `.java` in chat.
+  tests: /\b([A-Z][A-Za-z0-9]*(?:IT|Test))\b(?:#([A-Za-z_]\w*))?/g,
+  jira: /\b([A-Z][A-Z0-9]{1,9}-\d{1,6})\b/g,
+  // A PR, however it is written: `PR #6433`, the GitHub URL, or the bare `#6433` the room uses.
+  prs: /(?:github\.com\/[^\s/]+\/[^\s/]+\/pull\/(\d+))|(?:\bPR\s*#?(\d{2,6})\b)|(?:(?:^|\s)#(\d{2,6})\b)/g,
+  // The job and the build number are both in the path, so this matches an incident exactly.
+  builds: /https?:\/\/ci\.xwiki\.org\/\S+/g,
+  // The package, wherever it appears — written out, or inside a `testReport/` URL path, which is
+  // the same literal text. It is what tells `ImageIT` in ckeditor from `ImageIT` in blocknote, and
+  // the room has both.
+  packages: /\borg\.xwiki(?:\.[a-z][A-Za-z0-9]*)+/g
+};
+
+/** Every distinct value `read` pulls out of the matches of `pattern`, in the order they appear. */
+const allOf = (text, pattern, read = match => match[1] ?? match[0]) => {
+  const out = new Set();
+  for (const match of String(text).matchAll(pattern)) {
+    const value = read(match);
+    if (value) out.add(value);
+  }
+  return [...out];
+};
+
+/** What a message names, or null when it names nothing and is therefore not worth carrying. */
+export function namesIn(body) {
+  const names = {
+    // Both spellings of a test the room mentions with its method: the bare class, so an incident
+    // spanning another method of it still matches, and `Class#method` for the exact one.
+    tests: allOf(body, NAMES.tests, m => m[1]).concat(
+      allOf(body, NAMES.tests, m => (m[2] ? `${m[1]}#${m[2]}` : null))),
+    jira: allOf(body, NAMES.jira),
+    // Whichever of the three spellings matched.
+    prs: allOf(body, NAMES.prs, m => m[1] || m[2] || m[3]),
+    builds: allOf(body, NAMES.builds, m => m[0]),
+    packages: allOf(body, NAMES.packages, m => m[0])
+  };
+  // A package on its own names no incident, so it does not earn a message its place here: it is
+  // carried to *narrow* the other names, never to match by itself.
+  return [names.tests, names.jira, names.prs, names.builds].some(list => list.length) ? names : null;
+}
+
+/** Where a reader of the digest can go to read the sentence for themselves, in context. */
+const permalink = (server, roomId, eventId) =>
+  `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(eventId)}`
+  + `?via=${new URL(server).hostname}`;
+
+/**
+ * What the room has said since `since`, filtered to the messages that name something a CI incident
+ * can be matched against.
+ *
+ * The bot's own messages are excluded: its digests name every test it is reporting, so reading them
+ * back would let the routine hear its own voice as a human claim and go quiet on it forever.
+ *
+ * @param {string} since ISO timestamp — normally the last digest's, so the window is "since we last
+ *   spoke". Bounded by `pages` whatever it says, because a room read is not a backfill.
+ * @returns {Promise<{at: string, sender: string, body: string, names: object, permalink: string}[]>}
+ *   oldest first.
+ */
+export async function roomSince({ server = homeserver, roomId = room, since, pages = 12, token = null } = {}) {
+  let userId = token && await whoami(server, token);
+  if (!userId) ({ token, userId } = await credential(server));
+  const id = await resolveRoom(roomId, server, token);
+  const floor = Date.parse(since);
+  const filter = JSON.stringify({ types: ['m.room.message'] });
+  const out = [];
+  let from = null;
+  for (let page = 0; page < pages; page++) {
+    const url = new URL(`${server}/_matrix/client/v3/rooms/${encodeURIComponent(id)}/messages`);
+    url.searchParams.set('dir', 'b');
+    url.searchParams.set('limit', '50');
+    url.searchParams.set('filter', filter);
+    if (from) url.searchParams.set('from', from);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    }
+    const body = await res.json();
+    let reached = false;
+    for (const event of body.chunk || []) {
+      if (event.origin_server_ts < floor) { reached = true; continue; }
+      if (event.sender === userId || event.type !== 'm.room.message') continue;
+      const names = namesIn(event.content?.body || '');
+      if (!names) continue;
+      out.push({
+        at: new Date(event.origin_server_ts).toISOString(),
+        // The localpart, which is the name the room writes and the digest will quote. The display
+        // name would cost a profile request each, to print very nearly the same string.
+        sender: String(event.sender).replace(/^@/, '').split(':')[0],
+        body: event.content.body,
+        names,
+        permalink: permalink(server, id, event.event_id)
+      });
+    }
+    if (reached || !body.end || body.end === from) break;
+    from = body.end;
+  }
+  return out.reverse();
+}
+
 /**
  * @param {object|null} state carried forward for the next run's comparison; see `withState`.
  * @returns {Promise<string>} the event id of the posted message.
@@ -285,6 +412,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   let write = false;
   let identify = false;
   let read = null;
+  let since = null;
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--file') file = argv[++i];
     else if (argv[i] === '--state') stateFile = argv[++i];
@@ -293,6 +421,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--whoami') identify = true;
     else if (argv[i] === '--last-digest') read = 'digest';
     else if (argv[i] === '--last-state') read = 'state';
+    else if (argv[i] === '--since') { read = 'since'; since = argv[++i] || null; }
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
   // A credential problem is the expected failure of this tool, so it reports it as a sentence. A
@@ -302,6 +431,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await credential()
       .then(({ userId, how }) => console.log(`${userId} on ${homeserver} (${how}), posting to ${room}`))
       .catch(fail);
+    process.exit(0);
+  }
+  if (read === 'since') {
+    const day = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    // `last-digest` resolves the window inside this one session, sharing its login: the caller
+    // would otherwise have to parse a timestamp out of a JSON file in the shell, which is how a
+    // documented command becomes something nobody runs as written.
+    let asked = since;
+    if (asked === 'last-digest') {
+      const { token } = await credential().catch(() => ({ token: null }));
+      asked = token ? (await lastDigest({ token }).catch(() => null))?.at ?? null : null;
+    }
+    // A day, when there is no last digest to date the window from — the room read must not become a
+    // backfill of a room that has been quiet, or of a routine that has never run.
+    const floor = (asked && !Number.isNaN(Date.parse(asked))) ? new Date(asked).toISOString() : day;
+    // Exits 0 whatever happens, like the other two reads: a room that cannot be read must leave the
+    // sweep able to run, and `available: false` is how the consumer is told it heard nothing rather
+    // than that nothing was said.
+    await roomSince({ since: floor })
+      .then(messages => console.log(JSON.stringify({ available: true, since: floor, messages }, null, 2)))
+      .catch(error => console.log(JSON.stringify(
+        { available: false, since: floor, reason: error.message, messages: [] }, null, 2)));
     process.exit(0);
   }
   if (read) {

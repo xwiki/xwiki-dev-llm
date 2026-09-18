@@ -17,7 +17,7 @@ import {
   branchesOf, buildRevision, buildSummaries, ENV_TESTS_FOLDER, failedNodesOf, isPseudoTest,
   jobUrl, MAIN_FOLDER, outcomes, stagesOf, stepConsole, stepLog, testResults
 } from '../../../scripts/jenkins.mjs';
-import { knownFlickers } from '../../../scripts/jira-flickers.mjs';
+import { JIRA, knownFlickers } from '../../../scripts/jira-flickers.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -38,6 +38,8 @@ const USAGE = `Usage: node ci-check.mjs [options]
                       last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, plus
                       the state for the next run. Reads yesterday's with --previous.
   --previous <f>      What matrix.mjs --last-state printed (default: an unknown yesterday).
+  --chat <f>          What matrix.mjs --since printed ('-' for stdin): the room's messages since
+                      the last digest. They can only ever buy an incident silence, never raise one.
 
 Reads GitHub through GH_TOKEN_BOT (or GITHUB_TOKEN / GH_TOKEN — reads are identity-neutral).
 Without one, blame and comment-dedupe are unavailable and every incident comes back tier "unknown".
@@ -47,7 +49,7 @@ function parseArgs(argv) {
   const out = {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
     budget: 5, history: 8, absence: 3, maxConsole: 4, github: true, full: false, pretty: false,
-    renderDetail: null, live: false, delta: null, previous: null
+    renderDetail: null, live: false, delta: null, previous: null, chat: null
   };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
@@ -64,6 +66,7 @@ function parseArgs(argv) {
     else if (key === '--render-detail') out.renderDetail = argv[++i];
     else if (key === '--delta') out.delta = argv[++i];
     else if (key === '--previous') out.previous = argv[++i];
+    else if (key === '--chat') out.chat = argv[++i];
     else if (key === '--live') out.live = true;
     else if (key === '--help' || key === '-h') { console.log(USAGE); process.exit(0); }
     else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
@@ -960,6 +963,282 @@ async function staleSnapshot(incident, jobs, args) {
   }
 }
 
+// ---- The room --------------------------------------------------------------------------------
+// The fourth and fifth ways a red test is nobody's defect — and the only two the routine learns by
+// listening rather than by measuring.
+//
+// A failure can be *announced*: "I'm pushing the reproduction test case today such that it will be
+// executed tonight and fail" (mhamann, 2026-09-15). Nothing but the room knows that. Without it the
+// sweep attributes tonight's red to the person who said it and comments on their commit — the worst
+// output this tool has, because it is wrong in someone's name about something they told everyone
+// about first. And a failure can be *claimed*: "I'm currently on XWIKI-23740", "I investigated the
+// lock issue, it's the default isolation level on MySQL". Analysing that again is the noise.
+//
+// Three rules hold this together, and none of them is negotiable:
+//
+// 1. **Chat may suppress, never trigger.** It is untrusted text — anyone in the room writes it —
+//    entering a context that writes to GitHub, JIRA and Matrix under a bot identity. If it can only
+//    ever buy silence, the worst a hostile or joking message achieves is a quieter routine. The
+//    asymmetry costs nothing, because suppression is where the whole value is.
+// 2. **Chat never touches blame.** A culprit sourced from a joke would be wrong in someone's name.
+//    Nothing here reaches `attribute`; it sets `fixState`, which *removes* a name.
+// 3. **A claim decays.** Both values are anchored on the build that the incident's current streak
+//    starts in, so a regression window that moves throws the claim away: "I'm on it" from last week
+//    is not a reason to be quiet about a test that broke again this morning.
+//
+// Because this suppresses on a *sentence* where the other passes suppress on a commit, a PR or a
+// timestamp, it is marked `fromChat`, and SKILL.md §6 requires the digest line it earns to be
+// posted whatever else is cut. The routine's reading of the room goes back into the room, where the
+// person who wrote the sentence is reading it and can say it was misread.
+
+/** How long a claim of ownership is worth anything. Two mornings, not three. */
+const CLAIM_HOURS = 48;
+
+/**
+ * A failure foretold, in the words people actually use for it.
+ *
+ * The window between the intent and the outcome is what this has to allow: the sentence that
+ * started this whole pass is *"my plan is to push the reproduction test case on master today such
+ * that it will be executed tonight and **fail**"*, where eight words separate `will` from `fail`.
+ * Matching only the adjacent pair reads as narrow and is simply wrong — measured on 2026-09-18,
+ * `will (?:fail|break)` misses that message, which is the one message the design exists for. So:
+ * both halves, in order, inside one clause.
+ */
+const ANNOUNCES =
+  /\b(?:will|going to|expected to|it'll)\b[^.!?\n]{0,60}?\b(?:fail|fails|break|breaks|be red|go red|turn red|not pass)\b/i;
+/** …unless it says the opposite, which the same words do. */
+const ANNOUNCES_NOT = /\b(?:not|never|shouldn't|should not|won't|will not|no longer)\s+(?:\w+\s+){0,3}?(?:fail|break)\b/i;
+/** Somebody has taken it. */
+const HANDLING =
+  /\b(?:I(?:'m| am) (?:on it|on this|looking (?:at|into)|currently on|investigating|working on|debugging)|I(?:'ve| have) (?:reported|filed|opened|pushed a fix)|I(?:'ll| will) (?:fix|look at|push|handle)|working on (?:it|this)|taking (?:a look|this one))\b/i;
+
+/** The room's messages, as `matrix.mjs --since` printed them, or none when it was not read. */
+function chatOf(args) {
+  if (!args.chat) return { available: false, messages: [] };
+  try {
+    const read = JSON.parse(readFileSync(args.chat === '-' ? 0 : args.chat, 'utf8'));
+    return { available: read?.available !== false, messages: read?.messages || [] };
+  } catch {
+    return { available: false, messages: [] };
+  }
+}
+
+/**
+ * The names this incident answers to in prose: the simple class names of its failing tests, its
+ * JIRA key, and its own build.
+ *
+ * Class names and not file names, exactly as `inFlightKeys` reasons — a chat message writes
+ * `DocExtraTabsIT`, never `DocExtraTabsIT.java` — and grouped per failing class, so coverage is
+ * counted in tests and an incident spanning five classes is not silenced by a sentence naming one.
+ */
+function chatKeys(incident) {
+  const groups = forwardKeys(incident).groups
+    .map(keys => keys.filter(key => key.endsWith('.java')).map(key => key.replace(/\.java$/, '')));
+  return {
+    groups,
+    jira: incident.jira?.key || null,
+    // `https://ci.xwiki.org/job/…/job/master/1377/` — the job path and the build number, which is
+    // the one identifier a human pastes that matches an incident exactly rather than by name.
+    build: incident.buildUrl ? incident.buildUrl.replace(/\/+$/, '') : null,
+    // The packages and methods the incident's own tests are in, to tell its `ImageIT` from the
+    // other `ImageIT`s the room talks about. See `namesIncident`.
+    packages: [...new Set((incident.tests || []).map(id => id.split('#')[0].split(/[.$]/).slice(0, -1))
+      .filter(parts => parts.length > 1).map(parts => parts.join('.')))],
+    methods: [...new Set((incident.tests || []).map(id => id.split('#')[1]).filter(Boolean))]
+  };
+}
+
+// A chat message is the *weakest* evidence any pass here runs on — a sentence, written by anyone,
+// naming a class by the short name three modules happen to share — and it is the only evidence that
+// buys silence without a build, a commit or a PR behind it. So it is matched more strictly than a
+// pull request is, not more loosely, and these two guards are why.
+//
+// Both are contradictions, never requirements: a message that says nothing about the package or the
+// method still matches, because that is how people write. It is a message that names a *different*
+// one that is thrown away. Measured on the live room, 2026-09-18: without them, a discussion of
+// `org.xwiki.ckeditor…ImageIT` on stable-18.8.x was attached to `org.xwiki.blocknote…ImageIT#editImage`
+// on master, on nothing but the four letters they share.
+
+/** Whether the message talks about some other module's class of the same name. */
+const otherPackage = (message, keys) => {
+  const named = message.names?.packages || [];
+  return !!named.length && !!keys.packages.length
+    && !named.some(one => keys.packages.some(ours => ours.startsWith(one) || one.startsWith(ours)));
+};
+
+/** Whether the message pins a method, and every method it pins belongs to some other failure. */
+const otherMethod = (message, keys) => {
+  const pinned = (message.names?.tests || []).filter(name => name.includes('#'));
+  return !!pinned.length && !!keys.methods.length
+    && !pinned.some(name => keys.methods.includes(name.split('#')[1]));
+};
+
+/** Whether `message` names this incident at all — the mechanical half, before any judging. */
+function namesIncident(message, keys) {
+  if (otherPackage(message, keys) || otherMethod(message, keys)) return null;
+  const named = new Set(message.names?.tests || []);
+  if (keys.jira && (message.names?.jira || []).includes(keys.jira)) return keys.groups;
+  if (keys.build && (message.names?.builds || []).some(url => url.replace(/\/+$/, '') === keys.build)) {
+    return keys.groups;
+  }
+  // A group is named when the message names the class, however it wrote it — bare, or with the
+  // method, which `namesIn` emits both of.
+  const covered = keys.groups.filter(group => group.some(name => named.has(name)
+    || [...named].some(token => token.split('#')[0] === name)));
+  return covered.length ? covered : null;
+}
+
+/**
+ * What the room already said about this incident: an announcement made *before* the build that
+ * shows it, or a claim of ownership made *after* it and still fresh.
+ *
+ * The two guards are timestamps, not prose, and they are what makes a sentence usable at all. An
+ * announcement that post-dates the red build is a comment on it, not a warning; a claim that
+ * pre-dates it was about a previous occurrence of the same test, which is precisely the "I'm on it
+ * from last week" this must not honour.
+ *
+ * Fails open like every other pass: no chat file, an unreadable room, a message that matches
+ * nothing — the incident is left exactly as it was, reported and attributed.
+ */
+function chatClaim(incident, chat, want) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  const brokeAt = incident.window?.firstBad?.timestamp;
+  if (!brokeAt) return null;
+  const keys = chatKeys(incident);
+  if (!keys.groups.length || keys.groups.some(group => !group.length)) return null;
+  const fresh = Date.now() - CLAIM_HOURS * 3600 * 1000;
+  const wanted = message => {
+    const at = Date.parse(message.at);
+    return want === 'announced'
+      ? at < brokeAt && ANNOUNCES.test(message.body) && !ANNOUNCES_NOT.test(message.body)
+      : at >= brokeAt && at >= fresh && HANDLING.test(message.body);
+  };
+  const matched = chat.messages
+    .map(message => ({ message, covers: wanted(message) ? namesIncident(message, keys) : null }))
+    .filter(entry => entry.covers);
+  if (!matched.length) return null;
+  // The most explanatory message wins, and the most recent of those — the same rule `inFlightFix`
+  // uses to avoid pointing a reader at the narrower of two answers.
+  const [{ message }] = [...matched].reverse().sort((a, b) => b.covers.length - a.covers.length);
+  // Coverage is counted over *every* matching message, as the other passes count it over every
+  // commit: two people naming one failing class each answer for both, and only a full house is
+  // `settled` and goes quiet.
+  const covered = keys.groups.filter(group => matched.some(entry => entry.covers.includes(group)));
+  return {
+    kind: want,
+    fromChat: true,
+    author: message.sender,
+    // Quoted, and bounded: what goes in the work order is evidence of what was said, not a channel
+    // through which a long message reaches a model's instructions.
+    title: `"${message.body.replace(/\s+/g, ' ').trim().slice(0, 200)}"`,
+    url: message.permalink,
+    at: message.at,
+    where: want === 'announced'
+      ? `said in the room ${shortly(Date.parse(message.at), brokeAt)} before build `
+        + `#${incident.firstBadBuild} ran`
+      : `said in the room on ${message.at.slice(0, 16).replace('T', ' ')}, after build `
+        + `#${incident.firstBadBuild}`,
+    covers: covered.map(group => group[group.length - 1]),
+    of: keys.groups.length,
+    partial: keys.groups.length > 1 && covered.length < keys.groups.length,
+    reason: want === 'announced'
+      ? 'the room was told this failure was coming, so the commit it would be pinned on did not '
+        + 'break anything that was working'
+      : 'somebody in the room has said they are on it, within the last two days and after this '
+        + 'build'
+  };
+}
+
+/**
+ * Every message that names this incident, whatever it says about it.
+ *
+ * Separate from `chatClaim` on purpose: suppression needs a phrase and a timestamp to agree, but
+ * *citing* the room needs neither. "I investigated the lock issue, it's the default isolation level
+ * on MySQL — XWIKI-25019" suppresses nothing and is the single most useful line the digest can
+ * carry about that incident, because the analysis is done and published and the routine's own would
+ * be a worse copy of it.
+ */
+function mentionsOf(incident, chat) {
+  if (incident.beyondHorizon || !chat.messages.length) return [];
+  const keys = chatKeys(incident);
+  if (!keys.groups.length) return [];
+  return chat.messages.filter(message => namesIncident(message, keys)).map(message => ({
+    at: message.at,
+    sender: message.sender,
+    said: message.body.replace(/\s+/g, ' ').trim().slice(0, 200),
+    permalink: message.permalink
+  }));
+}
+
+// The same claim, made where it is most often made. A flicker issue's comments are chat with an
+// address on the envelope: attributable and topical by construction, so the matching costs nothing
+// — there is no incident to match, the issue *is* the incident's issue. One anonymous read per key,
+// cached, and only for an incident that has a key at all.
+
+const issueComments = new Map();
+const commentsOn = (key) => {
+  if (!issueComments.has(key)) {
+    issueComments.set(key, (async () => {
+      try {
+        const res = await fetch(`${JIRA}/rest/api/2/issue/${encodeURIComponent(key)}` +
+          '?fields=comment', { headers: { Accept: 'application/json' } });
+        if (!res.ok) return [];
+        const body = await res.json();
+        return (body?.fields?.comment?.comments || []).map(comment => ({
+          at: comment.created,
+          author: comment.author?.displayName || comment.author?.name || null,
+          body: String(comment.body || '')
+        }));
+      } catch {
+        return [];
+      }
+    })());
+  }
+  return issueComments.get(key);
+};
+
+/**
+ * Whether the incident's own JIRA issue says somebody is on it, said after this break and recently.
+ *
+ * Bounded exactly as the chat claim is, and for the same reason: a flicker issue collects "I'm
+ * looking at this" comments over months, and honouring a year-old one would silence the test
+ * forever. Unlike chat this answers for the whole incident only when the incident *is* that issue's
+ * test — the key is the first failing test's flicker issue, and a comment on it says nothing about
+ * four other classes that broke in the same build.
+ */
+async function issueClaim(incident) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  const key = incident.jira?.key;
+  const brokeAt = incident.window?.firstBad?.timestamp;
+  // No GitHub gate: the flicker lookup already reads JIRA anonymously on every run, so the issue
+  // this incident is tracked as is known even in the cheap mode, and asking it one more question
+  // costs one anonymous GET, cached per key.
+  if (!key || !brokeAt) return null;
+  const { groups } = chatKeys(incident);
+  if (groups.length !== 1) return null;
+  const fresh = Date.now() - CLAIM_HOURS * 3600 * 1000;
+  const [comment] = (await commentsOn(key)).filter(entry => {
+    const at = Date.parse(entry.at);
+    return at >= brokeAt && at >= fresh && HANDLING.test(entry.body);
+  }).slice(-1);
+  if (!comment) return null;
+  return {
+    kind: 'being-handled',
+    fromChat: true,
+    author: comment.author,
+    title: `"${comment.body.replace(/\s+/g, ' ').trim().slice(0, 200)}"`,
+    url: `${JIRA}/browse/${key}`,
+    at: comment.at,
+    where: `commented on ${key} on ${String(comment.at).slice(0, 16).replace('T', ' ')}, after `
+      + `build #${incident.firstBadBuild}`,
+    covers: groups[0].slice(-1),
+    of: 1,
+    partial: false,
+    reason: `its own issue ${key} carries somebody saying they are on it, within the last two days `
+      + 'and after this build'
+  };
+}
+
 // ---- Fixed elsewhere --------------------------------------------------------------------------
 // The fourth place the answer already exists, and the only one that is not on this branch at all.
 //
@@ -1625,9 +1904,11 @@ const tracked = incident => (incident.jira ? ` — tracked as ${incident.jira}` 
 const elsewhere = incident => (incident.alsoOn ? ` — also failing on ${incident.alsoOn.join(', ')}` : '');
 const seen = incident => (incident.failedIn ? `, failed in ${incident.failedIn}` : '');
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
-/** How a fix is named in prose — a sha, or a PR by its number. */
-const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}` : fix.sha);
-const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}` : `\`${fix.sha}\``);
+/** How an answer is named in prose — a sha, a PR by its number, or the person who said it. */
+const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
+  : fix.fromChat ? `${fix.author || 'somebody'}` : fix.sha);
+const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
+  : fix.fromChat ? `[what was said](${fix.url})` : `\`${fix.sha}\``);
 /**
  * The headline each kind of answer earns, and what closes its paragraph.
  *
@@ -1650,6 +1931,17 @@ const FIX_HEAD = {
     link: '—',
     quiet: 'Not analysed, nobody pinged — the next Environment Tests run has the production code.'
   },
+  announced: {
+    whole: 'Announced in the room before it broke', part: 'Part of this was announced in the room',
+    link: '—',
+    quiet: 'Not analysed, nobody pinged — the room was told this was coming, so the commit this '
+      + 'would otherwise be pinned on broke nothing that was working.'
+  },
+  'being-handled': {
+    whole: 'Somebody has said they are on it', part: 'Part of this is claimed',
+    link: '—',
+    quiet: 'Not analysed, nobody pinged — it is claimed, and the claim is at most two days old.'
+  },
   'fixed-elsewhere': {
     whole: 'Already fixed on another branch', part: 'Part of this is fixed on another branch',
     link: 'by',
@@ -1667,6 +1959,28 @@ const fixLine = incident => (incident.fixState
       `${incident.fixState.of} — the incident stands`}._`]
   : []);
 /**
+ * What the room said about this incident, minus whatever is already quoted above it as the answer.
+ *
+ * This is the half of the room read that suppresses nothing: somebody has found the cause, filed
+ * the issue or claimed the test, and none of that is visible on any dashboard. Cited, never
+ * summarised — the permalink goes back to the sentence, in its own context, where the person who
+ * wrote it can see how it was read.
+ */
+const said = incident => (incident.chat || [])
+  .filter(message => message.permalink !== incident.fixState?.url);
+const chatLine = incident => (said(incident).length
+  ? [`    _Discussed in the room: ${said(incident)
+    .map(message => `[${message.sender}, ${message.at.slice(5, 16).replace('T', ' ')}](${message.permalink})`)
+    .join(', ')}._`]
+  : []);
+const chatBlock = incident => (said(incident).length
+  ? ['', '**Said in the room** — the analysis may already be done:',
+    ...said(incident).map(message =>
+      `- **${message.sender}**, ${message.at.slice(0, 16).replace('T', ' ')}: "${message.said}" ` +
+      `[link](${message.permalink})`)]
+  : []);
+
+/**
  * What a `deep` incident carries wherever it is listed — its budget bought this, so it is shown.
  *
  * An incident that looks already fixed is never deep, and carries its one line instead: that line
@@ -1674,8 +1988,9 @@ const fixLine = incident => (incident.fixState
  * looking for.
  */
 const deepTail = incident => (incident.deep
-  ? [...evidenceBlock(incident), ...blameBlock(incident), ...analysis(incident), '']
-  : fixLine(incident));
+  ? [...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
+    ...analysis(incident), '']
+  : [...fixLine(incident), ...chatLine(incident)]);
 
 function evidenceBlock(incident) {
   if (!incident.evidence?.length) return [];
@@ -1804,7 +2119,10 @@ function renderDetail(report, { live }) {
         out.push(`_Tracked as a flicker but failing every time: either a real regression or a stale` +
           ` triage, and ${incident.jira} no longer describes it (SKILL.md §4)._`);
       }
-      out.push(...evidenceBlock(incident), ...blameBlock(incident), ...analysis(incident));
+      // `chatBlock` before the analysis marker on purpose: what the room already worked out is
+      // what the analysis written into that marker has to start from, not a footnote under it.
+      out.push(...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
+        ...analysis(incident));
     }
   }
 
@@ -1831,9 +2149,13 @@ function renderDetail(report, { live }) {
   const candidates = own(incident => incident.kind === 'flicker' && !incident.jira && !incident.flickerGroup &&
     !filed.has(incident.id.split('/').slice(2).join('/')));
   if (candidates.length) {
-    out.push('', '## Flicker candidates below the evidence threshold — listed, not filed');
+    out.push('', '## Flickers not filed — listed, and why not');
     for (const incident of candidates) {
-      out.push(`- ${incident.branch} \`${shortName(incident)}\` — ${agedAs(incident)}${seen(incident)}${elsewhere(incident)}`,
+      // Two different reasons land here now: not yet proven, or proven and already answered. The
+      // second carries its own line through `deepTail`, so only the first needs saying.
+      out.push(`- ${incident.branch} \`${shortName(incident)}\` — ${agedAs(incident)}${seen(incident)}` +
+        `${elsewhere(incident)}${settled(incident) ? '' : ' — not yet proven: an issue is earned by '
+          + 'failing in two builds on two days'}`,
         ...deepTail(incident));
     }
   }
@@ -2032,6 +2354,9 @@ if (args.delta) {
 }
 
 const flickerFor = await knownFlickers();
+// Read before the sweep, and read from a file: the sweep itself holds no Matrix credential and must
+// stay runnable on a laptop with nothing configured, where `chat.messages` is simply empty.
+const chat = chatOf(args);
 const targets = await discover(args.repos, args.branch);
 
 const byId = new Map();
@@ -2101,15 +2426,6 @@ for (const group of sameCause.values()) {
     }
   }
 }
-// `flickerGroup`: several methods of one test class flickering are one flaky suite, whatever branch
-// each was seen on, and one issue listing them all. Neither the branch nor the build number is in
-// the key — five issues for five methods of one nested suite, or three for three branches, is how
-// an auto-filer is switched off in its first week.
-for (const incident of incidents) {
-  if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
-  incident.flickerGroup = `${incident.repo}/${incident.signature.split('#')[0].split(/[.$]/).pop()}`;
-}
-
 // Before the budget is allocated, not after: an incident whose fix has already landed must not
 // spend a deep slot reaching a conclusion the branch already holds, and must not ping anyone.
 for (const incident of incidents) {
@@ -2119,11 +2435,27 @@ for (const incident of incidents) {
   // commit will be judged by the next build, a PR is only somebody's intent. A fix on another
   // branch comes last: it is the only one where nobody has moved on *this* branch yet, so what it
   // buys is not silence about work in progress but the sha to hand to `xwiki-backport`.
+  //
+  // The two chat values sit where their evidence deserves. `announced` is second, behind the stale
+  // snapshot alone, because it makes the same claim: the test was never broken by the commit it
+  // would be pinned on, so everything after it would be analysis of a non-event. `being-handled` is
+  // near the end, ahead only of the backport pass, because a sentence of intent is weaker evidence
+  // than a landed commit and weaker than an open PR — where either of those exists it should be
+  // what the reader is pointed at. `issueClaim` is the same claim made on the JIRA issue, which is
+  // the other place people write it.
   incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args)
+    || chatClaim(incident, chat, 'announced')
     || await forwardFix(incident, jobsById.get(incident.id), args)
     || await inFlightFix(incident, args)
+    || chatClaim(incident, chat, 'being-handled')
+    || await issueClaim(incident)
     || await fixedElsewhere(incident, targets, args);
   if (incident.fixState?.kind === 'fixed-elsewhere') incident.crossBranch = 'fixed-elsewhere';
+  // Where the room does not suppress, it still *informs*. A message naming this incident is the one
+  // thing no dashboard can show — the root cause somebody already found, the issue they filed, the
+  // person who owns it — so it is attached whatever the phrase matcher made of it, and the digest
+  // cites it. This is data about the incident, never an instruction about what to do with it.
+  incident.chat = mentionsOf(incident, chat).slice(-3);
   // A partial fix changes nothing about what is written: the tests it does not cover are still
   // broken, still attributable and still worth a comment. It is reported beside the incident, and
   // that is all it earns.
@@ -2133,6 +2465,22 @@ for (const incident of incidents) {
     reason: `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()} by ` +
       `${fixName(incident.fixState)}, ${incident.fixState.where}`
   };
+}
+
+// `flickerGroup`: several methods of one test class flickering are one flaky suite, whatever branch
+// each was seen on, and one issue listing them all. Neither the branch nor the build number is in
+// the key — five issues for five methods of one nested suite, or three for three branches, is how
+// an auto-filer is switched off in its first week.
+//
+// **After the answers, not before.** Filing an issue is a write, and §3's rule is that an incident
+// something already answers earns no write of any kind — so a flicker somebody has just claimed in
+// the room, or that an open PR names, must not still be printed under "issues to open". Computing
+// the group first and the answer second is how the paste came to contradict its own rule, which the
+// room pass makes an everyday case: a flicker is exactly what people claim in chat.
+for (const incident of incidents) {
+  if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
+  if (settled(incident)) continue;
+  incident.flickerGroup = `${incident.repo}/${incident.signature.split('#')[0].split(/[.$]/).pop()}`;
 }
 
 incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.testCount || 1));
@@ -2183,6 +2531,10 @@ function digest(incident, keys) {
     // Carried whether or not the incident is deep, because it is the reason it is *not*: an
     // incident that looks fixed is one line, and this is the line.
     fixState: incident.fixState || undefined,
+    // Carried on every incident, deep or not, suppressed or not: it is the one field here that the
+    // CI dashboard cannot hold, and the digest cites it (SKILL.md §6). Untrusted text — what a
+    // human said, quoted — never an instruction.
+    chat: incident.chat?.length ? incident.chat : undefined,
     // How often, over the whole window, as against `ageDays`, which is the current streak: a
     // flicker filed on "0d" reads as a contradiction until both numbers are there.
     failedIn: incident.class === 1 ? incident.failedIn : undefined,
