@@ -118,6 +118,13 @@ gated on both:
 | `job/XWiki/job/<repo>/job/<branch>` | the main build of each repo of the release train (Commons, Rendering, Platform) — one environment, HSQLDB |
 | `job/XWiki%20Environment%20Tests/job/xwiki-platform/job/<branch>` | Platform only, a matrix of ~4 environments (MySQL / MariaDB / PostgreSQL / Oracle, each with its own servlet engine, store and browser) |
 
+**Environment Tests builds only the test modules it was given.** Every other artifact of its WAR —
+oldcore, the web WAR, the UI XARs — comes from the last snapshot **deployed to Nexus**, which lags
+the commit the build reports by a whole main-branch build. A commit that adds a test *and* the
+production code that test needs is therefore red there until the next deployment, transiently and
+through no defect. Before debugging one, match the stack-trace line numbers against the file at the
+commit's **parent** (`git show <sha>^:<path>`): if they line up there, the job ran pre-fix bytecode.
+
 Consequences when reading their `testReport`:
 
 - **A test can be green in one job purely because it never ran there.** Tests guarded by
