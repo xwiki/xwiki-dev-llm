@@ -109,7 +109,7 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
-| `fixState` | a commit CI has not built yet answers this incident ⇒ **one line, no analysis, no write** |
+| `fixState` | somebody already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR ⇒ **one line, no analysis, no write** |
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
@@ -129,12 +129,17 @@ Treat only the incidents marked `deep` — at most 5, chosen by severity. That i
 target**; below the line, an incident is reported in the paste without analysis, which is a correct
 outcome, not a failure.
 
-**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** The branch
-already holds a commit that answers it and CI has simply not built it yet, so root-causing it argues
-with a branch that has moved on, and **no write of any kind follows** — no commit comment, no fix
-PR, no flicker issue — because each of them asks someone for work already done. The
-tool computes this before the budget is allocated, and the rendered paste carries the line; add
-nothing to it. Saying nothing here is the point, not an omission to apologise for.
+**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Somebody has
+already answered it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), or an
+open PR names the failing test (`fix-in-flight`) — so root-causing it argues with people who have
+moved on, and **no write of any kind follows** — no commit comment, no fix PR, no flicker issue —
+because each of them asks someone for work already under way. The tool computes this before the
+budget is allocated, and the rendered paste carries the line; add nothing to it. Saying nothing here
+is the point, not an omission to apologise for.
+
+**Neither value asserts a fix**, and the paste's wording is the one it keeps: *possibly fixed
+already* for a landed commit, *a fix may be in flight* for a PR, which may equally be a rewrite that
+touches the test or may never merge. What settles it is the next build, or the merge — not this run.
 
 The field is set only when **every** test the incident covers is answered — a commit fixing one test
 of five leaves the incident live, and the paste says which part is answered. Deciding otherwise, in
@@ -327,10 +332,11 @@ listed. `NEW` means `ageDays` is 0 — there is no ledger, so it is the only thi
 The digest lines are chosen, not rendered: pick what a developer can act on today — a break with an
 owner first, then a break without one, then what has changed state — and let the paste carry the
 rest. Every line names the branch, what is broken, since when, and what was done about it
-(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`).
+(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`, `fix in flight`).
 
 An incident with a `fixState` earns a digest line and nothing else — it is the one line that stops a
-reader who has just pushed the fix from opening the paste to find out whether the routine noticed.
+reader who has just pushed the fix, or opened the PR, from opening the paste to find out whether the
+routine noticed.
 
 ```bash
 node <skill>/tools/privatebin.mjs --file detail.md --expire 1week --write   # prints the URL, key included
