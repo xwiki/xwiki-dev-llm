@@ -428,6 +428,20 @@ async function github(path) {
 }
 
 /**
+ * A commit's full record, fetched once per run.
+ *
+ * The same commit is compared against from several jobs of one branch — the main build and every
+ * cell of the Environment Tests matrix — and the forward-fix pass below walks the same unbuilt
+ * range as often as there are jobs. Without this, one push costs a request per job per commit.
+ */
+const commitDetails = new Map();
+const detailOf = (repo, sha) => {
+  const key = `${repo}/${sha}`;
+  if (!commitDetails.has(key)) commitDetails.set(key, github(`/repos/xwiki/${repo}/commits/${sha}`));
+  return commitDetails.get(key);
+};
+
+/**
  * The commits between two builds' *project* revisions, with their real authors and the files they
  * touched.
  *
@@ -440,7 +454,7 @@ async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) 
   if (!data?.commits) return [];
   const commits = data.commits.filter(c => (c.parents || []).length < 2).slice(-maxCommits);
   return Promise.all(commits.map(async commit => {
-    const detail = await github(`/repos/xwiki/${repo}/commits/${commit.sha}`);
+    const detail = await detailOf(repo, commit.sha);
     return {
       sha: commit.sha,
       short: commit.sha.slice(0, 10),
@@ -599,6 +613,124 @@ function attribute(incident, commits) {
     reason: `${commits.length} commits by ${authors.size} author(s), ${relevant.size} of them relevant`
   };
 }
+
+// ---- Forward fix -----------------------------------------------------------------------------
+// Blame looks backward, at the commits inside the regression window. Nothing looked forward, at
+// what landed *after* CI last built the branch — so a break fixed at 22:27 was still being
+// root-caused, and its author still being pinged, at 06:00 the next morning. That is the one
+// failure mode that costs the whole system its credibility, because the reader already knows the
+// answer the routine is missing.
+//
+// The unbuilt commits are the only place an unproven fix can be: anything older was built, and the
+// build still failed. They are fetched once per job — every incident of a job shares them — and
+// matched with the very keys blame uses, pointed the other way.
+
+const unbuilt = new Map();
+
+/**
+ * The commits pushed to the branch since this job last built it.
+ *
+ * @returns {Promise<{build: number, commits: object[]}>} an empty list when the branch head is
+ *   built, when there is no token, or when the lookup fails — see `forwardFix` on why failing open
+ *   is the right direction here.
+ */
+function unbuiltOf(job, repo, branch, args) {
+  const latest = job?.builds?.[0];
+  if (!latest || !args.github || !token) return Promise.resolve({ build: null, commits: [] });
+  const key = `${job.url}#${latest.number}`;
+  if (!unbuilt.has(key)) {
+    unbuilt.set(key, (async () => {
+      try {
+        const built = await buildRevision(`${job.url}/${latest.number}`, repo);
+        const head = await github(`/repos/xwiki/${repo}/branches/${encodeURIComponent(branch)}`);
+        const headSha = head?.commit?.sha;
+        if (!built || !headSha || built === headSha) return { build: latest.number, commits: [] };
+        // Ten, not the blame pass's twenty: a fix lands in the hours after the break, and a range
+        // long enough to need more is a branch CI has stopped building, which is another incident.
+        const commits = await commitsBetween(repo, built, headSha, { maxCommits: 10 });
+        return { build: latest.number, commits };
+      } catch {
+        return { build: latest.number, commits: [] };
+      }
+    })());
+  }
+  return unbuilt.get(key);
+}
+
+/**
+ * What a commit must name to look like *this* incident's fix — narrower than `blameKeys`, and the
+ * asymmetry is the whole point.
+ *
+ * Backward, a commit touching the failing test's *package* is a fair suspect: the page objects and
+ * fixtures beside it break a test as readily as the test itself, and the cost of a wrong guess is
+ * a comment that asks. Forward, the cost of a wrong guess is silence about a live breakage — so
+ * only the failing file itself counts, never the directory around it, and never the module.
+ *
+ * Measured on 2026-09-18: with the package key, `9dd4f149c8` (touching `VersionIT.java`) silenced
+ * a systematic failure of `DocExtraTabsIT`, its neighbour in `org/xwiki/flamingo/test/docker`.
+ */
+function forwardKeys(incident) {
+  // Grouped by the thing that has to be fixed, not by spelling: one group per failing test class,
+  // holding the file names that class can live in. Coverage is then counted in tests, which is
+  // what an incident is made of, rather than in keys, of which one test contributes several.
+  if (incident.file) return { groups: [[basename(incident.file)]], words: [] };
+  const groups = new Map();
+  for (const id of (incident.tests || []).slice(0, 20)) {
+    // `AllIT$NestedDocExtraTabsIT` is declared in `DocExtraTabsIT.java`: the `Nested` prefix names
+    // the inner class the suite wraps it in, and no file carries it.
+    const simple = id.split('#')[0].split(/[.$]/).pop();
+    const keys = [...new Set([`${simple}.java`, `${simple.replace(/^Nested/, '')}.java`])];
+    groups.set(keys.join('|'), keys);
+  }
+  // A dependency break names no file at all — the bump that caused it changed a pom and nothing
+  // else — so the library its subject names is the only signal there is, forward as backward.
+  return { groups: [...groups.values()], words: incident.class === 2 ? blameKeys(incident).words : [] };
+}
+
+/**
+ * The unbuilt commit that looks like the fix for this incident, if there is one.
+ *
+ * **Fails open, always.** A lookup that errors, or a token that is missing, leaves the incident
+ * exactly as it was: reported, attributed, commented on. The asymmetry is deliberate — missing a
+ * fix costs one needless ping, which the wording of a `likely` comment already survives, whereas
+ * inventing one buys silence about a real breakage.
+ *
+ * The newest match wins. Where several unbuilt commits touch the failing code, the last one is the
+ * state of the branch now, and it is the state of the branch the next build will judge.
+ */
+async function forwardFix(incident, job, args) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  const { build, commits } = await unbuiltOf(job, incident.repo, incident.branch, args);
+  if (!commits.length) return null;
+  const { groups, words } = forwardKeys(incident);
+  const paths = groups.flat();
+  const [byPath] = commits.filter(commit => paths.some(key => touches(commit, key))).slice(-1);
+  const [byWord] = commits.filter(commit => words.some(word => names(commit, word))).slice(-1);
+  const commit = byPath || byWord;
+  if (!commit) return null;
+  // One incident spans the N tests that broke together, and an unbuilt commit may answer for only
+  // some of them. Silencing all N on a fix for one is the same mistake as never looking forward at
+  // all, so coverage is counted across *every* unbuilt commit and only a full house goes quiet.
+  const covered = groups.filter(keys => commits.some(c => keys.some(key => touches(c, key))));
+  const partial = groups.length > 1 && covered.length < groups.length;
+  return {
+    kind: 'fix-unbuilt',
+    sha: commit.short,
+    author: commit.author || commit.gitAuthor || null,
+    title: commit.title,
+    url: commit.url,
+    afterBuild: build,
+    covers: covered.map(keys => keys[keys.length - 1].replace(/\.java$/, '')),
+    of: groups.length,
+    partial,
+    reason: byPath
+      ? `touches ${paths.find(key => touches(commit, key))}, which the failure names`
+      : `its subject names ${words.find(word => names(commit, word))}, which the failure reports`
+  };
+}
+
+/** Whether the branch already answers for the *whole* incident — the only case that goes quiet. */
+const settled = incident => !!incident.fixState && !incident.fixState.partial;
 
 // ---- Sweep -----------------------------------------------------------------------------------
 
@@ -1057,10 +1189,24 @@ const tracked = incident => (incident.jira ? ` — tracked as ${incident.jira}` 
 const elsewhere = incident => (incident.alsoOn ? ` — also failing on ${incident.alsoOn.join(', ')}` : '');
 const seen = incident => (incident.failedIn ? `, failed in ${incident.failedIn}` : '');
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
-/** What a `deep` incident carries wherever it is listed — its budget bought this, so it is shown. */
+/** The same news as `fixBlock`, folded into one indented line for the places that list bullets. */
+const fixLine = incident => (incident.fixState
+  ? [`    _${settled(incident) ? 'Possibly fixed already' : 'Partly answered'} by ` +
+    `\`${incident.fixState.sha}\` (${incident.fixState.author || 'unknown'}), pushed after build ` +
+    `#${incident.fixState.afterBuild} and not yet built` +
+    `${settled(incident) ? ' — nobody pinged' : `; it covers ${incident.fixState.covers.join(', ')} of ` +
+      `${incident.fixState.of} — the incident stands`}._`]
+  : []);
+/**
+ * What a `deep` incident carries wherever it is listed — its budget bought this, so it is shown.
+ *
+ * An incident that looks already fixed is never deep, and carries its one line instead: that line
+ * is precisely why it was not analysed, so it is the one thing a reader must not have to go
+ * looking for.
+ */
 const deepTail = incident => (incident.deep
   ? [...evidenceBlock(incident), ...blameBlock(incident), ...analysis(incident), '']
-  : []);
+  : fixLine(incident));
 
 function evidenceBlock(incident) {
   if (!incident.evidence?.length) return [];
@@ -1071,10 +1217,43 @@ function evidenceBlock(incident) {
     ? [`Failing environments: ${incident.envs.join(' | ')}`] : [])];
 }
 
+/**
+ * The one line an incident with a landed-but-unbuilt fix gets, in place of everything else.
+ *
+ * "Possibly", and the evidence under it, because the claim rests on a file overlap and not on a
+ * green build: the next build is what settles it, and this line exists to stop the routine
+ * arguing with a branch that has already moved on.
+ */
+function fixBlock(incident) {
+  const fix = incident.fixState;
+  if (!fix) return [];
+  const head = `\`${fix.sha}\` **${fix.author || '(unknown)'}** — ${fix.title}`;
+  if (fix.partial) {
+    return ['', `**Part of this may be fixed already** — ${head}`,
+      `Pushed after build #${fix.afterBuild} and not yet built; ${fix.reason}. It covers ` +
+      `${fix.covers.join(', ')} — ${fix.of - fix.covers.length} of the ${fix.of} failing tests are ` +
+      'not answered by anything unbuilt, so this incident stands.'];
+  }
+  // Where the incident spans several tests, the commit named above answers for one of them and the
+  // sentence has to say what answers for the rest — otherwise the line reads as a fix for a test it
+  // does not mention.
+  const whole = fix.of > 1
+    ? ` All ${fix.of} failing tests (${fix.covers.join(', ')}) are answered by commits CI has not built yet.`
+    : '';
+  return ['', `**Possibly fixed already** — ${head}`,
+    `Pushed after build #${fix.afterBuild} and not yet built; ${fix.reason}.${whole} ` +
+    'Not analysed, nobody pinged — the next build settles it.'];
+}
+
 function blameBlock(incident) {
+  // Before the `blame` guard, not after: a settled incident is never deep, and the work order
+  // carries no blame for an incident below the line — so testing `blame` first would drop the one
+  // line that says why nothing was written. A *partial* fix is printed above the blame it does
+  // not cancel.
+  if (settled(incident)) return fixBlock(incident);
+  const out = fixBlock(incident);
   const blame = incident.blame;
-  if (!blame) return [];
-  const out = [];
+  if (!blame) return out;
   if (blame.culprit) {
     out.push('', `Blame **${blame.tier}** — ${blame.reason}.`,
       `Culprit: \`${blame.culprit.short}\` **${blame.culprit.author || '(unknown)'}** — ` +
@@ -1098,7 +1277,8 @@ function renderDetail(report, { live }) {
     '',
     `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → **${plural(summary.incidents, 'incident')}**: ` +
     `${summary.deep} deep-treated, ${summary.beyondHorizon} beyond the ${report.horizonDays}-day horizon, ` +
-    `${summary.alreadyCommented} already commented.`
+    `${summary.alreadyCommented} already commented` +
+    `${summary.likelyFixed ? `, ${summary.likelyFixed} possibly fixed already` : ''}.`
   ];
   if (green.length) out.push(`${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch.`);
   if (report.githubTokenWarning) out.push('', `⚠️ ${report.githubTokenWarning}`);
@@ -1204,18 +1384,27 @@ function renderDetail(report, { live }) {
 
   const deep = of(incident => incident.deep);
   const noOwner = deep.filter(incident => ['ambiguous', 'none', 'unknown'].includes(incident.blame?.tier));
+  const fixed = of(settled);
   out.push('', '## Not written, and why', '',
     `- **${noOwner.length} of the ${deep.length} deep-treated** have no attributable author` +
     `${noOwner.length ? ' — listed here, nobody pinged:' : '.'}`);
   for (const incident of noOwner) {
     out.push(`    - ${incident.branch} \`${shortName(incident)}\` — ${incident.blame.tier}: ${incident.blame.reason}`);
   }
+  if (fixed.length) {
+    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'looks' : 'look'} already fixed by a commit CI has` +
+      ' not built yet — no slot spent, nobody pinged, since the branch already holds the answer:');
+    for (const incident of fixed) {
+      out.push(`    - ${incident.branch} \`${shortName(incident)}\` → \`${incident.fixState.sha}\`` +
+        ` (${incident.fixState.author || 'unknown'})`);
+    }
+  }
   out.push(
     `- **${summary.alreadyCommented}** already carry a comment in the same state — saying it twice is how a` +
     ' routine becomes noise.',
     `- **${summary.beyondHorizon}** older than ${report.horizonDays} days — counted, never written about.`,
-    `- **${Math.max(0, summary.incidents - deep.length)}** below the deep budget of ${report.budget} —` +
-    ' reported without analysis, by design.');
+    `- **${Math.max(0, summary.incidents - deep.length - fixed.length)}** below the deep budget of ` +
+    `${report.budget} — reported without analysis, by design.`);
   return out.join('\n');
 }
 
@@ -1286,10 +1475,26 @@ for (const incident of incidents) {
   }
 }
 
+// Before the budget is allocated, not after: an incident whose fix has already landed must not
+// spend a deep slot reaching a conclusion the branch already holds, and must not ping anyone.
+for (const incident of incidents) {
+  incident.fixState = await forwardFix(incident, jobsById.get(incident.id), args);
+  // A partial fix changes nothing about what is written: the tests it does not cover are still
+  // broken, still attributable and still worth a comment. It is reported beside the incident, and
+  // that is all it earns.
+  if (!settled(incident)) continue;
+  incident.blame = {
+    tier: 'none', suspects: [],
+    reason: `possibly fixed already by ${incident.fixState.sha}, pushed after build ` +
+      `#${incident.fixState.afterBuild} and not yet built`
+  };
+}
+
 incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.testCount || 1));
 // Beyond the horizon nothing may be written, so spending root-cause budget there buys nothing:
 // those incidents are aggregated into one digest line and that is all.
-const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon).slice(0, args.budget);
+const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon && !settled(incident))
+  .slice(0, args.budget);
 for (const incident of deep) {
   incident.deep = true;
   await investigate(incident, jobsById.get(incident.id), args);
@@ -1330,6 +1535,9 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // Carried whether or not the incident is deep, because it is the reason it is *not*: an
+    // incident that looks fixed is one line, and this is the line.
+    fixState: incident.fixState || undefined,
     // How often, over the whole window, as against `ageDays`, which is the current streak: a
     // flicker filed on "0d" reads as a contradiction until both numbers are there.
     failedIn: incident.class === 1 ? incident.failedIn : undefined,
@@ -1397,7 +1605,8 @@ const report = {
     incidents: incidents.length,
     deep: deep.length,
     beyondHorizon: incidents.filter(incident => incident.beyondHorizon).length,
-    alreadyCommented: incidents.filter(incident => incident.silent).length
+    alreadyCommented: incidents.filter(incident => incident.silent).length,
+    likelyFixed: incidents.filter(settled).length
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };
@@ -1414,6 +1623,8 @@ if (!args.pretty) {
       ? `${incident.blame.tier} → ${incident.blame.culprit.short} (${incident.blame.culprit.author})`
       : incident.blame?.tier || '—';
     console.log(`${incident.deep ? '*' : ' '} [${incident.kind}] ${incident.id} — ${age}, ${who}` +
-      `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}`);
+      `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}` +
+      `${incident.fixState ? ` (${settled(incident) ? 'possibly fixed' : 'partly answered'} by ` +
+        `${incident.fixState.sha}, unbuilt)` : ''}`);
   }
 }
