@@ -109,14 +109,15 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
-| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR, `stale-snapshot` the job ran new test code against older jars ⇒ **one line, no analysis, no write** |
+| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR, `stale-snapshot` the job ran new test code against older jars, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** |
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `jira` | the open flicker issue, if the test already has one |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |
-| `alsoOn` | the other branches the same test is failing on — one flaky test, not one per branch |
-| `flickerGroup` | proven, unfiled flickers that broke together (same class, same branch, same window) carry the same value: **one** issue per value (§5) |
+| `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
+| `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
+| `flickerGroup` | proven, unfiled flickers of one test class, on any branch, carry the same value: **one** issue per value (§5) |
 
 **There is no ledger file.** A routine gets a fresh sandbox every morning, so a local state file
 would be empty every morning. Every field above is recomputed from a durable system — Jenkins for
@@ -131,8 +132,9 @@ outcome, not a failure.
 
 **An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Something
 already answers it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), an open
-PR names the failing test (`fix-in-flight`), or the job ran new test code against older production
-jars (`stale-snapshot`) — so root-causing it argues with people who have moved on, or with a test
+PR names the failing test (`fix-in-flight`), the job ran new test code against older production
+jars (`stale-snapshot`), or the same failure is green again on another maintained branch
+(`fixed-elsewhere`) — so root-causing it argues with people who have moved on, or with a test
 that was never broken, and **no write of any kind follows** — no commit comment, no fix PR, no
 flicker issue — because each of them asks someone for work already under way, or for work nobody
 needs to do. The tool computes this before the budget is allocated, and the rendered paste carries
@@ -140,9 +142,25 @@ the line; add nothing to it. Saying nothing here is the point, not an omission t
 
 **No value asserts a fix**, and the paste's wording is the one it keeps: *possibly fixed already* for
 a landed commit; *a fix may be in flight* for a PR, which may equally be a rewrite that touches the
-test and may never merge; and *ran against a stale snapshot* for the third, which says the opposite —
-nothing is being fixed, because nothing is broken. What settles them is the next build, the merge, or
-the next Environment Tests run — never this one.
+test and may never merge; *ran against a stale snapshot* for the third, which says the opposite —
+nothing is being fixed, because nothing is broken; and *already fixed on another branch* for the
+fourth, where the fix exists but on code this branch has not got. What settles them is the next
+build, the merge, the next Environment Tests run, or a backport — never this one.
+
+**`fixed-elsewhere` is a backport candidate, and that is all it is.** The same signature was red on
+another maintained branch and is green there now, and the tool names the commit that did it — the
+one fact nobody reading three branches' dashboards side by side at 06:00 was ever going to notice.
+Hand that sha to **`xwiki-backport`**, and **never open the backport here**: it needs the adaptation
+to the older branch and the verification that skill exists for, and what this pass is worth is the
+noticing. Verify before backporting, because a signature also goes green when the test is *deleted*
+on that branch — for a test the tool excludes that by construction (it must still have *run* there,
+having failed and then passed in two consecutive builds each way), for a build break it cannot.
+
+**The same signature on several branches is one cause, and gets one treatment.** `primary` marks the
+incident that carries it — master where master is in the group, otherwise the newest maintained
+branch — and every other branch is named on its line, with its own regression window, and is
+analysed nowhere. Treating four of them costs four of the five deep slots to reach one conclusion,
+and comments four times on what is one person's one mistake.
 
 **`stale-snapshot` is the Environment Tests trap**, and it earns a value of its own because it is the
 one case where the *job* is what is wrong: that job builds only the test modules it was given and
@@ -181,7 +199,9 @@ For each one:
 ## 4. Comment on the culprit — and match the wording to the tier
 
 The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA. Skip
-entirely when `fixState` is set, when `silent` is true, when `beyondHorizon` is true, or when
+entirely when `fixState` is set, when `primary` is `false` — the same cause is commented on the
+branch that carries it, and the comment names the others — when `silent` is true, when
+`beyondHorizon` is true, or when
 `blame.tier` is `ambiguous`, `none` or `unknown` — an ambiguous incident is listed in the paste and the digest says *no owner
 found*. Never guess an author.
 
@@ -333,7 +353,7 @@ paste.
 ```
 🔴 CI 2026-09-12 — 2 new, 3 ongoing
 • platform/master   checkstyle break → a1b2c3d (jdoe) — commented
-• platform/18.4.x   AllIT#foo systematic since #412 (4d) — NEW, no owner found
+• platform/18.4.x+17.10.x  AllIT#foo systematic since #412 (4d) — NEW, no owner found
 • commons/16.10.x   docker rate limit — infra, day 3
 • platform/master   DocExtraTabsIT systematic (0d) — likely fixed in 9dd4f149, unbuilt
   … 2 more (flickers, tracked) · +12 long-standing
@@ -345,7 +365,13 @@ listed. `NEW` means `ageDays` is 0 — there is no ledger, so it is the only thi
 The digest lines are chosen, not rendered: pick what a developer can act on today — a break with an
 owner first, then a break without one, then what has changed state — and let the paste carry the
 rest. Every line names the branch, what is broken, since when, and what was done about it
-(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`, `fix in flight`).
+(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`, `fix in flight`,
+`backport candidate`).
+
+**One cause is one line**, whatever the branch count: incidents whose `primary` is `false` are the
+same signature elsewhere, so their branches join the primary's line (`platform/18.4.x+17.10.x`) and
+never take a line of their own. A `fixed-elsewhere` incident names the sha and what to do with it —
+*platform/18.4.x `VersionIT` systematic (1d) — fixed on master by `a1b2c3d`, backport candidate*.
 
 An incident with a `fixState` earns a digest line and nothing else — it is the one line that stops a
 reader who has just pushed the fix, or opened the PR, from opening the paste to find out whether the
@@ -379,6 +405,7 @@ are the mode working.
 - `xwiki-release-test-triage` — the read-only counterpart, and the right answer to every question
   about CI state. It reports and asks; this skill acts. Both share `scripts/jenkins.mjs`.
 - `xwiki-fix-flickering-docker-test` — to actually stabilise a flicker this skill only filed.
+- `xwiki-backport` — where a `fixed-elsewhere` commit goes; this skill notices it and never lands it.
 - `xwiki-build` (Maven, `xmvn`, the IT slot limiter), `xwiki-pull-request` (the PR),
   `xwiki-jira` (the issue), `xwiki-fix-sonarqube-issue` (a quality-gate failure).
 - `okf/servers/jenkins.md` — the CI traps the tooling encodes; `okf/servers/jira.md` — the flicker

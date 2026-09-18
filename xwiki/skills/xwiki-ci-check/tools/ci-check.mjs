@@ -954,6 +954,203 @@ async function staleSnapshot(incident, jobs, args) {
   }
 }
 
+// ---- Fixed elsewhere --------------------------------------------------------------------------
+// The fourth place the answer already exists, and the only one that is not on this branch at all.
+//
+// Commons, Rendering and Platform are developed on master and maintained on several stable
+// branches, so a break reaches all of them and the fix is written once — on master, usually — and
+// backported. A stable branch analysed from scratch at 06:00 is therefore a morning spent
+// re-deriving a conclusion that has been a commit on another branch for a week, and the reader
+// knows it. Nobody reads three branches side by side; the sweep already visits them all.
+//
+// What this buys is a *name*: the sha to hand to `xwiki-backport`. What it must never do is open
+// the backport itself, or state the fix as a fact — a signature also goes green when the test is
+// deleted. For a test that is excluded by construction below (it must still have *run* there); for
+// a build break only the reader can tell, which is why the wording stays "verify before
+// backporting" everywhere it is printed.
+
+/** Branches ordered as a fix travels: master, then the newest LTS, then the rest. */
+function branchRank(branch) {
+  const { class: branchClass, cycle } = classifyBranch(branch);
+  return { dev: 0, lts: 1, transient: 2 }[branchClass] * 1000 - (cycle ?? 0);
+}
+
+// Four, not every branch there is: the ones a fix is written on come first, and a sweep that walks
+// eight branches' test reports looking for one sha has stopped being cheap.
+const PEER_BRANCHES = 4;
+
+/** The same job on the other maintained branches of this repo, best first. */
+async function peerJobsOf(incident, targets, args) {
+  // The job that is failing, not the repo's main one: a test red in the environment matrix is
+  // answered by the environment matrix of another branch, and the two number their builds — and
+  // run their tests — independently.
+  const label = incident.failingJobs?.[0] || incident.window?.job || incident.job || 'main';
+  const peers = targets
+    .filter(target => target.repo === incident.repo && target.branch !== incident.branch
+      && !(incident.alsoOn || []).includes(target.branch))
+    .sort((a, b) => branchRank(a.branch) - branchRank(b.branch))
+    .slice(0, PEER_BRANCHES);
+  const out = [];
+  for (const peer of peers) {
+    const job = peer.jobs.find(entry => entry.label === label);
+    if (job) out.push({ branch: peer.branch, job: await jobHistory(job, args.history) });
+  }
+  return out;
+}
+
+// Two consecutive failures, then two consecutive passes: what a fix looks like in a test report,
+// and what flakiness does not. A test that failed once and passed once has said nothing — and a
+// flicker on the peer branch produces exactly that pattern all day, which would otherwise be read
+// as "fixed there" and buy silence about a real breakage here.
+const HEALED_RUN = 2;
+
+/**
+ * Where these tests went red→green on a peer branch, as a *fix* and not as a flicker.
+ *
+ * @returns {Promise<{lastBad: object, firstGood: object, covered: string[]}|null>} `covered` is the
+ *   subset of the tests answered by the one transition — the rest is still broken on both branches.
+ */
+async function healedTests(job, ids, args) {
+  const builds = job.tested.slice(0, args.history);
+  if (builds.length < HEALED_RUN * 2) return null;
+  const [latest] = builds;
+  const now = await outcomesOf(`${job.url}/${latest.number}`);
+  // Ran *and* passed, so the walk below is paid for only where there is something to walk. A test
+  // simply absent from the peer's report — deleted there, or in a module that branch no longer
+  // builds — is the one way this pass could hand a reader a "fix" that removes the test, and
+  // reading `ran` is the whole of the guard against it.
+  const alive = ids.filter(id => now.ran.has(id) && !now.failed.has(id));
+  if (!alive.length) return null;
+  // Newest first, and only the builds that ran the test: a build that skipped it says nothing in
+  // either direction, so counting it as a pass would turn a skipped module into a fix.
+  const history = [];
+  for (const build of builds) {
+    const outcome = await outcomesOf(`${job.url}/${build.number}`);
+    history.push({ build, outcome });
+  }
+  const transitions = new Map();
+  for (const id of alive) {
+    const seen = history.filter(entry => entry.outcome.ran.has(id));
+    const green = seen.findIndex(entry => entry.outcome.failed.has(id));
+    if (green < HEALED_RUN) continue;
+    const older = seen.slice(green);
+    const back = older.findIndex(entry => !entry.outcome.failed.has(id));
+    // `-1` is a run of failures reaching the end of the fetched history, which is as long as the
+    // history is — not an unbounded one, and not a pass.
+    if ((back === -1 ? older.length : back) < HEALED_RUN) continue;
+    const key = `${seen[green].build.number}→${seen[green - 1].build.number}`;
+    transitions.set(key, {
+      lastBad: seen[green].build,
+      firstGood: seen[green - 1].build,
+      covered: [...(transitions.get(key)?.covered || []), id]
+    });
+  }
+  if (!transitions.size) return null;
+  // One fix is one transition. Where the incident's tests healed in different builds, the largest
+  // group is the one a single commit can answer for, and the rest is reported as unanswered.
+  return [...transitions.values()].sort((a, b) => b.covered.length - a.covered.length)[0];
+}
+
+/** The same build-break signature, red and then green again, on a peer branch. */
+async function healedBreak(job, signature, args) {
+  const [latest, ...older] = job.builds;
+  // A peer that is red right now says nothing worth a stage log: either it carries this break too —
+  // which is `also-red`, not a fix — or it carries another one, and diagnosing it is how the sweep
+  // would pay for every branch's console to learn that.
+  if (!latest || latest.result === 'FAILURE') return null;
+  let firstGood = latest;
+  let read = 0;
+  for (const build of older) {
+    if (build.result === 'FAILURE') {
+      if (read >= args.maxConsole) return null;
+      read++;
+      const { signature: found } = await diagnose(`${job.url}/${build.number}`);
+      if (`${job.label}:${found}` === signature) return { lastBad: build, firstGood, covered: [signature] };
+    }
+    // Red for another reason is still a build this break was absent from, so it bounds the range
+    // as tightly as a green one.
+    firstGood = build;
+  }
+  return null;
+}
+
+/** The commit that did it, between the peer's last red build and its first green one. */
+async function fixingCommit(incident, peer, healed) {
+  const baseSha = await buildRevision(`${peer.job.url}/${healed.lastBad.number}`, incident.repo);
+  const headSha = await buildRevision(`${peer.job.url}/${healed.firstGood.number}`, incident.repo);
+  if (!baseSha || !headSha || baseSha === headSha) return null;
+  const commits = await commitsBetween(incident.repo, baseSha, headSha);
+  if (!commits.length) return null;
+  const { groups, words } = forwardKeys(incident);
+  const paths = groups.flat();
+  // Blame's own two tests, pointed at the branch that healed: the failing file among a commit's
+  // changed files, then — for a dependency break, which changes a pom and nothing else — the
+  // library among the words of its subject. Where neither hits, a range of exactly one commit names
+  // itself, and anything wider is a window, not a fix. A window is not something to hand to
+  // `xwiki-backport`, so it is reported as no answer at all and the incident is analysed the
+  // ordinary way.
+  const [byPath] = commits.filter(commit => paths.some(key => touches(commit, key))).slice(-1);
+  const [byWord] = commits.filter(commit => words.some(word => names(commit, word))).slice(-1);
+  // A flicker stops failing on its own, and commits land in the window while it does — so for one
+  // of those the range naming a single commit is a coincidence, not a fix, and naming its author in
+  // the digest is the one mistake this design cannot afford. A systematic breakage does not fix
+  // itself: there, the only commit between the last red build and the first green one is the fix.
+  const alone = incident.kind !== 'flicker' && commits.length === 1;
+  const commit = byPath || byWord || (alone ? commits[0] : null);
+  if (!commit) return null;
+  const total = incident.class === 1 ? ((incident.tests || []).length || 1) : 1;
+  return {
+    kind: 'fixed-elsewhere',
+    sha: commit.short,
+    author: commit.author || commit.gitAuthor || null,
+    title: commit.title,
+    url: commit.url,
+    branch: peer.branch,
+    where: `${peer.branch} has been green again since ${peer.job.label} #${healed.firstGood.number}`,
+    covers: incident.class === 1
+      ? [...new Set(healed.covered.map(id => testName(id).split('#')[0]))].slice(0, 6)
+      : [healed.covered[0].split('/').pop()],
+    of: total,
+    partial: healed.covered.length < total,
+    reason: byPath ? `it touches ${paths.find(key => touches(commit, key))}, which the failure names`
+      : byWord ? `its subject names ${words.find(word => names(commit, word))}, which the failure reports`
+        : 'it is the only commit between the last red build there and the first green one'
+  };
+}
+
+/**
+ * The commit on another branch that already answers this incident, if there is one.
+ *
+ * Fails open like every other pass here: a peer that cannot be read, a missing token, a range that
+ * names no single commit — each leaves the incident exactly as it was, reported and attributed.
+ */
+async function fixedElsewhere(incident, targets, args) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  // Only a break that named itself. A quality gate fails on the whole project's aggregate coverage
+  // and issue counts, so no commit anywhere "fixed" it — and measured on 2026-09-18, this pass
+  // offered an unrelated bug fix from a third branch as the fix for the gate on two others, which
+  // is the wrong-name-in-public failure the whole gate exists to prevent. `unclassified` is the
+  // same risk one step weaker: its signature is a normalised error message, and the same message on
+  // another branch is not evidence of the same cause.
+  if (incident.class === 2 && (incident.kind !== 'build-break'
+    || /sonar-gate:failed$/.test(incident.signature || ''))) return null;
+  if (!args.github || !token) return null;
+  const ids = (incident.tests || []).slice(0, 20);
+  if (incident.class === 1 && !ids.length) return null;
+  for (const peer of await peerJobsOf(incident, targets, args)) {
+    try {
+      const healed = incident.class === 1
+        ? await healedTests(peer.job, ids, args)
+        : await healedBreak(peer.job, incident.signature, args);
+      const fix = healed && await fixingCommit(incident, peer, healed);
+      if (fix) return fix;
+    } catch {
+      // A branch whose history or revisions cannot be read is a branch that says nothing.
+    }
+  }
+  return null;
+}
+
 // ---- Sweep -----------------------------------------------------------------------------------
 
 /** Every job of every maintained branch, discovered from Jenkins rather than hardcoded. */
@@ -994,6 +1191,15 @@ function jobHistory(job, history) {
   return historyCache.get(job.url);
 }
 
+// One build's test outcomes, fetched once. Three passes ask the same question of the same builds:
+// the history walk that ages a failure, the flicker rating, and the cross-branch check that reads
+// another branch's report looking for the build this failure stopped in.
+const outcomesCache = new Map();
+const outcomesOf = buildUrl => {
+  if (!outcomesCache.has(buildUrl)) outcomesCache.set(buildUrl, outcomes(buildUrl));
+  return outcomesCache.get(buildUrl);
+};
+
 /**
  * Per test: where it failed now, and how it has behaved over the recent builds.
  *
@@ -1025,7 +1231,7 @@ async function testHistory(job, args) {
   if (!tests.size) return tests;
 
   for (const build of older) {
-    const { ran, failed } = await outcomes(`${job.url}/${build.number}`);
+    const { ran, failed } = await outcomesOf(`${job.url}/${build.number}`);
     for (const [id, row] of tests) {
       if (!ran.has(id)) continue;
       row.seenBuilds.push(build);
@@ -1437,6 +1643,13 @@ const FIX_HEAD = {
     whole: 'Ran against a stale snapshot', part: 'Part of this ran against a stale snapshot',
     link: '—',
     quiet: 'Not analysed, nobody pinged — the next Environment Tests run has the production code.'
+  },
+  'fixed-elsewhere': {
+    whole: 'Already fixed on another branch', part: 'Part of this is fixed on another branch',
+    link: 'by',
+    quiet: 'Not analysed, nobody pinged — this is a backport candidate: hand the commit to'
+      + ' `xwiki-backport`, and verify it first, since a signature also goes green when the test is'
+      + ' deleted.'
   }
 };
 /** The same news as `fixBlock`, folded into one indented line for the places that list bullets. */
@@ -1522,13 +1735,30 @@ function renderDetail(report, { live }) {
   const redRepos = new Set(report.jobs.filter(job => job.result && job.result !== 'SUCCESS').map(job => job.repo));
   const green = [...new Set(report.jobs.map(job => job.repo))].filter(repo => !redRepos.has(repo));
   const of = filter => incidents.filter(filter);
+  // One cause, one entry. The peers of an `also-red` group are named under the incident that
+  // carries it and never given a section of their own: four branches red on the same enforcer rule
+  // is one break, and printing it four times is most of what makes a red morning unreadable.
+  const own = filter => of(incident => incident.primary !== false && filter(incident));
+  const causeOf = incident => `${incident.repo}\u0000${incident.id.split('/').slice(2).join('/')}`;
+  const peers = new Map();
+  for (const incident of of(entry => entry.primary === false)) {
+    peers.set(causeOf(incident), [...(peers.get(causeOf(incident)) || []), incident]);
+  }
+  // Each peer keeps its own window: the same break starts on each branch at the commit that reached
+  // that branch, and "since when, there" is the one fact the collapse must not swallow.
+  const alsoRed = incident => ((peers.get(causeOf(incident)) || []).length
+    ? [`_Also red on ${(peers.get(causeOf(incident)) || []).map(peer => `${peer.branch}` +
+      `${peer.firstBadBuild == null ? '' : ` (since #${peer.firstBadBuild}, ${agedAs(peer)})`}`).join(', ')}` +
+      ' — the same signature, so one cause: analysed and commented here only._']
+    : []);
   const out = [
     `# CI sweep — ${date}${live ? '' : ' (not a live run — no digest posted, no issue filed)'}`,
     '',
     `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → **${plural(summary.incidents, 'incident')}**: ` +
     `${summary.deep} deep-treated, ${summary.beyondHorizon} beyond the ${report.horizonDays}-day horizon, ` +
     `${summary.alreadyCommented} already commented` +
-    `${summary.answered ? `, ${summary.answered} already answered` : ''}.`
+    `${summary.answered ? `, ${summary.answered} already answered` : ''}` +
+    `${summary.collapsed ? `, ${summary.collapsed} the same cause on another branch` : ''}.`
   ];
   if (green.length) out.push(`${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch.`);
   if (report.githubTokenWarning) out.push('', `⚠️ ${report.githubTokenWarning}`);
@@ -1536,7 +1766,7 @@ function renderDetail(report, { live }) {
   // sections of a document nobody will open is the kind of output that teaches people to skim.
   if (!incidents.length) return [...out, '', 'Nothing red, nothing written.'].join('\n');
 
-  const breaks = of(incident => incident.class === 2);
+  const breaks = own(incident => incident.class === 2);
   if (breaks.length) {
     out.push('', '## Build breaks');
     for (const incident of breaks) {
@@ -1544,7 +1774,7 @@ function renderDetail(report, { live }) {
       out.push('', `### ${incident.branch} — ${incident.signature ? incident.signature.split('/').pop() : 'build break'}`,
         [`**${agedAs(incident)}**`, window, incident.stage ? `stage _${incident.stage}_` : null,
           incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · '),
-        ...evidenceBlock(incident), ...blameBlock(incident));
+        ...alsoRed(incident), ...evidenceBlock(incident), ...blameBlock(incident));
       if (/sonar-gate:failed$/.test(incident.signature || '')) {
         out.push('', '_Quality-gate failures are reported here and fixed nowhere: see `okf/sonarqube/` and' +
           ' the `xwiki-fix-sonarqube-issue` skill._');
@@ -1553,7 +1783,7 @@ function renderDetail(report, { live }) {
     }
   }
 
-  const breakages = of(incident => incident.class === 1 && incident.kind === 'test-breakage');
+  const breakages = own(incident => incident.class === 1 && incident.kind === 'test-breakage');
   if (breakages.length) {
     out.push('', '## Test breakages');
     for (const incident of breakages) {
@@ -1561,8 +1791,9 @@ function renderDetail(report, { live }) {
         [`**${incident.state}**, ${agedAs(incident)}`, windowOf(incident),
           `${plural(incident.testCount || 1, 'test')}${seen(incident)}`,
           incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ') +
-        `${tracked(incident)}${elsewhere(incident)}` +
-        `${incident.beyondHorizon ? ' — **beyond the horizon: reported, never written about**' : ''}`);
+        `${tracked(incident)}` +
+        `${incident.beyondHorizon ? ' — **beyond the horizon: reported, never written about**' : ''}`,
+        ...alsoRed(incident));
       if (incident.jira && incident.state === 'systematic') {
         out.push(`_Tracked as a flicker but failing every time: either a real regression or a stale` +
           ` triage, and ${incident.jira} no longer describes it (SKILL.md §4)._`);
@@ -1578,19 +1809,20 @@ function renderDetail(report, { live }) {
     out.push('', `## Proven flickers not yet filed — ${plural(groups.size, 'issue')} to open`);
     for (const [, group] of groups) {
       const [first] = group;
-      const branches = [...new Set([first.branch, ...(first.alsoOn || [])])];
+      const branches = [...new Set(group.flatMap(incident => [incident.branch, ...(incident.alsoOn || [])]))];
+      const methods = [...new Set(group.map(shortName))].sort();
       out.push('', `- **${testName(first.id.split('/').slice(2).join('/')).split('#')[0]}** on ` +
-        `${branches.join(', ')} — ${plural(group.length, 'method')}, streak ${agedAs(first)}${seen(first)}`);
-      for (const incident of group) out.push(`    - \`${shortName(incident)}\``);
+        `${branches.join(', ')} — ${plural(methods.length, 'method')}, streak ${agedAs(first)}${seen(first)}`);
+      for (const method of methods) out.push(`    - \`${method}\``);
     }
-    out.push('', '_One issue per test class per regression window, listing every branch it fails on:' +
-      ' one flaky suite is one issue, and an auto-filer that opens five is switched off in a week._');
+    out.push('', '_One issue per test class, listing every method and every branch it fails on: one' +
+      ' flaky suite is one issue, and an auto-filer that opens five is switched off in a week._');
   }
 
   // A test already covered by a group above is not also a candidate: the issue that group files
   // lists this branch, so printing it again reads as two different flickers.
   const filed = new Set(toFile.map(incident => incident.id.split('/').slice(2).join('/')));
-  const candidates = of(incident => incident.kind === 'flicker' && !incident.jira && !incident.flickerGroup &&
+  const candidates = own(incident => incident.kind === 'flicker' && !incident.jira && !incident.flickerGroup &&
     !filed.has(incident.id.split('/').slice(2).join('/')));
   if (candidates.length) {
     out.push('', '## Flicker candidates below the evidence threshold — listed, not filed');
@@ -1600,7 +1832,7 @@ function renderDetail(report, { live }) {
     }
   }
 
-  const known = of(incident => incident.jira && !(incident.class === 1 && incident.kind === 'test-breakage'));
+  const known = own(incident => incident.jira && !(incident.class === 1 && incident.kind === 'test-breakage'));
   if (known.length) {
     out.push('', '## Already tracked in JIRA — nobody pinged');
     for (const incident of known) {
@@ -1610,7 +1842,7 @@ function renderDetail(report, { live }) {
     }
   }
 
-  const infra = of(incident => incident.class === 3);
+  const infra = own(incident => incident.class === 3);
   if (infra.length) {
     out.push('', '## Infrastructure');
     for (const incident of infra) {
@@ -1622,7 +1854,7 @@ function renderDetail(report, { live }) {
       ' network to fail._');
   }
 
-  const rest = of(incident => ![1, 2, 3].includes(incident.class) ||
+  const rest = own(incident => ![1, 2, 3].includes(incident.class) ||
     (incident.class === 1 && !['test-breakage', 'flicker'].includes(incident.kind)));
   if (rest.length) {
     out.push('', '## Other');
@@ -1647,15 +1879,22 @@ function renderDetail(report, { live }) {
     for (const incident of fixed) {
       out.push(`    - ${incident.branch} \`${shortName(incident)}\` → ${fixRef(incident.fixState)}` +
         ` (${incident.fixState.author || 'unknown'}) — ` +
-        `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()}`);
+        `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()}` +
+        `${incident.fixState.kind === 'fixed-elsewhere' ? ' — backport candidate, verify first' : ''}`);
     }
+  }
+  const collapsed = of(incident => incident.primary === false);
+  if (collapsed.length) {
+    out.push(`- **${collapsed.length}** ${collapsed.length === 1 ? 'is' : 'are'} the same signature on` +
+      ' another branch — listed under the incident that carries the cause, and analysed and' +
+      ' commented there only.');
   }
   out.push(
     `- **${summary.alreadyCommented}** already carry a comment in the same state — saying it twice is how a` +
     ' routine becomes noise.',
     `- **${summary.beyondHorizon}** older than ${report.horizonDays} days — counted, never written about.`,
-    `- **${Math.max(0, summary.incidents - deep.length - fixed.length)}** below the deep budget of ` +
-    `${report.budget} — reported without analysis, by design.`);
+    `- **${Math.max(0, summary.incidents - deep.length - fixed.length - collapsed.length)}** below the deep ` +
+    `budget of ${report.budget} — reported without analysis, by design.`);
   return out.join('\n');
 }
 
@@ -1708,37 +1947,62 @@ for (const target of targets) {
 }
 const incidents = [...byId.values()];
 
-// Two views a per-incident walk cannot produce, both about not filing the same thing twice.
-// `alsoOn`: one flaky test failing on three branches is one flaky test — filing an issue per branch
-// is how an auto-filer discredits itself in a week. `flickerGroup`: several methods of one test
-// class that started failing in the same build broke together, whatever the cause, so they are one
-// issue as well — five issues for five methods of one nested suite is the same mistake, per morning.
-const branchesOfTest = new Map();
+// Two views a per-incident walk cannot produce, both about not saying the same thing four times.
+//
+// A signature is branch-independent by construction — only the incident *id* is branch-scoped — so
+// one break reaching master and three stable branches is one cause seen four times. `alsoOn` names
+// the other branches; `primary` marks the single incident of the group that carries the analysis,
+// the comment and the paste's paragraph. Four analyses of one cause spend four of the five deep
+// slots to reach the same conclusion, and four comments ping one person four times for one mistake.
+const sameCause = new Map();
 for (const incident of incidents) {
-  if (incident.class !== 1 || !incident.signature) continue;
-  branchesOfTest.set(incident.signature, [...(branchesOfTest.get(incident.signature) || []), incident.branch]);
+  if (!incident.signature) continue;
+  // Keyed by repo as well as by signature: `main:Build/enforcer:rule-failed` is how an enforcer
+  // break signs itself in every repo there is, and commons' break is not platform's.
+  const cause = `${incident.repo}\u0000${incident.signature}`;
+  sameCause.set(cause, [...(sameCause.get(cause) || []), incident]);
 }
-for (const incident of incidents) {
-  if (incident.class !== 1 || !incident.signature) continue;
-  const others = [...new Set((branchesOfTest.get(incident.signature) || [])
-    .filter(branch => branch !== incident.branch))];
-  if (others.length) incident.alsoOn = others;
-  if (incident.kind === 'flicker' && incident.proven && !incident.jira && !incident.beyondHorizon) {
-    const className = incident.signature.split('#')[0].split(/[.$]/).pop();
-    incident.flickerGroup = `${incident.repo}/${incident.branch}/${className}@${incident.firstBadBuild}`;
+for (const group of sameCause.values()) {
+  if (group.length < 2) continue;
+  // master first, then the newest maintained branch, then whichever saw it first: a fix is written
+  // where development is, so that is the branch whose commit a reader can act on.
+  group.sort((a, b) => branchRank(a.branch) - branchRank(b.branch) || (b.ageDays ?? -1) - (a.ageDays ?? -1));
+  for (const [index, incident] of group.entries()) {
+    incident.alsoOn = group.filter(other => other !== incident).map(other => other.branch);
+    incident.crossBranch = 'also-red';
+    incident.primary = index === 0;
+    if (index) {
+      incident.blame ??= {
+        tier: 'none',
+        suspects: [],
+        reason: `the same signature is red on ${group[0].branch} and analysed there — one cause, one analysis`
+      };
+    }
   }
+}
+// `flickerGroup`: several methods of one test class flickering are one flaky suite, whatever branch
+// each was seen on, and one issue listing them all. Neither the branch nor the build number is in
+// the key — five issues for five methods of one nested suite, or three for three branches, is how
+// an auto-filer is switched off in its first week.
+for (const incident of incidents) {
+  if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
+  incident.flickerGroup = `${incident.repo}/${incident.signature.split('#')[0].split(/[.$]/).pop()}`;
 }
 
 // Before the budget is allocated, not after: an incident whose fix has already landed must not
 // spend a deep slot reaching a conclusion the branch already holds, and must not ping anyone.
 for (const incident of incidents) {
-  // The stale snapshot first, because it is the only one of the three that says the test was never
+  // The stale snapshot first, because it is the only one of the four that says the test was never
   // broken: where a build ran new test code against old jars *and* someone has since pushed a fix,
   // reporting the fix implies there was something to fix. Then a landed commit, then an open PR — a
-  // commit will be judged by the next build, a PR is only somebody's intent.
+  // commit will be judged by the next build, a PR is only somebody's intent. A fix on another
+  // branch comes last: it is the only one where nobody has moved on *this* branch yet, so what it
+  // buys is not silence about work in progress but the sha to hand to `xwiki-backport`.
   incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args)
     || await forwardFix(incident, jobsById.get(incident.id), args)
-    || await inFlightFix(incident, args);
+    || await inFlightFix(incident, args)
+    || await fixedElsewhere(incident, targets, args);
+  if (incident.fixState?.kind === 'fixed-elsewhere') incident.crossBranch = 'fixed-elsewhere';
   // A partial fix changes nothing about what is written: the tests it does not cover are still
   // broken, still attributable and still worth a comment. It is reported beside the incident, and
   // that is all it earns.
@@ -1753,8 +2017,8 @@ for (const incident of incidents) {
 incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.testCount || 1));
 // Beyond the horizon nothing may be written, so spending root-cause budget there buys nothing:
 // those incidents are aggregated into one digest line and that is all.
-const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon && !settled(incident))
-  .slice(0, args.budget);
+const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon
+  && !settled(incident) && incident.primary !== false).slice(0, args.budget);
 for (const incident of deep) {
   incident.deep = true;
   await investigate(incident, jobsById.get(incident.id), args);
@@ -1802,6 +2066,11 @@ function digest(incident, keys) {
     // flicker filed on "0d" reads as a contradiction until both numbers are there.
     failedIn: incident.class === 1 ? incident.failedIn : undefined,
     alsoOn: incident.alsoOn,
+    // The same cause on several branches: `also-red` on each of them, and `primary` false on all
+    // but the one it is analysed and commented on — the others are that one's branch list, not
+    // incidents of their own.
+    crossBranch: incident.crossBranch,
+    primary: incident.primary,
     flickerGroup: incident.flickerGroup,
     // What a class-1 incident is, is its test, and the id already carries it. Anything else is
     // named by its signature and by nothing else, so below the deep line it would otherwise be
@@ -1866,7 +2135,8 @@ const report = {
     deep: deep.length,
     beyondHorizon: incidents.filter(incident => incident.beyondHorizon).length,
     alreadyCommented: incidents.filter(incident => incident.silent).length,
-    answered: incidents.filter(settled).length
+    answered: incidents.filter(settled).length,
+    collapsed: incidents.filter(incident => incident.primary === false).length
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };
@@ -1885,6 +2155,7 @@ if (!args.pretty) {
     console.log(`${incident.deep ? '*' : ' '} [${incident.kind}] ${incident.id} — ${age}, ${who}` +
       `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}` +
       `${incident.fixState ? ` (${settled(incident) ? 'possibly answered' : 'partly answered'} by ` +
-        `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}`);
+        `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}` +
+      `${incident.primary === false ? ` (same cause as ${incident.alsoOn[0]} — collapsed)` : ''}`);
   }
 }
