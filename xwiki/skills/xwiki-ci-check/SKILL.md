@@ -109,7 +109,7 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
-| `fixState` | somebody already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR ⇒ **one line, no analysis, no write** |
+| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR, `stale-snapshot` the job ran new test code against older jars ⇒ **one line, no analysis, no write** |
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
@@ -129,17 +129,30 @@ Treat only the incidents marked `deep` — at most 5, chosen by severity. That i
 target**; below the line, an incident is reported in the paste without analysis, which is a correct
 outcome, not a failure.
 
-**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Somebody has
-already answered it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), or an
-open PR names the failing test (`fix-in-flight`) — so root-causing it argues with people who have
-moved on, and **no write of any kind follows** — no commit comment, no fix PR, no flicker issue —
-because each of them asks someone for work already under way. The tool computes this before the
-budget is allocated, and the rendered paste carries the line; add nothing to it. Saying nothing here
-is the point, not an omission to apologise for.
+**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Something
+already answers it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), an open
+PR names the failing test (`fix-in-flight`), or the job ran new test code against older production
+jars (`stale-snapshot`) — so root-causing it argues with people who have moved on, or with a test
+that was never broken, and **no write of any kind follows** — no commit comment, no fix PR, no
+flicker issue — because each of them asks someone for work already under way, or for work nobody
+needs to do. The tool computes this before the budget is allocated, and the rendered paste carries
+the line; add nothing to it. Saying nothing here is the point, not an omission to apologise for.
 
-**Neither value asserts a fix**, and the paste's wording is the one it keeps: *possibly fixed
-already* for a landed commit, *a fix may be in flight* for a PR, which may equally be a rewrite that
-touches the test or may never merge. What settles it is the next build, or the merge — not this run.
+**No value asserts a fix**, and the paste's wording is the one it keeps: *possibly fixed already* for
+a landed commit; *a fix may be in flight* for a PR, which may equally be a rewrite that touches the
+test and may never merge; and *ran against a stale snapshot* for the third, which says the opposite —
+nothing is being fixed, because nothing is broken. What settles them is the next build, the merge, or
+the next Environment Tests run — never this one.
+
+**`stale-snapshot` is the Environment Tests trap**, and it earns a value of its own because it is the
+one case where the *job* is what is wrong: that job builds only the test modules it was given and
+takes the rest of its WAR from the last snapshot deployed to Nexus, so a commit carrying a test *and*
+the production code that test needs is red there until the next deployment — with stack-trace line
+numbers read from the *old* file, which is what makes it look like a defect in the new test.
+`okf/servers/jenkins.md` has the trap and how to confirm one by hand. The tool sets the value only
+where a single commit does both halves inside the gap the build could not have resolved, and only for
+a test failing in that job **alone**: the main job builds everything from source, so a test red there
+is red for real.
 
 The field is set only when **every** test the incident covers is answered — a commit fixing one test
 of five leaves the incident live, and the paste says which part is answered. Deciding otherwise, in

@@ -464,6 +464,7 @@ async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) 
       gitAuthor: commit.commit?.author?.name || null,
       title: (commit.commit?.message || '').split('\n')[0].slice(0, 120),
       url: commit.html_url,
+      date: commit.commit?.author?.date || null,
       files: (detail?.files || []).map(f => f.filename).slice(0, 200)
     };
   }));
@@ -851,6 +852,108 @@ async function inFlightFix(incident, args) {
   };
 }
 
+// ---- Stale snapshot ---------------------------------------------------------------------------
+// The third way a red test is nobody's defect, and the only one where the *job* is what is wrong.
+//
+// Environment Tests builds only the test modules it was given; the rest of its WAR — oldcore, the
+// web resources, the XARs — is the last snapshot deployed to Nexus (`okf/servers/jenkins.md`). A
+// commit that adds a test *and* the production code that test needs is therefore red there until
+// the next deployment, transiently and through no defect, with stack-trace line numbers that come
+// from the *old* file. It looks exactly like a defect in the new test, and on 2026-09-17 it was
+// two of them: `8d5a155efc` pushed `VersionIT` and `XWikiHibernateVersioningStore` together at
+// 20:27, and build #1377 started 14 minutes later.
+//
+// What the jars held cannot be read back: XWiki's CI runs Maven without transfer progress, so no
+// build log names a resolved artifact (measured on #1377: 192 KB of step console, no download
+// line). The revisions bound it instead — see `deployedRevision`.
+
+/** A production file: one the Environment Tests job takes from Nexus rather than building. */
+const PRODUCTION_FILE = /\/src\/main\//;
+/** …which its own test modules are not, page objects and fixtures included: those it builds. */
+const TEST_MODULE = /-test(?:-[a-z]+)?\//;
+const productionIn = commit =>
+  commit.files.filter(path => PRODUCTION_FILE.test(path) && !TEST_MODULE.test(path));
+
+/**
+ * The newest revision the job's jars can possibly have held.
+ *
+ * An **upper** bound, deliberately: the main job deploys at the end of a build, so a build that had
+ * started but not finished when this one began had deployed nothing, and the real snapshot is this
+ * revision or older. Commits after it are certainly absent from the jars; commits before it may be.
+ * Erring here means detecting less, which is the direction a detector that buys silence must fail
+ * in. (Not the SUCCESS builds only: platform's main job has been `FAILURE` on every build for days
+ * — the quality gate, after the deploy — and waiting for a green one would date the snapshot to
+ * last week.)
+ */
+async function deployedRevision(main, startedAt, repo) {
+  const prior = main.builds.find(build => build.timestamp <= startedAt);
+  if (!prior) return null;
+  return { number: prior.number, sha: await buildRevision(`${main.url}/${prior.number}`, repo) };
+}
+
+/** `14 minutes`, `3 hours` — how long before the build the commit landed. */
+function shortly(before, after) {
+  const minutes = Math.round((after - before) / 60000);
+  if (minutes < 90) return plural(Math.max(1, minutes), 'minute');
+  return plural(Math.round(minutes / 60), 'hour');
+}
+
+/**
+ * Whether this incident is the job running new test code against older production code.
+ *
+ * The evidence is one commit doing both halves of the trap — touching the failing test class *and*
+ * a production file — inside the gap between what the build could have resolved and what it checked
+ * out. One commit, not two: a test change here and a production change there is an ordinary pair of
+ * commits, and reading it as the trap would silence a real breakage on a coincidence.
+ */
+async function staleSnapshot(incident, jobs, args) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  // Failing in the environment job and *nowhere else*. The main job builds the whole repo from
+  // source, so a commit carrying a test and its production code is consistent there — a test that
+  // fails on both jobs is broken, whatever the snapshot held. `window.job` names only the job that
+  // saw it break first, which is why this reads the jobs it is failing in now.
+  const failing = incident.failingJobs || [incident.window?.job || incident.job];
+  if (failing.length !== 1 || failing[0] !== 'env-tests') return null;
+  if (!args.github || !token) return null;
+  const env = jobs.find(job => job.label === 'env-tests');
+  const main = jobs.find(job => job.label === 'main');
+  const latest = env?.builds?.[0];
+  // Only a failure that *started* in this build can be explained by what this build resolved. One
+  // that survived the next run ran against jars that had caught up, and is a breakage.
+  if (!latest || !main || incident.firstBadBuild !== latest.number) return null;
+  try {
+    const built = await buildRevision(`${env.url}/${latest.number}`, incident.repo);
+    const deployed = await deployedRevision(main, latest.timestamp, incident.repo);
+    if (!built || !deployed?.sha || built === deployed.sha) return null;
+    const commits = await commitsBetween(incident.repo, deployed.sha, built, { maxCommits: 10 });
+    const { groups } = forwardKeys(incident);
+    const trap = commits.filter(commit => productionIn(commit).length);
+    const covered = groups.filter(keys => trap.some(commit => keys.some(key => touches(commit, key))));
+    if (!covered.length) return null;
+    const [commit] = trap.filter(c => groups.some(keys => keys.some(key => touches(c, key)))).slice(-1);
+    const production = productionIn(commit);
+    return {
+      kind: 'stale-snapshot',
+      sha: commit.short,
+      author: commit.author || commit.gitAuthor || null,
+      title: commit.title,
+      url: commit.url,
+      where: commit.date
+        ? `pushed ${shortly(Date.parse(commit.date), latest.timestamp)} before build #${latest.number} started`
+        : `pushed after main build #${deployed.number}, which build #${latest.number} could not have`
+          + ' resolved',
+      covers: covered.map(keys => keys[keys.length - 1].replace(/\.java$/, '')),
+      of: groups.length,
+      partial: groups.length > 1 && covered.length < groups.length,
+      reason: `it changes ${basename(production[0])} as well as the test, and Environment Tests `
+        + 'builds only the test modules — the rest of its WAR is the last snapshot deployed to Nexus, '
+        + 'which predates this commit'
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ---- Sweep -----------------------------------------------------------------------------------
 
 /** Every job of every maintained branch, discovered from Jenkins rather than hardcoded. */
@@ -1093,6 +1196,7 @@ async function incidentsOf(target, args, flickerFor) {
         // PostgreSQL ones" is a diagnosis, while "2/4 envs" is a statistic — and the matrix is the
         // only place that distinction can be read.
         envs: [...row.failedEnvs].map(env => env.replace(/^env-tests\//, '')),
+        failingJobs: [...new Set(row.perJob.map(entry => entry.job))],
         jira,
         proven: flickerProven(row),
         ...ageOf(window),
@@ -1144,6 +1248,7 @@ async function incidentsOf(target, args, flickerFor) {
       testCount: ids.length,
       setupFailures: group.filter(entry => entry.pseudo).map(entry => entry.id),
       evidence: group.slice(0, 3).map(entry => `${entry.id}: ${entry.row.detail || '(no error detail)'}`),
+      failingJobs: [...new Set(group.flatMap(entry => entry.row.perJob.map(row => row.job)))],
       jira: flickerFor(ids[0]),
       ...ageOf(window),
       window
@@ -1321,17 +1426,23 @@ const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}` : `\`$
  */
 const FIX_HEAD = {
   'fix-unbuilt': {
-    whole: 'Possibly fixed already', part: 'Part of this may be fixed already',
+    whole: 'Possibly fixed already', part: 'Part of this may be fixed already', link: 'by',
     quiet: 'Not analysed, nobody pinged — the next build settles it.'
   },
   'fix-in-flight': {
-    whole: 'A fix may be in flight', part: 'Part of this may be in flight',
+    whole: 'A fix may be in flight', part: 'Part of this may be in flight', link: '—',
     quiet: 'Not analysed, nobody pinged — the PR is where this gets settled.'
+  },
+  'stale-snapshot': {
+    whole: 'Ran against a stale snapshot', part: 'Part of this ran against a stale snapshot',
+    link: '—',
+    quiet: 'Not analysed, nobody pinged — the next Environment Tests run has the production code.'
   }
 };
 /** The same news as `fixBlock`, folded into one indented line for the places that list bullets. */
 const fixLine = incident => (incident.fixState
-  ? [`    _${settled(incident) ? FIX_HEAD[incident.fixState.kind].whole : 'Partly answered'} by ` +
+  ? [`    _${FIX_HEAD[incident.fixState.kind][settled(incident) ? 'whole' : 'part']} ` +
+    `${FIX_HEAD[incident.fixState.kind].link} ` +
     `${fixRef(incident.fixState)} (${incident.fixState.author || 'unknown'}), ${incident.fixState.where}` +
     `${settled(incident) ? ' — nobody pinged' : `; it covers ${incident.fixState.covers.join(', ')} of ` +
       `${incident.fixState.of} — the incident stands`}._`]
@@ -1417,7 +1528,7 @@ function renderDetail(report, { live }) {
     `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → **${plural(summary.incidents, 'incident')}**: ` +
     `${summary.deep} deep-treated, ${summary.beyondHorizon} beyond the ${report.horizonDays}-day horizon, ` +
     `${summary.alreadyCommented} already commented` +
-    `${summary.likelyFixed ? `, ${summary.likelyFixed} possibly fixed already` : ''}.`
+    `${summary.answered ? `, ${summary.answered} already answered` : ''}.`
   ];
   if (green.length) out.push(`${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch.`);
   if (report.githubTokenWarning) out.push('', `⚠️ ${report.githubTokenWarning}`);
@@ -1531,11 +1642,12 @@ function renderDetail(report, { live }) {
     out.push(`    - ${incident.branch} \`${shortName(incident)}\` — ${incident.blame.tier}: ${incident.blame.reason}`);
   }
   if (fixed.length) {
-    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'looks' : 'look'} answered already — by a commit CI` +
-      ' has not built yet, or by an open PR — so no slot was spent and nobody was pinged:');
+    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'is' : 'are'} answered already — no slot spent,` +
+      ' nobody pinged, since somebody or something has already settled it:');
     for (const incident of fixed) {
       out.push(`    - ${incident.branch} \`${shortName(incident)}\` → ${fixRef(incident.fixState)}` +
-        ` (${incident.fixState.author || 'unknown'})`);
+        ` (${incident.fixState.author || 'unknown'}) — ` +
+        `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()}`);
     }
   }
   out.push(
@@ -1564,6 +1676,8 @@ const targets = await discover(args.repos, args.branch);
 
 const byId = new Map();
 const jobsById = new Map();
+// Both jobs of the target, for the passes that compare one against the other.
+const targetJobs = new Map();
 for (const target of targets) {
   const jobs = await Promise.all(target.jobs.map(job => jobHistory(job, args.history)));
   for (const incident of await incidentsOf(target, args, flickerFor)) {
@@ -1589,6 +1703,7 @@ for (const target of targets) {
     // Every incident of a target shares its jobs; blame reads the one it came from, or the main one.
     const label = incident.window?.job || incident.job || 'main';
     jobsById.set(incident.id, jobs.find(job => job.label === label) || jobs[0]);
+    targetJobs.set(incident.id, jobs);
   }
 }
 const incidents = [...byId.values()];
@@ -1617,10 +1732,12 @@ for (const incident of incidents) {
 // Before the budget is allocated, not after: an incident whose fix has already landed must not
 // spend a deep slot reaching a conclusion the branch already holds, and must not ping anyone.
 for (const incident of incidents) {
-  // A landed commit first, an open PR only where the branch itself holds nothing: a commit will be
-  // judged by the next build, a PR is somebody's intent, and where both exist the stronger one is
-  // what the reader needs.
-  incident.fixState = await forwardFix(incident, jobsById.get(incident.id), args)
+  // The stale snapshot first, because it is the only one of the three that says the test was never
+  // broken: where a build ran new test code against old jars *and* someone has since pushed a fix,
+  // reporting the fix implies there was something to fix. Then a landed commit, then an open PR — a
+  // commit will be judged by the next build, a PR is only somebody's intent.
+  incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args)
+    || await forwardFix(incident, jobsById.get(incident.id), args)
     || await inFlightFix(incident, args);
   // A partial fix changes nothing about what is written: the tests it does not cover are still
   // broken, still attributable and still worth a comment. It is reported beside the incident, and
@@ -1749,7 +1866,7 @@ const report = {
     deep: deep.length,
     beyondHorizon: incidents.filter(incident => incident.beyondHorizon).length,
     alreadyCommented: incidents.filter(incident => incident.silent).length,
-    likelyFixed: incidents.filter(settled).length
+    answered: incidents.filter(settled).length
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };
