@@ -28,7 +28,18 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
 
 ## PR description — always use the template
 
-Fill `.github/pull_request_template.md` (at the repo root). Complete every section meaningfully:
+The template is **not in the repo you are working in** — the core repos (`xwiki-platform`,
+`xwiki-commons`, `xwiki-rendering`) carry no `.github/pull_request_template.md`. GitHub applies the
+org-level one, in the **`xwiki/.github`** repository, which `gh pr create --body-file` does not insert
+for you, so fetch it and fill it yourself (check the repo first: a contrib repo may have its own):
+
+```bash
+gh api repos/xwiki/.github/contents/.github/pull_request_template.md -q .content | base64 -d
+```
+
+Keep its headings and their levels (`# Jira URL`, `# Changes` with `## Description` and
+`## Clarifications`, `# Screenshots & Video`, `# Executed Tests`, `# Expected merging strategy`), and
+complete every section meaningfully:
 
 - **Jira URL** — link the JIRA issue (omit only for `[Misc]` PRs).
 - **Changes → Description** — the main changes.
@@ -39,7 +50,8 @@ Fill `.github/pull_request_template.md` (at the repo root). Complete every secti
   the PR body must reference, `gh` being unable to upload an image.
 - **Executed Tests** — how the change was validated (the `mvn` commands run). Especially important
   for regression fixes.
-- **Expected merging strategy** — `Prefers squash: Yes`; list backport branches if any.
+- **Expected merging strategy** — `Prefers squash: Yes`, and the `Backport on branches:` bullet
+  listing the branches (say so explicitly when there is none).
 
 ## Labels, assignees, branches
 
