@@ -109,6 +109,7 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
+| `fixState` | a commit CI has not built yet answers this incident ⇒ **one line, no analysis, no write** |
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
@@ -127,6 +128,18 @@ the symptoms and the age, JIRA for the known flickers, and **the comment left la
 Treat only the incidents marked `deep` — at most 5, chosen by severity. That is a **ceiling, not a
 target**; below the line, an incident is reported in the paste without analysis, which is a correct
 outcome, not a failure.
+
+**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** The branch
+already holds a commit that answers it and CI has simply not built it yet, so root-causing it argues
+with a branch that has moved on, and **no write of any kind follows** — no commit comment, no fix
+PR, no flicker issue — because each of them asks someone for work already done. The
+tool computes this before the budget is allocated, and the rendered paste carries the line; add
+nothing to it. Saying nothing here is the point, not an omission to apologise for.
+
+The field is set only when **every** test the incident covers is answered — a commit fixing one test
+of five leaves the incident live, and the paste says which part is answered. Deciding otherwise, in
+either direction, is not yours to make: the tool's threshold is deliberately conservative because a
+wrong silence hides a real breakage, while a wrong ping is a comment that asks.
 
 For each one:
 
@@ -150,8 +163,8 @@ For each one:
 ## 4. Comment on the culprit — and match the wording to the tier
 
 The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA. Skip
-entirely when `silent` is true, when `beyondHorizon` is true, or when `blame.tier` is `ambiguous`,
-`none` or `unknown` — an ambiguous incident is listed in the paste and the digest says *no owner
+entirely when `fixState` is set, when `silent` is true, when `beyondHorizon` is true, or when
+`blame.tier` is `ambiguous`, `none` or `unknown` — an ambiguous incident is listed in the paste and the digest says *no owner
 found*. Never guess an author.
 
 The tool already refuses to attribute an incident that has an **open flicker issue** (`jira`) and is
@@ -304,6 +317,7 @@ paste.
 • platform/master   checkstyle break → a1b2c3d (jdoe) — commented
 • platform/18.4.x   AllIT#foo systematic since #412 (4d) — NEW, no owner found
 • commons/16.10.x   docker rate limit — infra, day 3
+• platform/master   DocExtraTabsIT systematic (0d) — likely fixed in 9dd4f149, unbuilt
   … 2 more (flickers, tracked) · +12 long-standing
 → https://bin.xwikisas.com/?abc#key (1 week)
 ```
@@ -313,7 +327,10 @@ listed. `NEW` means `ageDays` is 0 — there is no ledger, so it is the only thi
 The digest lines are chosen, not rendered: pick what a developer can act on today — a break with an
 owner first, then a break without one, then what has changed state — and let the paste carry the
 rest. Every line names the branch, what is broken, since when, and what was done about it
-(`commented`, `no owner found`, `issue filed`, `tracked`).
+(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`).
+
+An incident with a `fixState` earns a digest line and nothing else — it is the one line that stops a
+reader who has just pushed the fix from opening the paste to find out whether the routine noticed.
 
 ```bash
 node <skill>/tools/privatebin.mjs --file detail.md --expire 1week --write   # prints the URL, key included
