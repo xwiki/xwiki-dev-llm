@@ -208,8 +208,14 @@ match. See [[versioning]] for why the version itself must always be read, never 
 - Quality-gate failures are a Sonar concern, not a Jenkins one: use the `sonarqube` MCP and the
   `xwiki-fix-sonarqube-issue` skill.
 - A test that fails intermittently rather than deterministically is a flicker: Jenkins only shows
-  the one run, so take its history across builds from the `develocity` MCP, then use the
-  `xwiki-fix-flickering-docker-test` skill.
+  the one run, so take its history across builds from Develocity, then use the
+  `xwiki-fix-flickering-docker-test` skill. Prefer
+  [`dv-test-history`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history)
+  (`bash/` in `xwiki/xwiki-dev-tools`) over the `develocity` MCP for that: it gives 28 days of the
+  test's executions grouped by what actually failed, broken down by branch, browser, database and
+  servlet container, with the configurations a failure concentrates in and how many clean runs it
+  would take to call it fixed. `xwiki-ci-check` wraps it as `tools/dv-test-history.mjs`, which finds
+  a checkout and passes the Develocity key.
 - To triage a whole branch's failures at once — flickers vs. real breakages, before a release — use
   the `xwiki-release-test-triage` skill, which automates the correlation described above. To *act*
   on what is red across every maintained branch — attribute it, comment on the culprit commit, file

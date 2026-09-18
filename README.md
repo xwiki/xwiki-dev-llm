@@ -200,7 +200,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     somebody announced in advance, or has said they are on, is reported in one line and nobody is
     pinged for it, and so that the digest can cite the analysis the team already published rather
     than redo it. What is said there can only ever buy an incident silence, never raise one, because
-    it is untrusted text reaching a context that writes under a bot identity. Designed
+    it is untrusted text reaching a context that writes under a bot identity. A failing *test* is
+    analysed from **Develocity** rather than from the build log:
+    [`dv-test-history`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history)
+    in `xwiki/xwiki-dev-tools` gives 28 days of that test's executions on every branch, browser, database and servlet
+    container, and the skill reasons from that — the division of labour being that the tool
+    establishes the facts and the skill decides and acts on them. Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —
@@ -240,6 +245,7 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
 | `SONARQUBE_TOKEN`       | sonarqube | Your personal SonarCloud token (same for all repos). |
 | `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
 | `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
+| `XWIKI_DEV_TOOLS`       | `xwiki-ci-check` | Absolute path to a [`xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools) checkout (or directly to its `bash/dv-test-history`), whose Develocity analyser the CI check reads a failing test's history from. Optional — without it a checkout sitting next to your other XWiki repos is used, and failing that one is cloned into `$XDG_STATE_HOME/xwiki-llm/xwiki-dev-tools`. Needs `python3` (no packages to install) and the Develocity key above. |
 | `JIRA_API_TOKEN`        | `xwiki-jira` (jira-cli / REST) | Your jira.xwiki.org personal access token. Optional — only needed to act on JIRA issues. See "JIRA access" below. |
 | `JIRA_AUTH_TYPE`        | jira-cli  | Set to `bearer` (PAT auth) for the self-hosted XWiki JIRA.       |
 | `DISCOURSE_API_KEY`     | discourse | A forum.xwiki.org **admin** API key. Optional — without it the forum MCP is read-only. See "Forum write access" below. |
@@ -314,7 +320,7 @@ If the forum refuses the credential (revoked, expired, wrong username), the laun
 stderr and starts the server read-only, rather than letting it fail to start and take the search and
 read tools down with it.
 
-## Develocity access (for the `develocity` MCP server)
+## Develocity access (for the `develocity` MCP server and `dv-test-history`)
 
 [community.develocity.cloud](https://community.develocity.cloud) is the Develocity instance that
 stores the build scans of every CI build and provides the remote build cache. It is Gradle's free
@@ -322,7 +328,8 @@ instance for open-source projects, shared with other projects, so XWiki's data i
 project ID `xwiki` (set in each repo's `.mvn/develocity.xml`). Its MCP server exposes that data —
 exception details and stack traces for a failed build, test outcomes and flaky-test history, build
 timings and cache hit rates, and diffs between two builds — so you can investigate a CI failure
-without leaving the terminal.
+without leaving the terminal. The same key feeds `dv-test-history`, the analyser `xwiki-ci-check`
+reads a failing test's 28-day history from (see `XWIKI_DEV_TOOLS` above).
 
 This is **optional**, and unlike the other servers it needs a credential just to list its tools: the
 access key is validated on *every* request. So leave `DEVELOCITY_MCP_ACCESS_KEY` unset if you don't have a
@@ -347,6 +354,9 @@ separate name lets you keep both, with the same key in each:
 export DEVELOCITY_ACCESS_KEY="community.develocity.cloud=<the-access-key>"  # Maven/Gradle build
 export DEVELOCITY_MCP_ACCESS_KEY="<the-access-key>"                         # this plugin's MCP server
 ```
+
+`dv-test-history` takes either: the bare variable as it stands, and the host-scoped one with the
+host prefix stripped for the server being queried.
 
 The key's Develocity user needs the *Access build data via the API and MCP* permission (included in
 the default Developer role).
