@@ -238,10 +238,44 @@ For each one:
   `blame.suspects` is one line per candidate commit, each marked with why the script thought it
   relevant (`relevant: <file>`, `names <library>`). **Never fetch a build's `consoleText`** — a platform build's log is
   **~80 MB**, and the script has already read the failing *stage's* own log, which is the cheap way
-  in. If you genuinely need more, take the narrowest thing there is: the build's `testReport` for one
-  test, or an archived screenshot (`okf/servers/jenkins.md`).
-- **`develocity` MCP: only for a class 1 incident whose `state` is `single env`.** That is the one
-  verdict Jenkins' own data cannot settle. Every other use costs tokens for nothing.
+  in. If you genuinely need more, take the narrowest thing there is: for a failing *test*, the
+  Develocity history below, which knows more than any one build's log; for a build break, that
+  build's `testReport` for one test, or an archived screenshot (`okf/servers/jenkins.md`).
+- **A class 1 incident starts at Develocity, not at Jenkins.** Jenkins retains eight builds of one
+  branch; Develocity holds every execution of that test for 28 days, across every branch, browser,
+  database and servlet container, grouped by what actually failed. One command, at most once per
+  deep class 1 incident:
+
+  ```bash
+  node <skill>/tools/dv-test-history.mjs '<the test named in `tests`>'   # --section F1 for one group
+  ```
+
+  It gives the failure rate over the window, the configurations the failure concentrates in with a
+  p-value, the week it started, the change points, and how many clean runs it would take before
+  "fixed" means anything. **Reason from that, not from the stage log.** On
+  `AllIT$NestedImageIT#editImage` the sweep says `1/7 builds, 1/4 envs`, and this says 6 failures in
+  **347** executions, every one of them on **Chrome** (p=0.0008), with ~30 consecutive clean runs
+  needed before a fix could be claimed — which is the difference between naming a red square and
+  knowing what to do about it. The tool is Michael Hamann's, in `xwiki/xwiki-dev-tools`, and the
+  division of labour is worth stating plainly wherever this comes up: **`dv-test-history` establishes
+  the facts, `xwiki-ci-check` decides and acts on them.** The wrapper finds a checkout or clones one
+  and passes the Develocity key the plugin already has.
+
+  `--section F<n>` prints the one failure group that matches the incident: the representative stack
+  (deeper than the sweep's single evidence line — it names the page object, not just the selector),
+  the per-configuration table, and the **build scan links**. A scan URL is the most useful link
+  there is to put in a commit comment or a flicker issue, so take it from there whenever the
+  incident earns a write.
+
+  **It costs real requests** — 123 Develocity and 19 Jenkins for that one test — so it is spent on a
+  deep class 1 incident, once, and never on class 2/3/4 or on anything carrying a `fixState`. It
+  **fails soft**: exit 3 is no checkout and no `python3`, any other non-zero is the analyser's own
+  (a missing key, most often), and both mean the same thing — no Develocity facts this morning,
+  carry on with what Jenkins gave you.
+- **`develocity` MCP: for a class 2 break whose stage log came back `unclassified`, and nothing
+  else.** The build scan names the failing goal and module directly, which is exactly what that log
+  did not — a bounded second attempt on the one path where the tokens are earned. Every class 1
+  question belongs to `dv-test-history` above, which answers it with 28 days of executions behind it.
 - **Sonar quality-gate failures (`sonar-gate:failed`): report, never fix.** Per-rule fix correctness
   lives in `okf/sonarqube/` and belongs to `xwiki-fix-sonarqube-issue`; a gate failure is rarely one
   commit's fault, so the blame would be weak anyway.
