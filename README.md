@@ -204,8 +204,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     analysed from **Develocity** rather than from the build log:
     [`dv-test-history`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history)
     in `xwiki/xwiki-dev-tools` gives 28 days of that test's executions on every branch, browser, database and servlet
-    container, and the skill reasons from that — the division of labour being that the tool
-    establishes the facts and the skill decides and acts on them. Designed
+    container, and the sweep puts that in the work order itself — the failure rate, the day the
+    failure started (as against the current streak, which is all Jenkins retains), the browser or
+    database it concentrates in with its p-value, the build scans and any screenshot Jenkins
+    archived — so the report carries facts rather than inferences. The division of labour is that
+    the tool establishes the facts and the skill decides and acts on them; with no Develocity
+    credential the sweep simply runs without them. Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —
