@@ -192,7 +192,10 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     CI: the daily sweep of every maintained branch, turning what is red into incidents (test
     breakage, build break, infra blip, absence), attributing each to the commit that caused it,
     commenting on that commit, opening PRs for mechanical fixes, filing flicker issues that have
-    proven themselves, and posting a short digest to Matrix pointing at a PrivateBin paste. Designed
+    proven themselves, and posting a short digest to Matrix pointing at a PrivateBin paste. That
+    digest says only what **moved** since the previous one — new, changed and fixed — and is not
+    posted at all on a morning that moved nothing, the room itself being the ledger it compares
+    against. Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —

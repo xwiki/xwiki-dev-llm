@@ -32,7 +32,7 @@ Two things run this skill, and they may write different things.
 | Commit comment (§4) | **ask** | yes |
 | Fix PR (§5) | **ask** | yes |
 | JIRA flicker issue (§5) | **ask** | yes |
-| Matrix digest (§6) | **never** | yes |
+| Matrix digest (§6) | **never** | yes, when something moved |
 
 **Local is the default — anything that is not `--write` is a local run**, whatever machine it is on.
 Say which mode you are in as the first line of your output, every time, and in local mode name the
@@ -92,8 +92,9 @@ plus Platform's Environment Tests matrix; `feature-*` excluded), classifies ever
 the incidents, ages them, attributes them and checks what was already said. It is **read-only by
 construction** and deterministic, so all of that costs nothing.
 
-Read `summary` first. **If `summary.incidents` is 0, you are done**: post the one-line green digest
-(§6), no paste, and stop. A green morning must cost one tool call and one line.
+Read `summary` first. **If `summary.incidents` is 0, you are done**: no paste, and the digest is the
+delta of §6 — one line naming what went green, or nothing at all when yesterday was green too. A
+green morning must cost one tool call and, most mornings, one line.
 
 ## 2. What the work order contains
 
@@ -343,44 +344,69 @@ both `streak Nd` and `failed in X/Y builds`, which measure different things.
 In a **local run the detail document is the deliverable** — print it, or its incidents at least, and
 then ask whether to paste it. There is no digest to write, so the paste question is the last one.
 
-### The digest
+### The digest — what moved since yesterday, or nothing at all
 
-**Routine only.** Post **one short message** to the Matrix room, capped at ~5 lines, pointing at the PrivateBin paste
-holding that detail. The digest is a **state snapshot**, not an event stream, so repeating yesterday's
-lines is correct — which is why **every line carries its age**. A green morning is one line and no
-paste.
+**Routine only.** Post **one short message** to the Matrix room, capped at ~5 lines, pointing at the
+PrivateBin paste holding that detail.
+
+**The digest is a delta, not a snapshot.** A snapshot of what is red this morning is what the CI
+dashboard already is, and a reader who gets it faster there stops reading the digest. Ask the room
+what the last digest was, and say only what has moved since:
+
+```bash
+node <skill>/tools/matrix.mjs --last-state > previous.json                        # read-only
+node <skill>/tools/ci-check.mjs --delta work-order.json --previous previous.json > delta.json
+```
+
+The room is the ledger — each digest carries its own incident states in a marker no client shows —
+so this needs no state file and survives the sandbox being new every morning.
+
+- **`silent: true` means post nothing at all** — no digest, no green line, no "still 3 red". A
+  morning that moved nothing is a morning the room does not need to hear from. This is the correct
+  outcome, not a missed run: say so in the terminal report, where it costs nobody anything. The
+  paste and the commit comments are unaffected and still run — they cost the room nothing — and on a
+  silent morning the paste URL lives in the run log alone.
+- List `new`, `changed` and `fixed`, one line each. **`fixed` is the line the dashboard can never
+  show**: it says what went green, and it is the only place anyone learns that.
+- Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
+- `previous.available: false` — the room could not be read — classifies **nothing**. Fall back to
+  the state snapshot of every incident and **say so in the last line**: *"(could not read the last
+  digest — this is a full snapshot)"*. A routine silenced by a failed read is indistinguishable from
+  a green morning, which is the one way this may not fail.
 
 ```
-🔴 CI 2026-09-12 — 2 new, 3 ongoing
-• platform/master   checkstyle break → a1b2c3d (jdoe) — commented
-• platform/18.4.x+17.10.x  AllIT#foo systematic since #412 (4d) — NEW, no owner found
-• commons/16.10.x   docker rate limit — infra, day 3
-• platform/master   DocExtraTabsIT systematic (0d) — likely fixed in 9dd4f149, unbuilt
-  … 2 more (flickers, tracked) · +12 long-standing
+🔴 CI 2026-09-18 — 1 new, 1 changed, 2 fixed
+• NEW     platform/master   checkstyle break → a1b2c3d (jdoe) — commented
+• CHANGED platform/18.4.x+17.10.x  AllIT#foo flicker → systematic since #412 (4d) — no owner found
+• FIXED   commons/16.10.x   docker rate limit — green since #221
+• FIXED   platform/master   DocExtraTabsIT — green
+  … 3 unchanged · +12 long-standing
 → https://bin.xwikisas.com/?abc#key (1 week)
 ```
 
 Incidents with `beyondHorizon` are **aggregated into a single `+N long-standing` count**, never
-listed. `NEW` means `ageDays` is 0 — there is no ledger, so it is the only thing that can mean it.
-The digest lines are chosen, not rendered: pick what a developer can act on today — a break with an
-owner first, then a break without one, then what has changed state — and let the paste carry the
-rest. Every line names the branch, what is broken, since when, and what was done about it
-(`commented`, `no owner found`, `issue filed`, `tracked`, `likely fixed, unbuilt`, `fix in flight`,
-`backport candidate`).
+listed. The rest are chosen, not rendered: a break with an owner first, then a break without one,
+then what moved; the paste carries the rest. Every line names the branch, what is broken, since
+when, and what was done about it (`commented`, `no owner found`, `issue filed`, `tracked`, `likely
+fixed, unbuilt`, `fix in flight`, `backport candidate`). **Every line still carries its age** — a
+`changed` incident that broke four days ago is not four days of news.
 
 **One cause is one line**, whatever the branch count: incidents whose `primary` is `false` are the
 same signature elsewhere, so their branches join the primary's line (`platform/18.4.x+17.10.x`) and
 never take a line of their own. A `fixed-elsewhere` incident names the sha and what to do with it —
 *platform/18.4.x `VersionIT` systematic (1d) — fixed on master by `a1b2c3d`, backport candidate*.
 
-An incident with a `fixState` earns a digest line and nothing else — it is the one line that stops a
-reader who has just pushed the fix, or opened the PR, from opening the paste to find out whether the
-routine noticed.
+An incident whose `fixState` appeared today is `changed`, and it earns that line and nothing else —
+it is the one line that stops a reader who has just pushed the fix, or opened the PR, from opening
+the paste to find out whether the routine noticed.
 
 ```bash
 node <skill>/tools/privatebin.mjs --file detail.md --expire 1week --write   # prints the URL, key included
-node <skill>/tools/matrix.mjs --file digest.md --write
+node <skill>/tools/matrix.mjs --file digest.md --state delta.json --write
 ```
+
+**`--state delta.json` is not optional**: without it the digest carries no state forward and
+tomorrow's run has nothing to compare against — so tomorrow says everything again.
 
 Both print instead of posting when `--write` is absent, so the paste of a local run carries it only
 once the developer has agreed, and the Matrix line is never run locally at all.
@@ -397,7 +423,9 @@ why — silent duplicates, ambiguous blame, beyond-horizon, budget. The "what I 
 the one that tells a reader whether the brakes are working.
 
 A local run adds to that half what the mode itself withheld: the digest it did not post, and
-anything the developer declined. Those are not failures and must not be reported as warnings — they
+anything the developer declined. A routine run adds the delta it measured — how many incidents were
+new, changed, fixed and unchanged — and, on a silent morning, that the digest was withheld because
+nothing moved. Those are not failures and must not be reported as warnings — they
 are the mode working.
 
 ## Related

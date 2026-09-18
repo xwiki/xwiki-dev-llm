@@ -34,6 +34,10 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --pretty            Human-readable summary instead of the JSON work order
   --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
                       instead of sweeping. Add --live to drop the "dry run" header.
+  --delta <f>         Classify the incidents of a work order ('-' for stdin) against the state the
+                      last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, plus
+                      the state for the next run. Reads yesterday's with --previous.
+  --previous <f>      What matrix.mjs --last-state printed (default: an unknown yesterday).
 
 Reads GitHub through GH_TOKEN_BOT (or GITHUB_TOKEN / GH_TOKEN — reads are identity-neutral).
 Without one, blame and comment-dedupe are unavailable and every incident comes back tier "unknown".
@@ -43,7 +47,7 @@ function parseArgs(argv) {
   const out = {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
     budget: 5, history: 8, absence: 3, maxConsole: 4, github: true, full: false, pretty: false,
-    renderDetail: null, live: false
+    renderDetail: null, live: false, delta: null, previous: null
   };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
@@ -58,6 +62,8 @@ function parseArgs(argv) {
     else if (key === '--full') out.full = true;
     else if (key === '--pretty') out.pretty = true;
     else if (key === '--render-detail') out.renderDetail = argv[++i];
+    else if (key === '--delta') out.delta = argv[++i];
+    else if (key === '--previous') out.previous = argv[++i];
     else if (key === '--live') out.live = true;
     else if (key === '--help' || key === '-h') { console.log(USAGE); process.exit(0); }
     else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
@@ -1898,6 +1904,112 @@ function renderDetail(report, { live }) {
   return out.join('\n');
 }
 
+// ---- The delta ---------------------------------------------------------------------------------
+// A daily state snapshot is what the CI dashboard already is, and a reader who can get the same
+// thing faster by looking at it stops reading the digest. What a dashboard cannot show is the
+// *transitions*: what broke since yesterday, what moved, and — the one it can never show — what
+// went green. So each run is compared against the state the last digest carried, and a morning that
+// moved nothing is not posted at all.
+//
+// The comparison is mechanical and belongs here rather than in the model's reading of yesterday's
+// prose: an id either was in yesterday's state or was not. The prose is then written about the
+// handful of lines this produces.
+
+/**
+ * What is compared, as one short string per incident — the whole state of a red morning has to fit
+ * in a chat message (see matrix.mjs). Deliberately *not* the age: an incident whose only change is
+ * that it is a day older has not changed, and re-announcing it daily is the noise this removes.
+ */
+const stateLine = incident => [
+  incident.kind, incident.state ?? '', incident.fixState?.kind ?? '',
+  incident.beyondHorizon ? 'long-standing' : ''
+].join('/');
+
+const parseLine = line => {
+  const [kind = '', state = '', answer = '', horizon = ''] = String(line ?? '').split('/');
+  return { kind, state, answer, beyondHorizon: horizon === 'long-standing' };
+};
+
+/**
+ * Today's incidents against the state the last digest carried.
+ *
+ * Beyond the horizon nothing is written and nothing is analysed, so those incidents are counted and
+ * never classified: a two-month-old flicker that fails today, passes tomorrow and fails again on
+ * Thursday would otherwise produce a `FIXED` line and a `NEW` line every other morning — the
+ * churniest possible source of exactly the noise this exists to stop. Each incident is judged by
+ * the day it exists on: one that crossed the horizon today is counted, one that was long-standing
+ * yesterday and is back under the horizon today has been green in between and broken again, which
+ * is news.
+ *
+ * @param {object} report a work order
+ * @param {object|null} previous `{available, at, state}` as `matrix.mjs --last-state` prints it, or
+ *   a bare state map. `available: false` — the room could not be read — is not the same as an empty
+ *   state, and the difference is the whole reason this fails open: an unknown yesterday means today
+ *   is reported in full, saying so, because a routine that posts nothing because a read failed is
+ *   indistinguishable from a green morning.
+ */
+function deltaOf(report, previous) {
+  // An envelope announces itself by carrying either of its own fields; anything else is the bare
+  // state map. Told apart explicitly, because the failure of guessing is silent and absurd: the
+  // envelope of an unreadable room was read as a state of two incidents named `available` and
+  // `reason`, and both were then reported as fixed.
+  const envelope = previous != null && ('available' in previous || 'state' in previous);
+  const available = !envelope || previous.available !== false;
+  const before = new Map(Object.entries((envelope ? previous.state : previous) || {})
+    .map(([id, line]) => [id, { line: String(line ?? ''), ...parseLine(line) }]));
+  const state = {};
+  const appeared = [];
+  const changed = [];
+  const fixed = [];
+  let same = 0;
+  let longStanding = 0;
+  for (const incident of report.incidents || []) {
+    state[incident.id] = stateLine(incident);
+    const now = parseLine(state[incident.id]);
+    if (now.beyondHorizon) { longStanding++; continue; }
+    const was = before.get(incident.id);
+    if (!was) {
+      appeared.push({ id: incident.id, kind: now.kind, state: now.state, answer: now.answer || null });
+      continue;
+    }
+    const moves = [['kind', was.kind, now.kind], ['state', was.state, now.state],
+      ['answer', was.answer || 'none', now.answer || 'none']]
+      .filter(([, from, to]) => from !== to)
+      .map(([what, from, to]) => `${what} ${from} → ${to}`);
+    if (moves.length) changed.push({ id: incident.id, from: was.line, to: state[incident.id], moved: moves });
+    else same++;
+  }
+  for (const [id, was] of before) {
+    if (was.beyondHorizon || state[id]) continue;
+    fixed.push({ id, was: `${was.kind}/${was.state}` });
+  }
+  // An unknown yesterday classifies nothing. Calling today's incidents `NEW` would be a claim about
+  // a comparison that never happened — a week-old flicker announced as this morning's breakage is
+  // worse than the snapshot the digest falls back to, which at least says what it is.
+  if (!available) {
+    return {
+      previous: { available: false, at: null, known: 0, reason: previous?.reason ?? null },
+      silent: false,
+      new: [], changed: [], fixed: [], same: 0,
+      unknown: Object.keys(state).length,
+      longStanding,
+      state
+    };
+  }
+  return {
+    previous: { available, at: previous?.at ?? null, known: before.size },
+    // Nothing to say is the correct outcome, and the one the whole change exists to produce. It is
+    // never reached on an unknown yesterday, whatever today looks like.
+    silent: available && !appeared.length && !changed.length && !fixed.length,
+    new: appeared,
+    changed,
+    fixed,
+    same,
+    longStanding,
+    state
+  };
+}
+
 // ---- Run -------------------------------------------------------------------------------------
 
 const args = parseArgs(process.argv.slice(2));
@@ -1907,6 +2019,15 @@ const args = parseArgs(process.argv.slice(2));
 if (args.renderDetail) {
   const source = readFileSync(args.renderDetail === '-' ? 0 : args.renderDetail, 'utf8');
   console.log(renderDetail(JSON.parse(source), args));
+  process.exit(0);
+}
+
+// The delta reads two files and no server, so yesterday's comparison can be redone — after a fix
+// to the classification, or on another machine — without a second pass over Jenkins either.
+if (args.delta) {
+  const report = JSON.parse(readFileSync(args.delta === '-' ? 0 : args.delta, 'utf8'));
+  const previous = args.previous ? JSON.parse(readFileSync(args.previous, 'utf8')) : { available: false };
+  console.log(JSON.stringify(deltaOf(report, previous), null, 2));
   process.exit(0);
 }
 
