@@ -89,7 +89,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   grants the right (and logs `PRChecker: Skipping check for [X] since it's excluded`):
   `@UITest(properties = {"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MySpace\\.MyPage"})`.
   The regex must match the **whole** serialized reference, wiki included (`xwiki:Space.Page`); the
-  patterns of several merged `@UITest`s are OR-ed together.
+  patterns of several merged `@UITest`s are OR-ed together. A pattern anchored on the test class's
+  own name must allow a prefix (`.*:.*MyIT\..*`), because `TestReference` names the page after the
+  *running* class's simple name — `NestedMyIT` once the test runs inside an `AllIT`, which is how CI
+  runs it.
 - **An `AllIT` container class carries a bare `@UITest`** — the Docker framework resolves the
   `@UITest` of the container class **and of every nested class** (walking each nested class's
   superclass chain) and merges them all into one configuration
