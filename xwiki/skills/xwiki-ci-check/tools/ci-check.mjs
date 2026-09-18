@@ -720,6 +720,7 @@ async function forwardFix(incident, job, args) {
     title: commit.title,
     url: commit.url,
     afterBuild: build,
+    where: `pushed after build #${build} and not yet built`,
     covers: covered.map(keys => keys[keys.length - 1].replace(/\.java$/, '')),
     of: groups.length,
     partial,
@@ -731,6 +732,124 @@ async function forwardFix(incident, job, args) {
 
 /** Whether the branch already answers for the *whole* incident — the only case that goes quiet. */
 const settled = incident => !!incident.fixState && !incident.fixState.partial;
+
+// ---- In-flight fix ---------------------------------------------------------------------------
+// The second place the answer can already exist, after the unbuilt commits above: an open pull
+// request. It is weaker evidence than a landed commit — a PR that names the failing test may be its
+// fix, or a rewrite that merely touches it — but it carries the same consequence, because a routine
+// that root-causes a test somebody is visibly working on is arguing with the room. So it buys the
+// same silence and says `may be in flight`, never `fixed`.
+//
+// One read per repo per run, never one per incident: the open PRs are listed once and every
+// incident of that repo is matched against the same list.
+
+const PR_DAYS = 14;
+const pullRequests = new Map();
+
+/**
+ * The repo's open pull requests updated in the last `PR_DAYS` days, newest first.
+ *
+ * The plain list endpoint, not the search API: one is a core-quota read of a stable shape, the
+ * other has its own 30-per-minute budget and a query syntax that has already moved once. Sorted by
+ * update, the walk stops at the first PR outside the window — a branch nobody has touched in a
+ * fortnight is not the fix for this morning's failure — and at three pages, which on
+ * xwiki-platform (~230 open, ~100 of them recent) is well past where that happens.
+ *
+ * @returns {Promise<object[]>} an empty or short list when there is no token or the read fails —
+ *   fewer matches, never a wrong one, the same direction `forwardFix` fails in.
+ */
+function openPullRequests(repo, args) {
+  if (!args.github || !token) return Promise.resolve([]);
+  if (!pullRequests.has(repo)) {
+    pullRequests.set(repo, (async () => {
+      const since = Date.now() - PR_DAYS * DAY;
+      const out = [];
+      try {
+        for (let page = 1; page <= 3; page++) {
+          const batch = await github(`/repos/xwiki/${repo}/pulls?state=open&sort=updated`
+            + `&direction=desc&per_page=100&page=${page}`);
+          if (!batch?.length) break;
+          for (const pr of batch) {
+            if (Date.parse(pr.updated_at) < since) return out;
+            out.push({
+              number: pr.number, title: pr.title || '', body: pr.body || '',
+              base: pr.base?.ref || null, author: pr.user?.login || null,
+              url: pr.html_url, updated: pr.updated_at
+            });
+          }
+          if (batch.length < 100) break;
+        }
+      } catch { /* keep what was read */ }
+      return out;
+    })());
+  }
+  return pullRequests.get(repo);
+}
+
+/** Whether `text` names `word` on its own, rather than inside a longer identifier. */
+const mentions = (text, word) =>
+  new RegExp(`(?<![\\w$])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w$])`).test(text);
+
+/**
+ * What an open PR must name to look like this incident's fix.
+ *
+ * Class names, not file names: a PR body writes `DocExtraTabsIT`, never `DocExtraTabsIT.java`.
+ * Only `.java` keys survive the crossing — `forwardKeys` also yields the failing *file* of a build
+ * break, and a PR that mentions `pom.xml` names nothing at all.
+ */
+function inFlightKeys(incident) {
+  const groups = forwardKeys(incident).groups.map(keys => keys
+    .filter(key => key.endsWith('.java')).map(key => key.replace(/\.java$/, '')));
+  return { groups, jira: incident.jira?.key || null };
+}
+
+/**
+ * The open PR that looks like a fix for this incident, if there is one.
+ *
+ * Runs only where `forwardFix` found nothing at all: a commit that has landed on the branch is
+ * better evidence than a proposal, and a *partial* forward fix is already the answer for the part
+ * it covers. Fails open for the same reason it does there.
+ */
+async function inFlightFix(incident, args) {
+  if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
+  // A PR against `master` cannot fix `stable-17.10.x`: its code is not going there, and silencing a
+  // stable-branch incident on it hides a break nobody is working on.
+  const prs = (await openPullRequests(incident.repo, args)).filter(pr => pr.base === incident.branch);
+  const { groups, jira } = inFlightKeys(incident);
+  // A group with no class name in it can never be covered, so an incident holding one can never go
+  // quiet on this evidence — the `of` count stays the incident's real one.
+  if (!prs.length || !groups.length || groups.some(keys => !keys.length)) return null;
+  const text = pr => `${pr.title}\n${pr.body}`;
+  const covers = (pr, keys) => keys.some(name => mentions(text(pr), name));
+  // The JIRA key answers for the whole incident only when the incident *is* one test class: the key
+  // is the flicker issue of the first failing test, and a PR fixing it says nothing about four
+  // other classes that happen to have broken in the same build.
+  const whole = pr => !!jira && groups.length === 1 && mentions(text(pr), jira);
+  const matched = prs.filter(pr => whole(pr) || groups.some(keys => covers(pr, keys)));
+  if (!matched.length) return null;
+  const covered = groups.filter(keys => matched.some(pr => whole(pr) || covers(pr, keys)));
+  if (!covered.length) return null;
+  // The PR that explains the most of the incident, and the most recently updated of those — naming
+  // a PR that mentions one of three failing classes, while another names all three, points the
+  // reader at the wrong work. `matched` is already newest-first, and `sort` is stable.
+  const reach = pr => (whole(pr) ? groups.length : groups.filter(keys => covers(pr, keys)).length);
+  const [pr] = [...matched].sort((a, b) => reach(b) - reach(a));
+  const named = groups.flat().find(name => mentions(text(pr), name));
+  return {
+    kind: 'fix-in-flight',
+    number: pr.number,
+    author: pr.author,
+    title: pr.title,
+    url: pr.url,
+    where: `open, last updated ${dayOf(Date.parse(pr.updated))}`,
+    covers: covered.map(keys => keys[keys.length - 1]),
+    of: groups.length,
+    partial: groups.length > 1 && covered.length < groups.length,
+    reason: named
+      ? `it names ${named}, the class the failure names`
+      : `it names ${jira}, the issue this incident is tracked as`
+  };
+}
 
 // ---- Sweep -----------------------------------------------------------------------------------
 
@@ -1189,11 +1308,31 @@ const tracked = incident => (incident.jira ? ` — tracked as ${incident.jira}` 
 const elsewhere = incident => (incident.alsoOn ? ` — also failing on ${incident.alsoOn.join(', ')}` : '');
 const seen = incident => (incident.failedIn ? `, failed in ${incident.failedIn}` : '');
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
+/** How a fix is named in prose — a sha, or a PR by its number. */
+const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}` : fix.sha);
+const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}` : `\`${fix.sha}\``);
+/**
+ * The headline each kind of answer earns, and what closes its paragraph.
+ *
+ * The wording is the whole difference between the two: a commit that touches the failing file has
+ * landed and will be judged by the next build, whereas a PR naming the test is somebody's intent —
+ * it may be the fix, it may be a rewrite that touches it, and it may never merge. Both buy the
+ * same silence; only one of them may be reported as a fix.
+ */
+const FIX_HEAD = {
+  'fix-unbuilt': {
+    whole: 'Possibly fixed already', part: 'Part of this may be fixed already',
+    quiet: 'Not analysed, nobody pinged — the next build settles it.'
+  },
+  'fix-in-flight': {
+    whole: 'A fix may be in flight', part: 'Part of this may be in flight',
+    quiet: 'Not analysed, nobody pinged — the PR is where this gets settled.'
+  }
+};
 /** The same news as `fixBlock`, folded into one indented line for the places that list bullets. */
 const fixLine = incident => (incident.fixState
-  ? [`    _${settled(incident) ? 'Possibly fixed already' : 'Partly answered'} by ` +
-    `\`${incident.fixState.sha}\` (${incident.fixState.author || 'unknown'}), pushed after build ` +
-    `#${incident.fixState.afterBuild} and not yet built` +
+  ? [`    _${settled(incident) ? FIX_HEAD[incident.fixState.kind].whole : 'Partly answered'} by ` +
+    `${fixRef(incident.fixState)} (${incident.fixState.author || 'unknown'}), ${incident.fixState.where}` +
     `${settled(incident) ? ' — nobody pinged' : `; it covers ${incident.fixState.covers.join(', ')} of ` +
       `${incident.fixState.of} — the incident stands`}._`]
   : []);
@@ -1218,31 +1357,31 @@ function evidenceBlock(incident) {
 }
 
 /**
- * The one line an incident with a landed-but-unbuilt fix gets, in place of everything else.
+ * The one paragraph an incident somebody has already answered gets, in place of everything else.
  *
- * "Possibly", and the evidence under it, because the claim rests on a file overlap and not on a
- * green build: the next build is what settles it, and this line exists to stop the routine
- * arguing with a branch that has already moved on.
+ * Hedged, always, because the claim rests on a name overlap and not on a green build: what settles
+ * it is the next build, or the merge, and this paragraph exists only to stop the routine arguing
+ * with people who have already moved on.
  */
 function fixBlock(incident) {
   const fix = incident.fixState;
   if (!fix) return [];
-  const head = `\`${fix.sha}\` **${fix.author || '(unknown)'}** — ${fix.title}`;
+  const head = `${fixRef(fix)} **${fix.author || '(unknown)'}** — ${fix.title}`;
+  const where = fix.where[0].toUpperCase() + fix.where.slice(1);
   if (fix.partial) {
-    return ['', `**Part of this may be fixed already** — ${head}`,
-      `Pushed after build #${fix.afterBuild} and not yet built; ${fix.reason}. It covers ` +
-      `${fix.covers.join(', ')} — ${fix.of - fix.covers.length} of the ${fix.of} failing tests are ` +
-      'not answered by anything unbuilt, so this incident stands.'];
+    const rest = fix.of - fix.covers.length;
+    return ['', `**${FIX_HEAD[fix.kind].part}** — ${head}`,
+      `${where}; ${fix.reason}. It covers ${fix.covers.join(', ')} — the other ` +
+      `${plural(rest, 'failing test')} ${rest === 1 ? 'is' : 'are'} left unanswered, so this incident stands.`];
   }
-  // Where the incident spans several tests, the commit named above answers for one of them and the
-  // sentence has to say what answers for the rest — otherwise the line reads as a fix for a test it
-  // does not mention.
+  // Where the incident spans several tests, the commit or PR named above answers for one of them
+  // and the sentence has to say what answers for the rest — otherwise the line reads as a fix for a
+  // test it does not mention.
   const whole = fix.of > 1
-    ? ` All ${fix.of} failing tests (${fix.covers.join(', ')}) are answered by commits CI has not built yet.`
+    ? ` All ${fix.of} failing tests (${fix.covers.join(', ')}) are answered the same way.`
     : '';
-  return ['', `**Possibly fixed already** — ${head}`,
-    `Pushed after build #${fix.afterBuild} and not yet built; ${fix.reason}.${whole} ` +
-    'Not analysed, nobody pinged — the next build settles it.'];
+  return ['', `**${FIX_HEAD[fix.kind].whole}** — ${head}`,
+    `${where}; ${fix.reason}.${whole} ${FIX_HEAD[fix.kind].quiet}`];
 }
 
 function blameBlock(incident) {
@@ -1392,10 +1531,10 @@ function renderDetail(report, { live }) {
     out.push(`    - ${incident.branch} \`${shortName(incident)}\` — ${incident.blame.tier}: ${incident.blame.reason}`);
   }
   if (fixed.length) {
-    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'looks' : 'look'} already fixed by a commit CI has` +
-      ' not built yet — no slot spent, nobody pinged, since the branch already holds the answer:');
+    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'looks' : 'look'} answered already — by a commit CI` +
+      ' has not built yet, or by an open PR — so no slot was spent and nobody was pinged:');
     for (const incident of fixed) {
-      out.push(`    - ${incident.branch} \`${shortName(incident)}\` → \`${incident.fixState.sha}\`` +
+      out.push(`    - ${incident.branch} \`${shortName(incident)}\` → ${fixRef(incident.fixState)}` +
         ` (${incident.fixState.author || 'unknown'})`);
     }
   }
@@ -1478,15 +1617,19 @@ for (const incident of incidents) {
 // Before the budget is allocated, not after: an incident whose fix has already landed must not
 // spend a deep slot reaching a conclusion the branch already holds, and must not ping anyone.
 for (const incident of incidents) {
-  incident.fixState = await forwardFix(incident, jobsById.get(incident.id), args);
+  // A landed commit first, an open PR only where the branch itself holds nothing: a commit will be
+  // judged by the next build, a PR is somebody's intent, and where both exist the stronger one is
+  // what the reader needs.
+  incident.fixState = await forwardFix(incident, jobsById.get(incident.id), args)
+    || await inFlightFix(incident, args);
   // A partial fix changes nothing about what is written: the tests it does not cover are still
   // broken, still attributable and still worth a comment. It is reported beside the incident, and
   // that is all it earns.
   if (!settled(incident)) continue;
   incident.blame = {
     tier: 'none', suspects: [],
-    reason: `possibly fixed already by ${incident.fixState.sha}, pushed after build ` +
-      `#${incident.fixState.afterBuild} and not yet built`
+    reason: `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()} by ` +
+      `${fixName(incident.fixState)}, ${incident.fixState.where}`
   };
 }
 
@@ -1624,7 +1767,7 @@ if (!args.pretty) {
       : incident.blame?.tier || '—';
     console.log(`${incident.deep ? '*' : ' '} [${incident.kind}] ${incident.id} — ${age}, ${who}` +
       `${incident.silent ? ' (already commented)' : ''}${incident.beyondHorizon ? ' (beyond horizon)' : ''}` +
-      `${incident.fixState ? ` (${settled(incident) ? 'possibly fixed' : 'partly answered'} by ` +
-        `${incident.fixState.sha}, unbuilt)` : ''}`);
+      `${incident.fixState ? ` (${settled(incident) ? 'possibly answered' : 'partly answered'} by ` +
+        `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}`);
   }
 }
