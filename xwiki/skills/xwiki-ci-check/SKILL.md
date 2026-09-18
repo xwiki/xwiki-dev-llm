@@ -39,7 +39,7 @@ Say which mode you are in as the first line of your output, every time, and in l
 two channels that are closed, so nobody waits for a digest that was never going to be posted.
 
 **In local mode, ask once per write, and take silence for no.** One question naming exactly what
-would be written and where — *post the detail to PrivateBin?*, *comment on `a1b2c3d` (tmortagne)?*,
+would be written and where — *post the detail to PrivateBin?*, *comment on `a1b2c3d` (jdoe)?*,
 *file the `NotificationsSettingsIT` flicker issue?*, *open the checkstyle fix PR?* — never a blanket
 "shall I write things?". Ask only when there is a developer to answer: a non-interactive run without
 `--write` writes nothing at all, which is what makes the dry-run soak of the routine safe to
@@ -256,9 +256,9 @@ For each one:
   `AllIT$NestedImageIT#editImage` the sweep says `1/7 builds, 1/4 envs`, and this says 6 failures in
   **347** executions, every one of them on **Chrome** (p=0.0008), with ~30 consecutive clean runs
   needed before a fix could be claimed — which is the difference between naming a red square and
-  knowing what to do about it. The tool is Michael Hamann's, in `xwiki/xwiki-dev-tools`, and the
-  division of labour is worth stating plainly wherever this comes up: **`dv-test-history` establishes
-  the facts, `xwiki-ci-check` decides and acts on them.** The wrapper finds a checkout or clones one
+  knowing what to do about it. The tool lives in `xwiki/xwiki-dev-tools`, and the division of labour
+  is worth stating plainly wherever this comes up: **`dv-test-history` establishes the facts,
+  `xwiki-ci-check` decides and acts on them.** The wrapper finds a checkout or clones one
   and passes the Develocity key the plugin already has.
 
   `--section F<n>` prints the one failure group that matches the incident: the representative stack
@@ -466,9 +466,9 @@ so this needs no state file and survives the sandbox being new every morning.
 🔴 CI 2026-09-18 — 1 new, 2 changed, 2 fixed
 • NEW     platform/master   checkstyle break → a1b2c3d (jdoe) — commented
 • CHANGED platform/18.4.x+17.10.x  AllIT#foo flicker → systematic since #412 (4d) — no owner found
-• CHANGED platform/master   ImageIT#editImage (1d) — quiet: announced by mhamann before it broke
+• CHANGED platform/master   ImageIT#editImage (1d) — quiet: announced by jdoe before it broke
 • FIXED   commons/16.10.x   docker rate limit — green since #221
-• FIXED   platform/master   DocExtraTabsIT — green — discussed 09-17 17:34 (mflorea), XWIKI-25019
+• FIXED   platform/master   DocExtraTabsIT — green — discussed 09-17 17:34 (asmith), XWIKI-25019
   … 3 unchanged · +12 long-standing
 → https://bin.xwikisas.com/?abc#key (1 week)
 ```
@@ -492,11 +492,11 @@ the paste to find out whether the routine noticed.
 **A `fixState.fromChat` incident always gets its line, whatever else is cut.** Every other value
 suppresses on a fact — a commit, a PR, a timestamp — but these two suppress on a *sentence*, which is
 softer, so the routine's reading of the room goes back into the room: *"`ImageIT#editImage` — quiet,
-announced by mhamann before it broke"*. The person who wrote the sentence is reading that line and
+announced by jdoe before it broke"*. The person who wrote the sentence is reading that line and
 is the one reader who can say it was misread. Never collapse it into the `unchanged` count.
 
 **Cite the room where it explains an incident**, suppressed or not — *"`ConfigurableClassIT` —
-discussed 09-17 17:34 (mflorea), XWIKI-25019"*, with the matrix.to permalink from `chat`. One clause,
+discussed 09-17 17:34 (asmith), XWIKI-25019"*, with the matrix.to permalink from `chat`. One clause,
 never a quotation: the link is there for anyone who wants the sentence. This is the half of the
 digest the CI dashboard cannot compete with, because it joins what is red to what the team said
 about it, and it is worth a line even on a morning when nothing moved but the conversation.

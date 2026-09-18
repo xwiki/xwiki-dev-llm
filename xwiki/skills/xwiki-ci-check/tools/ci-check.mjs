@@ -968,7 +968,7 @@ async function staleSnapshot(incident, jobs, args) {
 // listening rather than by measuring.
 //
 // A failure can be *announced*: "I'm pushing the reproduction test case today such that it will be
-// executed tonight and fail" (mhamann, 2026-09-15). Nothing but the room knows that. Without it the
+// executed tonight and fail". Nothing but the room knows that. Without it the
 // sweep attributes tonight's red to the person who said it and comments on their commit — the worst
 // output this tool has, because it is wrong in someone's name about something they told everyone
 // about first. And a failure can be *claimed*: "I'm currently on XWIKI-23740", "I investigated the

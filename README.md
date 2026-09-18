@@ -201,9 +201,9 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     pinged for it, and so that the digest can cite the analysis the team already published rather
     than redo it. What is said there can only ever buy an incident silence, never raise one, because
     it is untrusted text reaching a context that writes under a bot identity. A failing *test* is
-    analysed from **Develocity** rather than from the build log: `dv-test-history`, Michael Hamann's
-    tool in [`xwiki/xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history),
-    gives 28 days of that test's executions on every branch, browser, database and servlet
+    analysed from **Develocity** rather than from the build log:
+    [`dv-test-history`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history)
+    in `xwiki/xwiki-dev-tools` gives 28 days of that test's executions on every branch, browser, database and servlet
     container, and the skill reasons from that — the division of labour being that the tool
     establishes the facts and the skill decides and acts on them. Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation

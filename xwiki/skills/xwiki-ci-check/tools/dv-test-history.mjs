@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
- * Runs `dv-test-history` — Michael Hamann's Develocity analyser in `xwiki/xwiki-dev-tools` — and
- * prints the part of its report that is worth a model's context.
+ * Runs `dv-test-history`, the Develocity analyser in `xwiki/xwiki-dev-tools`, and prints the part
+ * of its report that is worth a model's context.
  *
  * **The division of labour this tool exists to enforce: `dv-test-history` establishes the facts,
  * `xwiki-ci-check` decides and acts on them.** Jenkins knows what is red in the eight builds it
