@@ -537,16 +537,33 @@ document whose shape is re-invented daily is read as a new document daily:
 node <skill>/tools/ci-check.mjs --render-detail work-order.json > detail.md   # add --live when writing
 ```
 
-That gives the whole document — counts, the green repos, every incident in a fixed order with its
-age, its regression window, its evidence, its suspects, the flicker groups, what was *not* written
-and why — and leaves one `<!-- ANALYSIS: <incident id> -->` line per `deep` incident. **Replace each
-of those lines with your root-cause paragraph, and change nothing else.** If a fix failed
-verification (§5), add it under the incident it belongs to.
+That gives the whole document: a numbered **table per branch** — *What fails* · *Why* · *Next — who*
+— over one collapsed `<details>` block per row holding that row's window, evidence, quality-gate
+issues, 28-day history, attribution and what the room said. The branch a reader must look at first
+comes first, and inside it the row that blocks a release does.
 
-Two wordings in it are deliberate and must not be "improved" back: a window with no green build
-reads *failing in every build examined, back to #N — start not established* rather than "since #N",
-because that number is how far the sweep looked and not when the break began; and a flicker carries
-both `streak Nd` and `failed in X/Y builds`, which measure different things.
+**Fill the markers, and change nothing else.** Each `deep` incident leaves three, and every one of
+them is a conclusion the renderer cannot reach:
+
+| Marker | Where | What replaces it |
+|---|---|---|
+| `<!-- WHY: <id> -->` | the *Why* cell | **One clause, ≤15 words**, naming the mechanism — *"modal re-renders after a suggestion is picked; the page object grabs a stale submit"*. Not the symptom, which column one already carries, and not a sentence with a verb phrase for every fact you found. |
+| `<!-- NEXT: <id> -->` | the *Next — who* cell | **`<who> → <what>`**, one line per person, the actor first: *"tmortagne → drop the dead `null` return, or take the default"*. `<who>` is a name where the analysis found one, `someone` where the work is real but unowned. Never a name the work order does not support. |
+| `<!-- ANALYSIS: <id> -->` | inside the `<details>` | Your root-cause paragraph, as before. This is where the reasoning goes — the two cells above are its conclusion, not a summary of it. |
+
+A cell you leave unfilled renders **empty**, which is how the document says you skipped it. If a fix
+failed verification (§5), add that under the incident it belongs to, inside its block.
+
+Three wordings are deliberate and must not be "improved" back: a window with no green build reads
+*failing in every build examined, back to #N — start not established* rather than "since #N",
+because that number is how far the sweep looked and not when the break began; a flicker carries both
+`streak Nd` and `failed in X/Y builds`, which measure different things; and every *Next* line starts
+with its actor, because that is the word the column is scanned for.
+
+**Do not restate the rules this skill runs on.** "One issue per test class", "a red gate blocks the
+release", "an issue is earned by two builds on two days" — the reader is the developer whose branch
+is red, not the author of this file. A rule reaches the paste only as the *action* it implies, in
+column three.
 
 In a **local run the detail document is the deliverable** — print it, or its incidents at least, and
 then ask whether to paste it. There is no digest to write, so the paste question is the last one.
