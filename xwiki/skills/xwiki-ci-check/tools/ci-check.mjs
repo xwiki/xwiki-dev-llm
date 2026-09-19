@@ -1889,10 +1889,18 @@ function severity(incident) {
 
 // ---- The paste ---------------------------------------------------------------------------------
 // Rendered here, not by the model, for one reason: the paste is read every morning, and a document
-// whose shape is re-invented each day is read as a new document each day. Everything below is a
-// mechanical restatement of the work order — the counts, the ages, the windows, the lists — in a
-// fixed order with fixed wording. What it cannot produce is the root cause of a `deep` incident, so
-// it leaves an `<!-- ANALYSIS: id -->` line where each one goes and SKILL.md fills them in.
+// whose shape is re-invented each day is read as a new document each day.
+//
+// The shape is a table per branch — *what fails*, *why*, *what happens next and who does it* — over
+// a collapsed block of evidence per row. That order is the document's argument: a reader who owns
+// none of this is done after the tables, and a reader who owns one row opens one block. Nothing the
+// sweep knows has been dropped; what changed is that the evidence no longer arrives before the
+// answer, and that the rules the sweep obeys are no longer restated to the people who wrote them —
+// they are in SKILL.md, which is where they belong.
+//
+// Three cells cannot be rendered, because they are the conclusion and not a field: a `deep`
+// incident's *why* and *next* are one `<!-- WHY: id -->` / `<!-- NEXT: id -->` marker each, and its
+// root cause is the `<!-- ANALYSIS: id -->` line inside its block. SKILL.md §6 fills all three.
 
 const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 const agedAs = incident => (incident.ageDays == null
@@ -1920,9 +1928,6 @@ const testName = id => {
   return method ? `${simple}#${method}` : simple;
 };
 const shortName = incident => testName(incident.id.split('/').slice(2).join('/'));
-const tracked = incident => (incident.jira ? ` — tracked as ${incident.jira}` : '');
-const elsewhere = incident => (incident.alsoOn ? ` — also failing on ${incident.alsoOn.join(', ')}` : '');
-const seen = incident => (incident.failedIn ? `, failed in ${incident.failedIn}` : '');
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
 /** How an answer is named in prose — a sha, a PR by its number, or the person who said it. */
 const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
@@ -1970,14 +1975,6 @@ const FIX_HEAD = {
       + ' deleted.'
   }
 };
-/** The same news as `fixBlock`, folded into one indented line for the places that list bullets. */
-const fixLine = incident => (incident.fixState
-  ? [`    _${FIX_HEAD[incident.fixState.kind][settled(incident) ? 'whole' : 'part']} ` +
-    `${FIX_HEAD[incident.fixState.kind].link} ` +
-    `${fixRef(incident.fixState)} (${incident.fixState.author || 'unknown'}), ${incident.fixState.where}` +
-    `${settled(incident) ? ' — nobody pinged' : `; it covers ${incident.fixState.covers.join(', ')} of ` +
-      `${incident.fixState.of} — the incident stands`}._`]
-  : []);
 /**
  * What the room said about this incident, minus whatever is already quoted above it as the answer.
  *
@@ -1988,29 +1985,12 @@ const fixLine = incident => (incident.fixState
  */
 const said = incident => (incident.chat || [])
   .filter(message => message.permalink !== incident.fixState?.url);
-const chatLine = incident => (said(incident).length
-  ? [`    _Discussed in the room: ${said(incident)
-    .map(message => `[${message.sender}, ${message.at.slice(5, 16).replace('T', ' ')}](${message.permalink})`)
-    .join(', ')}._`]
-  : []);
 const chatBlock = incident => (said(incident).length
   ? ['', '**Said in the room** — the analysis may already be done:',
     ...said(incident).map(message =>
       `- **${message.sender}**, ${message.at.slice(0, 16).replace('T', ' ')}: "${message.said}" ` +
       `[link](${message.permalink})`)]
   : []);
-
-/**
- * What a `deep` incident carries wherever it is listed — its budget bought this, so it is shown.
- *
- * An incident that looks already fixed is never deep, and carries its one line instead: that line
- * is precisely why it was not analysed, so it is the one thing a reader must not have to go
- * looking for.
- */
-const deepTail = incident => (incident.deep
-  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...sonarBlock(incident),
-    ...blameBlock(incident), ...chatBlock(incident), ...analysis(incident), '']
-  : [...fixLine(incident), ...chatLine(incident), ...sonarBlock(incident)]);
 
 /**
  * What the quality gate failed on, and whose code is under it.
@@ -2095,8 +2075,9 @@ function develocityBlock(incident) {
       [facts.artifacts.screenshot && `[screenshot](${facts.artifacts.screenshot})`,
         facts.artifacts.video && `[video](${facts.artifacts.video})`].filter(Boolean).join(' · '));
   }
-  out.push(`- Full report on this machine: \`${facts.report}\` — read the \`### ${facts.group?.label || 'F1'}\`` +
-    ' section of it for the representative stack and the per-configuration table; it costs no request.');
+  // The analyser's full report is *not* named here. It is a path in a temp directory on the machine
+  // that ran the sweep — live for the pass that writes the analysis, which reads it from the work
+  // order's `develocity.report`, and gone by the time anybody opens the paste.
   return out;
 }
 
@@ -2150,12 +2131,191 @@ function blameBlock(incident) {
     out.push('', `Blame **${blame.tier}** — ${blame.reason}.`,
       `Culprit: \`${blame.culprit.short}\` **${blame.culprit.author || '(unknown)'}** — ` +
       `${blame.culprit.title} [${plural(blame.culprit.filesChanged ?? 0, 'file')}]`);
-  } else {
+  } else if (blame.suspects?.length) {
     out.push('', `Blame **${blame.tier}** — ${blame.reason}.`);
   }
+  // With neither a culprit nor a suspect there is nothing here to show: "nobody is pinged, because
+  // a gate has no single author" is the row's own *next* cell, and printing the same sentence again
+  // under the evidence is how a three-incident morning came to read as a wall of text.
   for (const suspect of blame.suspects || []) out.push(`- ${suspect}`);
   if (incident.silent) out.push(`_Already commented in this state (${incident.notified?.state}) — saying nothing._`);
   return out;
+}
+
+/** What two incidents on two branches share when they are one break: the repo, and the signature. */
+const causeKey = incident => `${incident.repo}\u0000${incident.id.split('/').slice(2).join('/')}`;
+
+/** Whether this incident is the red quality gate, which is a build break with its own vocabulary. */
+const isGate = incident => /sonar-gate:failed$/.test(incident.signature || '');
+
+/**
+ * Release-blocking, as §5 means it — recomputed here from the digested incident rather than shared
+ * with the run's own `blocksRelease`, which reads fields (`alerting`) the work order does not carry.
+ */
+const blocking = incident => incident.branchClass !== 'transient' && incident.primary !== false
+  && !settled(incident) && (incident.class === 2
+    || (incident.class === 1 && incident.state === 'systematic' && !incident.beyondHorizon));
+
+/** What a reader calls the thing that is red, as plain text — the table and the summary style it. */
+function subjectOf(incident) {
+  if (isGate(incident)) return 'Sonar quality gate';
+  if (incident.class === 1) return shortName(incident);
+  if (incident.class === 3) return incident.state || 'infrastructure';
+  return incident.signature ? incident.signature.split('/').pop() : incident.kind;
+}
+
+/** What kind of red it is, in two or three words. */
+function kindOf(incident) {
+  if (isGate(incident)) return 'quality gate';
+  if (incident.class === 2) return 'build break';
+  if (incident.class === 3) return 'infrastructure';
+  if (incident.class === 1) {
+    const what = incident.kind === 'test-breakage' ? 'breakage' : 'flicker';
+    return incident.testCount > 1 ? `${what}, ${plural(incident.testCount, 'test')}` : what;
+  }
+  return incident.kind;
+}
+
+const STATE_WORDS = {
+  systematic: 'fails every run', 'single env': 'one environment, every build',
+  'first seen': 'seen once', intermittent: 'intermittent'
+};
+
+/**
+ * Column two when the renderer can answer it: the mechanical *why*.
+ *
+ * A gate is the one failure whose real explanation is already a field — the condition it failed and
+ * the value it wanted — so it is written here and no analysis slot is spent restating two nouns.
+ * Everything else below the deep line gets the numbers that distinguish it from its neighbours (how
+ * often, over what, in how many environments), which is as far as a renderer can honestly go.
+ */
+function whyOf(incident) {
+  if (incident.sonar?.conditions?.length) {
+    return incident.sonar.conditions
+      .map(condition => `${condition.name} is ${condition.actual}, the gate wants ${condition.threshold}`)
+      .join('; ');
+  }
+  if (incident.class === 3) return 'the agent or the environment, not the code';
+  const bits = [];
+  if (incident.class === 1) {
+    bits.push(STATE_WORDS[incident.state] || incident.state);
+    if (incident.failedIn) bits.push(incident.failedIn);
+    if (incident.develocity) {
+      bits.push(`${incident.develocity.failures}/${incident.develocity.runs} over ` +
+        `${incident.develocity.windowDays}d everywhere it runs`);
+    }
+  } else if (incident.evidence?.length) {
+    bits.push(incident.evidence[0].replace(/\s+/g, ' ').slice(0, 110));
+  } else if (incident.state) {
+    bits.push(incident.state);
+  }
+  return bits.filter(Boolean).join(' · ');
+}
+
+/** Why nobody is asked to do anything — always a reason, never an empty cell. */
+function noOneOwes(incident, horizonDays) {
+  if (incident.beyondHorizon) return `older than the ${horizonDays}-day horizon — counted, not written about`;
+  if (incident.jira) return 'already tracked — the issue is where this gets settled';
+  if (incident.kind === 'flicker' && !incident.proven) {
+    return 'not proven yet — an issue is earned by two builds on two days';
+  }
+  if (incident.class === 3) return 'nothing in the code to change; watch for the same agent tomorrow';
+  return 'below the analysis budget — reported, not analysed';
+}
+
+/**
+ * Column three: what happens next, and who does it.
+ *
+ * Every line starts with its actor — `bot`, a person, `nobody`, `done` — because that is the word
+ * a reader scans for, and a column that sometimes leads with the actor and sometimes with the verb
+ * is a column that has to be read rather than scanned. The run's own moves are mechanical and
+ * written here; what a *person* should do is the conclusion of the analysis, so a deep incident
+ * leaves a marker for the pass that writes its root cause (SKILL.md §6).
+ */
+function nextOf(incident, { horizonDays, filing, stabilising, cause }) {
+  const lines = [];
+  const fix = incident.fixState;
+  if (settled(incident)) {
+    // The hedge is the wording `FIX_HEAD` already carries, and it is kept exactly: no value here
+    // asserts a fix — a commit will be judged by the next build and a PR may never merge.
+    lines.push(`nobody → ${FIX_HEAD[fix.kind].whole.toLowerCase()}: ${fixRef(fix)} ` +
+      `(${fix.author || 'unknown'})` +
+      `${fix.kind === 'fixed-elsewhere' ? ' — a backport candidate, verify first' : ''}`);
+  } else if (incident.primary === false) {
+    lines.push(`see ${cause ? `#${cause.number}` : 'above'} → one cause, analysed on ` +
+      `${cause?.branch || incident.alsoOn?.[0] || 'another branch'}`);
+  } else if (!incident.beyondHorizon) {
+    if (incident.silent) {
+      lines.push('done → already commented, in this same state');
+    } else if (incident.sonar?.unequivocal && incident.sonar.target) {
+      lines.push(`bot → comment on ${incident.sonar.target.kind === 'pr'
+        ? `PR #${incident.sonar.target.number}` : `\`${incident.sonar.target.short}\``}`);
+    } else if (incident.blame?.culprit) {
+      lines.push(`bot → comment on \`${incident.blame.culprit.short}\` ` +
+        `(${incident.blame.culprit.author || 'unknown'})`);
+    }
+    if (filing) lines.push(`bot → file **one** issue for \`${filing.className}\` (${filing.scope})`);
+    if (stabilising) lines.push('bot → measure the rate, fix, measure again, draft PR');
+    if (incident.jira && incident.state === 'systematic') {
+      lines.push(`someone → re-triage ${incident.jira}: filed as a flicker, failing every run`);
+    }
+  }
+  if (incident.deep && !settled(incident) && !incident.beyondHorizon) {
+    lines.push(`<!-- NEXT: ${incident.id} -->`);
+  } else if (!lines.length) {
+    lines.push(`nobody → ${noOneOwes(incident, horizonDays)}`);
+  }
+  return lines.join('<br>');
+}
+
+/**
+ * A table cell: a newline ends the row and a bare pipe starts a new column, so neither reaches one.
+ * The pipe is escaped rather than replaced — a log line is evidence, and `\|` renders as the pipe
+ * that was actually there, inside a code span as well as outside one.
+ */
+const cell = text => String(text ?? '')
+  .replace(/\|/g, '\\|').replace(/\s*\n\s*/g, '<br>').trim() || '—';
+
+/**
+ * What the reader opens when the row is theirs: the evidence, the history, the attribution and the
+ * root cause, behind one disclosure triangle.
+ *
+ * Collapsed, because the tables above are the document and this is the appendix to one row of them
+ * — and because PrivateBin renders the markdown inside `<details>` exactly as it does outside it,
+ * so nothing is lost by folding it away.
+ */
+function evidenceFor(incident) {
+  const head = [windowOf(incident), incident.stage ? `stage _${incident.stage}_` : null].filter(Boolean);
+  const body = incident.deep
+    ? [...evidenceBlock(incident), ...sonarBlock(incident), ...develocityBlock(incident),
+      ...blameBlock(incident), ...chatBlock(incident), ...analysis(incident)]
+    : [...fixBlock(incident), ...sonarBlock(incident), ...chatBlock(incident)];
+  const out = [...(head.length ? ['', head.join(' · ')] : []), ...body];
+  return out.some(line => line.trim()) ? out : null;
+}
+
+/**
+ * The order the rows come in, which is the order they should be dealt with: what blocks a release,
+ * then what is broken, then what is flaky, then what is nobody's to fix. A row whose answer is
+ * already known — settled, or the same cause as a row above — goes last: it is there so that a red
+ * square on the dashboard has a line here, not because anyone has to act on it.
+ */
+function rowRank(incident, primaries) {
+  // A peer sorts where the incident it points at sorts, half a rank behind it — a pointer to a red
+  // gate is still the first thing on that branch, and a pointer is never the thing you read first.
+  if (incident.primary === false) {
+    const cause = primaries?.get(causeKey(incident));
+    return cause ? rowRank(cause) + 0.5 : 9;
+  }
+  if (settled(incident)) return 8;
+  if (isGate(incident)) return 0;
+  if (incident.class === 2) return 1;
+  if (incident.class === 1 && incident.kind === 'test-breakage') return incident.beyondHorizon ? 6 : 2;
+  if (incident.flickerGroup) return 3;
+  if (incident.class === 1 && incident.kind === 'flicker' && !incident.jira) return 4;
+  if (incident.jira) return 5;
+  if (incident.class === 3) return 7;
+  return 6.5;
 }
 
 function renderDetail(report, { live }) {
@@ -2163,208 +2323,136 @@ function renderDetail(report, { live }) {
   const date = report.generatedAt.slice(0, 10);
   const redRepos = new Set(report.jobs.filter(job => job.result && job.result !== 'SUCCESS').map(job => job.repo));
   const green = [...new Set(report.jobs.map(job => job.repo))].filter(repo => !redRepos.has(repo));
-  const of = filter => incidents.filter(filter);
-  // One cause, one entry. The peers of an `also-red` group are named under the incident that
-  // carries it and never given a section of their own: four branches red on the same enforcer rule
-  // is one break, and printing it four times is most of what makes a red morning unreadable.
-  const own = filter => of(incident => incident.primary !== false && filter(incident));
-  const causeOf = incident => `${incident.repo}\u0000${incident.id.split('/').slice(2).join('/')}`;
-  const peers = new Map();
-  for (const incident of of(entry => entry.primary === false)) {
-    peers.set(causeOf(incident), [...(peers.get(causeOf(incident)) || []), incident]);
+  const out = [`# CI sweep — ${date}${live ? '' : ' (not a live run — no digest posted, no issue filed)'}`];
+  if (!incidents.length) {
+    return [...out, '', `Nothing red across ${plural(summary.jobs, 'job')}. Nothing written.`].join('\n');
   }
-  // Each peer keeps its own window: the same break starts on each branch at the commit that reached
-  // that branch, and "since when, there" is the one fact the collapse must not swallow.
-  const alsoRed = incident => ((peers.get(causeOf(incident)) || []).length
-    ? [`_Also red on ${(peers.get(causeOf(incident)) || []).map(peer => `${peer.branch}` +
-      `${peer.firstBadBuild == null ? '' : ` (since #${peer.firstBadBuild}, ${agedAs(peer)})`}`).join(', ')}` +
-      ' — the same signature, so one cause: analysed and commented here only._']
-    : []);
-  const out = [
-    `# CI sweep — ${date}${live ? '' : ' (not a live run — no digest posted, no issue filed)'}`,
-    '',
-    `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → **${plural(summary.incidents, 'incident')}**: ` +
-    `${summary.deep} deep-treated, ${summary.beyondHorizon} beyond the ${report.horizonDays}-day horizon, ` +
-    `${summary.alreadyCommented} already commented` +
-    `${summary.answered ? `, ${summary.answered} already answered` : ''}` +
-    `${summary.collapsed ? `, ${summary.collapsed} the same cause on another branch` : ''}.`
-  ];
-  if (green.length) out.push(`${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch.`);
+
+  // One cause, one row. The peers of an `also-red` group keep a row in *their own* branch's table —
+  // a pointer, not a copy — because the person who watches that branch reads that table and has to
+  // find it there; the analysis and the comment still happen once, under the branch that carries
+  // the cause. A flicker group is the other collapse: one row for the test class, in the branch of
+  // the incident that heads it, because what the run files is one issue for the class.
+  const groups = new Map();
+  for (const incident of incidents) {
+    if (!incident.flickerGroup) continue;
+    groups.set(incident.flickerGroup, [...(groups.get(incident.flickerGroup) || []), incident]);
+  }
+  const filings = new Map();
+  for (const group of groups.values()) {
+    const branches = [...new Set(group.flatMap(incident => [incident.branch, ...(incident.alsoOn || [])]))];
+    const methods = [...new Set(group.map(shortName))].sort();
+    filings.set(group[0].id, {
+      className: testName(group[0].id.split('/').slice(2).join('/')).split('#')[0],
+      scope: `${plural(methods.length, 'method')}, ${branches.join(' + ')}`,
+      methods, branches, group
+    });
+  }
+  const rows = incidents.filter(incident => !incident.flickerGroup || filings.has(incident.id));
+
+  // Keyed by the signature the id carries rather than by `signature`, which the work order omits
+  // for a class-1 incident: what a test failure is, is its test, and the id already holds it.
+  const primaries = new Map();
+  for (const incident of rows) {
+    if (incident.primary === true) primaries.set(causeKey(incident), incident);
+  }
+  const sections = new Map();
+  for (const incident of rows) {
+    const key = `${incident.repo}\u0000${incident.branch}`;
+    sections.set(key, [...(sections.get(key) || []), incident]);
+  }
+  const ordered = [...sections.entries()]
+    .map(([key, list]) => ({
+      repo: key.split('\u0000')[0], branch: key.split('\u0000')[1],
+      list: list.sort((a, b) => rowRank(a, primaries) - rowRank(b, primaries)
+        || (b.ageDays ?? -1) - (a.ageDays ?? -1))
+    }))
+    // The branch a reader must look at first is the one with the worst row on it, not the one that
+    // sorts first by name — a red gate on a stable branch outranks a flicker on master.
+    .sort((a, b) => rowRank(a.list[0], primaries) - rowRank(b.list[0], primaries)
+      || branchRank(a.branch) - branchRank(b.branch) || a.repo.localeCompare(b.repo));
+
+  // Numbered across the whole document, in reading order, so that a row and the block that belongs
+  // to it are tied together by something short enough to say out loud in the room.
+  const numbers = new Map();
+  for (const section of ordered) for (const incident of section.list) numbers.set(incident.id, numbers.size + 1);
+  const causeOf = incident => {
+    const cause = incident.primary === false ? primaries.get(causeKey(incident)) : null;
+    return cause ? { number: numbers.get(cause.id), branch: cause.branch } : null;
+  };
+
+  const blockers = rows.filter(blocking);
+  out.push('', blockers.length
+    ? `**${[...new Set(blockers.map(incident => incident.branch))].join(', ')} ` +
+      `${blockers.length === 1 ? 'blocks' : 'block'} a release** — ` +
+      `${blockers.map(incident => `${subjectOf(incident)} (#${numbers.get(incident.id)})`).join(', ')}.`
+    : '**Nothing here blocks a release.**');
+  out.push('', `Swept **${plural(summary.jobs, 'job')}**, **${summary.red} red** → ` +
+    `**${plural(summary.incidents, 'incident')}**` +
+    `${green.length ? `. ${green.join(' and ')} ${green.length === 1 ? 'is' : 'are'} green on every branch` : ''}.`);
   if (report.githubTokenWarning) out.push('', `⚠️ ${report.githubTokenWarning}`);
-  // A green morning is one line in the room and no paste at all (SKILL.md §6); rendering the empty
-  // sections of a document nobody will open is the kind of output that teaches people to skim.
-  if (!incidents.length) return [...out, '', 'Nothing red, nothing written.'].join('\n');
 
-  const breaks = own(incident => incident.class === 2);
-  if (breaks.length) {
-    out.push('', '## Build breaks');
-    for (const incident of breaks) {
-      const window = windowOf(incident);
-      out.push('', `### ${incident.branch} — ${incident.signature ? incident.signature.split('/').pop() : 'build break'}`,
-        [`**${agedAs(incident)}**`, window, incident.stage ? `stage _${incident.stage}_` : null,
-          incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · '),
-        // The gate block before the blame, because for a gate failure it *is* the evidence: the
-        // stage log has one line and SonarCloud has the condition, the issues and their authors.
-        ...alsoRed(incident), ...evidenceBlock(incident), ...sonarBlock(incident), ...blameBlock(incident));
-      if (/sonar-gate:failed$/.test(incident.signature || '')) {
-        out.push('', '_A red gate blocks every release on this branch, so it is the run\'s first fix' +
-          ' (SKILL.md §5) — through `xwiki-fix-sonarqube-issue`, whose `okf/sonarqube/` rules say which' +
-          ' fixes are correct here and which only look mechanical._');
+  for (const section of ordered) {
+    out.push('', `## ${section.repo} · ${section.branch}`, '',
+      '| What fails | Why | Next — who |', '|---|---|---|');
+    for (const incident of section.list) {
+      const cause = causeOf(incident);
+      const meta = [kindOf(incident), agedAs(incident),
+        incident.jira ? `tracked as ${incident.jira}` : null,
+        incident.alsoOn?.length && incident.primary !== false ? `also red on ${incident.alsoOn.join(', ')}` : null,
+        incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ');
+      const name = isGate(incident) ? `**${subjectOf(incident)}**` : `\`${subjectOf(incident)}\``;
+      const filing = filings.get(incident.id);
+      // A gate explains itself out of fields the renderer holds — the condition it failed and the
+      // value the gate wanted — so it keeps its mechanical answer and spends no analysis slot
+      // restating two nouns. For everything else that won a slot, *why* is the conclusion of that
+      // analysis: the numbers a renderer can reach say how often a test fails, never why it does.
+      const why = cause ? `the same failure as #${cause.number} on ${cause.branch}`
+        : incident.deep && !incident.sonar?.conditions?.length ? `<!-- WHY: ${incident.id} -->`
+          : whyOf(incident);
+      out.push(`| **${numbers.get(incident.id)}.** ${cell(name)}<br>_${cell(meta)}_ ` +
+        `| ${cell(why)} ` +
+        `| ${cell(nextOf(incident, { horizonDays: report.horizonDays, filing, cause,
+          stabilising: incident.stabilise }))} |`);
+    }
+    for (const incident of section.list) {
+      const body = evidenceFor(incident);
+      const filing = filings.get(incident.id);
+      const lists = filing && filing.methods.length > 1;
+      if (!body && !lists) continue;
+      out.push('', '<details>', `<summary><b>${numbers.get(incident.id)}</b> · ` +
+        `${isGate(incident) ? `<b>${subjectOf(incident)}</b>` : `<code>${subjectOf(incident)}</code>`}` +
+        ' — the evidence, and the root cause</summary>');
+      // Every method of a flicker group, because the issue the run files lists them and somebody
+      // has to be able to check that list against what is actually red.
+      if (lists) {
+        out.push('', `One issue for \`${filing.className}\` — ${filing.scope}:`,
+          ...filing.methods.map(method => `- \`${method}\``));
       }
-      out.push(...analysis(incident));
+      out.push(...(body || []), '', '</details>');
     }
   }
 
-  const breakages = own(incident => incident.class === 1 && incident.kind === 'test-breakage');
-  if (breakages.length) {
-    out.push('', '## Test breakages');
-    for (const incident of breakages) {
-      out.push('', `### ${incident.branch} — \`${shortName(incident)}\``,
-        [`**${incident.state}**, ${agedAs(incident)}`, windowOf(incident),
-          `${plural(incident.testCount || 1, 'test')}${seen(incident)}`,
-          incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ') +
-        `${tracked(incident)}` +
-        `${incident.beyondHorizon ? ' — **beyond the horizon: reported, never written about**' : ''}`,
-        ...alsoRed(incident));
-      if (incident.jira && incident.state === 'systematic') {
-        out.push(`_Tracked as a flicker but failing every time: either a real regression or a stale` +
-          ` triage, and ${incident.jira} no longer describes it (SKILL.md §4)._`);
-      }
-      // `chatBlock` before the analysis marker on purpose: what the room already worked out is
-      // what the analysis written into that marker has to start from, not a footnote under it.
-      out.push(...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
-        ...analysis(incident));
-    }
-  }
-
-  // What the run proposes to *fix*, or why it proposes nothing — and the second is worth its line
-  // every morning: a reader who does not see it wonders whether the pass ran at all, and "a build
-  // break is open, so no flake fix today" is the ordering being obeyed rather than a gap.
   const stabilise = summary.stabilise;
-  if (stabilise && incidents.length) {
-    out.push('', '## Stabilisation — the one flicker this run may fix');
-    if (!stabilise.id) {
-      out.push('', `_None this run — ${stabilise.skipped}` +
-        `${stabilise.blockers?.length ? ` (${stabilise.blockers.join(', ')})` : ''}.` +
-        `${stabilise.blockers?.length ? ' The run\'s one fix goes there instead (SKILL.md §5).' : ''}_`);
-    } else {
-      const pick = incidents.find(incident => incident.id === stabilise.id);
-      out.push('', `- **${pick ? `${pick.branch} \`${shortName(pick)}\`` : stabilise.id}** → ` +
-        `${stabilise.jira}${pick ? `, ${agedAs(pick)}` : ''} — ${stabilise.failedIn}` +
-        `${stabilise.configuration ? `, concentrated on \`${stabilise.configuration}\`` : ''}` +
-        `${stabilise.others ? ` (${plural(stabilise.others, 'other candidate')} not picked)` : ''}`,
-        // Its evidence and its 28 days, here, because the candidate is usually *not* deep — a
-        // flicker the team has already filed is deliberately last in the analysis budget — and
-        // whoever fixes it reads the configuration breakdown before anything else. A candidate
-        // that did win a slot already carries both above, so it is not printed twice.
-        ...(pick && !pick.deep ? [...evidenceBlock(pick), ...develocityBlock(pick), ...chatBlock(pick)] : []));
-      out.push('', '_Measure the rate, fix it inside Tier C, measure again, and open **one draft PR**' +
-        ' carrying both rates — or nothing at all if the second rate is no better (SKILL.md §5)._');
-    }
+  const notes = [];
+  // Worth its line every morning, including the morning it is "none": a reader who does not see it
+  // wonders whether the pass ran at all, and "a build break is open, so no flake fix today" is the
+  // ordering being obeyed rather than a gap.
+  if (stabilise && !stabilise.id) {
+    const named = (stabilise.blockers || [])
+      .map(id => (numbers.has(id) ? `#${numbers.get(id)}` : id));
+    notes.push(`**No stabilisation fix this run** — ${stabilise.skipped}` +
+      `${named.length ? ` (${named.join(', ')})` : ''}.`);
   }
-
-  const toFile = of(incident => incident.flickerGroup);
-  if (toFile.length) {
-    const groups = new Map();
-    for (const incident of toFile) groups.set(incident.flickerGroup, [...(groups.get(incident.flickerGroup) || []), incident]);
-    out.push('', `## Proven flickers not yet filed — ${plural(groups.size, 'issue')} to open`);
-    for (const [, group] of groups) {
-      const [first] = group;
-      const branches = [...new Set(group.flatMap(incident => [incident.branch, ...(incident.alsoOn || [])]))];
-      const methods = [...new Set(group.map(shortName))].sort();
-      out.push('', `- **${testName(first.id.split('/').slice(2).join('/')).split('#')[0]}** on ` +
-        `${branches.join(', ')} — ${plural(methods.length, 'method')}, streak ${agedAs(first)}${seen(first)}`);
-      for (const method of methods) out.push(`    - \`${method}\``);
-      // A flicker in a group can still be `deep`, and then it has spent a slot — its evidence, its
-      // Develocity history and its analysis slot belong under it, exactly as they do everywhere
-      // else. Listing it as a method of a class to file and nothing more is how the budget gets
-      // spent on an incident the paste never shows.
-      for (const incident of group) if (incident.deep) out.push(...deepTail(incident));
-    }
-    out.push('', '_One issue per test class, listing every method and every branch it fails on: one' +
-      ' flaky suite is one issue, and an auto-filer that opens five is switched off in a week._');
-  }
-
-  // A test already covered by a group above is not also a candidate: the issue that group files
-  // lists this branch, so printing it again reads as two different flickers.
-  const filed = new Set(toFile.map(incident => incident.id.split('/').slice(2).join('/')));
-  const candidates = own(incident => incident.kind === 'flicker' && !incident.jira && !incident.flickerGroup &&
-    !filed.has(incident.id.split('/').slice(2).join('/')));
-  if (candidates.length) {
-    out.push('', '## Flickers not filed — listed, and why not');
-    for (const incident of candidates) {
-      // Two different reasons land here now: not yet proven, or proven and already answered. The
-      // second carries its own line through `deepTail`, so only the first needs saying.
-      out.push(`- ${incident.branch} \`${shortName(incident)}\` — ${agedAs(incident)}${seen(incident)}` +
-        `${elsewhere(incident)}${settled(incident) ? '' : ' — not yet proven: an issue is earned by '
-          + 'failing in two builds on two days'}`,
-        ...deepTail(incident));
-    }
-  }
-
-  const known = own(incident => incident.jira && !(incident.class === 1 && incident.kind === 'test-breakage'));
-  if (known.length) {
-    out.push('', '## Already tracked in JIRA — nobody pinged');
-    for (const incident of known) {
-      out.push(`- ${incident.branch} \`${shortName(incident)}\` → ${incident.jira} ` +
-        `(${incident.kind}, ${incident.state}, ${agedAs(incident)})${elsewhere(incident)}`,
-        ...deepTail(incident));
-    }
-  }
-
-  const infra = own(incident => incident.class === 3);
-  if (infra.length) {
-    out.push('', '## Infrastructure');
-    for (const incident of infra) {
-      out.push(`- ${incident.branch} — \`${incident.state}\`, ${agedAs(incident)}` +
-        `${incident.testCount ? `, ${plural(incident.testCount, 'test')} affected` : ''}`,
-        ...deepTail(incident));
-    }
-    out.push('', '_Infra incidents name no author: nobody in the window caused the agent, the registry or the' +
-      ' network to fail._');
-  }
-
-  const rest = own(incident => ![1, 2, 3].includes(incident.class) ||
-    (incident.class === 1 && !['test-breakage', 'flicker'].includes(incident.kind)));
-  if (rest.length) {
-    out.push('', '## Other');
-    for (const incident of rest) {
-      out.push(`- ${incident.branch} — ${incident.kind}, ${incident.state}, ${agedAs(incident)}` +
-        `${incident.buildUrl ? ` ([build](${incident.buildUrl}))` : ''}`);
-    }
-  }
-
-  const deep = of(incident => incident.deep);
+  const deep = incidents.filter(incident => incident.deep);
   const noOwner = deep.filter(incident => ['ambiguous', 'none', 'unknown'].includes(incident.blame?.tier));
-  const fixed = of(settled);
-  out.push('', '## Not written, and why', '',
-    `- **${noOwner.length} of the ${deep.length} deep-treated** have no attributable author` +
-    `${noOwner.length ? ' — listed here, nobody pinged:' : '.'}`);
-  for (const incident of noOwner) {
-    out.push(`    - ${incident.branch} \`${shortName(incident)}\` — ${incident.blame.tier}: ${incident.blame.reason}`);
-  }
-  if (fixed.length) {
-    out.push(`- **${fixed.length}** ${fixed.length === 1 ? 'is' : 'are'} answered already — no slot spent,` +
-      ' nobody pinged, since somebody or something has already settled it:');
-    for (const incident of fixed) {
-      out.push(`    - ${incident.branch} \`${shortName(incident)}\` → ${fixRef(incident.fixState)}` +
-        ` (${incident.fixState.author || 'unknown'}) — ` +
-        `${FIX_HEAD[incident.fixState.kind].whole.toLowerCase()}` +
-        `${incident.fixState.kind === 'fixed-elsewhere' ? ' — backport candidate, verify first' : ''}`);
-    }
-  }
-  const collapsed = of(incident => incident.primary === false);
-  if (collapsed.length) {
-    out.push(`- **${collapsed.length}** ${collapsed.length === 1 ? 'is' : 'are'} the same signature on` +
-      ' another branch — listed under the incident that carries the cause, and analysed and' +
-      ' commented there only.');
-  }
-  out.push(
-    `- **${summary.alreadyCommented}** already carry a comment in the same state — saying it twice is how a` +
-    ' routine becomes noise.',
-    `- **${summary.beyondHorizon}** older than ${report.horizonDays} days — counted, never written about.`,
-    `- **${Math.max(0, summary.incidents - deep.length - fixed.length - collapsed.length)}** below the deep ` +
-    `budget of ${report.budget} — reported without analysis, by design.`);
+  notes.push(`**Nobody was pinged for ${noOwner.length} of the ${deep.length} analysed** — no attributable` +
+    ` author. **${summary.alreadyCommented}** already carried a comment in the same state,` +
+    ` **${summary.beyondHorizon}** are older than the ${report.horizonDays}-day horizon, and` +
+    ` **${Math.max(0, summary.incidents - deep.length - incidents.filter(settled).length -
+      incidents.filter(incident => incident.primary === false).length)}** were below the deep budget` +
+    ` of ${report.budget} — reported without analysis, by design.`);
+  out.push('', '---', '', ...notes.map(note => `_${note}_`));
   return out.join('\n');
 }
 
