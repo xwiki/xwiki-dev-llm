@@ -307,8 +307,16 @@ For each one:
   run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
   cleared, which is why it outranks any flicker (§5). Hand the fixing itself to
   **`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
-  "fix" there silently breaks things — and keep the blame weak: a gate failure is rarely one
-  commit's fault, so it earns a report and a PR, never a comment naming somebody.
+  "fix" there silently breaks things.
+
+  **Say who caused it.** The Jenkins log cannot tell you, which is why `blame` is empty here, but
+  SonarCloud can: the gate names the conditions it failed, and each condition has the new-code
+  issues under it with their file, their line, their rule, the day Sonar first raised them and,
+  usually, the SCM author of the line. Read those — the `sonarqube` MCP, or
+  `/api/qualitygates/project_status` and `/api/issues/search?sinceLeakPeriod=true` — and put the
+  answer in the report: which condition failed, the handful of issues that fail it, and who
+  introduced each. `new_reliability_rating` on `master` on 2026-09-19 was three issues, two of them
+  one person's two-line change. A gate that has been red for a week is still somebody's commit.
 
   **On an old cycle-2 branch the gate itself is usually the bug.** A branch that only receives
   backported security fixes should not be failing a quality gate at all, and the fix is to stop that

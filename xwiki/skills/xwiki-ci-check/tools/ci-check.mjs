@@ -1813,13 +1813,15 @@ async function investigate(incident, job, args) {
   }
   // A quality gate fails on aggregate coverage and issue counts over the whole project, not on a
   // change — so file overlap has nothing to overlap and the five commits in the window are five
-  // people named under a failure none of them can be shown to have caused. The gate is fixed — it
-  // is the run's first fix (SKILL.md §5) — but through SonarCloud and `xwiki-fix-sonarqube-issue`,
-  // and under nobody's name: a PR, never a comment on somebody's commit.
+  // people named under a failure none of them can be shown to have caused. There *is* an author —
+  // SonarCloud carries the file, the line and the SCM author of every new-code issue under the
+  // failing condition — but it is found there and not here, which is what SKILL.md §3 sends the
+  // report to do.
   if (/sonar-gate:failed$/.test(incident.signature || '')) {
     incident.blame = {
       tier: 'none', suspects: [],
-      reason: 'a quality gate fails on aggregate metrics, not on one change — read the gate on SonarCloud'
+      reason: 'a quality gate fails on aggregate metrics, not on one change — the author of each '
+        + 'new-code issue under the failing condition is on SonarCloud (SKILL.md §3)'
     };
     return;
   }
