@@ -222,6 +222,18 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" --status   # who is holdi
 Two runs at a time by default (`--max N`, or `XWIKI_LLM_IT_SLOTS`). Exit code **75** means no slot
 came free within `--wait` (3600s default) — report which run holds it rather than launching anyway.
 
+**To run one test many times** — measuring a flicker's pass *rate* rather than seeing whether it
+passed once — use `scripts/xwiki-it-repeat.mjs` instead of looping by hand. It takes the slot for
+the whole session, keeps each failing repetition's report, screenshot and video, excludes the runs
+that died in `beforeAll` from the rate, and writes a `report.json` and a pasteable `summary.md`:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-repeat.mjs" --module <module-path> \
+  --test TestClass#testMethod --runs 20 --browser chrome --label before
+```
+
+The `xwiki-fix-flickering-docker-test` skill owns when and how to use it.
+
 **5. A failure in `beforeAll` is never evidence about your change.**
 `RuntimeException: Error setting up the XWiki testing environment` means no test method ran. Repair
 the machine and re-run; the symptom table in the OKF topic says which cause each line points at.

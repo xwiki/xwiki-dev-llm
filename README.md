@@ -123,6 +123,18 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
   instead of colliding; `--status` shows who holds what, the slot is released however the command
   ends, and one whose holder died is reclaimed. Not a hook: the `xwiki-build` skill tells Claude to
   use it, so it costs nothing in sessions that run no functional test.
+- **Docker IT repeat-run oracle** (`xwiki/scripts/xwiki-it-repeat.mjs`) — runs one functional test N
+  times on one configuration and reports the pass **rate**, because a flicker is a probability and
+  "it passed" is not evidence that a fix worked. It counts test executions rather than Maven runs,
+  keeps each failing repetition's Failsafe report, screenshot and video, excludes the runs that died
+  in `beforeAll` (a starved Docker daemon is a fact about the machine, not about the test), and
+  writes a `report.json` plus a `summary.md` table a pull request can quote; `--baseline` prints the
+  before/after comparison. By default it provisions the wiki once with `xwiki.test.ui.keepRunning`
+  and re-runs against it through the framework's `external` servlet engine, which is an order of
+  magnitude faster per repetition; `--mode fresh` pays a full build per repetition and works with
+  any servlet engine. The whole session takes one of the slots above. It needs no display — the
+  browser is a container in every configuration — so a scheduled routine runs it as CI would. The
+  `xwiki-fix-flickering-docker-test` skill owns when to use it.
 - **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — a `PostToolUse` hook on
   `Write`/`Edit` that checks every file written against the explicit `eol` declared by the repo's
   `.gitattributes` (via `git check-attr`). On a CRLF/LF mismatch it fails with a clear message so
