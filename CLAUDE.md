@@ -72,7 +72,7 @@ Inside `xwiki/`:
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
   by `xwiki-it-slot.mjs`). Never recompute those paths in another script, and never restate the
-  platform rules in a doc — README.md's `XWIKI_LLM_WORK` table row is the one human-readable copy,
+  platform rules in a doc — `docs/setup.md`'s `XWIKI_LLM_WORK` table row is the one human-readable copy,
   and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
   work directory". Run directly, the script prints that work root: that is how opencode gets it,
   having no `SessionStart` hook and reading `xwiki-org.md` verbatim.
@@ -121,7 +121,9 @@ Inside `xwiki/`:
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
   instead) — that text is the only thing Claude sees when deciding to invoke it.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the
-  install flow, the provided skills/MCP servers, and the required env vars for human readers.
+  install flow and holds one table row per skill and per always-on feature — a row, not a section:
+  the detail belongs in the skill's own `SKILL.md`, which is where both a developer and the model
+  read it. Credentials and environment variables live in `docs/setup.md`, not in README.md.
 - The XWiki-development facts (Maven profiles, JIRA keys, test frameworks, `@since` versioning) live
   in `instructions/xwiki-org.md` and the `skills/`, not here. Edit those files to change guidance
   given to developers in XWiki repos.
