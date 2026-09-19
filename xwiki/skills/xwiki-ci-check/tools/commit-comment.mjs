@@ -20,6 +20,12 @@
  * Usage:
  *   node commit-comment.mjs --repo xwiki-platform --sha <sha> --incident <id> --state systematic \
  *     --file body.md [--write]
+ *   node commit-comment.mjs --repo xwiki-platform --pr 5928 --incident <id> --state … --file body.md
+ *
+ * `--pr` posts the same comment, with the same marker and the same idempotency, on a pull request
+ * instead of a commit. It exists for the quality gate: the issues that fail it were introduced in a
+ * squashed PR, and that is where the change was reviewed and where its author and its reviewer are
+ * both already subscribed.
  *
  * Environment: GH_TOKEN_BOT — the bot account's token, and deliberately nothing else.
  */
@@ -61,8 +67,13 @@ async function github(path, init = {}) {
  * @returns {Promise<{posted: boolean, url: string|null, reason: string}>} `posted: false` with a
  *   reason is a normal outcome, not an error: staying silent is the point of the marker.
  */
-export async function comment(repo, sha, incident, state, body, { write = false } = {}) {
-  const existing = await github(`/repos/xwiki/${repo}/commits/${sha}/comments`);
+export async function comment(repo, sha, incident, state, body, { write = false, pr = null } = {}) {
+  // One target, two URLs. A PR's comments are issue comments; a commit's are its own — everything
+  // else about this function, the marker included, is identical, because "have we said this
+  // already" must not depend on where we said it.
+  const where = pr ? `/repos/xwiki/${repo}/issues/${pr}/comments` : `/repos/xwiki/${repo}/commits/${sha}/comments`;
+  const human = pr ? `https://github.com/xwiki/${repo}/pull/${pr}` : `https://github.com/xwiki/${repo}/commit/${sha}`;
+  const existing = await github(where);
   for (const previous of existing) {
     const found = (previous.body || '').match(MARKER_RE);
     if (found?.[1] !== incident) continue;
@@ -74,10 +85,10 @@ export async function comment(repo, sha, incident, state, body, { write = false 
   }
   const full = `${body.trimEnd()}\n\n${FOOTER}\n\n${marker(incident, state)}\n`;
   if (!write) {
-    console.log(`--- would comment on https://github.com/xwiki/${repo}/commit/${sha} ---\n${full}`);
+    console.log(`--- would comment on ${human} ---\n${full}`);
     return { posted: false, url: null, reason: 'rehearsal — pass --write to post' };
   }
-  const created = await github(`/repos/xwiki/${repo}/commits/${sha}/comments`, {
+  const created = await github(where, {
     method: 'POST',
     body: JSON.stringify({ body: full })
   });
@@ -92,6 +103,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repo') options.repo = argv[++i];
     else if (argv[i] === '--sha') options.sha = argv[++i];
+    else if (argv[i] === '--pr') options.pr = argv[++i];
     else if (argv[i] === '--incident') options.incident = argv[++i];
     else if (argv[i] === '--state') options.state = argv[++i];
     else if (argv[i] === '--file') options.file = argv[++i];
@@ -99,9 +111,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--dry-run') options.write = false;
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
-  for (const required of ['repo', 'sha', 'incident', 'state']) {
+  for (const required of ['repo', 'incident', 'state']) {
     if (!options[required]) { console.error(`--${required} is required`); process.exit(2); }
   }
+  if (!options.sha && !options.pr) { console.error('one of --sha or --pr is required'); process.exit(2); }
   if (!token && options.write) {
     console.error('GH_TOKEN_BOT is not set. This tool posts as the CI bot and will not fall back to a '
       + 'personal token — set the bot token, or drop --write.');

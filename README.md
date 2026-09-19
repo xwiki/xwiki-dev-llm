@@ -227,8 +227,10 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     the branch. A gate failure is also the one incident whose cause the Jenkins log does not hold,
     so the sweep reads it from SonarCloud — the failing condition, the newest new-code issues under
     it with their file, line, rule and the SCM author of the line, and the commit that last touched
-    each file — and the report names whose code is under the gate, which is deliberately a weaker
-    claim than blame and never turns into a comment on somebody's commit. On a morning when none of those is open, the run instead picks **one** proven,
+    each file — and the report names whose code is under the gate. Where **one** person put all of
+    it there, and only then, that becomes a comment asking them to clear it, on the pull request the
+    change came in through; where two people's changes are both under the failing condition, nobody
+    is pinged and the digest says so. On a morning when none of those is open, the run instead picks **one** proven,
     already-filed flicker and tries to fix it: measure the failure rate
     with the repeat-run oracle below, fix it inside the same never-touch-an-assertion rules, measure
     again, and open a single unassigned **draft** PR carrying both rates, or nothing at all when the

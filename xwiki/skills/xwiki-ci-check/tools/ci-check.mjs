@@ -486,7 +486,15 @@ async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) 
 
 /** Whether this incident was already commented on, and in what state. */
 async function priorComment(repo, sha, incidentId) {
-  const comments = await github(`/repos/xwiki/${repo}/commits/${sha}/comments`);
+  return markerIn(await github(`/repos/xwiki/${repo}/commits/${sha}/comments`), incidentId);
+}
+
+/** The same question about a pull request, which is where a gate comment goes when there is one. */
+async function priorPrComment(repo, number, incidentId) {
+  return markerIn(await github(`/repos/xwiki/${repo}/issues/${number}/comments`), incidentId);
+}
+
+function markerIn(comments, incidentId) {
   for (const comment of comments || []) {
     const marker = (comment.body || '').match(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/);
     if (marker && marker[1] === incidentId) {
@@ -2025,13 +2033,21 @@ function sonarBlock(incident) {
     out.push(`- \`${issue.file.split('/').pop()}:${issue.line ?? '?'}\` — ${issue.rule}` +
       `${issue.severity ? ` (${issue.severity})` : ''}, raised ${issue.raisedOn} — ${issue.message}` +
       `${issue.author ? `\n    author: ${issue.author}` : ''}` +
-      `${issue.commit ? `${issue.author ? ' ·' : '\n   '} last touched by \`${issue.commit.short}\`` +
-        ` (${issue.commit.author}, ${issue.commit.date}) — ${issue.commit.title}` : ''}`);
+      `${issue.commit ? `${issue.author ? ' ·' : '\n   '} introduced by \`${issue.commit.short}\`` +
+        ` (${issue.commit.author}, ${issue.commit.date}) — ${issue.commit.title}`
+        : `${issue.author ? ' ·' : '\n   '} no commit touched this file when it was raised — an existing` +
+          ' line, newly reported'}`);
   }
-  if (sonar.culprits?.length) {
+  if (sonar.unequivocal && sonar.target) {
+    out.push(`_One person put all of this here — ${sonar.target.kind === 'pr'
+      ? `comment on **PR #${sonar.target.number}** (${sonar.target.url})`
+      : `comment on **\`${sonar.target.short}\`** (${sonar.target.url})`}, per §4._`);
+  } else if (sonar.culprits?.length) {
     out.push(`_Whose code: ${sonar.culprits.map(entry => `**${entry.who}** (${plural(entry.issues, 'issue')}` +
-      `${entry.commits.length ? `, ${entry.commits.join(', ')}` : ''})`).join(', ')} — the author of the` +
-      ' code under the failing condition, which is not the same claim as having broken the build._');
+      `${entry.commits.length ? `, ${entry.commits.join(', ')}` : ''})`).join(', ')}._` +
+      `${sonar.equivocalBecause ? ` _Reported and not pinged: ${sonar.equivocalBecause}._` : ''}`);
+  } else if (sonar.equivocalBecause) {
+    out.push(`_Nobody is named: ${sonar.equivocalBecause}._`);
   }
   out.push(`_The gate: ${sonar.url}_`);
   if (sonar.issuesUnavailable) out.push(`_Could not list the issues: ${sonar.issuesUnavailable}._`);
@@ -2667,6 +2683,9 @@ for (const incident of deep) {
 // author of a line is not automatically the author of a failure. So it lands in `sonar.culprits`
 // and never in `blame` — it is named in the report, and nobody is pinged on the strength of it.
 const GATE_RE = /sonar-gate:failed$/;
+// How far back a commit may be and still be what raised an issue. The analysis runs nightly, so it
+// sees a change within a day of the push; anything older was analysed already and passed.
+const GATE_INTRO_DAYS = 2;
 const gateCache = new Map();
 let sonarOff = null;
 for (const incident of incidents) {
@@ -2684,22 +2703,27 @@ for (const incident of incidents) {
   const newest = facts.issues.slice(0, 4);
   for (const issue of newest) {
     if (!args.github || !issue.file || !issue.raisedOn) continue;
-    // The last commit to touch that file by the day Sonar first raised the issue. `until` is the
-    // end of that day: an analysis runs after the push it analyses, never before it.
+    // The commits that touched that file in the two days up to the analysis that raised the issue.
+    // `until` is the end of that day — an analysis runs after the push it analyses, never before —
+    // and the window is short on purpose: a nightly analysis sees a change within a day, so a file
+    // with *no* commit in it did not have this issue introduced by a commit at all. That is the
+    // new-rule-on-old-code case, and the honest answer there is that nobody caused it.
     const until = `${issue.raisedOn}T23:59:59Z`;
+    const since = new Date(`${issue.raisedOn}T00:00:00Z`);
+    since.setUTCDate(since.getUTCDate() - (GATE_INTRO_DAYS - 1));
     const path = `/repos/xwiki/${incident.repo}/commits?sha=${encodeURIComponent(incident.branch)}` +
-      `&path=${encodeURIComponent(issue.file)}&until=${until}&per_page=1`;
+      `&path=${encodeURIComponent(issue.file)}&since=${since.toISOString()}&until=${until}&per_page=10`;
     try {
-      const [commit] = (await github(path)) || [];
-      if (commit) {
-        issue.commit = {
-          short: commit.sha.slice(0, 10),
-          author: commit.author?.login || commit.commit?.author?.name || null,
-          title: (commit.commit?.message || '').split('\n')[0].slice(0, 100),
-          date: (commit.commit?.author?.date || '').slice(0, 10),
-          url: commit.html_url
-        };
-      }
+      const commits = (await github(path)) || [];
+      issue.commits = commits.filter(commit => (commit.parents || []).length < 2).map(commit => ({
+        sha: commit.sha,
+        short: commit.sha.slice(0, 10),
+        author: commit.author?.login || commit.commit?.author?.name || null,
+        title: (commit.commit?.message || '').split('\n')[0].slice(0, 100),
+        date: (commit.commit?.author?.date || '').slice(0, 10),
+        url: commit.html_url
+      }));
+      issue.commit = issue.commits[0];
     } catch {
       // A path lookup that fails costs the issue its commit and nothing else: the file, the line
       // and the Sonar author are already the answer to "who", and the sha was the convenience.
@@ -2729,6 +2753,66 @@ for (const incident of incidents) {
       .map(entry => ({ who: entry.who, issues: entry.issues,
         files: [...entry.files].slice(0, 3), commits: [...entry.commits].slice(0, 3) }))
   };
+  await gateCulprit(incident, newest, args);
+}
+
+/**
+ * When one person, and only one, put the code under the failing condition there, say it to them.
+ *
+ * Unequivocal means exactly that, and both routes have to agree: every commit that touched any of
+ * the gate-causing files in the two days before the analysis is by **one** author, and SonarCloud
+ * attributes the lines to at most one person. Two names anywhere — two people's changes both under
+ * the gate, or a line author who is not the committer — and the incident keeps its `none` blame and
+ * is reported to the room instead. That asymmetry is the same one the rest of this file lives by: a
+ * missing comment costs a morning, a comment in the wrong person's name costs the system.
+ *
+ * A file with no commit in the window is not a vote for silence and not a vote for anyone: the
+ * issue came from a new rule run over old code, and it takes no part in the decision.
+ *
+ * **The pull request first, then the commit.** These changes land squashed with their PR number in
+ * the subject, and the PR is where the change was reviewed, where its author and its reviewer both
+ * get the notification, and where a Sonar decoration would have been seen had it run in time. §4's
+ * "the commit, never the PR" is about a test breakage days later; a gate issue belongs to a review.
+ */
+async function gateCulprit(incident, issues, args) {
+  if (!args.github || !token || incident.beyondHorizon) return;
+  const commits = issues.flatMap(issue => issue.commits || []);
+  const authors = new Set(commits.map(commit => commit.author).filter(Boolean));
+  const lineAuthors = new Set(issues.map(issue => issue.author).filter(Boolean));
+  incident.sonar.unequivocal = authors.size === 1 && lineAuthors.size <= 1;
+  if (!incident.sonar.unequivocal) {
+    incident.sonar.equivocalBecause = authors.size === 0
+      ? 'no commit touched these files in the two days before the analysis — a rule applied to existing code'
+      : `${authors.size} people touched the files under the failing condition`
+        + `${lineAuthors.size > 1 ? `, and SonarCloud attributes the lines to ${lineAuthors.size} of them` : ''}`
+        + ' — nobody is pinged for a gate two people could have caused';
+    // The blame line and the gate block must not say different things about the same incident.
+    incident.blame = { tier: 'none', suspects: [], reason: incident.sonar.equivocalBecause };
+    return;
+  }
+  // The newest commit of the one author: the one that made the gate fail, where several of theirs
+  // touch the same file.
+  const [culprit] = [...commits].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let target = { kind: 'commit', sha: culprit.sha, short: culprit.short, url: culprit.url };
+  try {
+    const [pull] = (await github(`/repos/xwiki/${incident.repo}/commits/${culprit.sha}/pulls`)) || [];
+    if (pull) target = { kind: 'pr', number: pull.number, title: pull.title, url: pull.html_url, sha: culprit.sha, short: culprit.short };
+  } catch {
+    // No PR lookup, no PR: the commit is always a valid target and is what §4 would have used.
+  }
+  incident.sonar.target = target;
+  incident.blame = {
+    tier: 'likely',
+    reason: `the only person who touched the files under the failing condition in the two days `
+      + `before the analysis${[...lineAuthors].length ? `, and SonarCloud attributes the lines to `
+      + `${[...lineAuthors][0]}` : ''}`,
+    culprit: { ...culprit, files: issues.map(issue => issue.file) },
+    suspects: []
+  };
+  incident.notified = target.kind === 'pr'
+    ? await priorPrComment(incident.repo, target.number, incident.id)
+    : await priorComment(incident.repo, culprit.sha, incident.id);
+  incident.silent = !!incident.notified && incident.notified.state === incident.state;
 }
 
 // ---- Stabilisation: the one flicker this run may try to fix ------------------------------------

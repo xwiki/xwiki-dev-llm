@@ -318,11 +318,17 @@ For each one:
   is in the field, and do not go querying for more: the condition and how far off it is, the newest
   issues that fail it, and `sonar.culprits` — the people whose code is under it.
 
-  **That is a weaker claim than blame, and it stays weaker.** The author of a line is not
-  necessarily the author of a failure: the gate turns red when an analysis runs, an issue can be
-  raised by a new rule on old code, and the commit is only the last one to touch that file. So the
-  names go in the report and **nobody is commented on** for a gate (§4 skips a `none` blame anyway).
-  Naming a person who can clear a BLOCKER in a minute is the useful half; accusing them is not.
+  **One name or none.** `sonar.unequivocal` is true only when every commit that touched any of the
+  gate-causing files in the two days before the analysis is by the *same* author and SonarCloud
+  attributes the lines to at most one person; then `blame` is `likely`, and §4 comments — on
+  `sonar.target`, which is the pull request when the commit had one. Two names anywhere — two
+  people's changes both under the gate, or a line author who is not the committer — and
+  `sonar.equivocalBecause` says which, the blame stays `none`, and the room hears about it instead.
+  A file with **no** commit in that window took no part in the decision: the issue is a new rule run
+  over an existing line, and nobody caused it.
+
+  Wording is `likely`, never more, whatever the tool says: the gate went red when an analysis ran,
+  not when the commit landed, and an author of a line is not automatically the author of a failure.
 
   Absent `sonar` means the token was missing or SonarCloud refused —
   `summary.sonar.unavailable` says which, and then the gate is reported without its cause.
@@ -338,7 +344,11 @@ For each one:
 
 ## 4. Comment on the culprit — and match the wording to the tier
 
-The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA. Skip
+The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA — with
+one exception, the quality gate: there the issues were introduced in a squashed PR whose author and
+reviewer are both still subscribed to it, and that review is where the gate would have been caught,
+so `sonar.target` names the PR when the commit had one and the commit when it did not. Pass it with
+`--pr <number>` instead of `--sha` (same tool, same marker, same "already said" check). Skip
 entirely when `fixState` is set, when `primary` is `false` — the same cause is commented on the
 branch that carries it, and the comment names the others — when `silent` is true, when
 `beyondHorizon` is true, or when
