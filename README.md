@@ -221,12 +221,27 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     database it concentrates in with its p-value, the build scans and any screenshot Jenkins
     archived — so the report carries facts rather than inferences. The division of labour is that
     the tool establishes the facts and the skill decides and acts on them; with no Develocity
-    credential the sweep simply runs without them. Designed
+    credential the sweep simply runs without them. **What blocks a release comes first**: a build
+    break, a broken pom, a test failing in every build, or a failing SonarCloud quality gate — that
+    last one fixed through `xwiki-fix-sonarqube-issue`, since a red gate holds up every release on
+    the branch. A gate failure is also the one incident whose cause the Jenkins log does not hold,
+    so the sweep reads it from SonarCloud — the failing condition, the newest new-code issues under
+    it with their file, line, rule and the SCM author of the line, and the commit that last touched
+    each file — and the report names whose code is under the gate. Where **one** person put all of
+    it there, and only then, that becomes a comment asking them to clear it, on the pull request the
+    change came in through; where two people's changes are both under the failing condition, nobody
+    is pinged and the digest says so. On a morning when none of those is open, the run instead picks **one** proven,
+    already-filed flicker and tries to fix it: measure the failure rate
+    with the repeat-run oracle below, fix it inside the same never-touch-an-assertion rules, measure
+    again, and open a single unassigned **draft** PR carrying both rates, or nothing at all when the
+    second rate is no better. That ordering is the point of it — a flicker costs a re-run and blocks
+    nobody, so it is what the routine does when there is nothing more urgent, never instead of it.
+    Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —
     that default mode analyses to the terminal, never posts the Matrix digest, asks before each of
-    the four writes it may make (paste, commit comment, flicker issue, fix PR), and needs no bot
+    the five writes it may make (paste, commit comment, flicker issue, fix PR, stabilisation PR), and needs no bot
     credential to be useful.
     Read-only CI questions go to `xwiki-release-test-triage` instead. See
     `xwiki/skills/xwiki-ci-check/routine-prompt.md`.
@@ -258,7 +273,7 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
 | `XWIKI_LLM_HOME`        | opencode  | Absolute path to your `xwiki-dev-llm` checkout. **opencode only** (Claude Code and Kimi Code resolve paths themselves). |
 | `XWIKI_LLM_ORGS`        | Claude Code, Kimi Code | Extra GitHub orgs, comma- or whitespace-separated (e.g. `acme-corp,acme-labs`), whose repos should also get the org conventions injected. Optional — `xwiki` and `xwiki-contrib` always match. Not used by opencode, which has no remote scoping. |
 | `XWIKI_LLM_WORK`        | all hosts | Absolute path to the work directory for plans, handoffs, drafts and other cross-session state. Optional — defaults to `$XDG_STATE_HOME/xwiki-llm/work` on Linux/macOS, falling back to `~/.local/state/xwiki-llm/work` when `XDG_STATE_HOME` is unset (as it is by default on macOS); and to `%LOCALAPPDATA%\xwiki-llm\work` on Windows, falling back to `%USERPROFILE%\AppData\Local\xwiki-llm\work` when `LOCALAPPDATA` is unset. |
-| `SONARQUBE_TOKEN`       | sonarqube | Your personal SonarCloud token (same for all repos). |
+| `SONARQUBE_TOKEN`       | sonarqube, `xwiki-ci-check` | Your personal SonarCloud token (same for all repos). The CI check reads it directly too — a failing quality gate is the one CI incident whose cause is not in the Jenkins log, so the sweep asks SonarCloud which condition failed and which new-code issues are under it, and names their authors in the report. Without it the gate is still reported, without its cause. |
 | `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
 | `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
 | `XWIKI_DEV_TOOLS`       | `xwiki-ci-check` | Absolute path to a [`xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools) checkout (or directly to its `bash/dv-test-history`), whose Develocity analyser the CI check reads a failing test's history from. Optional — without it a checkout sitting next to your other XWiki repos is used, and failing that one is cloned into `$XDG_STATE_HOME/xwiki-llm/xwiki-dev-tools`. Needs `python3` (no packages to install) and the Develocity key above. |

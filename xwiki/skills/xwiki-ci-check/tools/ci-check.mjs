@@ -19,6 +19,7 @@ import {
 } from '../../../scripts/jenkins.mjs';
 import { JIRA, knownFlickers } from '../../../scripts/jira-flickers.mjs';
 import { develocityFacts } from './dv-test-history.mjs';
+import { gateFacts } from './sonar-gate.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -485,7 +486,15 @@ async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) 
 
 /** Whether this incident was already commented on, and in what state. */
 async function priorComment(repo, sha, incidentId) {
-  const comments = await github(`/repos/xwiki/${repo}/commits/${sha}/comments`);
+  return markerIn(await github(`/repos/xwiki/${repo}/commits/${sha}/comments`), incidentId);
+}
+
+/** The same question about a pull request, which is where a gate comment goes when there is one. */
+async function priorPrComment(repo, number, incidentId) {
+  return markerIn(await github(`/repos/xwiki/${repo}/issues/${number}/comments`), incidentId);
+}
+
+function markerIn(comments, incidentId) {
   for (const comment of comments || []) {
     const marker = (comment.body || '').match(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/);
     if (marker && marker[1] === incidentId) {
@@ -1679,14 +1688,17 @@ async function incidentsOf(target, args, flickerFor) {
       && (verdict === 'intermittent' || (verdict === 'single env' && flickerProven(row)));
     if (flickers) {
       const jira = flickerFor(id);
+      const failedBuilds = row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0);
+      const seenBuilds = row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0);
       incidents.push({
         ...base(target, 1, 'flicker', id),
         state: verdict,
         tests: [id],
         evidence: [row.detail || '(no error detail)'],
-        failedIn: `${row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0)}/` +
-          `${row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0)} builds, ` +
-          `${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
+        failedIn: `${failedBuilds}/${seenBuilds} builds, ${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
+        // The same ratio as a number, for the one decision that has to compare two flickers: which
+        // of them a repeat run can actually catch failing (the stabilisation pick below).
+        failRatio: seenBuilds ? failedBuilds / seenBuilds : 0,
         // *Which* environments, not only how many: "fails on the two MySQL rows and passes on the
         // PostgreSQL ones" is a diagnosis, while "2/4 envs" is a statistic — and the matrix is the
         // only place that distinction can be read.
@@ -1810,12 +1822,15 @@ async function investigate(incident, job, args) {
   }
   // A quality gate fails on aggregate coverage and issue counts over the whole project, not on a
   // change — so file overlap has nothing to overlap and the five commits in the window are five
-  // people named under a failure none of them can be shown to have caused. SKILL.md reports a gate
-  // failure and never fixes it; naming nobody is the honest end of that.
+  // people named under a failure none of them can be shown to have caused. There *is* an author —
+  // SonarCloud carries the file, the line and the SCM author of every new-code issue under the
+  // failing condition — but it is found there and not here, which is what SKILL.md §3 sends the
+  // report to do.
   if (/sonar-gate:failed$/.test(incident.signature || '')) {
     incident.blame = {
       tier: 'none', suspects: [],
-      reason: 'a quality gate fails on aggregate metrics, not on one change — read the gate on SonarCloud'
+      reason: 'a quality gate fails on aggregate metrics, not on one change — `sonar.culprits` '
+        + 'names the authors of the code under the failing condition instead'
     };
     return;
   }
@@ -1855,9 +1870,10 @@ function severity(incident) {
   if (!onMaintained) return 6;
   // Out of scope for v1: detected and reported honestly, but it gets no root-cause budget.
   if (incident.kind === 'timeout') return 5.5;
-  // Reported, never fixed (SKILL.md §3) and now attributed to nobody — so root-causing it buys
-  // nothing, and it must not hold a slot a breakage could use. It is still reported, in the paste
-  // and in the digest, like every incident below the line.
+  // Below a plain breakage in the *analysis* budget, and nothing to do with how urgent it is: what
+  // a gate failed on is in SonarCloud, not in the Jenkins log this budget pays to read, and the fix
+  // belongs to `xwiki-fix-sonarqube-issue`. It is still the run's first fix (SKILL.md §5) and a
+  // release blocker; it just must not hold a root-cause slot a breakage could use.
   if (/sonar-gate:failed$/.test(incident.signature || '')) return 2.75;
   if (incident.class === 2) return 1;
   // A test the team has triaged as a flicker that now fails *every* time is either a real
@@ -1992,9 +2008,51 @@ const chatBlock = incident => (said(incident).length
  * looking for.
  */
 const deepTail = incident => (incident.deep
-  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...blameBlock(incident),
-    ...chatBlock(incident), ...analysis(incident), '']
-  : [...fixLine(incident), ...chatLine(incident)]);
+  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...sonarBlock(incident),
+    ...blameBlock(incident), ...chatBlock(incident), ...analysis(incident), '']
+  : [...fixLine(incident), ...chatLine(incident), ...sonarBlock(incident)]);
+
+/**
+ * What the quality gate failed on, and whose code is under it.
+ *
+ * Printed wherever the incident is — deep or not — because for a gate failure this *is* the
+ * evidence: the stage log's one line says only that the gate failed, and everything a reader needs
+ * in order to act is here. The names are the authors of the code under the failing condition, which
+ * is a weaker claim than "broke the build" and is worded as one.
+ */
+function sonarBlock(incident) {
+  const sonar = incident.sonar;
+  if (!sonar) return [];
+  const out = ['', `**Quality gate — ${sonar.conditions.map(condition =>
+    `${condition.name} is ${condition.actual}, the gate wants ${condition.threshold}`).join('; ')}**` +
+    ` (new code: ${sonar.newCodePeriod}${sonar.newCodeSince ? `, since ${sonar.newCodeSince}` : ''}).`];
+  if (sonar.total > sonar.issues.length) {
+    out.push(`${sonar.total} issues fail it; the newest ${sonar.issues.length} are what turned it red:`);
+  }
+  for (const issue of sonar.issues) {
+    out.push(`- \`${issue.file.split('/').pop()}:${issue.line ?? '?'}\` — ${issue.rule}` +
+      `${issue.severity ? ` (${issue.severity})` : ''}, raised ${issue.raisedOn} — ${issue.message}` +
+      `${issue.author ? `\n    author: ${issue.author}` : ''}` +
+      `${issue.commit ? `${issue.author ? ' ·' : '\n   '} introduced by \`${issue.commit.short}\`` +
+        ` (${issue.commit.author}, ${issue.commit.date}) — ${issue.commit.title}`
+        : `${issue.author ? ' ·' : '\n   '} no commit touched this file when it was raised — an existing` +
+          ' line, newly reported'}`);
+  }
+  if (sonar.unequivocal && sonar.target) {
+    out.push(`_One person put all of this here — ${sonar.target.kind === 'pr'
+      ? `comment on **PR #${sonar.target.number}** (${sonar.target.url})`
+      : `comment on **\`${sonar.target.short}\`** (${sonar.target.url})`}, per §4._`);
+  } else if (sonar.culprits?.length) {
+    out.push(`_Whose code: ${sonar.culprits.map(entry => `**${entry.who}** (${plural(entry.issues, 'issue')}` +
+      `${entry.commits.length ? `, ${entry.commits.join(', ')}` : ''})`).join(', ')}._` +
+      `${sonar.equivocalBecause ? ` _Reported and not pinged: ${sonar.equivocalBecause}._` : ''}`);
+  } else if (sonar.equivocalBecause) {
+    out.push(`_Nobody is named: ${sonar.equivocalBecause}._`);
+  }
+  out.push(`_The gate: ${sonar.url}_`);
+  if (sonar.issuesUnavailable) out.push(`_Could not list the issues: ${sonar.issuesUnavailable}._`);
+  return out;
+}
 
 /**
  * What 28 days of executions say about this test, as against what tonight's job says.
@@ -2145,10 +2203,13 @@ function renderDetail(report, { live }) {
       out.push('', `### ${incident.branch} — ${incident.signature ? incident.signature.split('/').pop() : 'build break'}`,
         [`**${agedAs(incident)}**`, window, incident.stage ? `stage _${incident.stage}_` : null,
           incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · '),
-        ...alsoRed(incident), ...evidenceBlock(incident), ...blameBlock(incident));
+        // The gate block before the blame, because for a gate failure it *is* the evidence: the
+        // stage log has one line and SonarCloud has the condition, the issues and their authors.
+        ...alsoRed(incident), ...evidenceBlock(incident), ...sonarBlock(incident), ...blameBlock(incident));
       if (/sonar-gate:failed$/.test(incident.signature || '')) {
-        out.push('', '_Quality-gate failures are reported here and fixed nowhere: see `okf/sonarqube/` and' +
-          ' the `xwiki-fix-sonarqube-issue` skill._');
+        out.push('', '_A red gate blocks every release on this branch, so it is the run\'s first fix' +
+          ' (SKILL.md §5) — through `xwiki-fix-sonarqube-issue`, whose `okf/sonarqube/` rules say which' +
+          ' fixes are correct here and which only look mechanical._');
       }
       out.push(...analysis(incident));
     }
@@ -2173,6 +2234,32 @@ function renderDetail(report, { live }) {
       // what the analysis written into that marker has to start from, not a footnote under it.
       out.push(...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
         ...analysis(incident));
+    }
+  }
+
+  // What the run proposes to *fix*, or why it proposes nothing — and the second is worth its line
+  // every morning: a reader who does not see it wonders whether the pass ran at all, and "a build
+  // break is open, so no flake fix today" is the ordering being obeyed rather than a gap.
+  const stabilise = summary.stabilise;
+  if (stabilise && incidents.length) {
+    out.push('', '## Stabilisation — the one flicker this run may fix');
+    if (!stabilise.id) {
+      out.push('', `_None this run — ${stabilise.skipped}` +
+        `${stabilise.blockers?.length ? ` (${stabilise.blockers.join(', ')})` : ''}.` +
+        `${stabilise.blockers?.length ? ' The run\'s one fix goes there instead (SKILL.md §5).' : ''}_`);
+    } else {
+      const pick = incidents.find(incident => incident.id === stabilise.id);
+      out.push('', `- **${pick ? `${pick.branch} \`${shortName(pick)}\`` : stabilise.id}** → ` +
+        `${stabilise.jira}${pick ? `, ${agedAs(pick)}` : ''} — ${stabilise.failedIn}` +
+        `${stabilise.configuration ? `, concentrated on \`${stabilise.configuration}\`` : ''}` +
+        `${stabilise.others ? ` (${plural(stabilise.others, 'other candidate')} not picked)` : ''}`,
+        // Its evidence and its 28 days, here, because the candidate is usually *not* deep — a
+        // flicker the team has already filed is deliberately last in the analysis budget — and
+        // whoever fixes it reads the configuration breakdown before anything else. A candidate
+        // that did win a slot already carries both above, so it is not printed twice.
+        ...(pick && !pick.deep ? [...evidenceBlock(pick), ...develocityBlock(pick), ...chatBlock(pick)] : []));
+      out.push('', '_Measure the rate, fix it inside Tier C, measure again, and open **one draft PR**' +
+        ' carrying both rates — or nothing at all if the second rate is no better (SKILL.md §5)._');
     }
   }
 
@@ -2580,6 +2667,210 @@ for (const incident of deep) {
   }
   incident.develocity = facts;
 }
+
+// ---- The quality gate: what failed it, and whose code is under it -----------------------------
+//
+// A gate failure is the one incident whose cause is not in Jenkins at all. The stage log says
+// `QUALITY GATE STATUS: FAILED` and stops, so the blame pass has nothing to overlap and the window's
+// commits are a list of people none of whom can be shown to have caused anything — which is how
+// this came to be reported as authorless. It is not: SonarCloud holds the failing condition, the
+// new-code issues under it, and for each the file, the line, the rule, the day it was raised and
+// usually the SCM author of the line. This reads that, and then asks GitHub which commit last
+// touched that file on the day the issue appeared.
+//
+// **Whose code, not who broke the build**, and the distinction is kept all the way into the paste:
+// the gate turned red when an analysis ran, the code under it was written days earlier, and the
+// author of a line is not automatically the author of a failure. So it lands in `sonar.culprits`
+// and never in `blame` — it is named in the report, and nobody is pinged on the strength of it.
+const GATE_RE = /sonar-gate:failed$/;
+// How far back a commit may be and still be what raised an issue. The analysis runs nightly, so it
+// sees a change within a day of the push; anything older was analysed already and passed.
+const GATE_INTRO_DAYS = 2;
+const gateCache = new Map();
+let sonarOff = null;
+for (const incident of incidents) {
+  if (!GATE_RE.test(incident.signature || '') || incident.primary === false || sonarOff) continue;
+  const key = `${incident.repo}/${incident.branch}`;
+  if (!gateCache.has(key)) gateCache.set(key, await gateFacts(incident.repo, incident.branch));
+  const facts = await gateCache.get(key);
+  if (facts.unavailable) {
+    sonarOff = facts.unavailable;
+    process.stderr.write(`quality gate facts unavailable: ${facts.unavailable}\n`);
+    continue;
+  }
+  // The newest issues only. The gate went red for the newest one; the rest are the backlog that
+  // keeps it red, and naming twelve authors is naming nobody.
+  const newest = facts.issues.slice(0, 4);
+  for (const issue of newest) {
+    if (!args.github || !issue.file || !issue.raisedOn) continue;
+    // The commits that touched that file in the two days up to the analysis that raised the issue.
+    // `until` is the end of that day — an analysis runs after the push it analyses, never before —
+    // and the window is short on purpose: a nightly analysis sees a change within a day, so a file
+    // with *no* commit in it did not have this issue introduced by a commit at all. That is the
+    // new-rule-on-old-code case, and the honest answer there is that nobody caused it.
+    const until = `${issue.raisedOn}T23:59:59Z`;
+    const since = new Date(`${issue.raisedOn}T00:00:00Z`);
+    since.setUTCDate(since.getUTCDate() - (GATE_INTRO_DAYS - 1));
+    const path = `/repos/xwiki/${incident.repo}/commits?sha=${encodeURIComponent(incident.branch)}` +
+      `&path=${encodeURIComponent(issue.file)}&since=${since.toISOString()}&until=${until}&per_page=10`;
+    try {
+      const commits = (await github(path)) || [];
+      issue.commits = commits.filter(commit => (commit.parents || []).length < 2).map(commit => ({
+        sha: commit.sha,
+        short: commit.sha.slice(0, 10),
+        author: commit.author?.login || commit.commit?.author?.name || null,
+        title: (commit.commit?.message || '').split('\n')[0].slice(0, 100),
+        date: (commit.commit?.author?.date || '').slice(0, 10),
+        url: commit.html_url
+      }));
+      issue.commit = issue.commits[0];
+    } catch {
+      // A path lookup that fails costs the issue its commit and nothing else: the file, the line
+      // and the Sonar author are already the answer to "who", and the sha was the convenience.
+    }
+  }
+  // One name per person, with what each of them is on the hook for. `author` is Sonar's SCM email
+  // and `commit.author` is the GitHub account that last touched the file — the same person by two
+  // routes when they agree, and two candidates worth printing when they do not.
+  const by = new Map();
+  for (const issue of newest) {
+    // Sonar's author is the author of the *line*, which is the closer claim; the commit is only the
+    // last one to touch that file by the day the issue appeared, and on a file several people edit
+    // that is somebody else. So the commit fills in when there is no line author, and is printed
+    // beside the name rather than counted as a second one.
+    const who = issue.author || issue.commit?.author;
+    if (!who) continue;
+    const entry = by.get(who) || { who, issues: 0, files: new Set(), commits: new Set() };
+    entry.issues++;
+    entry.files.add(issue.file.split('/').pop());
+    if (issue.commit) entry.commits.add(issue.commit.short);
+    by.set(who, entry);
+  }
+  incident.sonar = {
+    ...facts,
+    issues: newest,
+    culprits: [...by.values()].sort((a, b) => b.issues - a.issues).slice(0, 4)
+      .map(entry => ({ who: entry.who, issues: entry.issues,
+        files: [...entry.files].slice(0, 3), commits: [...entry.commits].slice(0, 3) }))
+  };
+  await gateCulprit(incident, newest, args);
+}
+
+/**
+ * When one person, and only one, put the code under the failing condition there, say it to them.
+ *
+ * Unequivocal means exactly that, and both routes have to agree: every commit that touched any of
+ * the gate-causing files in the two days before the analysis is by **one** author, and SonarCloud
+ * attributes the lines to at most one person. Two names anywhere — two people's changes both under
+ * the gate, or a line author who is not the committer — and the incident keeps its `none` blame and
+ * is reported to the room instead. That asymmetry is the same one the rest of this file lives by: a
+ * missing comment costs a morning, a comment in the wrong person's name costs the system.
+ *
+ * A file with no commit in the window is not a vote for silence and not a vote for anyone: the
+ * issue came from a new rule run over old code, and it takes no part in the decision.
+ *
+ * **The pull request first, then the commit.** These changes land squashed with their PR number in
+ * the subject, and the PR is where the change was reviewed, where its author and its reviewer both
+ * get the notification, and where a Sonar decoration would have been seen had it run in time. §4's
+ * "the commit, never the PR" is about a test breakage days later; a gate issue belongs to a review.
+ */
+async function gateCulprit(incident, issues, args) {
+  if (!args.github || !token || incident.beyondHorizon) return;
+  const commits = issues.flatMap(issue => issue.commits || []);
+  const authors = new Set(commits.map(commit => commit.author).filter(Boolean));
+  const lineAuthors = new Set(issues.map(issue => issue.author).filter(Boolean));
+  incident.sonar.unequivocal = authors.size === 1 && lineAuthors.size <= 1;
+  if (!incident.sonar.unequivocal) {
+    incident.sonar.equivocalBecause = authors.size === 0
+      ? 'no commit touched these files in the two days before the analysis — a rule applied to existing code'
+      : `${authors.size} people touched the files under the failing condition`
+        + `${lineAuthors.size > 1 ? `, and SonarCloud attributes the lines to ${lineAuthors.size} of them` : ''}`
+        + ' — nobody is pinged for a gate two people could have caused';
+    // The blame line and the gate block must not say different things about the same incident.
+    incident.blame = { tier: 'none', suspects: [], reason: incident.sonar.equivocalBecause };
+    return;
+  }
+  // The newest commit of the one author: the one that made the gate fail, where several of theirs
+  // touch the same file.
+  const [culprit] = [...commits].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let target = { kind: 'commit', sha: culprit.sha, short: culprit.short, url: culprit.url };
+  try {
+    const [pull] = (await github(`/repos/xwiki/${incident.repo}/commits/${culprit.sha}/pulls`)) || [];
+    if (pull) target = { kind: 'pr', number: pull.number, title: pull.title, url: pull.html_url, sha: culprit.sha, short: culprit.short };
+  } catch {
+    // No PR lookup, no PR: the commit is always a valid target and is what §4 would have used.
+  }
+  incident.sonar.target = target;
+  incident.blame = {
+    tier: 'likely',
+    reason: `the only person who touched the files under the failing condition in the two days `
+      + `before the analysis${[...lineAuthors].length ? `, and SonarCloud attributes the lines to `
+      + `${[...lineAuthors][0]}` : ''}`,
+    culprit: { ...culprit, files: issues.map(issue => issue.file) },
+    suspects: []
+  };
+  incident.notified = target.kind === 'pr'
+    ? await priorPrComment(incident.repo, target.number, incident.id)
+    : await priorComment(incident.repo, culprit.sha, incident.id);
+  incident.silent = !!incident.notified && incident.notified.state === incident.state;
+}
+
+// ---- Stabilisation: the one flicker this run may try to fix ------------------------------------
+//
+// The routine's headline act is a *fix*, not a report — but not at any cost and not at any moment.
+// **What blocks a release comes first.** A compile break, a broken pom, a failing quality gate or a
+// test that now fails in every build is red for everyone and a re-run does not clear it; a flicker
+// costs whoever hit it a re-run and blocks nobody. So a run with any of the first open spends its
+// attention there and proposes no stabilisation at all, and the paste says which incidents held it
+// back. Ranking the other way round is how a routine comes to offer a flake fix on the morning
+// master does not compile.
+//
+// **A build break is first however old it is** — a quality gate red for a fortnight is a fortnight
+// of releases blocked, not furniture, and §5 sends the run's fix effort there. A *systematic test*
+// breakage is capped by the horizon instead: beyond it nothing may be written about the incident at
+// all, so it cannot be the thing the run works on instead.
+const blocksRelease = incident => incident.alerting && incident.primary !== false && !settled(incident)
+  && (incident.class === 2
+    || (incident.class === 1 && incident.state === 'systematic' && !incident.beyondHorizon));
+
+// What may be stabilised: a flicker the team has already triaged (`jira`), that has proven itself
+// (two builds, two days), that nothing already answers, and that is inside the horizon — the same
+// four brakes every other write here has. `systematic` is excluded twice over: it is a blocker
+// above, and §4 says a "flicker" failing every time is a regression or a stale triage, not a flake.
+const stabilisable = incident => incident.class === 1 && incident.kind === 'flicker' && incident.proven
+  && incident.jira && !incident.fixState && incident.alerting && !incident.beyondHorizon
+  && incident.primary !== false && incident.state !== 'systematic';
+
+const blockers = incidents.filter(blocksRelease);
+// Highest failure rate first: the oracle can only measure what it can catch failing, and a fix for
+// a test that fails 1 in 40 cannot be shown to work in an affordable number of repetitions.
+const stabiliseCandidates = incidents.filter(stabilisable)
+  .sort((a, b) => (b.failRatio || 0) - (a.failRatio || 0));
+let stabilise = { skipped: 'no proven, filed, unanswered flicker inside the horizon' };
+if (blockers.length) {
+  stabilise = {
+    skipped: `${plural(blockers.length, 'release-blocking incident')} open, and what blocks a `
+      + `release comes first — a flicker costs a re-run and blocks nobody`,
+    blockers: blockers.slice(0, 5).map(incident => incident.id)
+  };
+} else if (stabiliseCandidates.length) {
+  const [pick] = stabiliseCandidates;
+  pick.stabilise = true;
+  // The configuration the repeat run must use, and the before/after rate's own baseline, come from
+  // Develocity — so the candidate gets the history whether or not it won a deep slot. One extra
+  // invocation, once per run, and only on the mornings nothing more urgent is open.
+  if (!pick.develocity && !develocityOff && pick.tests?.length) {
+    const facts = develocityFacts(pick.tests[0], { match: pick.evidence?.[0] });
+    if (facts.unavailable) develocityOff = facts.unavailable;
+    else pick.develocity = facts;
+  }
+  stabilise = {
+    id: pick.id, jira: pick.jira.key, failedIn: pick.failedIn,
+    configuration: pick.develocity?.configs?.[0] || pick.envs?.[0] || null,
+    others: stabiliseCandidates.length - 1
+  };
+}
+
 for (const incident of incidents) {
   incident.deep ??= false;
   incident.blame ??= { tier: 'none', reason: 'below the per-run budget: reported, not investigated', suspects: [] };
@@ -2616,6 +2907,10 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
+    // deliberately low in the analysis budget — so it is flagged here and given the full shape
+    // below, because the skill has to read its history and its evidence to fix it.
+    stabilise: incident.stabilise || undefined,
     // Carried whether or not the incident is deep, because it is the reason it is *not*: an
     // incident that looks fixed is one line, and this is the line.
     fixState: incident.fixState || undefined,
@@ -2633,13 +2928,17 @@ function digest(incident, keys) {
     crossBranch: incident.crossBranch,
     primary: incident.primary,
     flickerGroup: incident.flickerGroup,
+    // For a gate failure this is the whole of the evidence, and it is the only place the report can
+    // learn who wrote the code under the failing condition — so it is carried whether or not the
+    // incident won a deep slot.
+    sonar: incident.sonar,
     // What a class-1 incident is, is its test, and the id already carries it. Anything else is
     // named by its signature and by nothing else, so below the deep line it would otherwise be
     // reported as an untitled heading with an age under it.
     signature: incident.class === 1 ? undefined : incident.signature,
     buildUrl: incident.class === 1 ? undefined : incident.buildUrl
   };
-  if (!incident.deep) return compact;
+  if (!incident.deep && !incident.stabilise) return compact;
   return {
     ...compact,
     signature: incident.signature,
@@ -2705,7 +3004,13 @@ const report = {
     develocity: develocityOff
       ? { unavailable: develocityOff }
       : { enriched: incidents.filter(incident => incident.develocity).length },
-    collapsed: incidents.filter(incident => incident.primary === false).length
+    collapsed: incidents.filter(incident => incident.primary === false).length,
+    // Only ever present when a gate was red: on a morning with no gate failure there is nothing to
+    // have been unable to read.
+    sonar: sonarOff ? { unavailable: sonarOff } : undefined,
+    // The one flicker this run may try to fix, or why it may not try — and the second is the more
+    // common morning, which is the point of printing it (SKILL.md §5).
+    stabilise
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };
@@ -2727,6 +3032,10 @@ if (!args.pretty) {
         `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}` +
       `${incident.primary === false ? ` (same cause as ${incident.alsoOn[0]} — collapsed)` : ''}` +
       `${incident.develocity ? ` [dv ${incident.develocity.failures}/${incident.develocity.runs} in ` +
-        `${incident.develocity.windowDays}d, since ${incident.develocity.firstSeen}]` : ''}`);
+        `${incident.develocity.windowDays}d, since ${incident.develocity.firstSeen}]` : ''}` +
+      `${incident.stabilise ? ' (stabilisation candidate)' : ''}`);
   }
+  console.log(summary.stabilise.id
+    ? `Stabilise: ${summary.stabilise.id} (${summary.stabilise.jira})`
+    : `Stabilise: none — ${summary.stabilise.skipped}`);
 }

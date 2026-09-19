@@ -1,6 +1,6 @@
 ---
 name: xwiki-ci-check
-description: "EXPLICIT INVOCATION ONLY — never load this skill to answer a question about CI. The daily acting sweep of ci.xwiki.org: it turns what is red on the maintained branches into incidents, attributes each to the commit that caused it, comments on that commit, opens PRs for mechanical fixes, files flicker issues that have proven themselves, and posts a digest to Matrix. It WRITES to GitHub, JIRA and Matrix, so it acts only with an explicit --write and is otherwise a local run that analyses to stdout and asks before each write. Run daily by a scheduled routine with --write; also usable at any time by a developer on their own machine, where it never touches Matrix or JIRA and offers the paste, the commit comment and the fix PR one at a time. Use ONLY when named — `/xwiki-ci-check`, \"run the CI check\", or a scheduled routine invoking it by name. Do NOT use it for \"what's the CI status?\", \"is master green?\", \"why is this test failing?\" or any other read-only CI question: those are xwiki-release-test-triage, which reports and asks and never acts. To fix one flicker use xwiki-fix-flickering-docker-test, to file an issue use xwiki-jira, to open a PR use xwiki-pull-request, for Maven commands use xwiki-build, for Sonar findings use xwiki-fix-sonarqube-issue."
+description: "EXPLICIT INVOCATION ONLY — never load this skill to answer a question about CI. The daily acting sweep of ci.xwiki.org: it turns what is red on the maintained branches into incidents, attributes each to the commit that caused it, comments on that commit, opens PRs for mechanical fixes — a failing quality gate or a build break first, since those block a release — files flicker issues that have proven themselves, proposes a draft fix for one proven flicker on a morning nothing blocks a release, and posts a digest to Matrix. It WRITES to GitHub, JIRA and Matrix, so it acts only with an explicit --write and is otherwise a local run that analyses to stdout and asks before each write. Run daily by a scheduled routine with --write; also usable at any time by a developer on their own machine, where it never touches Matrix or JIRA and offers the paste, the commit comment and the fix PR one at a time. Use ONLY when named — `/xwiki-ci-check`, \"run the CI check\", or a scheduled routine invoking it by name. Do NOT use it for \"what's the CI status?\", \"is master green?\", \"why is this test failing?\" or any other read-only CI question: those are xwiki-release-test-triage, which reports and asks and never acts. To fix one flicker use xwiki-fix-flickering-docker-test, to file an issue use xwiki-jira, to open a PR use xwiki-pull-request, for Maven commands use xwiki-build, for Sonar findings use xwiki-fix-sonarqube-issue."
 ---
 
 # The daily CI check
@@ -31,6 +31,7 @@ Two things run this skill, and they may write different things.
 | PrivateBin paste | **ask** | yes |
 | Commit comment (§4) | **ask** | yes |
 | Fix PR (§5) | **ask** | yes |
+| Flicker-stabilisation draft PR (§5) | **ask** — it holds the machine for ~an hour | yes, when nothing blocks a release |
 | JIRA flicker issue (§5) | **ask** | yes |
 | Matrix digest (§6) | **never** | yes, when something moved |
 
@@ -133,6 +134,8 @@ together.
 | `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
 | `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
 | `flickerGroup` | proven, unfiled flickers of one test class, on any branch, carry the same value: **one** issue per value (§5) |
+| `sonar` | on a quality-gate incident: the failing conditions with their actual and wanted values, the new-code period, the newest issues under them (file, line, rule, severity, the day it was raised, the SCM author, the commit that last touched that file) and `culprits`, the people whose code is under the failing condition |
+| `stabilise` | the **one** flicker this run may try to fix (§5), and it carries its evidence and its `develocity` history whether or not it won a deep slot. `summary.stabilise` holds it, or the reason there is none — most often that something release-blocking is open |
 
 **There is no ledger file.** A routine gets a fresh sandbox every morning, so a local state file
 would be empty every morning. Every field above is recomputed from a durable system — Jenkins for
@@ -301,16 +304,51 @@ For each one:
   so what broke is the pipeline itself — a quality gate, an archive step, an agent — and not a
   build. That is why the sweep does not do this lookup for you: on most class 2 incidents it would
   add an empty field.
-- **Sonar quality-gate failures (`sonar-gate:failed`): report, never fix.** Per-rule fix correctness
-  lives in `okf/sonarqube/` and belongs to `xwiki-fix-sonarqube-issue`; a gate failure is rarely one
-  commit's fault, so the blame would be weak anyway.
+- **Sonar quality-gate failures (`sonar-gate:failed`): the build is red for everyone, so this is the
+  run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
+  cleared, which is why it outranks any flicker (§5). Hand the fixing itself to
+  **`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
+  "fix" there silently breaks things.
+
+  **The report says who caused it, and the sweep has already found out.** The Jenkins log cannot —
+  it says `QUALITY GATE STATUS: FAILED` and stops, which is why `blame` is `none` here — but
+  SonarCloud holds the failing condition, the new-code issues under it, and for each one the file,
+  the line, the rule, the day it was raised and usually the SCM author of that line; the sweep reads
+  that into **`sonar`** and asks GitHub which commit last touched each file by that day. Report what
+  is in the field, and do not go querying for more: the condition and how far off it is, the newest
+  issues that fail it, and `sonar.culprits` — the people whose code is under it.
+
+  **One name or none.** `sonar.unequivocal` is true only when every commit that touched any of the
+  gate-causing files in the two days before the analysis is by the *same* author and SonarCloud
+  attributes the lines to at most one person; then `blame` is `likely`, and §4 comments — on
+  `sonar.target`, which is the pull request when the commit had one. Two names anywhere — two
+  people's changes both under the gate, or a line author who is not the committer — and
+  `sonar.equivocalBecause` says which, the blame stays `none`, and the room hears about it instead.
+  A file with **no** commit in that window took no part in the decision: the issue is a new rule run
+  over an existing line, and nobody caused it.
+
+  Wording is `likely`, never more, whatever the tool says: the gate went red when an analysis ran,
+  not when the commit landed, and an author of a line is not automatically the author of a failure.
+
+  Absent `sonar` means the token was missing or SonarCloud refused —
+  `summary.sonar.unavailable` says which, and then the gate is reported without its cause.
+
+  **On an old cycle-2 branch the gate itself is usually the bug.** A branch that only receives
+  backported security fixes should not be failing a quality gate at all, and the fix is to stop that
+  branch running (or failing) the gate rather than to chase its issues. That is a change to the
+  branch's CI configuration and a proposal to the team — say so in the paste and in the digest, and
+  do not make it here.
 - **`unclassified` is a legitimate verdict.** Report the error lines and say the cause is unknown.
   Do not invent one. So is `timeout` — a stage that ran out of time is out of scope for v1: report
   which stage, and stop there.
 
 ## 4. Comment on the culprit — and match the wording to the tier
 
-The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA. Skip
+The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA — with
+one exception, the quality gate: there the issues were introduced in a squashed PR whose author and
+reviewer are both still subscribed to it, and that review is where the gate would have been caught,
+so `sonar.target` names the PR when the commit had one and the commit when it did not. Pass it with
+`--pr <number>` instead of `--sha` (same tool, same marker, same "already said" check). Skip
 entirely when `fixState` is set, when `primary` is `false` — the same cause is commented on the
 branch that carries it, and the comment names the others — when `silent` is true, when
 `beyondHorizon` is true, or when
@@ -358,6 +396,13 @@ systematic breakage is news.
 
 ### Fix PRs — at most 2 per run
 
+**What blocks a release comes first, always.** A compile break, a broken pom, a failing Sonar
+quality gate, a test that now fails in *every* build: those make the build red for everyone and
+hold up the next release, so the run's fixing effort goes there before anywhere else — a quality
+gate through `xwiki-fix-sonarqube-issue` (§3), the rest through the tiers below. A flicker costs
+whoever hit it a re-run and blocks nobody, so stabilising one is what this skill does on a morning
+when none of that is open, never instead of it. `summary.stabilise.blockers` is that list.
+
 | Tier | What | PR |
 |---|---|---|
 | **A — mechanical** | License headers, a Checkstyle violation the error localises exactly (line > 120 chars, unused import, whitespace, missing newline), a trivially broken compile after a rename | ready for review |
@@ -398,6 +443,55 @@ asymmetry with the commit comment — which is the bot's, always, everywhere —
 comment lands unasked on someone else's commit and must never read as coming from a colleague,
 whereas a PR is proposed work someone has to own, and the developer who said yes to it is that
 someone. The body still says the fix was machine-generated and that the ITs were not run.
+
+### Flicker-stabilisation draft PRs — one per run, and only when nothing blocks a release
+
+**What blocks a release comes first, and this is where that ordering is enforced.** A compile break,
+a broken pom, a failing quality gate or a test that now fails in *every* build is red for everyone
+and no re-run clears it; a flicker costs whoever hit it a re-run and blocks nobody. So the sweep
+offers a stabilisation candidate **only on a morning with none of the first open** — `stabilise` on
+exactly one incident — and otherwise `summary.stabilise.skipped` names what held it back. The pick
+is the tool's, and it is not yours to override: never stabilise a flake while a break is open, and
+never promote a second candidate because the first looked hard.
+
+The candidate is a flicker that is `proven`, already **filed** (it has a `jira`), answered by
+nothing (`fixState` null), inside the horizon, and not `systematic` — and, among those, the one that
+fails most often, because a fix can only be *shown* to work on a test the oracle can catch failing.
+
+Then, and only for that one:
+
+1. **Measure before.** `xwiki-fix-flickering-docker-test` owns the whole procedure; its first step is
+   `xwiki/scripts/xwiki-it-repeat.mjs`, on the configuration `develocity` names in the work order —
+   the browser, database and servlet container the failure concentrates in, not the default. Take
+   those three and not the branch in that label: it is where the failure concentrates across all of
+   them, and the branch to reproduce on is the incident's own.
+2. **Fix it inside Tier C.** The table above is unchanged and is not negotiable here: no assertion,
+   no expected value, no timeout, no production logic. A flicker whose fix needs one of those is a
+   **comment on its JIRA issue** saying what was found, and no PR.
+3. **Measure after**, with `--label after --baseline <before>/report.json`.
+4. **Fail closed on the rate.** No improvement, or too few executions to tell, means **no PR** — the
+   two measurements go on the flicker issue instead. A draft PR whose evidence is "it passed the
+   times I ran it" is what makes every later one unreadable.
+
+The PR is **draft**, **unassigned** (a flicker usually has no culprit, and a wrong auto-assignment
+discredits the whole system), and its subject is the issue's key and its title verbatim, per
+`xwiki-pull-request`. Its body carries, and a reviewer should not have to ask for any of it:
+
+- the **two rates with their execution counts** — *"failed 5/60 before, 0/60 after"* — and what a
+  clean series does and does not prove: zero failures in n executions bounds the rate below ~3/n,
+  not at zero, which is why 20 repetitions are an argument and 5 are not;
+- the **Develocity breakdown** from `develocity` — the 28-day rate, the day the failure started, the
+  configuration it concentrates in with its p-value, and the build scan — quoted, never reworded;
+- the configuration the repetitions actually ran on, and plainly that **the ITs were not run in CI**:
+  Jenkins does not build PRs, this measured one test on one machine, and nothing ran the suite;
+- a link to the flicker issue, and one comment **on that issue** naming the PR — a draft PR assigned
+  to nobody is otherwise invisible to the person who owns the flicker.
+
+This PR does not consume the two mechanical fix-PR slots above: it is different work, at a different
+price, and both together are still at most three PRs from one run. On a laptop it is the one write
+to **ask about before starting** rather than after — twenty repetitions hold port 8080 and a slice of
+the Docker daemon for around half an hour — and, like every other PR from a local run, it is opened
+under the developer's own name.
 
 ### Flicker issues — file on evidence, not on sight
 
@@ -479,9 +573,18 @@ so this needs no state file and survives the sandbox being new every morning.
   outcome, not a missed run: say so in the terminal report, where it costs nobody anything. The
   paste and the commit comments are unaffected and still run — they cost the room nothing — and on a
   silent morning the paste URL lives in the run log alone.
+- **A stabilisation PR is news, and it makes the morning non-silent.** The one thing here a
+  dashboard could never print is a fix, so when §5 opened one it gets its own line — *"→ draft fix
+  for `ImageIT#editImage`: 5/60 → 0/60 on Chrome, XWIKI-24749"* — even on a morning where nothing
+  else moved and the digest would otherwise be withheld. Nothing else about that flicker is
+  repeated: it was already red yesterday, and the PR is the whole of the news.
 - List `new`, `changed` and `fixed`, one line each. **`fixed` is the line the dashboard can never
   show**: it says what went green, and it is the only place anyone learns that.
 - Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
+- **A quality-gate line names what failed it and whose code is under it** — *"sonar gate red on
+  master — reliability of new code is C: 1 blocker in `RepositoryManager.java`, 2 issues in
+  `comments.js` (lcharpentier)"*. Take the names from `sonar.culprits` and nothing else, and let the
+  line say *whose code*, never *who broke it*.
 - **Where a line has a Develocity fact, it carries it, in one clause.** *"6/347 over 28d, Chrome
   only"* or *"first failed 2026-08-25, not in tonight's window"* is the other half of the answer to
   "the dashboard is faster": the dashboard has tonight's red square, and no dashboard has the
@@ -564,7 +667,9 @@ are the mode working.
 
 - `xwiki-release-test-triage` — the read-only counterpart, and the right answer to every question
   about CI state. It reports and asks; this skill acts. Both share `scripts/jenkins.mjs`.
-- `xwiki-fix-flickering-docker-test` — to actually stabilise a flicker this skill only filed.
+- `xwiki-fix-flickering-docker-test` — how a flicker is actually stabilised, and the owner of the
+  repeat-run oracle (`xwiki/scripts/xwiki-it-repeat.mjs`) the draft PR of §5 gets its rates from.
+  This skill decides *which* flicker and *when*; that one does the work.
 - `xwiki-backport` — where a `fixed-elsewhere` commit goes; this skill notices it and never lands it.
 - `xwiki-build` (Maven, `xmvn`, the IT slot limiter), `xwiki-pull-request` (the PR),
   `xwiki-jira` (the issue), `xwiki-fix-sonarqube-issue` (a quality-gate failure).

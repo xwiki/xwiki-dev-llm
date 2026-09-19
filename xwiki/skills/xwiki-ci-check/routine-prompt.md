@@ -76,7 +76,8 @@ to a personal account.
 
 A developer can run `/xwiki-ci-check` on their own machine at any time — before a release, or when
 something looks wrong at 11am. That run is the skill's **default mode**: it sweeps and analyses,
-never posts to Matrix, and asks one question before each of the four writes it may make (the paste, a
-commit comment, a flicker issue, a fix PR). It needs no bot credential to be useful: the sweep, the
+never posts to Matrix, and asks one question before each of the five writes it may make (the paste, a
+commit comment, a flicker issue, a fix PR, a flicker-stabilisation draft PR — that last one *before*
+starting, since it holds the machine for around an hour). It needs no bot credential to be useful: the sweep, the
 analysis and the paste all work with nothing configured. Scope it when the question is
 narrow — `--repos xwiki-platform --branch master`.
