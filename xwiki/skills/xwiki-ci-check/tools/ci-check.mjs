@@ -19,6 +19,7 @@ import {
 } from '../../../scripts/jenkins.mjs';
 import { JIRA, knownFlickers } from '../../../scripts/jira-flickers.mjs';
 import { develocityFacts } from './dv-test-history.mjs';
+import { gateFacts } from './sonar-gate.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -1820,8 +1821,8 @@ async function investigate(incident, job, args) {
   if (/sonar-gate:failed$/.test(incident.signature || '')) {
     incident.blame = {
       tier: 'none', suspects: [],
-      reason: 'a quality gate fails on aggregate metrics, not on one change — the author of each '
-        + 'new-code issue under the failing condition is on SonarCloud (SKILL.md §3)'
+      reason: 'a quality gate fails on aggregate metrics, not on one change — `sonar.culprits` '
+        + 'names the authors of the code under the failing condition instead'
     };
     return;
   }
@@ -1999,9 +2000,43 @@ const chatBlock = incident => (said(incident).length
  * looking for.
  */
 const deepTail = incident => (incident.deep
-  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...blameBlock(incident),
-    ...chatBlock(incident), ...analysis(incident), '']
-  : [...fixLine(incident), ...chatLine(incident)]);
+  ? [...evidenceBlock(incident), ...develocityBlock(incident), ...sonarBlock(incident),
+    ...blameBlock(incident), ...chatBlock(incident), ...analysis(incident), '']
+  : [...fixLine(incident), ...chatLine(incident), ...sonarBlock(incident)]);
+
+/**
+ * What the quality gate failed on, and whose code is under it.
+ *
+ * Printed wherever the incident is — deep or not — because for a gate failure this *is* the
+ * evidence: the stage log's one line says only that the gate failed, and everything a reader needs
+ * in order to act is here. The names are the authors of the code under the failing condition, which
+ * is a weaker claim than "broke the build" and is worded as one.
+ */
+function sonarBlock(incident) {
+  const sonar = incident.sonar;
+  if (!sonar) return [];
+  const out = ['', `**Quality gate — ${sonar.conditions.map(condition =>
+    `${condition.name} is ${condition.actual}, the gate wants ${condition.threshold}`).join('; ')}**` +
+    ` (new code: ${sonar.newCodePeriod}${sonar.newCodeSince ? `, since ${sonar.newCodeSince}` : ''}).`];
+  if (sonar.total > sonar.issues.length) {
+    out.push(`${sonar.total} issues fail it; the newest ${sonar.issues.length} are what turned it red:`);
+  }
+  for (const issue of sonar.issues) {
+    out.push(`- \`${issue.file.split('/').pop()}:${issue.line ?? '?'}\` — ${issue.rule}` +
+      `${issue.severity ? ` (${issue.severity})` : ''}, raised ${issue.raisedOn} — ${issue.message}` +
+      `${issue.author ? `\n    author: ${issue.author}` : ''}` +
+      `${issue.commit ? `${issue.author ? ' ·' : '\n   '} last touched by \`${issue.commit.short}\`` +
+        ` (${issue.commit.author}, ${issue.commit.date}) — ${issue.commit.title}` : ''}`);
+  }
+  if (sonar.culprits?.length) {
+    out.push(`_Whose code: ${sonar.culprits.map(entry => `**${entry.who}** (${plural(entry.issues, 'issue')}` +
+      `${entry.commits.length ? `, ${entry.commits.join(', ')}` : ''})`).join(', ')} — the author of the` +
+      ' code under the failing condition, which is not the same claim as having broken the build._');
+  }
+  out.push(`_The gate: ${sonar.url}_`);
+  if (sonar.issuesUnavailable) out.push(`_Could not list the issues: ${sonar.issuesUnavailable}._`);
+  return out;
+}
 
 /**
  * What 28 days of executions say about this test, as against what tonight's job says.
@@ -2152,10 +2187,13 @@ function renderDetail(report, { live }) {
       out.push('', `### ${incident.branch} — ${incident.signature ? incident.signature.split('/').pop() : 'build break'}`,
         [`**${agedAs(incident)}**`, window, incident.stage ? `stage _${incident.stage}_` : null,
           incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · '),
-        ...alsoRed(incident), ...evidenceBlock(incident), ...blameBlock(incident));
+        // The gate block before the blame, because for a gate failure it *is* the evidence: the
+        // stage log has one line and SonarCloud has the condition, the issues and their authors.
+        ...alsoRed(incident), ...evidenceBlock(incident), ...sonarBlock(incident), ...blameBlock(incident));
       if (/sonar-gate:failed$/.test(incident.signature || '')) {
-        out.push('', '_Quality-gate failures are reported here and fixed nowhere: see `okf/sonarqube/` and' +
-          ' the `xwiki-fix-sonarqube-issue` skill._');
+        out.push('', '_A red gate blocks every release on this branch, so it is the run\'s first fix' +
+          ' (SKILL.md §5) — through `xwiki-fix-sonarqube-issue`, whose `okf/sonarqube/` rules say which' +
+          ' fixes are correct here and which only look mechanical._');
       }
       out.push(...analysis(incident));
     }
@@ -2614,6 +2652,85 @@ for (const incident of deep) {
   incident.develocity = facts;
 }
 
+// ---- The quality gate: what failed it, and whose code is under it -----------------------------
+//
+// A gate failure is the one incident whose cause is not in Jenkins at all. The stage log says
+// `QUALITY GATE STATUS: FAILED` and stops, so the blame pass has nothing to overlap and the window's
+// commits are a list of people none of whom can be shown to have caused anything — which is how
+// this came to be reported as authorless. It is not: SonarCloud holds the failing condition, the
+// new-code issues under it, and for each the file, the line, the rule, the day it was raised and
+// usually the SCM author of the line. This reads that, and then asks GitHub which commit last
+// touched that file on the day the issue appeared.
+//
+// **Whose code, not who broke the build**, and the distinction is kept all the way into the paste:
+// the gate turned red when an analysis ran, the code under it was written days earlier, and the
+// author of a line is not automatically the author of a failure. So it lands in `sonar.culprits`
+// and never in `blame` — it is named in the report, and nobody is pinged on the strength of it.
+const GATE_RE = /sonar-gate:failed$/;
+const gateCache = new Map();
+let sonarOff = null;
+for (const incident of incidents) {
+  if (!GATE_RE.test(incident.signature || '') || incident.primary === false || sonarOff) continue;
+  const key = `${incident.repo}/${incident.branch}`;
+  if (!gateCache.has(key)) gateCache.set(key, await gateFacts(incident.repo, incident.branch));
+  const facts = await gateCache.get(key);
+  if (facts.unavailable) {
+    sonarOff = facts.unavailable;
+    process.stderr.write(`quality gate facts unavailable: ${facts.unavailable}\n`);
+    continue;
+  }
+  // The newest issues only. The gate went red for the newest one; the rest are the backlog that
+  // keeps it red, and naming twelve authors is naming nobody.
+  const newest = facts.issues.slice(0, 4);
+  for (const issue of newest) {
+    if (!args.github || !issue.file || !issue.raisedOn) continue;
+    // The last commit to touch that file by the day Sonar first raised the issue. `until` is the
+    // end of that day: an analysis runs after the push it analyses, never before it.
+    const until = `${issue.raisedOn}T23:59:59Z`;
+    const path = `/repos/xwiki/${incident.repo}/commits?sha=${encodeURIComponent(incident.branch)}` +
+      `&path=${encodeURIComponent(issue.file)}&until=${until}&per_page=1`;
+    try {
+      const [commit] = (await github(path)) || [];
+      if (commit) {
+        issue.commit = {
+          short: commit.sha.slice(0, 10),
+          author: commit.author?.login || commit.commit?.author?.name || null,
+          title: (commit.commit?.message || '').split('\n')[0].slice(0, 100),
+          date: (commit.commit?.author?.date || '').slice(0, 10),
+          url: commit.html_url
+        };
+      }
+    } catch {
+      // A path lookup that fails costs the issue its commit and nothing else: the file, the line
+      // and the Sonar author are already the answer to "who", and the sha was the convenience.
+    }
+  }
+  // One name per person, with what each of them is on the hook for. `author` is Sonar's SCM email
+  // and `commit.author` is the GitHub account that last touched the file — the same person by two
+  // routes when they agree, and two candidates worth printing when they do not.
+  const by = new Map();
+  for (const issue of newest) {
+    // Sonar's author is the author of the *line*, which is the closer claim; the commit is only the
+    // last one to touch that file by the day the issue appeared, and on a file several people edit
+    // that is somebody else. So the commit fills in when there is no line author, and is printed
+    // beside the name rather than counted as a second one.
+    const who = issue.author || issue.commit?.author;
+    if (!who) continue;
+    const entry = by.get(who) || { who, issues: 0, files: new Set(), commits: new Set() };
+    entry.issues++;
+    entry.files.add(issue.file.split('/').pop());
+    if (issue.commit) entry.commits.add(issue.commit.short);
+    by.set(who, entry);
+  }
+  incident.sonar = {
+    ...facts,
+    issues: newest,
+    culprits: [...by.values()].sort((a, b) => b.issues - a.issues).slice(0, 4)
+      .map(entry => ({ who: entry.who, issues: entry.issues,
+        files: [...entry.files].slice(0, 3), commits: [...entry.commits].slice(0, 3) }))
+  };
+}
+
 // ---- Stabilisation: the one flicker this run may try to fix ------------------------------------
 //
 // The routine's headline act is a *fix*, not a report — but not at any cost and not at any moment.
@@ -2727,6 +2844,10 @@ function digest(incident, keys) {
     crossBranch: incident.crossBranch,
     primary: incident.primary,
     flickerGroup: incident.flickerGroup,
+    // For a gate failure this is the whole of the evidence, and it is the only place the report can
+    // learn who wrote the code under the failing condition — so it is carried whether or not the
+    // incident won a deep slot.
+    sonar: incident.sonar,
     // What a class-1 incident is, is its test, and the id already carries it. Anything else is
     // named by its signature and by nothing else, so below the deep line it would otherwise be
     // reported as an untitled heading with an age under it.
@@ -2800,6 +2921,9 @@ const report = {
       ? { unavailable: develocityOff }
       : { enriched: incidents.filter(incident => incident.develocity).length },
     collapsed: incidents.filter(incident => incident.primary === false).length,
+    // Only ever present when a gate was red: on a morning with no gate failure there is nothing to
+    // have been unable to read.
+    sonar: sonarOff ? { unavailable: sonarOff } : undefined,
     // The one flicker this run may try to fix, or why it may not try — and the second is the more
     // common morning, which is the point of printing it (SKILL.md §5).
     stabilise

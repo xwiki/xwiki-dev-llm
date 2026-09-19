@@ -134,6 +134,7 @@ together.
 | `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
 | `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
 | `flickerGroup` | proven, unfiled flickers of one test class, on any branch, carry the same value: **one** issue per value (§5) |
+| `sonar` | on a quality-gate incident: the failing conditions with their actual and wanted values, the new-code period, the newest issues under them (file, line, rule, severity, the day it was raised, the SCM author, the commit that last touched that file) and `culprits`, the people whose code is under the failing condition |
 | `stabilise` | the **one** flicker this run may try to fix (§5), and it carries its evidence and its `develocity` history whether or not it won a deep slot. `summary.stabilise` holds it, or the reason there is none — most often that something release-blocking is open |
 
 **There is no ledger file.** A routine gets a fresh sandbox every morning, so a local state file
@@ -309,14 +310,22 @@ For each one:
   **`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
   "fix" there silently breaks things.
 
-  **Say who caused it.** The Jenkins log cannot tell you, which is why `blame` is empty here, but
-  SonarCloud can: the gate names the conditions it failed, and each condition has the new-code
-  issues under it with their file, their line, their rule, the day Sonar first raised them and,
-  usually, the SCM author of the line. Read those — the `sonarqube` MCP, or
-  `/api/qualitygates/project_status` and `/api/issues/search?sinceLeakPeriod=true` — and put the
-  answer in the report: which condition failed, the handful of issues that fail it, and who
-  introduced each. `new_reliability_rating` on `master` on 2026-09-19 was three issues, two of them
-  one person's two-line change. A gate that has been red for a week is still somebody's commit.
+  **The report says who caused it, and the sweep has already found out.** The Jenkins log cannot —
+  it says `QUALITY GATE STATUS: FAILED` and stops, which is why `blame` is `none` here — but
+  SonarCloud holds the failing condition, the new-code issues under it, and for each one the file,
+  the line, the rule, the day it was raised and usually the SCM author of that line; the sweep reads
+  that into **`sonar`** and asks GitHub which commit last touched each file by that day. Report what
+  is in the field, and do not go querying for more: the condition and how far off it is, the newest
+  issues that fail it, and `sonar.culprits` — the people whose code is under it.
+
+  **That is a weaker claim than blame, and it stays weaker.** The author of a line is not
+  necessarily the author of a failure: the gate turns red when an analysis runs, an issue can be
+  raised by a new rule on old code, and the commit is only the last one to touch that file. So the
+  names go in the report and **nobody is commented on** for a gate (§4 skips a `none` blame anyway).
+  Naming a person who can clear a BLOCKER in a minute is the useful half; accusing them is not.
+
+  Absent `sonar` means the token was missing or SonarCloud refused —
+  `summary.sonar.unavailable` says which, and then the gate is reported without its cause.
 
   **On an old cycle-2 branch the gate itself is usually the bug.** A branch that only receives
   backported security fixes should not be failing a quality gate at all, and the fix is to stop that
@@ -562,6 +571,10 @@ so this needs no state file and survives the sandbox being new every morning.
 - List `new`, `changed` and `fixed`, one line each. **`fixed` is the line the dashboard can never
   show**: it says what went green, and it is the only place anyone learns that.
 - Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
+- **A quality-gate line names what failed it and whose code is under it** — *"sonar gate red on
+  master — reliability of new code is C: 1 blocker in `RepositoryManager.java`, 2 issues in
+  `comments.js` (lcharpentier)"*. Take the names from `sonar.culprits` and nothing else, and let the
+  line say *whose code*, never *who broke it*.
 - **Where a line has a Develocity fact, it carries it, in one clause.** *"6/347 over 28d, Chrome
   only"* or *"first failed 2026-08-25, not in tonight's window"* is the other half of the answer to
   "the dashboard is faster": the dashboard has tonight's red square, and no dashboard has the
