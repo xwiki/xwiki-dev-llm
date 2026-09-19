@@ -221,12 +221,21 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
     database it concentrates in with its p-value, the build scans and any screenshot Jenkins
     archived — so the report carries facts rather than inferences. The division of labour is that
     the tool establishes the facts and the skill decides and acts on them; with no Develocity
-    credential the sweep simply runs without them. Designed
+    credential the sweep simply runs without them. **What blocks a release comes first**: a build
+    break, a broken pom, a test failing in every build, or a failing SonarCloud quality gate — that
+    last one fixed through `xwiki-fix-sonarqube-issue`, since a red gate holds up every release on
+    the branch. On a morning when none of those is open, the run instead picks **one** proven,
+    already-filed flicker and tries to fix it: measure the failure rate
+    with the repeat-run oracle below, fix it inside the same never-touch-an-assertion rules, measure
+    again, and open a single unassigned **draft** PR carrying both rates, or nothing at all when the
+    second rate is no better. That ordering is the point of it — a flicker costs a re-run and blocks
+    nobody, so it is what the routine does when there is nothing more urgent, never instead of it.
+    Designed
     to be run by a scheduled routine before the working day; **writes are off unless the invocation
     says `--write`**, nothing is written about an incident older than a 7-day blame horizon, and it
     acts under a dedicated bot identity, never a developer's. It is also usable by hand at any time —
     that default mode analyses to the terminal, never posts the Matrix digest, asks before each of
-    the four writes it may make (paste, commit comment, flicker issue, fix PR), and needs no bot
+    the five writes it may make (paste, commit comment, flicker issue, fix PR, stabilisation PR), and needs no bot
     credential to be useful.
     Read-only CI questions go to `xwiki-release-test-triage` instead. See
     `xwiki/skills/xwiki-ci-check/routine-prompt.md`.

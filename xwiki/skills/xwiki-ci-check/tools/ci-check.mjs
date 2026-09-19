@@ -1679,14 +1679,17 @@ async function incidentsOf(target, args, flickerFor) {
       && (verdict === 'intermittent' || (verdict === 'single env' && flickerProven(row)));
     if (flickers) {
       const jira = flickerFor(id);
+      const failedBuilds = row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0);
+      const seenBuilds = row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0);
       incidents.push({
         ...base(target, 1, 'flicker', id),
         state: verdict,
         tests: [id],
         evidence: [row.detail || '(no error detail)'],
-        failedIn: `${row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0)}/` +
-          `${row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0)} builds, ` +
-          `${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
+        failedIn: `${failedBuilds}/${seenBuilds} builds, ${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
+        // The same ratio as a number, for the one decision that has to compare two flickers: which
+        // of them a repeat run can actually catch failing (the stabilisation pick below).
+        failRatio: seenBuilds ? failedBuilds / seenBuilds : 0,
         // *Which* environments, not only how many: "fails on the two MySQL rows and passes on the
         // PostgreSQL ones" is a diagnosis, while "2/4 envs" is a statistic — and the matrix is the
         // only place that distinction can be read.
@@ -1810,8 +1813,9 @@ async function investigate(incident, job, args) {
   }
   // A quality gate fails on aggregate coverage and issue counts over the whole project, not on a
   // change — so file overlap has nothing to overlap and the five commits in the window are five
-  // people named under a failure none of them can be shown to have caused. SKILL.md reports a gate
-  // failure and never fixes it; naming nobody is the honest end of that.
+  // people named under a failure none of them can be shown to have caused. The gate is fixed — it
+  // is the run's first fix (SKILL.md §5) — but through SonarCloud and `xwiki-fix-sonarqube-issue`,
+  // and under nobody's name: a PR, never a comment on somebody's commit.
   if (/sonar-gate:failed$/.test(incident.signature || '')) {
     incident.blame = {
       tier: 'none', suspects: [],
@@ -1855,9 +1859,10 @@ function severity(incident) {
   if (!onMaintained) return 6;
   // Out of scope for v1: detected and reported honestly, but it gets no root-cause budget.
   if (incident.kind === 'timeout') return 5.5;
-  // Reported, never fixed (SKILL.md §3) and now attributed to nobody — so root-causing it buys
-  // nothing, and it must not hold a slot a breakage could use. It is still reported, in the paste
-  // and in the digest, like every incident below the line.
+  // Below a plain breakage in the *analysis* budget, and nothing to do with how urgent it is: what
+  // a gate failed on is in SonarCloud, not in the Jenkins log this budget pays to read, and the fix
+  // belongs to `xwiki-fix-sonarqube-issue`. It is still the run's first fix (SKILL.md §5) and a
+  // release blocker; it just must not hold a root-cause slot a breakage could use.
   if (/sonar-gate:failed$/.test(incident.signature || '')) return 2.75;
   if (incident.class === 2) return 1;
   // A test the team has triaged as a flicker that now fails *every* time is either a real
@@ -2173,6 +2178,32 @@ function renderDetail(report, { live }) {
       // what the analysis written into that marker has to start from, not a footnote under it.
       out.push(...evidenceBlock(incident), ...blameBlock(incident), ...chatBlock(incident),
         ...analysis(incident));
+    }
+  }
+
+  // What the run proposes to *fix*, or why it proposes nothing — and the second is worth its line
+  // every morning: a reader who does not see it wonders whether the pass ran at all, and "a build
+  // break is open, so no flake fix today" is the ordering being obeyed rather than a gap.
+  const stabilise = summary.stabilise;
+  if (stabilise && incidents.length) {
+    out.push('', '## Stabilisation — the one flicker this run may fix');
+    if (!stabilise.id) {
+      out.push('', `_None this run — ${stabilise.skipped}` +
+        `${stabilise.blockers?.length ? ` (${stabilise.blockers.join(', ')})` : ''}.` +
+        `${stabilise.blockers?.length ? ' The run\'s one fix goes there instead (SKILL.md §5).' : ''}_`);
+    } else {
+      const pick = incidents.find(incident => incident.id === stabilise.id);
+      out.push('', `- **${pick ? `${pick.branch} \`${shortName(pick)}\`` : stabilise.id}** → ` +
+        `${stabilise.jira}${pick ? `, ${agedAs(pick)}` : ''} — ${stabilise.failedIn}` +
+        `${stabilise.configuration ? `, concentrated on \`${stabilise.configuration}\`` : ''}` +
+        `${stabilise.others ? ` (${plural(stabilise.others, 'other candidate')} not picked)` : ''}`,
+        // Its evidence and its 28 days, here, because the candidate is usually *not* deep — a
+        // flicker the team has already filed is deliberately last in the analysis budget — and
+        // whoever fixes it reads the configuration breakdown before anything else. A candidate
+        // that did win a slot already carries both above, so it is not printed twice.
+        ...(pick && !pick.deep ? [...evidenceBlock(pick), ...develocityBlock(pick), ...chatBlock(pick)] : []));
+      out.push('', '_Measure the rate, fix it inside Tier C, measure again, and open **one draft PR**' +
+        ' carrying both rates — or nothing at all if the second rate is no better (SKILL.md §5)._');
     }
   }
 
@@ -2580,6 +2611,63 @@ for (const incident of deep) {
   }
   incident.develocity = facts;
 }
+
+// ---- Stabilisation: the one flicker this run may try to fix ------------------------------------
+//
+// The routine's headline act is a *fix*, not a report — but not at any cost and not at any moment.
+// **What blocks a release comes first.** A compile break, a broken pom, a failing quality gate or a
+// test that now fails in every build is red for everyone and a re-run does not clear it; a flicker
+// costs whoever hit it a re-run and blocks nobody. So a run with any of the first open spends its
+// attention there and proposes no stabilisation at all, and the paste says which incidents held it
+// back. Ranking the other way round is how a routine comes to offer a flake fix on the morning
+// master does not compile.
+//
+// **A build break is first however old it is** — a quality gate red for a fortnight is a fortnight
+// of releases blocked, not furniture, and §5 sends the run's fix effort there. A *systematic test*
+// breakage is capped by the horizon instead: beyond it nothing may be written about the incident at
+// all, so it cannot be the thing the run works on instead.
+const blocksRelease = incident => incident.alerting && incident.primary !== false && !settled(incident)
+  && (incident.class === 2
+    || (incident.class === 1 && incident.state === 'systematic' && !incident.beyondHorizon));
+
+// What may be stabilised: a flicker the team has already triaged (`jira`), that has proven itself
+// (two builds, two days), that nothing already answers, and that is inside the horizon — the same
+// four brakes every other write here has. `systematic` is excluded twice over: it is a blocker
+// above, and §4 says a "flicker" failing every time is a regression or a stale triage, not a flake.
+const stabilisable = incident => incident.class === 1 && incident.kind === 'flicker' && incident.proven
+  && incident.jira && !incident.fixState && incident.alerting && !incident.beyondHorizon
+  && incident.primary !== false && incident.state !== 'systematic';
+
+const blockers = incidents.filter(blocksRelease);
+// Highest failure rate first: the oracle can only measure what it can catch failing, and a fix for
+// a test that fails 1 in 40 cannot be shown to work in an affordable number of repetitions.
+const stabiliseCandidates = incidents.filter(stabilisable)
+  .sort((a, b) => (b.failRatio || 0) - (a.failRatio || 0));
+let stabilise = { skipped: 'no proven, filed, unanswered flicker inside the horizon' };
+if (blockers.length) {
+  stabilise = {
+    skipped: `${plural(blockers.length, 'release-blocking incident')} open, and what blocks a `
+      + `release comes first — a flicker costs a re-run and blocks nobody`,
+    blockers: blockers.slice(0, 5).map(incident => incident.id)
+  };
+} else if (stabiliseCandidates.length) {
+  const [pick] = stabiliseCandidates;
+  pick.stabilise = true;
+  // The configuration the repeat run must use, and the before/after rate's own baseline, come from
+  // Develocity — so the candidate gets the history whether or not it won a deep slot. One extra
+  // invocation, once per run, and only on the mornings nothing more urgent is open.
+  if (!pick.develocity && !develocityOff && pick.tests?.length) {
+    const facts = develocityFacts(pick.tests[0], { match: pick.evidence?.[0] });
+    if (facts.unavailable) develocityOff = facts.unavailable;
+    else pick.develocity = facts;
+  }
+  stabilise = {
+    id: pick.id, jira: pick.jira.key, failedIn: pick.failedIn,
+    configuration: pick.develocity?.configs?.[0] || pick.envs?.[0] || null,
+    others: stabiliseCandidates.length - 1
+  };
+}
+
 for (const incident of incidents) {
   incident.deep ??= false;
   incident.blame ??= { tier: 'none', reason: 'below the per-run budget: reported, not investigated', suspects: [] };
@@ -2616,6 +2704,10 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
+    // deliberately low in the analysis budget — so it is flagged here and given the full shape
+    // below, because the skill has to read its history and its evidence to fix it.
+    stabilise: incident.stabilise || undefined,
     // Carried whether or not the incident is deep, because it is the reason it is *not*: an
     // incident that looks fixed is one line, and this is the line.
     fixState: incident.fixState || undefined,
@@ -2639,7 +2731,7 @@ function digest(incident, keys) {
     signature: incident.class === 1 ? undefined : incident.signature,
     buildUrl: incident.class === 1 ? undefined : incident.buildUrl
   };
-  if (!incident.deep) return compact;
+  if (!incident.deep && !incident.stabilise) return compact;
   return {
     ...compact,
     signature: incident.signature,
@@ -2705,7 +2797,10 @@ const report = {
     develocity: develocityOff
       ? { unavailable: develocityOff }
       : { enriched: incidents.filter(incident => incident.develocity).length },
-    collapsed: incidents.filter(incident => incident.primary === false).length
+    collapsed: incidents.filter(incident => incident.primary === false).length,
+    // The one flicker this run may try to fix, or why it may not try — and the second is the more
+    // common morning, which is the point of printing it (SKILL.md §5).
+    stabilise
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };
@@ -2727,6 +2822,10 @@ if (!args.pretty) {
         `${fixName(incident.fixState)}, ${incident.fixState.where})` : ''}` +
       `${incident.primary === false ? ` (same cause as ${incident.alsoOn[0]} — collapsed)` : ''}` +
       `${incident.develocity ? ` [dv ${incident.develocity.failures}/${incident.develocity.runs} in ` +
-        `${incident.develocity.windowDays}d, since ${incident.develocity.firstSeen}]` : ''}`);
+        `${incident.develocity.windowDays}d, since ${incident.develocity.firstSeen}]` : ''}` +
+      `${incident.stabilise ? ' (stabilisation candidate)' : ''}`);
   }
+  console.log(summary.stabilise.id
+    ? `Stabilise: ${summary.stabilise.id} (${summary.stabilise.jira})`
+    : `Stabilise: none — ${summary.stabilise.skipped}`);
 }
