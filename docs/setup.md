@@ -18,6 +18,7 @@ git-ignored `.envrc`.
 | `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
 | `XWIKI_DEV_TOOLS`       | `xwiki-ci-check` | Absolute path to a [`xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools) checkout (or directly to its `bash/dv-test-history`), whose Develocity analyser the CI check reads a failing test's history from. Optional — without it a checkout sitting next to your other XWiki repos is used, and failing that one is cloned into `$XDG_STATE_HOME/xwiki-llm/xwiki-dev-tools`. Needs `python3` (no packages to install) and the Develocity key above. |
 | `JIRA_API_TOKEN`        | `xwiki-jira` (jira-cli / REST) | Your jira.xwiki.org personal access token. Optional — only needed to act on JIRA issues. See "JIRA access" below. |
+| `OPENPROJECT_API_TOKEN` | `xwiki-openproject` | An op.xwiki.org API token (**My account → Access tokens**). Optional — without it every OpenProject call returns `401`. |
 | `JIRA_AUTH_TYPE`        | jira-cli  | Set to `bearer` (PAT auth) for the self-hosted XWiki JIRA.       |
 | `DISCOURSE_API_KEY`     | discourse | A forum.xwiki.org **admin** API key. Optional — without it the forum MCP is read-only. See "Forum write access" below. |
 | `DISCOURSE_API_USERNAME`| discourse | The forum username the admin API key acts as (e.g. your own). Required together with `DISCOURSE_API_KEY`. |

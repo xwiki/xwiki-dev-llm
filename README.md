@@ -107,64 +107,66 @@ observation-only under Kimi Code, and available to opencode as plugins.
 ### When you ask — skills
 
 ⚠ = **explicit invocation only**: named or nothing, because it is expensive or it writes.
+**Needs** is what must be set for the skill to do its job — [how to set it](docs/setup.md); a `—`
+means it needs nothing.
 
 **Build & test**
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-build`](xwiki/skills/xwiki-build/) | Maven commands: the right JDK, profiles, single module, single test | "run `EditIT` in `xwiki-platform-flamingo-skin-test`" |
-| [`xwiki-test-guidelines`](xwiki/skills/xwiki-test-guidelines/) | The rules and frameworks for writing a test — loads itself before any test change, down to one `@Test` | "add a test for this" |
-| [`xwiki-convert-tests`](xwiki/skills/xwiki-convert-tests/) | Convert unit tests to JUnit 5 + Mockito | "convert this test class to JUnit 5" |
-| [`xwiki-convert-tests-docker`](xwiki/skills/xwiki-convert-tests-docker/) | Convert functional ITs to the Docker `@UITest` framework | "convert these ITs to `@UITest`" |
-| [`xwiki-increase-test-coverage`](xwiki/skills/xwiki-increase-test-coverage/) | Recompute a module's JaCoCo ratio and raise the pom's floor | "bump the coverage ratio for this module" |
-| [`xwiki-fix-flickering-docker-test`](xwiki/skills/xwiki-fix-flickering-docker-test/) | Diagnose and fix a flicker, then prove it with a pass rate | "fix the `NotificationsIT` flicker" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-build`](xwiki/skills/xwiki-build/) | Maven commands: the right JDK, profiles, single module, single test | — | "run `EditIT` in `xwiki-platform-flamingo-skin-test`" |
+| [`xwiki-test-guidelines`](xwiki/skills/xwiki-test-guidelines/) | The rules and frameworks for writing a test — loads itself before any test change, down to one `@Test` | — | "add a test for this" |
+| [`xwiki-convert-tests`](xwiki/skills/xwiki-convert-tests/) | Convert unit tests to JUnit 5 + Mockito | — | "convert this test class to JUnit 5" |
+| [`xwiki-convert-tests-docker`](xwiki/skills/xwiki-convert-tests-docker/) | Convert functional ITs to the Docker `@UITest` framework | — | "convert these ITs to `@UITest`" |
+| [`xwiki-increase-test-coverage`](xwiki/skills/xwiki-increase-test-coverage/) | Recompute a module's JaCoCo ratio and raise the pom's floor | — | "bump the coverage ratio for this module" |
+| [`xwiki-fix-flickering-docker-test`](xwiki/skills/xwiki-fix-flickering-docker-test/) | Diagnose and fix a flicker, then prove it with a pass rate | Docker | "fix the `NotificationsIT` flicker" |
 
 **Code & APIs**
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" from the OKF, and extend it by PR | "what's our policy on comments in code?" |
-| [`xwiki-javadoc`](xwiki/skills/xwiki-javadoc/) | Write Javadoc per the XWiki code style | "javadoc this class" |
-| [`xwiki-legacy`](xwiki/skills/xwiki-legacy/) | Move a deprecated API to its `-legacy` module: migrate callers, remove, re-add, Revapi | "retire `XWikiRightService`" |
-| [`xwiki-translations`](xwiki/skills/xwiki-translations/) | Externalize and render i18n strings safely (escaping, word order) | "externalize these strings" |
-| [`xwiki-xar-pages`](xwiki/skills/xwiki-xar-pages/) | Edit extension wiki pages in a XAR (`xar:format` / `xar:verify` conventions) | "add a page to this XAR" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" from the OKF, and extend it by PR | — | "what's our policy on comments in code?" |
+| [`xwiki-javadoc`](xwiki/skills/xwiki-javadoc/) | Write Javadoc per the XWiki code style | — | "javadoc this class" |
+| [`xwiki-legacy`](xwiki/skills/xwiki-legacy/) | Move a deprecated API to its `-legacy` module: migrate callers, remove, re-add, Revapi | — | "retire `XWikiRightService`" |
+| [`xwiki-translations`](xwiki/skills/xwiki-translations/) | Externalize and render i18n strings safely (escaping, word order) | — | "externalize these strings" |
+| [`xwiki-xar-pages`](xwiki/skills/xwiki-xar-pages/) | Edit extension wiki pages in a XAR (`xar:format` / `xar:verify` conventions) | — | "add a page to this XAR" |
 
 **Issues, PRs & review**
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-jira`](xwiki/skills/xwiki-jira/) | View, search, create, update and transition jira.xwiki.org issues | "file a bug for this in XWIKI" |
-| [`xwiki-pull-request`](xwiki/skills/xwiki-pull-request/) | Commit format, PR template, squash and backport conventions | "open a PR for this branch" |
-| [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | One specialist reviewer per angle, each finding challenged before it is posted | `/xwiki-review PR 6453` |
-| [`xwiki-backport`](xwiki/skills/xwiki-backport/) | Cherry-pick to an older branch and *adapt* it (poms, Java level, `@since`, API drift) | "backport this to stable-18.8.x" |
-| [`xwiki-backport-testneeded`](xwiki/skills/xwiki-backport-testneeded/) | The `testneeded` sweep: backport one issue's test to every supported branch | "backport the test of XWIKI-24710" |
-| [`xwiki-security-advisory`](xwiki/skills/xwiki-security-advisory/) | Draft a GitHub Security Advisory from a security-restricted issue | "draft the advisory for XWIKI-25001" |
-| [`xwiki-openproject`](xwiki/skills/xwiki-openproject/) | Work packages on op.xwiki.org (**not** the issue tracker) | "what's on my OpenProject list?" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-jira`](xwiki/skills/xwiki-jira/) | View, search, create, update and transition jira.xwiki.org issues | `JIRA_API_TOKEN` | "file a bug for this in XWIKI" |
+| [`xwiki-pull-request`](xwiki/skills/xwiki-pull-request/) | Commit format, PR template, squash and backport conventions | `gh` login | "open a PR for this branch" |
+| [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | One specialist reviewer per angle, each finding challenged before it is posted | `gh` login | `/xwiki-review PR 6453` |
+| [`xwiki-backport`](xwiki/skills/xwiki-backport/) | Cherry-pick to an older branch and *adapt* it (poms, Java level, `@since`, API drift) | `gh` login | "backport this to stable-18.8.x" |
+| [`xwiki-backport-testneeded`](xwiki/skills/xwiki-backport-testneeded/) | The `testneeded` sweep: backport one issue's test to every supported branch | `gh` login, `JIRA_API_TOKEN` | "backport the test of XWIKI-24710" |
+| [`xwiki-security-advisory`](xwiki/skills/xwiki-security-advisory/) | Draft a GitHub Security Advisory from a security-restricted issue | `JIRA_API_TOKEN` | "draft the advisory for XWIKI-25001" |
+| [`xwiki-openproject`](xwiki/skills/xwiki-openproject/) | Work packages on op.xwiki.org (**not** the issue tracker) | `OPENPROJECT_API_TOKEN` | "what's on my OpenProject list?" |
 
 **CI & quality**
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-release-test-triage`](xwiki/skills/xwiki-release-test-triage/) | Reads CI and reports: known flicker, unknown flicker or real breakage — does it block the release? Never writes | "is master green?" |
-| [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | `/xwiki-ci-check xwiki-platform, master only` |
-| [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `okf/sonarqube/`) and open the PR | "fix a Sonar issue in this repo" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-release-test-triage`](xwiki/skills/xwiki-release-test-triage/) | Reads CI and reports: known flicker, unknown flicker or real breakage — does it block the release? Never writes | — | "is master green?" |
+| [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | nothing to analyse; the **bot** tokens to write (`GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`, `MATRIX_*`) | `/xwiki-ci-check xwiki-platform, master only` |
+| [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `okf/sonarqube/`) and open the PR | `SONARQUBE_TOKEN`, `SONARQUBE_PROJECT_KEY` | "fix a Sonar issue in this repo" |
 
-**Documentation**
+**Documentation** — all of these write to xwiki.org, so they read your credentials from `~/.xwiki-credentials`.
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-doc-writing`](xwiki/skills/xwiki-doc-writing/) | Write, update or review an xwiki.org page per the Documentation Guide (Diataxis) | "document this feature" |
-| [`xwiki-doc-convert`](xwiki/skills/xwiki-doc-convert/) | Migrate an old page into the new `/documentation` tree, as a resumable plan | "convert the Skin Extensions page" |
-| [`xwiki-release-documentation`](xwiki/skills/xwiki-release-documentation/) ⚠ | Audit a release's fixed issues: what needs a page, what needs a release note, then write both and fill the JIRA fields | `/xwiki-release-documentation 18.8.0` |
-| [`xwiki-contrib-release-blog-post`](xwiki/skills/xwiki-contrib-release-blog-post/) | The "<Extension> Extension X.Y Released" blog post on xwiki.org | "announce the Jira extension 9.2 release" |
-| [`xwiki-presentation`](xwiki/skills/xwiki-presentation/) | Build a `.pptx` deck in the XWiki look, then PDF/PNG/Keynote (needs LibreOffice + [Python deps](xwiki/skills/xwiki-presentation/tools/requirements.txt)) | "build a deck on XWiki 18.x for FOSDEM" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-doc-writing`](xwiki/skills/xwiki-doc-writing/) | Write, update or review an xwiki.org page per the Documentation Guide (Diataxis) | `~/.xwiki-credentials` | "document this feature" |
+| [`xwiki-doc-convert`](xwiki/skills/xwiki-doc-convert/) | Migrate an old page into the new `/documentation` tree, as a resumable plan | `~/.xwiki-credentials` | "convert the Skin Extensions page" |
+| [`xwiki-release-documentation`](xwiki/skills/xwiki-release-documentation/) ⚠ | Audit a release's fixed issues: what needs a page, what needs a release note, then write both and fill the JIRA fields | `~/.xwiki-credentials`, `JIRA_API_TOKEN` | `/xwiki-release-documentation 18.8.0` |
+| [`xwiki-contrib-release-blog-post`](xwiki/skills/xwiki-contrib-release-blog-post/) | The "<Extension> Extension X.Y Released" blog post on xwiki.org | `~/.xwiki-credentials` | "announce the Jira extension 9.2 release" |
+| [`xwiki-presentation`](xwiki/skills/xwiki-presentation/) | Build a `.pptx` deck in the XWiki look, then PDF/PNG/Keynote | LibreOffice, [Python deps](xwiki/skills/xwiki-presentation/tools/requirements.txt) | "build a deck on XWiki 18.x for FOSDEM" |
 
 **Running wiki**
 
-| Skill | What it does | Example |
-|---|---|---|
-| [`xwiki-rest-api`](xwiki/skills/xwiki-rest-api/) | Read and write a live instance over REST: pages, xobjects, Solr search | "what's in the sandbox page?" |
-| [`xwiki-deploy-extension`](xwiki/skills/xwiki-deploy-extension/) | Install a built XAR/JAR into a running XWiki via the job REST API | "deploy this XAR to localhost:8080" |
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-rest-api`](xwiki/skills/xwiki-rest-api/) | Read and write a live instance over REST: pages, xobjects, Solr search | the instance's login (`~/.xwiki-credentials` for xwiki.org) | "what's in the sandbox page?" |
+| [`xwiki-deploy-extension`](xwiki/skills/xwiki-deploy-extension/) | Install a built XAR/JAR into a running XWiki via the job REST API | the instance's login | "deploy this XAR to localhost:8080" |
 
 ### What the skills use
 
