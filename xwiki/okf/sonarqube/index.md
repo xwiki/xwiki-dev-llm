@@ -151,8 +151,15 @@ build gate to make a fix pass.
 
 ## Retiring an issue that should not be fixed
 
-When an issue is a genuine false positive, the resolution is **in the code, not in SonarCloud**: add
-`@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
+Retiring is the **last** resort, after the options that would stop the rule firing at all have been
+weighed: refactoring the flagged shape, adding the API the idiom is missing (deprecating the old one
+into `-legacy`), encapsulating the idiom once, or deferring the change and leaving the finding OPEN —
+with a JIRA issue only when that change touches public API. Those options are the developer's to
+choose, not the sweep's — the procedure for putting them up is in the `xwiki-fix-sonarqube-issue`
+skill.
+
+When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**:
+add `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
 *Accepted* in SonarCloud alone hides the reasoning from the next developer, who will try to "fix" it
 again. The full convention is in [[code-style]].
 
