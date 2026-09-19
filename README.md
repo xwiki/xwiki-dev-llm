@@ -14,6 +14,13 @@ The Claude marketplace manifest lives at the repo root (`.claude-plugin/marketpl
 Kimi plugin manifest lives at `kimi.plugin.json`, the opencode config lives at `opencode.jsonc`,
 and the shared plugin content lives under [`xwiki/`](xwiki).
 
+- [Install](#install) — [Claude Code](#claude-code) · [Kimi Code](#kimi-code) · [opencode](#opencode)
+- [What you get](#what-you-get) — [Always on](#always-on--no-invocation) · [Skills](#when-you-ask--skills) · [What the skills use](#what-the-skills-use)
+- [Setup](#setup) — credentials and environment variables
+- [Validate](#validate) — what to run after a change
+- [Versioning and releases](#versioning-and-releases)
+- [Contributing](#contributing)
+
 ## Install
 
 ### Claude Code
