@@ -91,6 +91,10 @@ A test that fails intermittently gets its own issue, and two things make it find
   `org.xwiki.search.test.ui.AllIT$NestedSolrSearchIT#searchExclusions` — the exact form CI reports,
   so tooling can join a CI failure to its issue instead of guessing from the summary. Fill it in.
 
+Joining a CI failure to its issue is done by the shared `xwiki/scripts/jira-flickers.mjs`, not by
+a query of your own — the field has JQL quirks and a test can carry several issues, and that module
+documents and handles both.
+
 ## The documentation fields
 
 Two custom fields record where a fixed issue ended up documented, and they are independent of each
