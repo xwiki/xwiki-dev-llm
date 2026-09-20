@@ -91,6 +91,22 @@ A test that fails intermittently gets its own issue, and two things make it find
   `org.xwiki.search.test.ui.AllIT$NestedSolrSearchIT#searchExclusions` — the exact form CI reports,
   so tooling can join a CI failure to its issue instead of guessing from the summary. Fill it in.
 
+**Querying that field from JQL has two traps**, so the shared lookup
+(`xwiki/scripts/jira-flickers.mjs`) avoids it entirely — it fetches the flicker issues and matches
+the field in memory. If you do write the JQL by hand:
+
+- **`=` is rejected** outright: *"The operator '=' is not supported by the 'Flickering Test' field."*
+  Only `~`, `is EMPTY` and `is not EMPTY` work.
+- **`~` matches tokens, not substrings**, and the tokeniser splits on `$`. So
+  `"Flickering Test" ~ "RecycleBinIT"` returns **nothing** while
+  `"Flickering Test" ~ "NestedRecycleBinIT"` returns the issue. Searching by the plain class name
+  silently finds no issue for a test that has one — which, in an auto-filer, is how a duplicate gets
+  created.
+
+Also note a test may have **several** closed issues over the years. Order by key descending and take
+the newest: the oldest one's fix versions describe a fix that shipped long ago and say nothing about
+whether the *current* recurrence has been fixed on your branch.
+
 ## The documentation fields
 
 Two custom fields record where a fixed issue ended up documented, and they are independent of each

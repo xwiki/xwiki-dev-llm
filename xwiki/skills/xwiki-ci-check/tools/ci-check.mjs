@@ -17,7 +17,7 @@ import {
   branchesOf, buildRevision, buildSummaries, ENV_TESTS_FOLDER, failedNodesOf, isPseudoTest,
   jobUrl, MAIN_FOLDER, outcomes, stagesOf, stepConsole, stepLog, testResults
 } from '../../../scripts/jenkins.mjs';
-import { JIRA, knownFlickers } from '../../../scripts/jira-flickers.mjs';
+import { JIRA, knownFlickers, closedFlickers } from '../../../scripts/jira-flickers.mjs';
 import { develocityFacts } from './dv-test-history.mjs';
 import { gateFacts } from './sonar-gate.mjs';
 import { readFileSync } from 'node:fs';
@@ -1688,6 +1688,7 @@ async function incidentsOf(target, args, flickerFor) {
       && (verdict === 'intermittent' || (verdict === 'single env' && flickerProven(row)));
     if (flickers) {
       const jira = flickerFor(id);
+      const jiraClosed = jira ? null : closedFlickerFor(id);
       const failedBuilds = row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0);
       const seenBuilds = row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0);
       incidents.push({
@@ -1705,6 +1706,7 @@ async function incidentsOf(target, args, flickerFor) {
         envs: [...row.failedEnvs].map(env => env.replace(/^env-tests\//, '')),
         failingJobs: [...new Set(row.perJob.map(entry => entry.job))],
         jira,
+        jiraClosed,
         proven: flickerProven(row),
         ...ageOf(window),
         window,
@@ -1757,6 +1759,7 @@ async function incidentsOf(target, args, flickerFor) {
       evidence: group.slice(0, 3).map(entry => `${entry.id}: ${entry.row.detail || '(no error detail)'}`),
       failingJobs: [...new Set(group.flatMap(entry => entry.row.perJob.map(row => row.job)))],
       jira: flickerFor(ids[0]),
+      jiraClosed: flickerFor(ids[0]) ? null : closedFlickerFor(ids[0]),
       ...ageOf(window),
       window
     });
@@ -2216,6 +2219,11 @@ function whyOf(incident) {
 function noOneOwes(incident, horizonDays) {
   if (incident.beyondHorizon) return `older than the ${horizonDays}-day horizon — counted, not written about`;
   if (incident.jira) return 'already tracked — the issue is where this gets settled';
+  if (incident.jiraClosed) {
+    return `${incident.jiraClosed.key} already fixed this test`
+      + `${incident.jiraClosed.fixVersions?.length ? ` in ${incident.jiraClosed.fixVersions.join(', ')}` : ''}`
+      + ' — compare that with this branch before filing anything';
+  }
   if (incident.kind === 'flicker' && !incident.proven) {
     return 'not proven yet — an issue is earned by two builds on two days';
   }
@@ -2399,6 +2407,8 @@ function renderDetail(report, { live }) {
       const cause = causeOf(incident);
       const meta = [kindOf(incident), agedAs(incident),
         incident.jira ? `tracked as ${incident.jira}` : null,
+        incident.jiraClosed ? `already fixed by ${incident.jiraClosed.key}`
+          + `${incident.jiraClosed.fixVersions?.length ? ` (${incident.jiraClosed.fixVersions.join(', ')})` : ''}` : null,
         incident.alsoOn?.length && incident.primary !== false ? `also red on ${incident.alsoOn.join(', ')}` : null,
         incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ');
       const name = isGate(incident) ? `**${subjectOf(incident)}**` : `\`${subjectOf(incident)}\``;
@@ -2584,6 +2594,12 @@ if (args.delta) {
 }
 
 const flickerFor = await knownFlickers();
+// The *closed* flicker issues, looked up the same way. A hit is never a reason to stay quiet — it is
+// the run's most actionable finding, because somebody has already written the fix. Which of the two
+// readings applies is settled by comparing the issue's `fixVersions` with the branch that is red
+// (SKILL.md §3), and that comparison is the report's to make, not this tool's: encoding it here
+// would turn a version-numbering guess into an assertion that sends someone to do a backport.
+const closedFlickerFor = await closedFlickers().catch(() => () => null);
 // Read before the sweep, and read from a file: the sweep itself holds no Matrix credential and must
 // stay runnable on a laptop with nothing configured, where `chat.messages` is simply empty.
 const chat = chatOf(args);
@@ -2709,6 +2725,10 @@ for (const incident of incidents) {
 // room pass makes an everyday case: a flicker is exactly what people claim in chat.
 for (const incident of incidents) {
   if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
+  // A *closed* issue for this exact test is still an issue. Filing a second one for a flicker the
+  // team already tracked and fixed is the duplicate that discredits an auto-filer fastest, and the
+  // answer §5 gives is to comment on that issue rather than open a new one.
+  if (incident.jiraClosed) continue;
   if (settled(incident)) continue;
   incident.flickerGroup = `${incident.repo}/${incident.signature.split('#')[0].split(/[.$]/).pop()}`;
 }
@@ -2995,6 +3015,9 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // A closed flicker issue naming this exact test. Never a reason to go quiet — it says the fix
+    // exists, and `fixVersions` against this branch says whether it ever shipped here (SKILL.md §3).
+    jiraClosed: incident.jiraClosed || undefined,
     // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
     // deliberately low in the analysis budget — so it is flagged here and given the full shape
     // below, because the skill has to read its history and its evidence to fix it.

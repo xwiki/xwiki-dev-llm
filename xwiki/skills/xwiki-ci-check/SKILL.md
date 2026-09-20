@@ -130,6 +130,7 @@ together.
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs — `failures`/`runs` and `failRate`, `firstSeen` (when it *started*, as against `ageDays`), the failure group this incident is, the configurations it concentrates in with their rates, the analyser's own `findings` with their p-values, build scans, any archived screenshot/video, and `report`, the full report already on disk. Absent when Develocity is unreachable — `summary.develocity` says why |
 | `jira` | the open flicker issue, if the test already has one |
+| `jiraClosed` | a **closed** flicker issue naming this exact test — the fix already exists. Carries `fixVersions` and `earlier`, the older issues filed for the same test. Never suppresses anything; see §3 |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |
 | `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
 | `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
@@ -176,6 +177,36 @@ to the older branch and the verification that skill exists for, and what this pa
 noticing. Verify before backporting, because a signature also goes green when the test is *deleted*
 on that branch — for a test the tool excludes that by construction (it must still have *run* there,
 having failed and then passed in two consecutive builds each way), for a build break it cannot.
+
+**`fixed-elsewhere` only sees inside the window, and `jiraClosed` is how the older fix is found.**
+That value needs a red→green edge in the eight builds Jenkins retains, so it answers "has somebody
+just fixed this elsewhere?" and cannot answer "was this fixed elsewhere months ago and never landed
+here?" — on the branches that carry the fix there is no failure in the window at all, so there is no
+edge to see. `jiraClosed` closes that gap from the other side: a **closed** flicker issue naming the
+failing test means the fix exists and has been reviewed, merged and released somewhere. Read it by
+comparing its `fixVersions` with the branch that is red, which is a judgement the tool deliberately
+does not make — encoding version-line arithmetic here would turn a guess into an assertion that
+sends somebody to do a backport nobody needed:
+
+- **no `fixVersions` entry on this branch's line** ⇒ the fix never shipped here. This is a
+  **backport candidate**: name the issue and hand it to **`xwiki-backport`**, which owns the
+  adaptation and the verification; never land it here. It is also the strongest thing a run can
+  produce, because the change already exists and four branches have run it.
+- **an entry that does cover this branch** ⇒ the fix is here and the test fails anyway. The issue is
+  wrong, not missing: **comment on it, or propose reopening it**, and file nothing. An `earlier`
+  list is the same signal repeated — a test filed three times is one that keeps coming back, and
+  saying so is worth more than a fourth issue.
+
+`jiraClosed` **never suppresses**. Every `fixState` value buys silence; this one buys work, so it
+raises the incident rather than quieting it, and it is the `Next` cell's business to say whose.
+
+**Not every branch is a backport target, and the report must not invent one.** The routine targets
+are the two LTS lines maintained in parallel; the LTS line older than those takes security backports
+only and **must not be named in any public artifact** — not in a JIRA issue, a fix version, a PR
+body or a commit message, not even to explain why it is excluded. A `jiraClosed` gap on that line is
+still worth reporting in the paste and the terminal, which are internal, and is actionable only as a
+keyless `[Misc]` fix on the branch itself. Derive the lines from the root `pom.xml`; never hardcode
+them, they move every release.
 
 **The same signature on several branches is one cause, and gets one treatment.** `primary` marks the
 incident that carries it — master where master is in the group, otherwise the newest maintained
@@ -523,7 +554,8 @@ one only after the developer has said yes to it by name (§0). Auto-filed issues
 **unassigned** — a flicker usually has no culprit, and a wrong auto-assignment discredits the whole
 system.
 
-If the flicker matches a **closed** issue: **comment on it and leave it closed**, and flag it in the
+If the flicker matches a **closed** issue — `jiraClosed` is set, and the tool has already withheld
+the `flickerGroup` for exactly this reason: **comment on it and leave it closed**, and flag it in the
 digest. Reopening overrides someone's triage decision; filing a duplicate is worse than both.
 
 ## 6. Digest and paste
