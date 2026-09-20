@@ -34,7 +34,9 @@ of truth and changes over time — fetch it when actually releasing.
 - The LTS line **older** than the maintained two takes **security fixes only** — a "Critical"
   vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix, however small; with
   master on `18.x` that is `16.10.x`. A repo offering a `backport stable-<old>.x` GitHub label does
-  not make that branch a routine target.
+  not make that branch a routine target. **Never name that line in a public artifact** — a PR body,
+  a JIRA issue or fix version, a commit message, a forum post — not even to explain why it is
+  excluded: naming it implies a support commitment that does not exist. List the targets and stop.
 - Released artifacts and snapshots are published to **nexus.xwiki.org** (see [[index]] in
   `servers/`); the Extension Manager consumes them.
 - xwiki-contrib extensions follow their **own** release + documentation process, including a release

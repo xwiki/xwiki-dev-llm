@@ -24,8 +24,7 @@ const FLICKER_JQL = 'labels = flickering AND status in (Open, "In Progress", Reo
 const FLICKER_FIELD = "customfield_10870";
 
 // Paged, because a single 200-issue request silently truncates: the *closed* flickers are already
-// past 270, and a lookup that quietly drops the tail reports "no issue tracks this test" for a test
-// that has one — which is how a duplicate gets filed.
+// past 270, and a lookup that drops the tail reports "no issue" for a test that has one.
 const search = async (jql, fields) => {
   const issues = [];
   for (let startAt = 0; ; ) {
@@ -60,9 +59,11 @@ export async function knownFlickers(jql = FLICKER_JQL) {
   const byNewest = [...(data?.issues || [])]
     .sort((a, b) => Number(b.key.split("-")[1]) - Number(a.key.split("-")[1]));
   for (const issue of byNewest) {
+    // `earlier` is on every entry, including the ones the summary fallback below returns, so a
+    // caller can read it without checking which path produced the answer.
     const entry = {
       key: issue.key, summary: issue.fields.summary, status: issue.fields.status?.name || "",
-      fixVersions: (issue.fields.fixVersions || []).map(version => version.name)
+      fixVersions: (issue.fields.fixVersions || []).map(version => version.name), earlier: []
     };
     all.push(entry);
     const ref = issue.fields[FLICKER_FIELD];
@@ -72,7 +73,7 @@ export async function knownFlickers(jql = FLICKER_JQL) {
       // Keep the newest as the answer and remember the rest: "this test has been filed three times
       // before" is itself the finding on a flicker that keeps coming back.
       if (seen) seen.earlier.push(entry.key);
-      else byTest.set(test, { ...entry, earlier: [] });
+      else byTest.set(test, entry);
     }
   }
   // Not every flicker issue fills the field in, so fall back to the summary — but only when it

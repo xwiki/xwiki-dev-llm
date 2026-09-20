@@ -1745,6 +1745,7 @@ async function incidentsOf(target, args, flickerFor) {
       });
       continue;
     }
+    const groupJira = flickerFor(ids[0]);
     incidents.push({
       // The smallest test id names the group: stable from day to day, unlike a count or a hash,
       // which would change the moment the breakage spreads by one test and re-ping everybody.
@@ -1758,8 +1759,8 @@ async function incidentsOf(target, args, flickerFor) {
       setupFailures: group.filter(entry => entry.pseudo).map(entry => entry.id),
       evidence: group.slice(0, 3).map(entry => `${entry.id}: ${entry.row.detail || '(no error detail)'}`),
       failingJobs: [...new Set(group.flatMap(entry => entry.row.perJob.map(row => row.job)))],
-      jira: flickerFor(ids[0]),
-      jiraClosed: flickerFor(ids[0]) ? null : closedFlickerFor(ids[0]),
+      jira: groupJira,
+      jiraClosed: groupJira ? null : closedFlickerFor(ids[0]),
       ...ageOf(window),
       window
     });
@@ -3015,8 +3016,6 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
-    // A closed flicker issue naming this exact test. Never a reason to go quiet — it says the fix
-    // exists, and `fixVersions` against this branch says whether it ever shipped here (SKILL.md §3).
     jiraClosed: incident.jiraClosed || undefined,
     // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
     // deliberately low in the analysis budget — so it is flagged here and given the full shape

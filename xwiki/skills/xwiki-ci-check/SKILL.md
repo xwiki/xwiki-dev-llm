@@ -191,7 +191,7 @@ sends somebody to do a backport nobody needed:
 - **no `fixVersions` entry on this branch's line** ⇒ the fix never shipped here. This is a
   **backport candidate**: name the issue and hand it to **`xwiki-backport`**, which owns the
   adaptation and the verification; never land it here. It is also the strongest thing a run can
-  produce, because the change already exists and four branches have run it.
+  produce, because the change already exists and the other branches have been running it.
 - **an entry that does cover this branch** ⇒ the fix is here and the test fails anyway. The issue is
   wrong, not missing: **comment on it, or propose reopening it**, and file nothing. An `earlier`
   list is the same signal repeated — a test filed three times is one that keeps coming back, and
@@ -200,13 +200,10 @@ sends somebody to do a backport nobody needed:
 `jiraClosed` **never suppresses**. Every `fixState` value buys silence; this one buys work, so it
 raises the incident rather than quieting it, and it is the `Next` cell's business to say whose.
 
-**Not every branch is a backport target, and the report must not invent one.** The routine targets
-are the two LTS lines maintained in parallel; the LTS line older than those takes security backports
-only and **must not be named in any public artifact** — not in a JIRA issue, a fix version, a PR
-body or a commit message, not even to explain why it is excluded. A `jiraClosed` gap on that line is
-still worth reporting in the paste and the terminal, which are internal, and is actionable only as a
-keyless `[Misc]` fix on the branch itself. Derive the lines from the root `pom.xml`; never hardcode
-them, they move every release.
+**Not every branch is a backport target, and the report must not invent one.** Which lines are, and
+which one may never be named in a public artifact, is `okf/processes/release.md`. What follows from
+it here: a `jiraClosed` gap on an unsupported line is still reported in the paste and the terminal,
+which are internal, and is actionable only as a keyless `[Misc]` fix on the branch itself.
 
 **The same signature on several branches is one cause, and gets one treatment.** `primary` marks the
 incident that carries it — master where master is in the group, otherwise the newest maintained
