@@ -47,13 +47,20 @@ When a session establishes a fact worth keeping, run the **gate checklist** befo
       that entry instead of adding a duplicate. A fact has exactly one home.
 - [ ] **Right home** — a convention/architecture/process *fact* → the matching `okf/` subdirectory;
       an *architectural decision* (a choice made between options, with rationale) → an **ADR** in
-      `okf/decisions/` (see below); a task procedure → a skill, not the OKF.
+      `okf/decisions/` (see below); a task procedure → a skill, not the OKF; a trap that a **shared
+      script already handles correctly** → that script's header, where it is read exactly when it
+      matters, leaving at most a routing line in the OKF ("use `<script>`, not a query of your own").
+      Two copies drift, and the prose one is the copy that goes stale.
 - [ ] **Minimal** — the OKF is read into context, so **every line costs tokens in every session that
       loads the file**. Write the rule plus the non-obvious trap and stop: no restating it in other
       words, no example the reader does not need, no rationale beyond the clause that makes it stick.
       When the new fact touches an existing bullet, **edit that bullet or cross-reference it** rather
       than stating the fact in two sections. Re-read your diff and cut whatever can go without losing
       a rule or a trap.
+- [ ] **Priced against the file's readers** — a topic file's cost is paid by every session that opens
+      it for *any* reason, so the test is "does someone doing the ordinary thing this file is for
+      need this?", not "is it about this topic?". `okf/servers/jira.md` is opened to file a bug: the
+      JQL quirks of one CI lookup failed that test and belonged next to the code that hits them.
 - [ ] **Nothing extra in the always-on file** — `instructions/xwiki-org.md` is injected into *every*
       session of every XWiki repo, so a line there is paid for by every task that never needed it.
       Its OKF map is **routing only**: the topic name, plus a clause only where the name does not say
