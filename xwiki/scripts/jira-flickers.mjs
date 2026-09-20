@@ -5,6 +5,16 @@
 // flicker still needs filing. The field and label conventions are in okf/servers/jira.md.
 //
 // Read access is anonymous — no token.
+//
+// Use this module rather than querying the "Flickering Test" field yourself, because that field has
+// two JQL traps and getting either wrong makes a test that HAS an issue look untracked — which, in
+// an auto-filer, is how a duplicate gets created:
+//
+//   * `=` is rejected outright ("The operator '=' is not supported by the 'Flickering Test' field").
+//     Only `~`, `is EMPTY` and `is not EMPTY` work.
+//   * `~` matches tokens, not substrings, and the tokeniser splits on `$`. So
+//     `"Flickering Test" ~ "RecycleBinIT"` finds nothing, while `~ "NestedRecycleBinIT"` finds the
+//     issue. Matching here is done in memory against the whole field instead, so neither applies.
 
 export const JIRA = "https://jira.xwiki.org";
 
