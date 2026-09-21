@@ -9,6 +9,13 @@
 # It is written to be shared: both routines want the same GitHub CLI, the same plugin, the same
 # Maven repositories and the same JDKs, and one script that is a superset costs nothing next to two
 # that drift apart.
+#
+# The routine's sandbox needs **full** network access, not "trusted". Trusted reaches neither the
+# hosts the skills work against (ci.xwiki.org, jira.xwiki.org, sonarcloud.io, matrix.org,
+# nexus-snapshots.xwiki.org, bin.xwikisas.com) nor the PPAs the image carries, so the run dies here
+# rather than at its first request: `apt-get update` gets 403 on deadsnakes and ondrej/php and
+# exits 100, and `set -e` takes the whole setup with it ("Setup script failed with exit code
+# 100").
 
 set -euo pipefail
 

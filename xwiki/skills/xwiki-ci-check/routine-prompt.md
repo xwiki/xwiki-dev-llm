@@ -53,6 +53,17 @@ Personal overrides on top of the skill:
     `matrix.mjs` logs in per run on a fixed device instead.
   - Optional, all defaulted: `MATRIX_HOMESERVER` (`https://matrix.org`),
     `MATRIX_ROOM` (`#xwiki:matrix.xwiki.com`), `XWIKI_CI_PASTE_URL` (`https://bin.xwikisas.com/`).
+- **`SONARQUBE_TOKEN`** — a SonarCloud token for the `xwiki` organization, in the same secret
+  store, and not a bot credential because there is no bot account on SonarCloud. A failing quality
+  gate is the one incident whose cause is nowhere in the Jenkins log — that log says
+  `QUALITY GATE STATUS: FAILED` and stops — so `sonar-gate.mjs` asks SonarCloud over its REST API
+  (no MCP server, no Docker) which condition failed and whose code is under it. Without the token
+  the gate is still reported, with `summary.sonar.unavailable` in place of its cause and nobody
+  named; since a red gate is what §5 fixes first, that is the most useful morning the routine can
+  lose. The account behind the token must be allowed to transition issues, because the gate fix
+  accepts the issues its PR covers as a claim on them. **Do not set `SONARQUBE_PROJECT_KEY`** — the
+  sweep derives the project from the repo, and one global value would report one project's gate for
+  all three.
 - **Checkouts** of `xwiki-commons`, `xwiki-rendering`, `xwiki-platform` and `xwiki-dev-llm`, which
   are what the fix PRs of §5 are written and verified in. Without them the skill fails closed: no
   PR, which is the safe outcome but is still an outcome to know about.
@@ -67,6 +78,8 @@ Personal overrides on top of the skill:
 - **The Claude GitHub App**, installed on the `xwiki` org — that, and not `GH_TOKEN_BOT`, is what
   pushes a fix branch and opens the PR, exactly as it does for the SonarQube routine. The branch
   lives in the upstream repo (`claude/<slug>`); there is no fork anywhere in this design.
+- **Full network access** for the sandbox — "trusted" reaches none of the XWiki hosts, and
+  fails the setup script itself; the header of `routine-setup.sh` says how it fails.
 - The `xwiki` plugin loaded, so the skill and the shared `scripts/` are present.
 
 Without the bot credentials the skill does that channel in rehearsal and says so; it never falls back
