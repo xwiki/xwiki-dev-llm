@@ -42,6 +42,11 @@ Per-run overrides on top of the skill:
 `xwiki-platform`, `xwiki-commons`, `xwiki-rendering`, `xwiki-dev-llm`, and
 `sonarcloud-routine-memory`.
 
+### Network access
+
+**Full**, not "trusted": trusted reaches none of the XWiki hosts, and fails the setup script itself
+— the header of `routine-setup.sh` says how it fails.
+
 ### Setup script
 
 `xwiki/scripts/routine-setup.sh`, pasted into the routine's setup field, and **shared with the
