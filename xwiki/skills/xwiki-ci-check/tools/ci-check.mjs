@@ -2266,7 +2266,7 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause }) {
     if (filing) lines.push(`bot → file **one** issue for \`${filing.className}\` (${filing.scope})`);
     if (stabilising) lines.push('bot → measure the rate, fix, measure again, draft PR');
     if (incident.jira && incident.state === 'systematic') {
-      lines.push(`someone → re-triage ${incident.jira}: filed as a flicker, failing every run`);
+      lines.push(`someone → re-triage ${incident.jira.key}: filed as a flicker, failing every run`);
     }
   }
   if (incident.deep && !settled(incident) && !incident.beyondHorizon) {
@@ -2407,7 +2407,7 @@ function renderDetail(report, { live }) {
     for (const incident of section.list) {
       const cause = causeOf(incident);
       const meta = [kindOf(incident), agedAs(incident),
-        incident.jira ? `tracked as ${incident.jira}` : null,
+        incident.jira ? `tracked as ${incident.jira.key}` : null,
         incident.jiraClosed ? `already fixed by ${incident.jiraClosed.key}`
           + `${incident.jiraClosed.fixVersions?.length ? ` (${incident.jiraClosed.fixVersions.join(', ')})` : ''}` : null,
         incident.alsoOn?.length && incident.primary !== false ? `also red on ${incident.alsoOn.join(', ')}` : null,
