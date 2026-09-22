@@ -15,7 +15,7 @@ git-ignored `.envrc`.
 | `XWIKI_LLM_WORK`        | all hosts | Absolute path to the work directory for plans, handoffs, drafts and other cross-session state. Optional — defaults to `$XDG_STATE_HOME/xwiki-llm/work` on Linux/macOS, falling back to `~/.local/state/xwiki-llm/work` when `XDG_STATE_HOME` is unset (as it is by default on macOS); and to `%LOCALAPPDATA%\xwiki-llm\work` on Windows, falling back to `%USERPROFILE%\AppData\Local\xwiki-llm\work` when `LOCALAPPDATA` is unset. |
 | `SONARQUBE_TOKEN`       | sonarqube, `xwiki-ci-check` | Your personal SonarCloud token (same for all repos). The CI check reads it directly too — a failing quality gate is the one CI incident whose cause is not in the Jenkins log, so the sweep asks SonarCloud which condition failed and which new-code issues are under it, and names their authors in the report. Without it the gate is still reported, without its cause. |
 | `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
-| `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
+| `DEVELOCITY_MCP_ACCESS_KEY` | develocity, `xwiki-ci-check` | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded and the CI check reports a failing test without its history. `DEVELOCITY_URL` overrides the server. See "Develocity access" below. |
 | `XWIKI_DEV_TOOLS`       | `xwiki-ci-check` | Absolute path to a [`xwiki-dev-tools`](https://github.com/xwiki/xwiki-dev-tools) checkout (or directly to its `bash/dv-test-history`), whose Develocity analyser the CI check reads a failing test's history from. Optional — without it a checkout sitting next to your other XWiki repos is used, and failing that one is cloned into `$XDG_STATE_HOME/xwiki-llm/xwiki-dev-tools`. Needs `python3` (no packages to install) and the Develocity key above. |
 | `JIRA_API_TOKEN`        | `xwiki-jira` (jira-cli / REST) | Your jira.xwiki.org personal access token. Optional — only needed to act on JIRA issues. See "JIRA access" below. |
 | `OPENPROJECT_API_TOKEN` | `xwiki-openproject` | An op.xwiki.org API token (**My account → Access tokens**). Optional — without it every OpenProject call returns `401`. |
@@ -29,6 +29,10 @@ git-ignored `.envrc`.
 | `MATRIX_HOMESERVER`, `MATRIX_ROOM` | `xwiki-ci-check` | Optional — default to `https://matrix.org` (where the bot's *account* is) and `#xwiki:matrix.xwiki.com` (where the *room* is, whatever the account's server). A `#alias` is resolved to the internal room id automatically; an alias with no `:server` part gets the homeserver's, which is why the default is fully qualified. |
 | `JIRA_TOKEN_BOT`        | `xwiki-ci-check` | The bot's jira.xwiki.org token, for auto-filed flicker issues. The `xwiki-jira` skill reads `JIRA_API_TOKEN`, so the routine exports it from this one — keeping the bot's credential distinct from the developer's on the same machine. |
 | `XWIKI_CI_PASTE_URL`    | `xwiki-ci-check` | The PrivateBin instance the digest's detail is pasted to. Optional — defaults to `https://bin.xwikisas.com/`. |
+
+The bot credentials above are for the **scheduled routines** — `xwiki-ci-check` and
+`xwiki-fix-sonarqube-issue`, each carrying a `routine-prompt.md` that says what its run needs, and
+both set up by `xwiki/scripts/routine-setup.sh` (whose header covers the sandbox's network).
 
 Up to plugin version 1.5.0 the work root was `~/.xwiki-llm/work` on every OS. If you still have files
 there, move them to the new root — each session reminds you while any remain — or point

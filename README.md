@@ -155,7 +155,7 @@ means it needs nothing.
 | Skill | What it does | Needs | Example |
 |---|---|---|---|
 | [`xwiki-release-test-triage`](xwiki/skills/xwiki-release-test-triage/) | Reads CI and reports: known flicker, unknown flicker or real breakage — does it block the release? Never writes | — | "is master green?" |
-| [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | nothing to analyse; the **bot** tokens to write (`GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`, `MATRIX_*`) | `/xwiki-ci-check xwiki-platform, master only` |
+| [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | to analyse, nothing — but a red quality gate keeps its cause only with `SONARQUBE_TOKEN`, and a failing test its history only with a [Develocity key](docs/setup.md); the **bot** tokens to write (`GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`, `MATRIX_*`) | `/xwiki-ci-check xwiki-platform, master only` |
 | [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `okf/sonarqube/`) and open the PR | `SONARQUBE_TOKEN`, `SONARQUBE_PROJECT_KEY` | "fix a Sonar issue in this repo" |
 
 **Documentation** — all of these write to xwiki.org, so they read your credentials from `~/.xwiki-credentials`.
