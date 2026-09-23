@@ -599,12 +599,16 @@ then ask whether to paste it. There is no digest to write, so the paste question
 
 ### The digest — what moved since yesterday, or nothing at all
 
-**Routine only.** Post **one short message** to the Matrix room, capped at ~5 lines, pointing at the
-PrivateBin paste holding that detail.
+**Routine only.** Post **one short message** to the Matrix room: a headline, the status grid, a
+table of at most ~5 rows, and the PrivateBin paste holding the detail.
 
-**The digest is a delta, not a snapshot.** A snapshot of what is red this morning is what the CI
-dashboard already is, and a reader who gets it faster there stops reading the digest. Ask the room
-what the last digest was, and say only what has moved since:
+**One glance, then the delta.** A reader must see how red CI is before reading a word — otherwise
+the dashboard's colours are faster, and they stop reading the digest. So the digest opens with the
+one snapshot it carries, the **status grid**: a repo × branch table of 🔴 (cannot be released as it
+stands — a build break, a failing gate, a test failing every run), 🟠 (red of any other kind) and 🟢,
+⚪ for no build. It is `status.grid` from `--delta`, **pasted as is**: a colour chosen by hand drifts
+from the dashboard it summarises. Everything under it is a **delta** — ask the room what the last
+digest was, and say only what has moved since:
 
 ```bash
 node <skill>/tools/matrix.mjs --last-state > previous.json                        # read-only
@@ -620,22 +624,22 @@ so this needs no state file and survives the sandbox being new every morning.
   paste and the commit comments are unaffected and still run — they cost the room nothing — and on a
   silent morning the paste URL lives in the run log alone.
 - **A stabilisation PR is news, and it makes the morning non-silent.** The one thing here a
-  dashboard could never print is a fix, so when §5 opened one it gets its own line — *"→ draft fix
+  dashboard could never print is a fix, so when §5 opened one it gets its own row — *"→ draft fix
   for `ImageIT#editImage`: 5/60 → 0/60 on Chrome, XWIKI-24749"* — even on a morning where nothing
   else moved and the digest would otherwise be withheld. Nothing else about that flicker is
   repeated: it was already red yesterday, and the PR is the whole of the news.
-- List `new`, `changed` and `fixed`, one line each. **`fixed` is the line the dashboard can never
+- List `new`, `changed` and `fixed`, one table row each. **`fixed` is the line the dashboard can never
   show**: it says what went green, and it is the only place anyone learns that.
 - Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
-- **A quality-gate line names what failed it and whose code is under it** — *"sonar gate red on
+- **A quality-gate row names what failed it and whose code is under it** — *"sonar gate red on
   master — reliability of new code is C: 1 blocker in `RepositoryManager.java`, 2 issues in
   `comments.js` (lcharpentier)"*. Take the names from `sonar.culprits` and nothing else, and let the
   line say *whose code*, never *who broke it*.
-- **Where a line has a Develocity fact, it carries it, in one clause.** *"6/347 over 28d, Chrome
+- **Where a row has a Develocity fact, it carries it, in one clause.** *"6/347 over 28d, Chrome
   only"* or *"first failed 2026-08-25, not in tonight's window"* is the other half of the answer to
   "the dashboard is faster": the dashboard has tonight's red square, and no dashboard has the
   28-day rate, the configuration the failure concentrates in, or the day it started. Take the clause
-  from `develocity` — never restate a p-value in your own words, and never put one on a line the
+  from `develocity` — never restate a p-value in your own words, and never put one on a row the
   field does not support.
 - `previous.available: false` — the room could not be read — classifies **nothing**. Fall back to
   the state snapshot of every incident and **say so in the last line**: *"(could not read the last
@@ -643,33 +647,47 @@ so this needs no state file and survives the sandbox being new every morning.
   a green morning, which is the one way this may not fail.
 
 ```
-🔴 CI 2026-09-18 — 1 new, 2 changed, 2 fixed
-• NEW     platform/master   checkstyle break → a1b2c3d (jdoe) — commented
-• CHANGED platform/18.4.x+17.10.x  AllIT#foo flicker → systematic since #412 (4d) — no owner found
-• CHANGED platform/master   ImageIT#editImage (1d) — quiet: announced by jdoe before it broke
-• FIXED   commons/16.10.x   docker rate limit — green since #221
-• FIXED   platform/master   DocExtraTabsIT — green — discussed 09-17 17:34 (asmith), XWIKI-25019
-  … 3 unchanged · +12 long-standing
-→ https://bin.xwikisas.com/?abc#key (1 week)
+🔴 CI 2026-09-18 — 1 new, 2 changed, 2 fixed · detail → https://bin.xwikisas.com/?abc#key (1 week)
+
+| | master | 18.8.x | 18.4.x | 17.10.x | 16.10.x |
+|---|:-:|:-:|:-:|:-:|:-:|
+| platform | 🔴 | 🟢 | 🔴 | 🔴 | 🟠 |
+| commons | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| rendering | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+
+| | Branch | What | Age | Done |
+|---|---|---|---|---|
+| 🆕🔴 | platform/master | checkstyle break → a1b2c3d (jdoe) | 0d | commented |
+| 🔄🔴 | platform/18.4.x+17.10.x | `AllIT#foo` flicker → systematic since #412 | 4d | no owner found |
+| 🔄🟠 | platform/master | `ImageIT#editImage` | 1d | quiet: announced by jdoe before it broke |
+| ✅ | commons/16.10.x | docker rate limit | — | green since #221 |
+| ✅ | platform/master | `DocExtraTabsIT` | — | discussed 09-17 17:34 (asmith), XWIKI-25019 |
+
+… 3 unchanged · +12 long-standing
 ```
 
+The headline opens with `status.worst`, the grid's worst cell. The first cell of a row is `🆕`, `🔄` or `✅` for new, changed and fixed, followed on the first two by the
+row's `dot` from `--delta` — the same colours as the grid, so a 🔴 row is the reason for a 🔴 cell.
+`matrix.mjs` posts a pipe table as an HTML table, which Element renders; the Markdown stays in the
+plain body a bridge relays. Keep a cell to a clause: a table is scanned, and a wrapped cell is read.
+
 Incidents with `beyondHorizon` are **aggregated into a single `+N long-standing` count**, never
-listed. The rest are chosen, not rendered: a break with an owner first, then a break without one,
-then what moved; the paste carries the rest. Every line names the branch, what is broken, since
-when, and what was done about it (`commented`, `no owner found`, `issue filed`, `tracked`, `likely
+listed — the grid still shows their colour. The rows are chosen, not rendered: a break with an
+owner first, then a break without one, then what moved; the paste carries the rest. Every row names
+the branch, what is broken, since when, and what was done about it (`commented`, `no owner found`, `issue filed`, `tracked`, `likely
 fixed, unbuilt`, `fix in flight`, `backport candidate`). **Every line still carries its age** — a
 `changed` incident that broke four days ago is not four days of news.
 
-**One cause is one line**, whatever the branch count: incidents whose `primary` is `false` are the
-same signature elsewhere, so their branches join the primary's line (`platform/18.4.x+17.10.x`) and
-never take a line of their own. A `fixed-elsewhere` incident names the sha and what to do with it —
+**One cause is one row**, whatever the branch count: incidents whose `primary` is `false` are the
+same signature elsewhere, so their branches join the primary's row (`platform/18.4.x+17.10.x`) and
+never take a row of their own. A `fixed-elsewhere` incident names the sha and what to do with it —
 *platform/18.4.x `VersionIT` systematic (1d) — fixed on master by `a1b2c3d`, backport candidate*.
 
-An incident whose `fixState` appeared today is `changed`, and it earns that line and nothing else —
-it is the one line that stops a reader who has just pushed the fix, or opened the PR, from opening
+An incident whose `fixState` appeared today is `changed`, and it earns that row and nothing else —
+it is the one row that stops a reader who has just pushed the fix, or opened the PR, from opening
 the paste to find out whether the routine noticed.
 
-**A `fixState.fromChat` incident always gets its line, whatever else is cut.** Every other value
+**A `fixState.fromChat` incident always gets its row, whatever else is cut.** Every other value
 suppresses on a fact — a commit, a PR, a timestamp — but these two suppress on a *sentence*, which is
 softer, so the routine's reading of the room goes back into the room: *"`ImageIT#editImage` — quiet,
 announced by jdoe before it broke"*. The person who wrote the sentence is reading that line and

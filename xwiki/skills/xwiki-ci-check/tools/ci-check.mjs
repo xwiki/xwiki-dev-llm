@@ -38,8 +38,9 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
                       instead of sweeping. Add --live to drop the "dry run" header.
   --delta <f>         Classify the incidents of a work order ('-' for stdin) against the state the
-                      last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, plus
-                      the state for the next run. Reads yesterday's with --previous.
+                      last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, the
+                      repo × branch status grid, and the state for the next run. Reads yesterday's
+                      with --previous.
   --previous <f>      What matrix.mjs --last-state printed (default: an unknown yesterday).
   --chat <f>          What matrix.mjs --since printed ('-' for stdin): the room's messages since
                       the last digest. They can only ever buy an incident silence, never raise one.
@@ -2467,12 +2468,70 @@ function renderDetail(report, { live }) {
   return out.join('\n');
 }
 
+// ---- The status grid ---------------------------------------------------------------------------
+// The one snapshot the digest carries: a repo × branch grid of the dashboard's colours, so a reader
+// sees how red CI is before reading a word, and reads the lines below only for the branch they own.
+// Rendered here, never written, because a colour that is chosen by hand is one that drifts from the
+// dashboard it claims to summarise.
+
+const DOTS = { red: '🔴', orange: '🟠', green: '🟢', none: '⚪' };
+
+/**
+ * One cell. Red is a branch that cannot be released as it stands — a build break, a failing gate,
+ * a test that fails every run — whether or not the incident is analysed today, collapsed onto
+ * another branch or beyond the horizon, because the dashboard shows it red all the same. Orange is
+ * red of any other kind: flickers, infrastructure, a red job the sweep did not explain.
+ */
+const unreleasable = incident => incident.class === 2 || isGate(incident)
+  || (incident.class === 1 && incident.state === 'systematic');
+
+function cellOf(jobs, incidents) {
+  if (incidents.some(unreleasable)) return 'red';
+  if (incidents.length || jobs.some(job => job.result && job.result !== 'SUCCESS')) return 'orange';
+  return jobs.some(job => job.result === 'SUCCESS') ? 'green' : 'none';
+}
+
+const shortBranch = branch => branch.replace(/^stable-/, '');
+const shortRepo = repo => repo.replace(/^xwiki-/, '');
+const branchOrder = (a, b) => {
+  const version = branch => (branch === 'master' ? [Infinity] : (branch.match(/\d+/g) || []).map(Number));
+  const [va, vb] = [version(a), version(b)];
+  for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+    if ((va[i] ?? -1) !== (vb[i] ?? -1)) return (vb[i] ?? -1) - (va[i] ?? -1);
+  }
+  return 0;
+};
+
+/** The grid as a Markdown pipe table — matrix.mjs posts it as an HTML table — and its worst colour. */
+function statusOf(report) {
+  const repos = [...new Set(report.jobs.map(job => job.repo))];
+  const branches = [...new Set(report.jobs.map(job => job.branch))].sort(branchOrder);
+  const colours = [];
+  const rows = repos.map(repo => {
+    const row = branches.map(branch => {
+      const jobs = report.jobs.filter(job => job.repo === repo && job.branch === branch);
+      if (!jobs.length) return '';
+      const colour = cellOf(jobs, (report.incidents || [])
+        .filter(incident => incident.repo === repo && incident.branch === branch));
+      colours.push(colour);
+      return DOTS[colour];
+    });
+    return `| ${shortRepo(repo)} | ${row.join(' | ')} |`;
+  });
+  const worst = ['red', 'orange', 'green', 'none'].find(colour => colours.includes(colour)) || 'none';
+  return {
+    worst: DOTS[worst],
+    grid: [`| | ${branches.map(shortBranch).join(' | ')} |`, `|---|${branches.map(() => ':-:').join('|')}|`,
+      ...rows].join('\n')
+  };
+}
+
 // ---- The delta ---------------------------------------------------------------------------------
-// A daily state snapshot is what the CI dashboard already is, and a reader who can get the same
-// thing faster by looking at it stops reading the digest. What a dashboard cannot show is the
-// *transitions*: what broke since yesterday, what moved, and — the one it can never show — what
-// went green. So each run is compared against the state the last digest carried, and a morning that
-// moved nothing is not posted at all.
+// A daily state snapshot is what the CI dashboard already is, so the digest carries exactly one —
+// the status grid above, a glance long — and spends its lines elsewhere. What a dashboard cannot
+// show is the *transitions*: what broke since yesterday, what moved, and — the one it can never
+// show — what went green. So each run is compared against the state the last digest carried, and a
+// morning that moved nothing is not posted at all.
 //
 // The comparison is mechanical and belongs here rather than in the model's reading of yesterday's
 // prose: an id either was in yesterday's state or was not. The prose is then written about the
@@ -2532,14 +2591,18 @@ function deltaOf(report, previous) {
     if (now.beyondHorizon) { longStanding++; continue; }
     const was = before.get(incident.id);
     if (!was) {
-      appeared.push({ id: incident.id, kind: now.kind, state: now.state, answer: now.answer || null });
+      appeared.push({ id: incident.id, kind: now.kind, state: now.state, answer: now.answer || null,
+        dot: DOTS[unreleasable(incident) ? 'red' : 'orange'] });
       continue;
     }
     const moves = [['kind', was.kind, now.kind], ['state', was.state, now.state],
       ['answer', was.answer || 'none', now.answer || 'none']]
       .filter(([, from, to]) => from !== to)
       .map(([what, from, to]) => `${what} ${from} → ${to}`);
-    if (moves.length) changed.push({ id: incident.id, from: was.line, to: state[incident.id], moved: moves });
+    if (moves.length) {
+      changed.push({ id: incident.id, from: was.line, to: state[incident.id], moved: moves,
+        dot: DOTS[unreleasable(incident) ? 'red' : 'orange'] });
+    }
     else same++;
   }
   for (const [id, was] of before) {
@@ -2556,6 +2619,7 @@ function deltaOf(report, previous) {
       new: [], changed: [], fixed: [], same: 0,
       unknown: Object.keys(state).length,
       longStanding,
+      status: statusOf(report),
       state
     };
   }
@@ -2569,6 +2633,7 @@ function deltaOf(report, previous) {
     fixed,
     same,
     longStanding,
+    status: statusOf(report),
     state
   };
 }
