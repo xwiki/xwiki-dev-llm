@@ -68,18 +68,44 @@ const room = process.env.MATRIX_ROOM || DEFAULT_ROOM;
 const escapeHtml = text =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+const inline = text => escapeHtml(text)
+  .replace(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
+  .replace(/`([^`]+)`/g, '<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  // A bare URL is the usual shape of the "detail here" line, so make it clickable too.
+  .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, '$1<a href="$2">$2</a>');
+
+const cells = row => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+const isRule = row => /^\s*\|?(\s*:?-+:?\s*\|)+\s*:?-*:?\s*\|?\s*$/.test(row);
+
+/** A pipe table — header, rule, rows — as the `<table>` Element renders; a table is scanned, a line is read. */
+function tableHtml(rows) {
+  const [head, , ...body] = rows;
+  const tr = (row, tag) => `<tr>${cells(row).map(cell => `<${tag}>${inline(cell)}</${tag}>`).join('')}</tr>`;
+  return `<table><thead>${tr(head, 'th')}</thead><tbody>${body.map(row => tr(row, 'td')).join('')}</tbody></table>`;
+}
+
 /**
- * Just enough Markdown for a digest — links, bold, code — rendered to the HTML subset Matrix
- * clients accept. Anything richer belongs in the paste, not in a chat room.
+ * Just enough Markdown for a digest — links, bold, code, pipe tables — rendered to the HTML subset
+ * Matrix clients accept. Anything richer belongs in the paste, not in a chat room. The plain `body`
+ * keeps the Markdown as written, which is what a bridge relays.
  */
 export function toHtml(markdown) {
-  return escapeHtml(markdown)
-    .replace(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    // A bare URL is the usual shape of the "detail here" line, so make it clickable too.
-    .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, '$1<a href="$2">$2</a>')
-    .replace(/\n/g, '<br/>');
+  const lines = markdown.split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().startsWith('|') && isRule(lines[i + 1] || '')) {
+      let end = i + 2;
+      while (end < lines.length && lines[end].trim().startsWith('|')) end++;
+      out.push({ table: tableHtml(lines.slice(i, end)) });
+      i = end - 1;
+    } else {
+      out.push({ line: inline(lines[i]) });
+    }
+  }
+  // A table is a block of its own: no line break is added either side of it.
+  const breakAfter = n => (n + 1 < out.length && out[n + 1].line != null ? '<br/>' : '');
+  return out.map((part, n) => part.table ?? part.line + breakAfter(n)).join('');
 }
 
 /**
