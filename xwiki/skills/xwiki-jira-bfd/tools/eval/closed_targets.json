@@ -1,0 +1,5793 @@
+{
+ "rows": [
+  {
+   "key": "XWIKI-21325",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-21324",
+   "target_resolution": "Fixed",
+   "created": "2023-09-15T11:52:02.000+0200",
+   "resolved": "2023-09-20T12:15:42.000+0200",
+   "target_resolved": "2023-09-20T12:15:08.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-21271",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-21185",
+   "target_resolution": "Fixed",
+   "created": "2023-08-30T10:04:36.000+0200",
+   "resolved": "2023-08-30T10:07:38.000+0200",
+   "target_resolved": "2023-07-31T14:26:32.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-21109",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-21110",
+   "target_resolution": "Fixed",
+   "created": "2023-07-05T14:12:54.000+0200",
+   "resolved": "2023-07-11T18:37:01.000+0200",
+   "target_resolved": "2023-07-11T16:55:15.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20769",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-20314",
+   "target_resolution": "Fixed",
+   "created": "2023-03-23T08:51:37.000+0100",
+   "resolved": "2023-03-23T09:55:37.000+0100",
+   "target_resolved": "2023-01-19T17:14:26.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20692",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-22380",
+   "target_resolution": "Fixed",
+   "created": "2023-02-28T11:10:59.000+0100",
+   "resolved": "2024-08-01T13:25:31.000+0200",
+   "target_resolved": "2024-08-01T11:33:13.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20547",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-21955",
+   "target_resolution": "Fixed",
+   "created": "2023-01-13T14:37:42.000+0100",
+   "resolved": "2024-09-26T14:59:28.000+0200",
+   "target_resolved": "2024-02-28T10:45:42.000+0100",
+   "comment_dates": [
+    "2023-01-13T14:42:30.000+0100",
+    "2023-01-13T14:44:18.000+0100",
+    "2023-01-13T14:45:43.000+0100",
+    "2023-01-13T14:48:08.000+0100",
+    "2024-09-23T15:50:07.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20375",
+   "group": "dup_of_Fixed",
+   "target": "XRENDERING-689",
+   "target_resolution": "Fixed",
+   "created": "2022-11-16T15:28:49.000+0100",
+   "resolved": "2022-11-21T17:37:04.000+0100",
+   "target_resolved": "2022-11-21T17:36:03.000+0100",
+   "comment_dates": [
+    "2022-11-16T15:28:50.000+0100",
+    "2022-11-16T15:28:50.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20313",
+   "group": "dup_of_Fixed",
+   "target": "XRENDERING-693",
+   "target_resolution": "Fixed",
+   "created": "2022-11-02T16:44:21.000+0100",
+   "resolved": "2022-12-20T17:31:38.000+0100",
+   "target_resolved": "2022-12-19T17:38:00.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20130",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19994",
+   "target_resolution": "Fixed",
+   "created": "2022-09-12T17:24:53.000+0200",
+   "resolved": "2022-09-12T18:00:16.000+0200",
+   "target_resolved": "2022-09-07T10:11:16.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-20096",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19994",
+   "target_resolution": "Fixed",
+   "created": "2022-08-25T18:06:49.000+0200",
+   "resolved": "2023-02-01T11:14:49.000+0100",
+   "target_resolved": "2022-09-07T10:11:16.000+0200",
+   "comment_dates": [
+    "2022-08-26T09:30:31.000+0200",
+    "2022-08-28T04:07:15.000+0200",
+    "2023-01-02T17:01:33.000+0100",
+    "2023-01-12T14:19:15.000+0100",
+    "2023-01-20T15:20:13.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19918",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19729",
+   "target_resolution": "Fixed",
+   "created": "2022-06-30T17:26:32.000+0200",
+   "resolved": "2022-06-30T17:29:40.000+0200",
+   "target_resolved": "2022-05-17T17:20:11.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19888",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19886",
+   "target_resolution": "Fixed",
+   "created": "2022-06-27T13:39:48.000+0200",
+   "resolved": "2022-07-06T16:49:33.000+0200",
+   "target_resolved": "2022-06-28T15:41:12.000+0200",
+   "comment_dates": [
+    "2022-06-28T09:25:22.000+0200",
+    "2022-06-28T10:59:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19789",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19795",
+   "target_resolution": "Fixed",
+   "created": "2022-06-03T08:01:58.000+0200",
+   "resolved": "2022-06-03T18:33:21.000+0200",
+   "target_resolved": "2022-06-03T18:32:51.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19781",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19680",
+   "target_resolution": "Fixed",
+   "created": "2022-05-30T13:50:03.000+0200",
+   "resolved": "2022-05-31T16:35:31.000+0200",
+   "target_resolved": "2022-05-02T16:51:56.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19679",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19677",
+   "target_resolution": "Fixed",
+   "created": "2022-05-02T14:08:02.000+0200",
+   "resolved": "2022-05-04T09:29:27.000+0200",
+   "target_resolved": "2022-05-03T20:53:08.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19661",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19639",
+   "target_resolution": "Fixed",
+   "created": "2022-04-26T00:50:47.000+0200",
+   "resolved": "2022-04-26T01:02:32.000+0200",
+   "target_resolved": "2022-04-21T10:45:15.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19659",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19660",
+   "target_resolution": "Fixed",
+   "created": "2022-04-25T17:33:04.000+0200",
+   "resolved": "2022-04-27T09:21:37.000+0200",
+   "target_resolved": "2022-04-27T09:21:16.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19642",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19123",
+   "target_resolution": "Fixed",
+   "created": "2022-04-15T13:15:33.000+0200",
+   "resolved": "2022-04-15T15:09:31.000+0200",
+   "target_resolved": "2021-11-10T14:07:28.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19583",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9119",
+   "target_resolution": "Fixed",
+   "created": "2022-03-30T15:25:02.000+0200",
+   "resolved": "2022-10-12T14:32:58.000+0200",
+   "target_resolved": "2022-10-12T14:31:59.000+0200",
+   "comment_dates": [
+    "2022-10-10T17:17:00.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19390",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-2388",
+   "target_resolution": "Fixed",
+   "created": "2022-02-01T21:34:40.000+0100",
+   "resolved": "2023-11-06T13:26:37.000+0100",
+   "target_resolved": "2022-04-05T08:08:49.000+0200",
+   "comment_dates": [
+    "2022-02-01T21:53:50.000+0100",
+    "2022-02-16T15:29:25.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19251",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18368",
+   "target_resolution": "Fixed",
+   "created": "2021-12-16T10:39:37.000+0100",
+   "resolved": "2021-12-17T09:57:32.000+0100",
+   "target_resolved": "2021-03-30T16:14:32.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19137",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18004",
+   "target_resolution": "Fixed",
+   "created": "2021-11-12T17:27:27.000+0100",
+   "resolved": "2023-05-24T16:55:22.000+0200",
+   "target_resolved": "2023-05-15T11:27:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19117",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-2068",
+   "target_resolution": "Fixed",
+   "created": "2021-11-05T16:26:01.000+0100",
+   "resolved": "2021-12-23T09:29:38.000+0100",
+   "target_resolved": "2021-12-23T09:28:49.000+0100",
+   "comment_dates": [
+    "2021-11-05T16:53:50.000+0100",
+    "2021-11-05T17:04:04.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19027",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19031",
+   "target_resolution": "Fixed",
+   "created": "2021-10-07T00:11:15.000+0200",
+   "resolved": "2021-10-27T12:13:17.000+0200",
+   "target_resolved": "2021-10-27T12:12:12.000+0200",
+   "comment_dates": [
+    "2021-10-07T00:27:37.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18977",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18827",
+   "target_resolution": "Fixed",
+   "created": "2021-09-15T11:45:13.000+0200",
+   "resolved": "2021-09-15T12:47:34.000+0200",
+   "target_resolved": "2021-07-09T13:38:34.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18705",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18703",
+   "target_resolution": "Fixed",
+   "created": "2021-06-01T15:52:38.000+0200",
+   "resolved": "2021-07-08T11:37:20.000+0200",
+   "target_resolved": "2021-06-02T10:59:56.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18704",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18703",
+   "target_resolution": "Fixed",
+   "created": "2021-06-01T15:51:23.000+0200",
+   "resolved": "2021-07-08T11:37:02.000+0200",
+   "target_resolved": "2021-06-02T10:59:56.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18664",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-20440",
+   "target_resolution": "Fixed",
+   "created": "2021-05-19T14:04:25.000+0200",
+   "resolved": "2025-06-15T19:18:32.000+0200",
+   "target_resolved": "2024-04-18T16:21:59.000+0200",
+   "comment_dates": [
+    "2021-05-19T14:04:50.000+0200",
+    "2025-06-13T13:48:47.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18602",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19549",
+   "target_resolution": "Fixed",
+   "created": "2021-04-23T18:18:32.000+0200",
+   "resolved": "2022-03-25T13:33:57.000+0100",
+   "target_resolved": "2022-03-25T13:29:13.000+0100",
+   "comment_dates": [
+    "2021-04-26T13:59:45.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18565",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17374",
+   "target_resolution": "Fixed",
+   "created": "2021-04-16T15:15:11.000+0200",
+   "resolved": "2021-04-19T09:43:08.000+0200",
+   "target_resolved": "2020-09-25T11:16:06.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18506",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18980",
+   "target_resolution": "Fixed",
+   "created": "2021-03-26T11:52:10.000+0100",
+   "resolved": "2022-04-21T11:28:15.000+0200",
+   "target_resolved": "2022-04-21T11:27:39.000+0200",
+   "comment_dates": [
+    "2021-08-23T14:26:29.000+0200",
+    "2021-09-20T10:12:37.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18396",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18413",
+   "target_resolution": "Fixed",
+   "created": "2021-03-02T13:02:35.000+0100",
+   "resolved": "2025-08-19T12:46:24.000+0200",
+   "target_resolved": "2024-06-27T12:17:13.000+0200",
+   "comment_dates": [
+    "2025-06-04T17:56:20.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18376",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-2509",
+   "target_resolution": "Fixed",
+   "created": "2021-02-23T12:17:29.000+0100",
+   "resolved": "2022-09-01T18:43:47.000+0200",
+   "target_resolved": "2022-09-01T18:41:01.000+0200",
+   "comment_dates": [
+    "2021-02-23T12:20:56.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18293",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19190",
+   "target_resolution": "Fixed",
+   "created": "2021-01-26T18:47:42.000+0100",
+   "resolved": "2022-06-12T19:25:30.000+0200",
+   "target_resolved": "2021-12-10T09:59:52.000+0100",
+   "comment_dates": [
+    "2021-01-26T18:49:39.000+0100",
+    "2021-01-26T18:51:36.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18070",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18081",
+   "target_resolution": "Fixed",
+   "created": "2020-11-18T00:52:11.000+0100",
+   "resolved": "2020-11-19T11:53:26.000+0100",
+   "target_resolved": "2020-11-19T11:52:55.000+0100",
+   "comment_dates": [
+    "2020-11-18T09:16:39.000+0100",
+    "2020-11-18T09:54:44.000+0100",
+    "2020-11-18T09:57:02.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-18055",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14168",
+   "target_resolution": "Fixed",
+   "created": "2020-11-12T09:49:39.000+0100",
+   "resolved": "2025-06-03T11:11:15.000+0200",
+   "target_resolved": "2024-09-13T12:42:17.000+0200",
+   "comment_dates": [
+    "2020-11-12T09:52:08.000+0100",
+    "2020-11-12T11:25:56.000+0100",
+    "2025-06-02T11:05:33.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18041",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18058",
+   "target_resolution": "Fixed",
+   "created": "2020-11-09T10:33:34.000+0100",
+   "resolved": "2020-11-13T17:21:23.000+0100",
+   "target_resolved": "2020-11-12T17:00:44.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17907",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17896",
+   "target_resolution": "Fixed",
+   "created": "2020-10-07T11:44:56.000+0200",
+   "resolved": "2020-10-08T09:50:30.000+0200",
+   "target_resolved": "2020-10-02T17:31:05.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17893",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17896",
+   "target_resolution": "Fixed",
+   "created": "2020-10-01T16:32:31.000+0200",
+   "resolved": "2020-10-02T17:31:50.000+0200",
+   "target_resolved": "2020-10-02T17:31:05.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17887",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-20911",
+   "target_resolution": "Fixed",
+   "created": "2020-09-30T14:23:44.000+0200",
+   "resolved": "2023-05-12T17:04:48.000+0200",
+   "target_resolved": "2023-05-12T16:36:10.000+0200",
+   "comment_dates": [
+    "2020-09-30T14:25:48.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17886",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17896",
+   "target_resolution": "Fixed",
+   "created": "2020-09-30T13:00:00.000+0200",
+   "resolved": "2020-10-08T09:52:20.000+0200",
+   "target_resolved": "2020-10-02T17:31:05.000+0200",
+   "comment_dates": [
+    "2020-09-30T13:07:34.000+0200",
+    "2020-09-30T17:04:04.000+0200",
+    "2020-09-30T17:26:06.000+0200",
+    "2020-09-30T17:56:12.000+0200",
+    "2020-10-01T08:08:42.000+0200",
+    "2020-10-01T09:25:44.000+0200",
+    "2020-10-01T11:06:43.000+0200",
+    "2020-10-01T12:01:41.000+0200",
+    "2020-10-01T12:18:40.000+0200",
+    "2020-10-01T14:15:43.000+0200",
+    "2020-10-01T17:35:56.000+0200",
+    "2020-10-02T08:19:36.000+0200",
+    "2020-10-02T10:18:26.000+0200",
+    "2020-10-02T11:21:01.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17875",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15310",
+   "target_resolution": "Fixed",
+   "created": "2020-09-28T16:43:37.000+0200",
+   "resolved": "2020-09-28T17:14:34.000+0200",
+   "target_resolved": "2018-05-31T17:40:40.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17847",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17854",
+   "target_resolution": "Fixed",
+   "created": "2020-09-24T10:43:48.000+0200",
+   "resolved": "2020-09-25T10:32:42.000+0200",
+   "target_resolved": "2020-09-25T10:29:54.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17767",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17723",
+   "target_resolution": "Fixed",
+   "created": "2020-09-08T16:26:17.000+0200",
+   "resolved": "2020-09-10T18:48:12.000+0200",
+   "target_resolved": "2020-09-10T18:47:24.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17706",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17367",
+   "target_resolution": "Fixed",
+   "created": "2020-08-28T11:04:38.000+0200",
+   "resolved": "2021-12-02T16:24:34.000+0100",
+   "target_resolved": "2021-12-02T16:23:25.000+0100",
+   "comment_dates": [
+    "2020-09-10T15:56:32.000+0200",
+    "2020-12-13T19:55:37.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17657",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17665",
+   "target_resolution": "Fixed",
+   "created": "2020-08-18T15:44:28.000+0200",
+   "resolved": "2020-08-19T18:54:29.000+0200",
+   "target_resolved": "2020-08-19T18:53:38.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17655",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17663",
+   "target_resolution": "Fixed",
+   "created": "2020-08-17T19:37:11.000+0200",
+   "resolved": "2020-08-19T12:32:19.000+0200",
+   "target_resolved": "2020-08-19T12:31:35.000+0200",
+   "comment_dates": [
+    "2020-08-18T08:53:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17569",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17367",
+   "target_resolution": "Fixed",
+   "created": "2020-07-16T16:29:53.000+0200",
+   "resolved": "2021-12-02T16:24:47.000+0100",
+   "target_resolved": "2021-12-02T16:23:25.000+0100",
+   "comment_dates": [
+    "2020-07-16T16:42:27.000+0200",
+    "2020-09-10T15:09:01.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17476",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17639",
+   "target_resolution": "Fixed",
+   "created": "2020-06-29T15:32:48.000+0200",
+   "resolved": "2020-09-18T17:30:38.000+0200",
+   "target_resolved": "2020-09-18T17:29:10.000+0200",
+   "comment_dates": [
+    "2020-06-29T15:33:49.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17414",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17194",
+   "target_resolution": "Fixed",
+   "created": "2020-06-05T17:25:34.000+0200",
+   "resolved": "2020-06-05T17:37:54.000+0200",
+   "target_resolved": "2020-04-23T12:04:50.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17286",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17194",
+   "target_resolution": "Fixed",
+   "created": "2020-05-01T13:36:27.000+0200",
+   "resolved": "2020-05-01T16:02:52.000+0200",
+   "target_resolved": "2020-04-23T12:04:50.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17281",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17279",
+   "target_resolution": "Fixed",
+   "created": "2020-04-30T15:35:11.000+0200",
+   "resolved": "2020-05-01T22:39:47.000+0200",
+   "target_resolved": "2020-04-30T15:22:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17085",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17092",
+   "target_resolution": "Fixed",
+   "created": "2020-03-01T17:06:18.000+0100",
+   "resolved": "2020-03-03T13:19:13.000+0100",
+   "target_resolved": "2020-03-03T13:17:09.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-17066",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17007",
+   "target_resolution": "Fixed",
+   "created": "2020-02-21T15:10:23.000+0100",
+   "resolved": "2020-02-25T14:14:49.000+0100",
+   "target_resolved": "2020-02-21T17:11:39.000+0100",
+   "comment_dates": [
+    "2020-02-24T09:23:24.000+0100",
+    "2020-02-24T09:28:20.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16960",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14247",
+   "target_resolution": "Fixed",
+   "created": "2020-01-08T16:09:48.000+0100",
+   "resolved": "2020-01-09T16:21:30.000+0100",
+   "target_resolved": "2020-01-09T16:21:06.000+0100",
+   "comment_dates": [
+    "2020-01-08T16:16:16.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16923",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1825",
+   "target_resolution": "Fixed",
+   "created": "2019-12-17T02:19:10.000+0100",
+   "resolved": "2019-12-23T09:44:51.000+0100",
+   "target_resolved": "2019-12-23T09:41:53.000+0100",
+   "comment_dates": [
+    "2019-12-17T08:41:16.000+0100",
+    "2019-12-17T12:27:43.000+0100",
+    "2019-12-17T16:26:23.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16808",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1800",
+   "target_resolution": "Fixed",
+   "created": "2019-10-25T14:28:20.000+0200",
+   "resolved": "2019-11-20T10:24:14.000+0100",
+   "target_resolved": "2019-11-20T10:23:13.000+0100",
+   "comment_dates": [
+    "2019-10-31T16:13:31.000+0100",
+    "2019-10-31T16:18:07.000+0100",
+    "2019-10-31T16:43:48.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16803",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16640",
+   "target_resolution": "Fixed",
+   "created": "2019-10-24T19:52:37.000+0200",
+   "resolved": "2019-10-25T10:58:20.000+0200",
+   "target_resolved": "2019-10-25T10:56:29.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16783",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-22380",
+   "target_resolution": "Fixed",
+   "created": "2019-10-15T17:13:56.000+0200",
+   "resolved": "2024-08-01T11:33:58.000+0200",
+   "target_resolved": "2024-08-01T11:33:13.000+0200",
+   "comment_dates": [
+    "2020-05-07T19:05:19.000+0200",
+    "2023-09-12T09:57:18.000+0200",
+    "2023-09-12T09:58:02.000+0200",
+    "2023-09-12T10:06:31.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16627",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1688",
+   "target_resolution": "Fixed",
+   "created": "2019-07-31T13:11:00.000+0200",
+   "resolved": "2019-08-06T15:32:19.000+0200",
+   "target_resolved": "2019-08-06T15:31:00.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16624",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16593",
+   "target_resolution": "Fixed",
+   "created": "2019-07-30T13:28:16.000+0200",
+   "resolved": "2019-07-30T16:57:01.000+0200",
+   "target_resolved": "2019-07-18T16:06:21.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16515",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18635",
+   "target_resolution": "Fixed",
+   "created": "2019-06-21T19:00:04.000+0200",
+   "resolved": "2022-06-16T23:39:04.000+0200",
+   "target_resolved": "2021-05-19T17:06:27.000+0200",
+   "comment_dates": [
+    "2019-06-21T19:02:48.000+0200",
+    "2019-06-21T19:46:25.000+0200",
+    "2020-07-30T10:31:24.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16397",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16489",
+   "target_resolution": "Fixed",
+   "created": "2019-05-10T09:44:56.000+0200",
+   "resolved": "2019-07-16T16:36:16.000+0200",
+   "target_resolved": "2019-06-21T12:30:20.000+0200",
+   "comment_dates": [
+    "2019-06-21T12:32:50.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16351",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16299",
+   "target_resolution": "Fixed",
+   "created": "2019-04-16T16:21:42.000+0200",
+   "resolved": "2019-04-16T16:27:52.000+0200",
+   "target_resolved": "2019-04-02T13:30:56.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16239",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16538",
+   "target_resolution": "Fixed",
+   "created": "2019-03-18T14:53:39.000+0100",
+   "resolved": "2019-06-27T14:13:20.000+0200",
+   "target_resolved": "2019-06-27T10:58:08.000+0200",
+   "comment_dates": [
+    "2019-04-11T12:49:40.000+0200",
+    "2019-06-05T13:24:44.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16227",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1603",
+   "target_resolution": "Fixed",
+   "created": "2019-03-14T18:28:55.000+0100",
+   "resolved": "2019-03-14T18:58:43.000+0100",
+   "target_resolved": "2019-03-14T18:55:16.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16225",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16146",
+   "target_resolution": "Fixed",
+   "created": "2019-03-13T16:46:24.000+0100",
+   "resolved": "2019-03-13T18:31:30.000+0100",
+   "target_resolved": "2019-02-14T18:48:49.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16156",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16124",
+   "target_resolution": "Fixed",
+   "created": "2019-02-15T16:14:28.000+0100",
+   "resolved": "2019-02-15T16:20:50.000+0100",
+   "target_resolved": "2019-02-11T17:36:17.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16105",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16170",
+   "target_resolution": "Fixed",
+   "created": "2019-02-05T13:18:37.000+0100",
+   "resolved": "2020-02-27T17:10:51.000+0100",
+   "target_resolved": "2019-02-21T22:22:57.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16090",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16077",
+   "target_resolution": "Fixed",
+   "created": "2019-02-01T15:31:36.000+0100",
+   "resolved": "2019-02-01T17:04:11.000+0100",
+   "target_resolved": "2019-01-31T15:40:21.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-16010",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15990",
+   "target_resolution": "Fixed",
+   "created": "2019-01-03T11:59:34.000+0100",
+   "resolved": "2019-01-03T17:54:36.000+0100",
+   "target_resolved": "2018-12-24T15:20:41.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15838",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15858",
+   "target_resolution": "Fixed",
+   "created": "2018-11-09T13:44:59.000+0100",
+   "resolved": "2018-12-06T10:02:14.000+0100",
+   "target_resolved": "2018-11-13T12:35:02.000+0100",
+   "comment_dates": [
+    "2018-11-19T10:36:50.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15834",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15858",
+   "target_resolution": "Fixed",
+   "created": "2018-11-08T14:11:00.000+0100",
+   "resolved": "2018-12-06T10:02:29.000+0100",
+   "target_resolved": "2018-11-13T12:35:02.000+0100",
+   "comment_dates": [
+    "2018-11-09T13:45:39.000+0100",
+    "2018-11-19T10:38:07.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15808",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16146",
+   "target_resolution": "Fixed",
+   "created": "2018-11-06T11:01:59.000+0100",
+   "resolved": "2019-02-14T18:49:16.000+0100",
+   "target_resolved": "2019-02-14T18:48:49.000+0100",
+   "comment_dates": [
+    "2018-11-24T21:33:21.000+0100",
+    "2018-11-26T09:53:57.000+0100",
+    "2018-11-26T15:29:48.000+0100",
+    "2018-11-26T16:34:13.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15771",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15835",
+   "target_resolution": "Fixed",
+   "created": "2018-10-27T02:11:13.000+0200",
+   "resolved": "2018-11-20T11:42:07.000+0100",
+   "target_resolved": "2018-11-20T11:14:51.000+0100",
+   "comment_dates": [
+    "2018-10-27T02:13:29.000+0200",
+    "2018-10-27T15:51:19.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15769",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15381",
+   "target_resolution": "Fixed",
+   "created": "2018-10-24T14:12:11.000+0200",
+   "resolved": "2018-11-01T11:32:02.000+0100",
+   "target_resolved": "2018-07-09T17:52:35.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-19404",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19051",
+   "target_resolution": "Fixed",
+   "created": "2018-10-10T14:51:55.000+0200",
+   "resolved": "2024-02-15T13:03:31.000+0100",
+   "target_resolved": "2021-10-14T16:52:21.000+0200",
+   "comment_dates": [
+    "2018-10-10T14:54:22.000+0200",
+    "2022-01-12T10:48:29.000+0100",
+    "2022-01-18T14:33:11.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15651",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1503",
+   "target_resolution": "Fixed",
+   "created": "2018-09-28T12:02:16.000+0200",
+   "resolved": "2018-10-11T08:26:23.000+0200",
+   "target_resolved": "2018-10-09T10:52:36.000+0200",
+   "comment_dates": [
+    "2018-09-28T12:56:53.000+0200",
+    "2018-10-04T14:38:23.000+0200",
+    "2018-10-04T14:43:04.000+0200",
+    "2018-10-04T14:45:58.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15596",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16011",
+   "target_resolution": "Fixed",
+   "created": "2018-09-14T18:35:07.000+0200",
+   "resolved": "2019-04-03T17:11:13.000+0200",
+   "target_resolved": "2019-01-10T10:36:56.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15524",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15549",
+   "target_resolution": "Fixed",
+   "created": "2018-08-23T10:32:38.000+0200",
+   "resolved": "2018-09-03T13:48:32.000+0200",
+   "target_resolved": "2018-09-03T13:39:50.000+0200",
+   "comment_dates": [
+    "2018-08-23T14:11:20.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15457",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15727",
+   "target_resolution": "Fixed",
+   "created": "2018-07-24T22:07:36.000+0200",
+   "resolved": "2018-10-16T14:32:22.000+0200",
+   "target_resolved": "2018-10-16T14:30:17.000+0200",
+   "comment_dates": [
+    "2018-07-25T08:02:07.000+0200",
+    "2018-07-25T14:34:17.000+0200",
+    "2018-07-26T22:22:41.000+0200",
+    "2018-10-11T16:10:22.000+0200",
+    "2018-10-11T16:36:48.000+0200",
+    "2018-10-11T16:46:44.000+0200",
+    "2018-10-11T16:57:49.000+0200",
+    "2018-10-11T17:17:15.000+0200",
+    "2018-10-11T17:20:46.000+0200",
+    "2018-10-11T18:08:29.000+0200",
+    "2018-10-11T18:27:01.000+0200",
+    "2018-10-11T18:49:43.000+0200",
+    "2018-10-11T19:01:51.000+0200",
+    "2018-10-11T19:16:55.000+0200",
+    "2018-10-11T19:24:25.000+0200",
+    "2018-10-11T19:32:07.000+0200",
+    "2018-10-11T22:07:46.000+0200",
+    "2018-10-12T11:29:12.000+0200",
+    "2018-10-12T11:58:42.000+0200",
+    "2018-10-12T12:10:56.000+0200",
+    "2018-10-13T14:26:44.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15371",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15445",
+   "target_resolution": "Fixed",
+   "created": "2018-06-19T11:01:24.000+0200",
+   "resolved": "2018-10-01T12:13:16.000+0200",
+   "target_resolved": "2018-09-06T18:53:01.000+0200",
+   "comment_dates": [
+    "2018-09-26T05:23:17.000+0200",
+    "2018-09-26T08:12:16.000+0200",
+    "2018-09-26T09:32:39.000+0200",
+    "2018-09-26T16:36:34.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15355",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-2001",
+   "target_resolution": "Fixed",
+   "created": "2018-06-14T11:20:25.000+0200",
+   "resolved": "2020-09-10T18:43:53.000+0200",
+   "target_resolved": "2020-08-05T19:42:04.000+0200",
+   "comment_dates": [
+    "2018-06-14T11:56:23.000+0200",
+    "2018-06-14T12:57:38.000+0200",
+    "2018-06-14T14:26:03.000+0200",
+    "2018-06-14T15:11:26.000+0200",
+    "2018-06-14T16:40:54.000+0200",
+    "2018-06-14T18:56:06.000+0200",
+    "2018-06-18T09:52:30.000+0200",
+    "2018-06-18T10:45:14.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15325",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15314",
+   "target_resolution": "Fixed",
+   "created": "2018-06-04T15:38:32.000+0200",
+   "resolved": "2018-06-06T14:32:28.000+0200",
+   "target_resolved": "2018-05-30T14:54:17.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15272",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15258",
+   "target_resolution": "Fixed",
+   "created": "2018-05-17T12:13:18.000+0200",
+   "resolved": "2018-05-17T14:13:26.000+0200",
+   "target_resolved": "2018-05-14T11:14:28.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15257",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15337",
+   "target_resolution": "Fixed",
+   "created": "2018-05-11T22:29:05.000+0200",
+   "resolved": "2018-06-07T13:46:07.000+0200",
+   "target_resolved": "2018-06-07T11:41:25.000+0200",
+   "comment_dates": [
+    "2018-05-12T09:02:49.000+0200",
+    "2018-05-12T11:39:59.000+0200",
+    "2018-05-14T10:15:21.000+0200",
+    "2018-05-14T10:55:12.000+0200",
+    "2018-05-14T11:07:31.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15231",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15870",
+   "target_resolution": "Fixed",
+   "created": "2018-04-27T16:36:54.000+0200",
+   "resolved": "2018-12-21T15:29:18.000+0100",
+   "target_resolved": "2018-11-27T11:38:35.000+0100",
+   "comment_dates": [
+    "2018-04-27T16:41:54.000+0200",
+    "2018-05-03T14:13:38.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15189",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15942",
+   "target_resolution": "Fixed",
+   "created": "2018-04-12T19:42:14.000+0200",
+   "resolved": "2019-08-01T17:03:34.000+0200",
+   "target_resolved": "2018-12-06T18:37:17.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15179",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15436",
+   "target_resolution": "Fixed",
+   "created": "2018-04-09T15:53:37.000+0200",
+   "resolved": "2018-09-12T11:46:52.000+0200",
+   "target_resolved": "2018-09-06T18:53:30.000+0200",
+   "comment_dates": [
+    "2018-06-04T11:37:16.000+0200",
+    "2018-08-08T10:41:31.000+0200",
+    "2018-08-08T11:39:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14997",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-1350",
+   "target_resolution": "Fixed",
+   "created": "2018-02-05T10:13:29.000+0100",
+   "resolved": "2018-02-05T14:31:55.000+0100",
+   "target_resolved": "2018-02-05T14:27:47.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14991",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-23437",
+   "target_resolution": "Fixed",
+   "created": "2018-02-01T14:51:40.000+0100",
+   "resolved": "2025-08-05T18:25:03.000+0200",
+   "target_resolved": "2025-08-05T18:24:42.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14919",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-23437",
+   "target_resolution": "Fixed",
+   "created": "2017-12-21T13:27:10.000+0100",
+   "resolved": "2025-08-05T18:25:20.000+0200",
+   "target_resolved": "2025-08-05T18:24:42.000+0200",
+   "comment_dates": [
+    "2018-01-09T10:31:38.000+0100",
+    "2018-01-09T11:01:08.000+0100",
+    "2018-01-26T13:22:06.000+0100",
+    "2018-01-26T14:14:27.000+0100",
+    "2018-02-01T14:11:07.000+0100",
+    "2018-02-01T15:18:05.000+0100",
+    "2018-04-04T10:10:53.000+0200",
+    "2018-04-13T16:22:01.000+0200",
+    "2018-04-27T15:47:38.000+0200",
+    "2018-04-27T15:59:11.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14870",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19223",
+   "target_resolution": "Fixed",
+   "created": "2017-11-24T14:03:59.000+0100",
+   "resolved": "2022-01-20T10:40:45.000+0100",
+   "target_resolved": "2021-12-23T14:21:44.000+0100",
+   "comment_dates": [
+    "2017-11-24T14:14:22.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14772",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15258",
+   "target_resolution": "Fixed",
+   "created": "2017-10-08T10:10:19.000+0200",
+   "resolved": "2018-06-14T15:33:40.000+0200",
+   "target_resolved": "2018-05-14T11:14:28.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14725",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14713",
+   "target_resolution": "Fixed",
+   "created": "2017-09-25T15:36:20.000+0200",
+   "resolved": "2017-10-10T11:51:06.000+0200",
+   "target_resolved": "2017-10-03T18:59:42.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14724",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14713",
+   "target_resolution": "Fixed",
+   "created": "2017-09-25T15:01:40.000+0200",
+   "resolved": "2017-10-09T10:33:58.000+0200",
+   "target_resolved": "2017-10-03T18:59:42.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14627",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15012",
+   "target_resolution": "Fixed",
+   "created": "2017-08-18T11:55:56.000+0200",
+   "resolved": "2019-05-15T12:14:32.000+0200",
+   "target_resolved": "2018-02-09T15:00:57.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14583",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14833",
+   "target_resolution": "Fixed",
+   "created": "2017-08-02T14:50:25.000+0200",
+   "resolved": "2017-11-27T14:02:25.000+0100",
+   "target_resolved": "2017-11-09T16:49:03.000+0100",
+   "comment_dates": [
+    "2017-10-19T11:42:31.000+0200",
+    "2017-11-14T13:26:02.000+0100",
+    "2017-11-14T15:52:01.000+0100",
+    "2017-11-14T16:00:48.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14530",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14496",
+   "target_resolution": "Fixed",
+   "created": "2017-07-12T14:19:28.000+0200",
+   "resolved": "2017-07-12T15:53:10.000+0200",
+   "target_resolved": "2017-06-30T16:33:33.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14528",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14164",
+   "target_resolution": "Fixed",
+   "created": "2017-07-12T11:18:53.000+0200",
+   "resolved": "2017-07-13T13:13:45.000+0200",
+   "target_resolved": "2017-04-10T18:07:28.000+0200",
+   "comment_dates": [
+    "2017-07-12T11:30:13.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14499",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14502",
+   "target_resolution": "Fixed",
+   "created": "2017-07-01T00:15:47.000+0200",
+   "resolved": "2017-07-03T19:40:43.000+0200",
+   "target_resolved": "2017-07-03T19:14:43.000+0200",
+   "comment_dates": [
+    "2017-07-02T12:30:21.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14489",
+   "group": "dup_of_Fixed",
+   "target": "BLOG-90",
+   "target_resolution": "Fixed",
+   "created": "2017-06-29T17:19:01.000+0200",
+   "resolved": "2019-05-15T15:40:29.000+0200",
+   "target_resolved": "2017-07-07T15:49:27.000+0200",
+   "comment_dates": [
+    "2017-07-05T15:51:33.000+0200",
+    "2017-07-07T13:54:14.000+0200",
+    "2018-02-01T11:02:38.000+0100",
+    "2018-02-09T09:48:43.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14339",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14021",
+   "target_resolution": "Fixed",
+   "created": "2017-06-09T13:33:22.000+0200",
+   "resolved": "2017-06-09T14:54:02.000+0200",
+   "target_resolved": "2017-02-21T16:20:30.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14307",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14308",
+   "target_resolution": "Fixed",
+   "created": "2017-05-30T14:40:22.000+0200",
+   "resolved": "2017-05-30T22:50:11.000+0200",
+   "target_resolved": "2017-05-30T17:12:23.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14301",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14296",
+   "target_resolution": "Fixed",
+   "created": "2017-05-26T08:57:56.000+0200",
+   "resolved": "2017-06-08T17:34:28.000+0200",
+   "target_resolved": "2017-05-24T11:01:45.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14284",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8910",
+   "target_resolution": "Fixed",
+   "created": "2017-05-18T11:28:55.000+0200",
+   "resolved": "2017-05-18T12:06:52.000+0200",
+   "target_resolved": "2016-12-21T12:45:20.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14191",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14522",
+   "target_resolution": "Fixed",
+   "created": "2017-04-10T16:11:57.000+0200",
+   "resolved": "2017-07-26T16:06:15.000+0200",
+   "target_resolved": "2017-07-18T14:26:29.000+0200",
+   "comment_dates": [
+    "2017-04-10T20:21:29.000+0200",
+    "2017-04-10T20:26:33.000+0200",
+    "2017-04-10T20:30:19.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14174",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14092",
+   "target_resolution": "Fixed",
+   "created": "2017-04-05T20:21:50.000+0200",
+   "resolved": "2017-04-06T09:23:12.000+0200",
+   "target_resolved": "2017-03-30T16:25:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-14075",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18983",
+   "target_resolution": "Fixed",
+   "created": "2017-03-08T09:00:59.000+0100",
+   "resolved": "2022-03-22T11:59:02.000+0100",
+   "target_resolved": "2021-11-29T16:34:56.000+0100",
+   "comment_dates": [
+    "2017-03-08T13:55:14.000+0100",
+    "2017-03-08T14:54:11.000+0100",
+    "2017-03-08T15:23:20.000+0100",
+    "2017-03-08T15:33:45.000+0100",
+    "2017-03-09T09:39:49.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13955",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13740",
+   "target_resolution": "Fixed",
+   "created": "2017-01-10T19:58:12.000+0100",
+   "resolved": "2017-01-11T07:18:02.000+0100",
+   "target_resolved": "2016-09-27T15:33:30.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13952",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9386",
+   "target_resolution": "Fixed",
+   "created": "2017-01-10T12:11:22.000+0100",
+   "resolved": "2017-01-10T17:47:33.000+0100",
+   "target_resolved": "2017-01-10T17:41:42.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13927",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13925",
+   "target_resolution": "Fixed",
+   "created": "2016-12-12T18:12:15.000+0100",
+   "resolved": "2016-12-12T19:21:35.000+0100",
+   "target_resolved": "2016-12-12T11:42:55.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13871",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13873",
+   "target_resolution": "Fixed",
+   "created": "2016-11-15T10:35:10.000+0100",
+   "resolved": "2016-11-15T17:51:00.000+0100",
+   "target_resolved": "2016-11-15T14:12:22.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13842",
+   "group": "dup_of_Fixed",
+   "target": "XE-1591",
+   "target_resolution": "Fixed",
+   "created": "2016-10-31T13:09:50.000+0100",
+   "resolved": "2016-10-31T13:48:07.000+0100",
+   "target_resolved": "2016-10-18T09:52:11.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13758",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13776",
+   "target_resolution": "Fixed",
+   "created": "2016-10-03T14:26:17.000+0200",
+   "resolved": "2016-10-11T11:59:37.000+0200",
+   "target_resolved": "2016-10-07T14:02:18.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13757",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13606",
+   "target_resolution": "Fixed",
+   "created": "2016-10-03T13:43:58.000+0200",
+   "resolved": "2016-10-03T13:45:47.000+0200",
+   "target_resolved": "2016-07-28T14:00:15.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13699",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13847",
+   "target_resolution": "Fixed",
+   "created": "2016-09-14T14:51:47.000+0200",
+   "resolved": "2016-11-03T10:41:06.000+0100",
+   "target_resolved": "2016-11-03T10:39:11.000+0100",
+   "comment_dates": [
+    "2016-09-14T15:15:33.000+0200",
+    "2016-09-27T11:49:34.000+0200",
+    "2016-10-04T10:14:22.000+0200",
+    "2016-10-04T10:21:12.000+0200",
+    "2016-10-04T10:34:33.000+0200",
+    "2016-10-04T10:39:49.000+0200",
+    "2016-10-04T10:50:29.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13442",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13518",
+   "target_resolution": "Fixed",
+   "created": "2016-05-23T17:02:30.000+0200",
+   "resolved": "2016-06-23T10:33:45.000+0200",
+   "target_resolved": "2016-06-21T14:16:27.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13330",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9292",
+   "target_resolution": "Fixed",
+   "created": "2016-04-13T23:27:21.000+0200",
+   "resolved": "2016-04-14T16:42:09.000+0200",
+   "target_resolved": "2015-06-23T17:45:57.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13307",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12877",
+   "target_resolution": "Fixed",
+   "created": "2016-04-07T17:09:24.000+0200",
+   "resolved": "2017-01-12T14:51:14.000+0100",
+   "target_resolved": "2015-12-23T16:09:00.000+0100",
+   "comment_dates": [
+    "2016-04-07T17:14:15.000+0200",
+    "2016-06-08T10:19:27.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13301",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13288",
+   "target_resolution": "Fixed",
+   "created": "2016-04-07T07:47:06.000+0200",
+   "resolved": "2016-04-07T14:01:42.000+0200",
+   "target_resolved": "2016-04-07T13:58:46.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13261",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13040",
+   "target_resolution": "Fixed",
+   "created": "2016-03-28T09:28:54.000+0200",
+   "resolved": "2016-05-20T16:25:24.000+0200",
+   "target_resolved": "2016-05-18T09:25:00.000+0200",
+   "comment_dates": [
+    "2016-04-11T14:02:07.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13158",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12298",
+   "target_resolution": "Fixed",
+   "created": "2016-03-02T15:23:44.000+0100",
+   "resolved": "2016-04-28T18:40:00.000+0200",
+   "target_resolved": "2016-04-21T14:12:49.000+0200",
+   "comment_dates": [
+    "2016-03-02T15:28:35.000+0100",
+    "2016-03-02T15:48:54.000+0100",
+    "2016-03-02T17:46:09.000+0100",
+    "2016-03-03T17:53:09.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13047",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13018",
+   "target_resolution": "Fixed",
+   "created": "2016-02-01T20:55:22.000+0100",
+   "resolved": "2016-03-24T11:17:11.000+0100",
+   "target_resolved": "2016-03-10T19:15:34.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-13035",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13287",
+   "target_resolution": "Fixed",
+   "created": "2016-01-27T14:40:23.000+0100",
+   "resolved": "2017-01-12T17:10:58.000+0100",
+   "target_resolved": "2016-04-28T17:25:50.000+0200",
+   "comment_dates": [
+    "2016-01-27T14:57:33.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12894",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12794",
+   "target_resolution": "Fixed",
+   "created": "2015-12-09T17:33:16.000+0100",
+   "resolved": "2015-12-10T12:44:12.000+0100",
+   "target_resolved": "2015-11-16T14:14:29.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12886",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-18532",
+   "target_resolution": "Fixed",
+   "created": "2015-12-07T14:20:51.000+0100",
+   "resolved": "2024-03-07T17:25:16.000+0100",
+   "target_resolved": "2021-04-30T14:10:47.000+0200",
+   "comment_dates": [
+    "2015-12-07T14:30:30.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12827",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13335",
+   "target_resolution": "Fixed",
+   "created": "2015-11-17T08:44:58.000+0100",
+   "resolved": "2016-06-02T16:38:36.000+0200",
+   "target_resolved": "2016-04-28T16:28:53.000+0200",
+   "comment_dates": [
+    "2015-11-17T10:07:57.000+0100",
+    "2015-11-17T12:00:50.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12825",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12264",
+   "target_resolution": "Fixed",
+   "created": "2015-11-16T18:57:29.000+0100",
+   "resolved": "2016-05-09T16:00:11.000+0200",
+   "target_resolved": "2016-05-09T15:59:14.000+0200",
+   "comment_dates": [
+    "2015-11-17T09:49:05.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12809",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12195",
+   "target_resolution": "Fixed",
+   "created": "2015-11-12T17:04:26.000+0100",
+   "resolved": "2015-11-13T13:09:48.000+0100",
+   "target_resolved": "2015-11-13T09:51:47.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12804",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12992",
+   "target_resolution": "Fixed",
+   "created": "2015-11-11T18:10:58.000+0100",
+   "resolved": "2016-01-15T13:34:51.000+0100",
+   "target_resolved": "2016-01-13T11:11:19.000+0100",
+   "comment_dates": [
+    "2015-11-11T18:24:21.000+0100",
+    "2015-11-11T18:41:53.000+0100",
+    "2015-11-12T11:11:32.000+0100",
+    "2015-11-13T19:21:38.000+0100",
+    "2015-12-03T18:05:34.000+0100",
+    "2015-12-03T18:11:31.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12621",
+   "group": "dup_of_Fixed",
+   "target": "XE-1499",
+   "target_resolution": "Fixed",
+   "created": "2015-09-27T20:55:46.000+0200",
+   "resolved": "2015-09-28T09:18:01.000+0200",
+   "target_resolved": "2015-08-26T10:43:19.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12570",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13574",
+   "target_resolution": "Fixed",
+   "created": "2015-09-16T10:31:51.000+0200",
+   "resolved": "2016-08-23T15:32:32.000+0200",
+   "target_resolved": "2016-07-22T10:35:29.000+0200",
+   "comment_dates": [
+    "2015-09-16T11:13:02.000+0200",
+    "2015-09-16T11:25:59.000+0200",
+    "2015-09-16T11:33:30.000+0200",
+    "2015-09-16T11:39:23.000+0200",
+    "2015-09-16T14:50:48.000+0200",
+    "2015-09-17T00:43:17.000+0200",
+    "2015-09-17T09:12:20.000+0200",
+    "2015-09-17T09:46:19.000+0200",
+    "2015-09-22T10:25:57.000+0200",
+    "2015-09-23T15:38:38.000+0200",
+    "2015-09-23T16:24:17.000+0200",
+    "2015-09-23T16:32:40.000+0200",
+    "2015-09-23T17:03:34.000+0200",
+    "2015-09-24T11:13:07.000+0200",
+    "2015-09-28T09:22:32.000+0200",
+    "2015-09-28T13:05:22.000+0200",
+    "2015-09-28T13:50:27.000+0200",
+    "2015-10-07T16:28:40.000+0200",
+    "2015-10-09T09:18:14.000+0200",
+    "2015-10-27T11:31:51.000+0100",
+    "2015-11-05T16:30:08.000+0100",
+    "2015-11-10T11:08:21.000+0100",
+    "2015-11-19T16:08:25.000+0100",
+    "2016-04-05T16:08:12.000+0200",
+    "2016-04-21T13:50:47.000+0200",
+    "2016-07-25T11:18:14.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14403",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-13092",
+   "target_resolution": "Fixed",
+   "created": "2015-08-29T13:22:00.000+0200",
+   "resolved": "2017-11-09T23:38:07.000+0100",
+   "target_resolved": "2016-05-09T10:45:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12429",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12398",
+   "target_resolution": "Fixed",
+   "created": "2015-08-21T19:22:16.000+0200",
+   "resolved": "2015-10-01T17:06:52.000+0200",
+   "target_resolved": "2015-08-26T18:04:21.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12406",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12342",
+   "target_resolution": "Fixed",
+   "created": "2015-08-17T16:29:30.000+0200",
+   "resolved": "2015-08-28T10:12:53.000+0200",
+   "target_resolved": "2015-07-25T17:32:51.000+0200",
+   "comment_dates": [
+    "2015-08-17T19:30:38.000+0200",
+    "2015-08-19T12:11:56.000+0200",
+    "2015-08-19T12:40:44.000+0200",
+    "2015-08-26T11:01:52.000+0200",
+    "2015-08-26T11:34:20.000+0200",
+    "2015-08-26T15:00:52.000+0200",
+    "2015-08-27T09:43:11.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12221",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12269",
+   "target_resolution": "Fixed",
+   "created": "2015-06-18T23:06:30.000+0200",
+   "resolved": "2015-07-09T10:46:33.000+0200",
+   "target_resolved": "2015-07-07T19:32:36.000+0200",
+   "comment_dates": [
+    "2015-06-18T23:08:05.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12178",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14768",
+   "target_resolution": "Fixed",
+   "created": "2015-06-13T15:00:07.000+0200",
+   "resolved": "2024-03-14T14:47:28.000+0100",
+   "target_resolved": "2017-10-06T13:45:51.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12077",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-803",
+   "target_resolution": "Fixed",
+   "created": "2015-05-07T14:35:49.000+0200",
+   "resolved": "2015-05-07T16:06:21.000+0200",
+   "target_resolved": "2015-05-06T14:43:46.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12067",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11870",
+   "target_resolution": "Fixed",
+   "created": "2015-05-06T09:58:20.000+0200",
+   "resolved": "2015-05-06T10:10:46.000+0200",
+   "target_resolved": "2015-03-03T12:56:06.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12054",
+   "group": "dup_of_Fixed",
+   "target": "MAP-7",
+   "target_resolution": "Fixed",
+   "created": "2015-04-27T11:56:38.000+0200",
+   "resolved": "2015-04-27T12:17:09.000+0200",
+   "target_resolved": "2015-04-23T13:14:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12049",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-5963",
+   "target_resolution": "Fixed",
+   "created": "2015-04-23T18:41:24.000+0200",
+   "resolved": "2015-04-24T06:49:40.000+0200",
+   "target_resolved": "2015-04-23T13:58:02.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12032",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-14476",
+   "target_resolution": "Fixed",
+   "created": "2015-04-17T05:18:19.000+0200",
+   "resolved": "2023-11-30T15:50:06.000+0100",
+   "target_resolved": "2017-11-09T18:45:35.000+0100",
+   "comment_dates": [
+    "2015-04-23T17:26:08.000+0200",
+    "2015-04-24T08:51:30.000+0200",
+    "2015-04-24T09:18:00.000+0200",
+    "2015-04-26T14:07:19.000+0200",
+    "2015-04-29T14:07:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12006",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-19304",
+   "target_resolution": "Fixed",
+   "created": "2015-04-09T21:18:02.000+0200",
+   "resolved": "2022-01-10T17:22:47.000+0100",
+   "target_resolved": "2022-01-10T17:21:20.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11976",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11833",
+   "target_resolution": "Fixed",
+   "created": "2015-03-30T12:38:12.000+0200",
+   "resolved": "2015-03-30T12:45:15.000+0200",
+   "target_resolved": "2015-02-23T12:37:48.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11968",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-12016",
+   "target_resolution": "Fixed",
+   "created": "2015-03-26T15:47:46.000+0100",
+   "resolved": "2015-04-16T16:08:52.000+0200",
+   "target_resolved": "2015-04-16T13:43:24.000+0200",
+   "comment_dates": [
+    "2015-03-27T22:42:00.000+0100",
+    "2015-03-28T12:51:41.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11933",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11870",
+   "target_resolution": "Fixed",
+   "created": "2015-03-18T02:07:11.000+0100",
+   "resolved": "2015-03-18T10:20:37.000+0100",
+   "target_resolved": "2015-03-03T12:56:06.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11907",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11870",
+   "target_resolution": "Fixed",
+   "created": "2015-03-10T14:40:32.000+0100",
+   "resolved": "2015-03-12T07:28:50.000+0100",
+   "target_resolved": "2015-03-03T12:56:06.000+0100",
+   "comment_dates": [
+    "2015-03-10T15:00:51.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11851",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11732",
+   "target_resolution": "Fixed",
+   "created": "2015-02-25T10:11:32.000+0100",
+   "resolved": "2015-02-27T10:49:15.000+0100",
+   "target_resolved": "2015-01-29T16:03:04.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11812",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15681",
+   "target_resolution": "Fixed",
+   "created": "2015-02-18T18:16:33.000+0100",
+   "resolved": "2018-11-08T13:49:16.000+0100",
+   "target_resolved": "2018-10-25T14:37:00.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11807",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10098",
+   "target_resolution": "Fixed",
+   "created": "2015-02-18T14:31:31.000+0100",
+   "resolved": "2015-02-26T11:36:52.000+0100",
+   "target_resolved": "2015-02-19T19:05:17.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11746",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11704",
+   "target_resolution": "Fixed",
+   "created": "2015-02-03T11:42:50.000+0100",
+   "resolved": "2015-02-05T17:16:39.000+0100",
+   "target_resolved": "2015-01-23T14:32:54.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11739",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11731",
+   "target_resolution": "Fixed",
+   "created": "2015-02-02T13:29:18.000+0100",
+   "resolved": "2015-02-12T13:11:52.000+0100",
+   "target_resolved": "2015-02-09T11:15:58.000+0100",
+   "comment_dates": [
+    "2015-02-02T13:54:05.000+0100",
+    "2015-02-02T13:55:09.000+0100",
+    "2015-02-02T13:56:09.000+0100",
+    "2015-02-02T14:07:05.000+0100",
+    "2015-02-02T14:51:50.000+0100",
+    "2015-02-02T15:16:23.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11711",
+   "group": "dup_of_Fixed",
+   "target": "XE-1463",
+   "target_resolution": "Fixed",
+   "created": "2015-01-26T10:46:17.000+0100",
+   "resolved": "2015-01-26T10:51:10.000+0100",
+   "target_resolved": "2015-01-22T13:09:53.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11699",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11202",
+   "target_resolution": "Fixed",
+   "created": "2015-01-22T15:47:42.000+0100",
+   "resolved": "2015-01-22T16:04:26.000+0100",
+   "target_resolved": "2014-10-20T09:30:42.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11695",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11730",
+   "target_resolution": "Fixed",
+   "created": "2015-01-22T13:25:30.000+0100",
+   "resolved": "2015-01-29T12:28:26.000+0100",
+   "target_resolved": "2015-01-29T12:28:01.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11678",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11670",
+   "target_resolution": "Fixed",
+   "created": "2015-01-20T08:51:19.000+0100",
+   "resolved": "2015-01-20T10:16:32.000+0100",
+   "target_resolved": "2015-01-19T10:43:51.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11645",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9065",
+   "target_resolution": "Fixed",
+   "created": "2015-01-12T19:24:29.000+0100",
+   "resolved": "2018-02-08T17:26:19.000+0100",
+   "target_resolved": "2017-10-19T18:06:52.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11593",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11721",
+   "target_resolution": "Fixed",
+   "created": "2014-12-22T22:10:24.000+0100",
+   "resolved": "2015-02-03T10:43:24.000+0100",
+   "target_resolved": "2015-01-29T17:04:40.000+0100",
+   "comment_dates": [
+    "2014-12-23T15:24:57.000+0100",
+    "2015-01-30T21:40:40.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11539",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11531",
+   "target_resolution": "Fixed",
+   "created": "2014-12-05T00:18:56.000+0100",
+   "resolved": "2014-12-08T10:25:05.000+0100",
+   "target_resolved": "2014-12-04T17:15:32.000+0100",
+   "comment_dates": [
+    "2014-12-05T10:00:43.000+0100",
+    "2014-12-05T20:49:35.000+0100",
+    "2014-12-06T18:40:33.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11430",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-680",
+   "target_resolution": "Fixed",
+   "created": "2014-11-11T11:02:25.000+0100",
+   "resolved": "2014-11-11T11:08:49.000+0100",
+   "target_resolved": "2014-11-06T19:01:34.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11405",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11391",
+   "target_resolution": "Fixed",
+   "created": "2014-11-06T14:20:38.000+0100",
+   "resolved": "2014-11-06T17:34:35.000+0100",
+   "target_resolved": "2014-11-04T18:34:21.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11355",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10652",
+   "target_resolution": "Fixed",
+   "created": "2014-10-29T18:09:13.000+0100",
+   "resolved": "2016-02-08T11:26:49.000+0100",
+   "target_resolved": "2014-07-15T11:49:34.000+0200",
+   "comment_dates": [
+    "2014-10-30T10:28:45.000+0100",
+    "2014-11-14T12:51:06.000+0100",
+    "2014-11-14T16:54:27.000+0100",
+    "2014-11-25T09:38:01.000+0100",
+    "2014-11-25T11:08:03.000+0100",
+    "2014-11-25T17:02:11.000+0100",
+    "2014-12-12T09:29:09.000+0100",
+    "2015-01-16T09:22:35.000+0100",
+    "2015-01-16T09:41:14.000+0100",
+    "2015-01-19T15:26:47.000+0100",
+    "2015-01-19T16:51:20.000+0100",
+    "2015-09-04T12:37:45.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11321",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11300",
+   "target_resolution": "Fixed",
+   "created": "2014-10-23T16:59:27.000+0200",
+   "resolved": "2014-10-27T17:23:52.000+0100",
+   "target_resolved": "2014-10-27T16:52:41.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11201",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11087",
+   "target_resolution": "Fixed",
+   "created": "2014-10-09T14:59:27.000+0200",
+   "resolved": "2014-10-09T15:20:17.000+0200",
+   "target_resolved": "2014-10-02T10:35:52.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11187",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11213",
+   "target_resolution": "Fixed",
+   "created": "2014-10-07T12:42:11.000+0200",
+   "resolved": "2014-10-14T10:32:33.000+0200",
+   "target_resolved": "2014-10-13T16:31:23.000+0200",
+   "comment_dates": [
+    "2014-10-07T15:46:29.000+0200",
+    "2014-10-07T15:59:44.000+0200",
+    "2014-10-07T16:27:43.000+0200",
+    "2014-10-07T16:31:31.000+0200",
+    "2014-10-07T16:36:24.000+0200",
+    "2014-10-07T17:36:36.000+0200",
+    "2014-10-08T09:27:54.000+0200",
+    "2014-10-08T10:55:05.000+0200",
+    "2014-10-08T13:37:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11153",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11144",
+   "target_resolution": "Fixed",
+   "created": "2014-10-01T13:08:40.000+0200",
+   "resolved": "2014-10-01T13:10:52.000+0200",
+   "target_resolved": "2014-09-30T16:31:48.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11121",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-3492",
+   "target_resolution": "Fixed",
+   "created": "2014-09-26T00:01:19.000+0200",
+   "resolved": "2014-10-02T09:57:50.000+0200",
+   "target_resolved": "2013-10-17T12:41:58.000+0200",
+   "comment_dates": [
+    "2014-09-26T00:03:25.000+0200",
+    "2014-09-26T07:04:31.000+0200",
+    "2014-09-26T08:41:42.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11060",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10673",
+   "target_resolution": "Fixed",
+   "created": "2014-09-18T13:13:25.000+0200",
+   "resolved": "2014-10-02T12:05:35.000+0200",
+   "target_resolved": "2014-07-21T16:53:48.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-11017",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9813",
+   "target_resolution": "Fixed",
+   "created": "2014-09-15T10:06:21.000+0200",
+   "resolved": "2014-09-15T16:35:44.000+0200",
+   "target_resolved": "2014-09-10T10:46:22.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10955",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10943",
+   "target_resolution": "Fixed",
+   "created": "2014-09-05T13:41:00.000+0200",
+   "resolved": "2014-09-05T13:45:58.000+0200",
+   "target_resolved": "2014-09-04T19:16:33.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10906",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10842",
+   "target_resolution": "Fixed",
+   "created": "2014-09-01T10:32:04.000+0200",
+   "resolved": "2014-09-08T17:58:27.000+0200",
+   "target_resolved": "2014-08-27T11:05:36.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10843",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11344",
+   "target_resolution": "Fixed",
+   "created": "2014-08-27T10:53:58.000+0200",
+   "resolved": "2014-10-29T17:12:16.000+0100",
+   "target_resolved": "2014-10-29T15:45:27.000+0100",
+   "comment_dates": [
+    "2014-08-27T11:00:16.000+0200",
+    "2014-08-27T12:35:17.000+0200",
+    "2014-10-28T15:23:14.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10803",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7163",
+   "target_resolution": "Fixed",
+   "created": "2014-08-14T14:11:33.000+0200",
+   "resolved": "2014-08-16T15:04:09.000+0200",
+   "target_resolved": "2014-04-30T11:21:20.000+0200",
+   "comment_dates": [
+    "2014-08-15T14:54:00.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10787",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10854",
+   "target_resolution": "Fixed",
+   "created": "2014-08-11T13:52:40.000+0200",
+   "resolved": "2014-08-27T16:47:39.000+0200",
+   "target_resolved": "2014-08-27T16:45:29.000+0200",
+   "comment_dates": [
+    "2014-08-18T13:43:17.000+0200",
+    "2014-08-26T11:15:15.000+0200",
+    "2014-08-26T11:38:06.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10619",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11140",
+   "target_resolution": "Fixed",
+   "created": "2014-07-10T08:09:34.000+0200",
+   "resolved": "2014-09-30T10:35:09.000+0200",
+   "target_resolved": "2014-09-30T10:34:18.000+0200",
+   "comment_dates": [
+    "2014-07-10T08:24:30.000+0200",
+    "2014-07-10T08:25:31.000+0200",
+    "2014-07-10T08:27:26.000+0200",
+    "2014-07-10T08:27:41.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10611",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8910",
+   "target_resolution": "Fixed",
+   "created": "2014-07-07T15:20:33.000+0200",
+   "resolved": "2016-12-21T13:29:01.000+0100",
+   "target_resolved": "2016-12-21T12:45:20.000+0100",
+   "comment_dates": [
+    "2014-07-07T16:14:28.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10497",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-612",
+   "target_resolution": "Fixed",
+   "created": "2014-06-18T12:21:47.000+0200",
+   "resolved": "2014-06-23T17:56:57.000+0200",
+   "target_resolved": "2014-06-23T17:56:33.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10334",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10382",
+   "target_resolution": "Fixed",
+   "created": "2014-05-12T15:45:08.000+0200",
+   "resolved": "2014-05-27T11:31:51.000+0200",
+   "target_resolved": "2014-05-27T09:01:11.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10271",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10152",
+   "target_resolution": "Fixed",
+   "created": "2014-04-24T16:54:44.000+0200",
+   "resolved": "2014-04-24T21:11:04.000+0200",
+   "target_resolved": "2014-04-17T10:18:42.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10202",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10200",
+   "target_resolution": "Fixed",
+   "created": "2014-03-31T12:59:27.000+0200",
+   "resolved": "2014-03-31T14:02:34.000+0200",
+   "target_resolved": "2014-03-31T12:34:30.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10180",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-10071",
+   "target_resolution": "Fixed",
+   "created": "2014-03-26T17:07:03.000+0100",
+   "resolved": "2014-03-26T17:56:25.000+0100",
+   "target_resolved": "2014-03-19T09:50:41.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10130",
+   "group": "dup_of_Fixed",
+   "target": "XE-1371",
+   "target_resolution": "Fixed",
+   "created": "2014-03-07T14:29:12.000+0100",
+   "resolved": "2014-03-14T18:56:02.000+0100",
+   "target_resolved": "2014-03-14T18:55:07.000+0100",
+   "comment_dates": [
+    "2014-03-10T18:30:41.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10096",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15527",
+   "target_resolution": "Fixed",
+   "created": "2014-02-25T13:05:28.000+0100",
+   "resolved": "2021-05-06T13:52:54.000+0200",
+   "target_resolved": "2018-08-28T15:08:02.000+0200",
+   "comment_dates": [
+    "2014-02-25T21:30:09.000+0100",
+    "2014-03-10T13:04:21.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10038",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-16066",
+   "target_resolution": "Fixed",
+   "created": "2014-02-11T09:46:32.000+0100",
+   "resolved": "2022-02-10T15:58:33.000+0100",
+   "target_resolved": "2019-01-25T09:40:56.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10013",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9803",
+   "target_resolution": "Fixed",
+   "created": "2014-02-05T17:42:30.000+0100",
+   "resolved": "2014-02-06T18:18:09.000+0100",
+   "target_resolved": "2013-12-13T12:08:05.000+0100",
+   "comment_dates": [
+    "2014-02-05T17:46:59.000+0100",
+    "2014-02-05T17:51:08.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-10011",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9806",
+   "target_resolution": "Fixed",
+   "created": "2014-02-05T17:37:00.000+0100",
+   "resolved": "2014-02-06T18:18:41.000+0100",
+   "target_resolved": "2013-12-13T12:51:14.000+0100",
+   "comment_dates": [
+    "2014-02-05T17:45:00.000+0100",
+    "2014-02-05T17:49:43.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9989",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8910",
+   "target_resolution": "Fixed",
+   "created": "2014-02-03T18:31:57.000+0100",
+   "resolved": "2017-01-12T17:37:47.000+0100",
+   "target_resolved": "2016-12-21T12:45:20.000+0100",
+   "comment_dates": [
+    "2014-02-04T09:41:22.000+0100",
+    "2014-02-04T09:50:46.000+0100",
+    "2014-02-04T10:45:24.000+0100",
+    "2015-11-25T12:35:27.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9941",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9830",
+   "target_resolution": "Fixed",
+   "created": "2014-01-28T11:03:02.000+0100",
+   "resolved": "2014-01-28T11:18:32.000+0100",
+   "target_resolved": "2014-01-06T15:46:26.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9919",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-521",
+   "target_resolution": "Fixed",
+   "created": "2014-01-23T15:20:06.000+0100",
+   "resolved": "2014-01-28T17:49:46.000+0100",
+   "target_resolved": "2014-01-27T15:49:02.000+0100",
+   "comment_dates": [
+    "2014-01-23T15:39:42.000+0100",
+    "2014-01-23T15:50:33.000+0100",
+    "2014-01-23T16:22:58.000+0100",
+    "2014-01-27T15:08:00.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9889",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9826",
+   "target_resolution": "Fixed",
+   "created": "2014-01-16T15:47:39.000+0100",
+   "resolved": "2014-01-23T11:27:28.000+0100",
+   "target_resolved": "2014-01-06T16:19:56.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9888",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9916",
+   "target_resolution": "Fixed",
+   "created": "2014-01-16T15:17:36.000+0100",
+   "resolved": "2014-01-30T16:45:04.000+0100",
+   "target_resolved": "2014-01-28T10:47:39.000+0100",
+   "comment_dates": [
+    "2014-01-16T15:31:22.000+0100",
+    "2014-01-16T15:40:46.000+0100",
+    "2014-01-16T15:56:57.000+0100",
+    "2014-01-16T16:10:40.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9824",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-507",
+   "target_resolution": "Fixed",
+   "created": "2013-12-18T10:21:33.000+0100",
+   "resolved": "2013-12-30T10:01:02.000+0100",
+   "target_resolved": "2013-12-30T09:43:27.000+0100",
+   "comment_dates": [
+    "2013-12-18T10:25:04.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9776",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9652",
+   "target_resolution": "Fixed",
+   "created": "2013-12-05T19:40:01.000+0100",
+   "resolved": "2013-12-06T08:12:15.000+0100",
+   "target_resolved": "2013-11-12T09:00:16.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9775",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9655",
+   "target_resolution": "Fixed",
+   "created": "2013-12-05T18:02:32.000+0100",
+   "resolved": "2013-12-06T08:34:18.000+0100",
+   "target_resolved": "2013-11-12T09:02:19.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9703",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9736",
+   "target_resolution": "Fixed",
+   "created": "2013-11-21T13:02:36.000+0100",
+   "resolved": "2013-11-27T10:40:58.000+0100",
+   "target_resolved": "2013-11-26T17:53:23.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9635",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9327",
+   "target_resolution": "Fixed",
+   "created": "2013-11-06T13:32:50.000+0100",
+   "resolved": "2013-11-07T10:56:13.000+0100",
+   "target_resolved": "2013-07-11T13:35:22.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9634",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9606",
+   "target_resolution": "Fixed",
+   "created": "2013-11-05T20:37:05.000+0100",
+   "resolved": "2013-11-07T17:32:14.000+0100",
+   "target_resolved": "2013-10-31T10:09:26.000+0100",
+   "comment_dates": [
+    "2013-11-06T11:26:28.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9597",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11107",
+   "target_resolution": "Fixed",
+   "created": "2013-10-25T17:08:23.000+0200",
+   "resolved": "2014-09-26T16:47:49.000+0200",
+   "target_resolved": "2014-09-24T14:49:50.000+0200",
+   "comment_dates": [
+    "2014-01-24T16:25:52.000+0100",
+    "2014-01-24T16:27:14.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9596",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-484",
+   "target_resolution": "Fixed",
+   "created": "2013-10-25T16:55:09.000+0200",
+   "resolved": "2013-10-30T08:17:54.000+0100",
+   "target_resolved": "2013-10-29T17:13:40.000+0100",
+   "comment_dates": [
+    "2013-10-25T17:01:23.000+0200",
+    "2013-10-25T17:10:36.000+0200",
+    "2013-10-25T17:15:38.000+0200",
+    "2013-10-28T10:43:37.000+0100",
+    "2013-10-28T11:01:52.000+0100",
+    "2013-10-28T11:19:55.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9461",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9433",
+   "target_resolution": "Fixed",
+   "created": "2013-09-16T14:46:13.000+0200",
+   "resolved": "2013-09-19T17:47:00.000+0200",
+   "target_resolved": "2013-09-17T20:58:51.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9455",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9376",
+   "target_resolution": "Fixed",
+   "created": "2013-09-16T11:46:43.000+0200",
+   "resolved": "2013-09-19T18:12:19.000+0200",
+   "target_resolved": "2013-08-02T15:49:52.000+0200",
+   "comment_dates": [
+    "2013-09-16T12:00:29.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9302",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-20571",
+   "target_resolution": "Fixed",
+   "created": "2013-07-01T18:42:51.000+0200",
+   "resolved": "2024-06-27T17:38:06.000+0200",
+   "target_resolved": "2023-01-24T12:09:23.000+0100",
+   "comment_dates": [
+    "2013-07-01T22:19:45.000+0200",
+    "2013-07-01T22:25:21.000+0200",
+    "2013-08-01T12:34:43.000+0200",
+    "2013-08-01T13:06:53.000+0200",
+    "2013-08-01T13:09:14.000+0200",
+    "2013-08-01T13:18:41.000+0200",
+    "2013-09-12T17:44:11.000+0200",
+    "2013-09-12T18:16:41.000+0200",
+    "2016-10-12T11:50:09.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9161",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9611",
+   "target_resolution": "Fixed",
+   "created": "2013-05-23T12:12:01.000+0200",
+   "resolved": "2013-11-29T18:13:53.000+0100",
+   "target_resolved": "2013-10-31T15:43:58.000+0100",
+   "comment_dates": [
+    "2013-05-30T09:19:17.000+0200",
+    "2013-05-30T10:10:30.000+0200",
+    "2013-06-29T13:15:41.000+0200",
+    "2013-07-17T13:12:34.000+0200",
+    "2013-07-17T21:37:08.000+0200",
+    "2013-09-25T15:53:51.000+0200",
+    "2013-10-08T21:29:27.000+0200",
+    "2013-10-10T21:11:16.000+0200",
+    "2013-10-10T22:44:00.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9156",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9826",
+   "target_resolution": "Fixed",
+   "created": "2013-05-20T16:16:54.000+0200",
+   "resolved": "2014-03-01T23:42:13.000+0100",
+   "target_resolved": "2014-01-06T16:19:56.000+0100",
+   "comment_dates": [
+    "2013-05-24T16:46:07.000+0200",
+    "2014-02-15T15:03:54.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9098",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9433",
+   "target_resolution": "Fixed",
+   "created": "2013-04-30T16:01:27.000+0200",
+   "resolved": "2013-09-19T16:29:16.000+0200",
+   "target_resolved": "2013-09-17T20:58:51.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9096",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9433",
+   "target_resolution": "Fixed",
+   "created": "2013-04-30T15:13:05.000+0200",
+   "resolved": "2013-09-19T16:32:10.000+0200",
+   "target_resolved": "2013-09-17T20:58:51.000+0200",
+   "comment_dates": [
+    "2013-05-03T12:25:00.000+0200",
+    "2013-05-03T13:17:30.000+0200",
+    "2013-05-03T16:37:51.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9052",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9826",
+   "target_resolution": "Fixed",
+   "created": "2013-04-23T11:11:48.000+0200",
+   "resolved": "2014-02-27T15:38:07.000+0100",
+   "target_resolved": "2014-01-06T16:19:56.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-9010",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9213",
+   "target_resolution": "Fixed",
+   "created": "2013-04-05T15:08:10.000+0200",
+   "resolved": "2013-06-13T09:21:27.000+0200",
+   "target_resolved": "2013-06-10T13:05:24.000+0200",
+   "comment_dates": [
+    "2013-04-05T15:43:26.000+0200",
+    "2013-04-05T16:10:34.000+0200",
+    "2013-04-05T16:54:17.000+0200",
+    "2013-04-05T17:01:02.000+0200",
+    "2013-04-25T07:49:59.000+0200",
+    "2013-04-25T08:14:53.000+0200",
+    "2013-04-26T10:21:11.000+0200",
+    "2013-04-26T10:22:52.000+0200",
+    "2013-04-26T11:09:14.000+0200",
+    "2013-04-26T13:24:07.000+0200",
+    "2013-04-26T20:31:06.000+0200",
+    "2013-06-10T13:07:58.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8977",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8984",
+   "target_resolution": "Fixed",
+   "created": "2013-03-28T22:49:18.000+0100",
+   "resolved": "2013-03-29T19:22:32.000+0100",
+   "target_resolved": "2013-03-29T19:02:12.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8965",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-374",
+   "target_resolution": "Fixed",
+   "created": "2013-03-27T16:09:09.000+0100",
+   "resolved": "2013-04-15T19:01:05.000+0200",
+   "target_resolved": "2013-03-27T17:18:42.000+0100",
+   "comment_dates": [
+    "2013-03-27T16:21:47.000+0100",
+    "2013-03-27T17:16:03.000+0100",
+    "2013-03-27T17:16:43.000+0100",
+    "2013-03-27T17:25:22.000+0100",
+    "2013-03-27T17:31:24.000+0100",
+    "2013-03-27T18:09:01.000+0100",
+    "2013-03-27T18:16:33.000+0100",
+    "2013-03-27T19:10:12.000+0100",
+    "2013-03-27T19:34:20.000+0100",
+    "2013-03-28T09:57:44.000+0100",
+    "2013-04-11T09:57:38.000+0200",
+    "2013-04-11T11:21:47.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8885",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-11202",
+   "target_resolution": "Fixed",
+   "created": "2013-03-05T18:39:21.000+0100",
+   "resolved": "2014-11-20T11:25:04.000+0100",
+   "target_resolved": "2014-10-20T09:30:42.000+0200",
+   "comment_dates": [
+    "2013-03-05T18:43:31.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8871",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8872",
+   "target_resolution": "Fixed",
+   "created": "2013-03-02T14:35:45.000+0100",
+   "resolved": "2013-03-07T11:22:30.000+0100",
+   "target_resolved": "2013-03-04T11:14:18.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8855",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8952",
+   "target_resolution": "Fixed",
+   "created": "2013-02-26T16:35:32.000+0100",
+   "resolved": "2013-04-04T12:33:47.000+0200",
+   "target_resolved": "2013-03-21T17:50:10.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8823",
+   "group": "dup_of_Fixed",
+   "target": "XRENDERING-283",
+   "target_resolution": "Fixed",
+   "created": "2013-02-15T21:20:43.000+0100",
+   "resolved": "2013-02-18T19:13:28.000+0100",
+   "target_resolved": "2013-02-18T14:23:22.000+0100",
+   "comment_dates": [
+    "2013-02-15T21:21:06.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8817",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9181",
+   "target_resolution": "Fixed",
+   "created": "2013-02-15T09:26:00.000+0100",
+   "resolved": "2013-05-30T12:38:44.000+0200",
+   "target_resolved": "2013-05-30T11:16:22.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8775",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8957",
+   "target_resolution": "Fixed",
+   "created": "2013-02-01T14:10:01.000+0100",
+   "resolved": "2013-04-11T18:08:18.000+0200",
+   "target_resolved": "2013-04-11T18:08:05.000+0200",
+   "comment_dates": [
+    "2013-03-25T16:00:09.000+0100",
+    "2013-03-25T16:08:43.000+0100",
+    "2013-03-25T16:24:55.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8768",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8617",
+   "target_resolution": "Fixed",
+   "created": "2013-01-31T10:41:06.000+0100",
+   "resolved": "2013-04-09T17:04:34.000+0200",
+   "target_resolved": "2013-03-07T18:41:02.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8758",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-9058",
+   "target_resolution": "Fixed",
+   "created": "2013-01-30T11:29:28.000+0100",
+   "resolved": "2013-04-23T23:46:51.000+0200",
+   "target_resolved": "2013-04-23T23:44:54.000+0200",
+   "comment_dates": [
+    "2013-03-29T10:58:28.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8682",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8674",
+   "target_resolution": "Fixed",
+   "created": "2013-01-11T15:19:50.000+0100",
+   "resolved": "2013-01-15T15:49:20.000+0100",
+   "target_resolved": "2013-01-10T16:09:57.000+0100",
+   "comment_dates": [
+    "2013-01-11T15:27:57.000+0100",
+    "2013-01-14T12:13:21.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8636",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-6935",
+   "target_resolution": "Fixed",
+   "created": "2012-12-25T13:32:31.000+0100",
+   "resolved": "2013-01-08T10:59:23.000+0100",
+   "target_resolved": "2012-06-08T00:55:02.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8591",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8557",
+   "target_resolution": "Fixed",
+   "created": "2012-12-11T12:44:04.000+0100",
+   "resolved": "2012-12-13T15:16:07.000+0100",
+   "target_resolved": "2012-12-04T15:52:42.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8556",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8653",
+   "target_resolution": "Fixed",
+   "created": "2012-12-03T15:47:26.000+0100",
+   "resolved": "2013-01-10T11:55:52.000+0100",
+   "target_resolved": "2013-01-07T09:22:46.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8475",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8493",
+   "target_resolution": "Fixed",
+   "created": "2012-11-21T11:52:58.000+0100",
+   "resolved": "2012-12-13T22:35:37.000+0100",
+   "target_resolved": "2012-11-23T04:54:03.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8372",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8276",
+   "target_resolution": "Fixed",
+   "created": "2012-10-25T16:15:51.000+0200",
+   "resolved": "2013-03-07T14:37:15.000+0100",
+   "target_resolved": "2012-10-22T12:24:39.000+0200",
+   "comment_dates": [
+    "2013-02-28T14:58:39.000+0100",
+    "2013-02-28T15:15:28.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8343",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8335",
+   "target_resolution": "Fixed",
+   "created": "2012-10-19T02:17:24.000+0200",
+   "resolved": "2012-10-19T16:54:50.000+0200",
+   "target_resolved": "2012-10-18T14:42:04.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8299",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8468",
+   "target_resolution": "Fixed",
+   "created": "2012-10-08T10:59:12.000+0200",
+   "resolved": "2012-11-20T15:11:14.000+0100",
+   "target_resolved": "2012-11-20T14:22:07.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8258",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8468",
+   "target_resolution": "Fixed",
+   "created": "2012-09-27T12:59:17.000+0200",
+   "resolved": "2012-11-20T15:00:38.000+0100",
+   "target_resolved": "2012-11-20T14:22:07.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8173",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-385",
+   "target_resolution": "Fixed",
+   "created": "2012-09-04T12:20:23.000+0200",
+   "resolved": "2013-04-29T14:05:42.000+0200",
+   "target_resolved": "2013-04-19T07:47:41.000+0200",
+   "comment_dates": [
+    "2012-09-04T12:25:53.000+0200",
+    "2012-09-04T13:44:08.000+0200",
+    "2012-09-04T14:12:29.000+0200",
+    "2012-09-06T14:09:05.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8092",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8091",
+   "target_resolution": "Fixed",
+   "created": "2012-07-26T13:37:50.000+0200",
+   "resolved": "2012-12-07T01:45:46.000+0100",
+   "target_resolved": "2012-10-18T00:38:04.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8077",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8671",
+   "target_resolution": "Fixed",
+   "created": "2012-07-20T12:42:41.000+0200",
+   "resolved": "2013-02-11T22:03:30.000+0100",
+   "target_resolved": "2013-02-11T13:50:31.000+0100",
+   "comment_dates": [
+    "2012-07-20T15:02:24.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8056",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7793",
+   "target_resolution": "Fixed",
+   "created": "2012-07-16T01:25:16.000+0200",
+   "resolved": "2012-12-06T23:53:33.000+0100",
+   "target_resolved": "2012-06-08T15:13:57.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-8029",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8034",
+   "target_resolution": "Fixed",
+   "created": "2012-07-10T08:57:18.000+0200",
+   "resolved": "2012-07-12T11:56:22.000+0200",
+   "target_resolved": "2012-07-10T14:00:12.000+0200",
+   "comment_dates": [
+    "2012-07-10T08:59:48.000+0200",
+    "2012-07-10T17:11:37.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7996",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-17755",
+   "target_resolution": "Fixed",
+   "created": "2012-07-02T14:52:30.000+0200",
+   "resolved": "2024-08-08T16:44:54.000+0200",
+   "target_resolved": "2020-10-14T12:20:14.000+0200",
+   "comment_dates": [
+    "2013-05-02T18:42:08.000+0200",
+    "2013-05-02T18:48:57.000+0200",
+    "2017-08-05T16:18:14.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7982",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-15556",
+   "target_resolution": "Fixed",
+   "created": "2012-06-27T18:04:02.000+0200",
+   "resolved": "2018-09-27T09:30:39.000+0200",
+   "target_resolved": "2018-09-19T09:27:05.000+0200",
+   "comment_dates": [
+    "2018-08-06T16:40:32.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7944",
+   "group": "dup_of_Fixed",
+   "target": "XCOMMONS-201",
+   "target_resolution": "Fixed",
+   "created": "2012-06-19T19:45:58.000+0200",
+   "resolved": "2012-06-20T07:22:23.000+0200",
+   "target_resolved": "2012-06-19T12:10:19.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7906",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-6946",
+   "target_resolution": "Fixed",
+   "created": "2012-06-12T13:52:10.000+0200",
+   "resolved": "2013-04-04T17:08:48.000+0200",
+   "target_resolved": "2013-03-28T14:57:09.000+0100",
+   "comment_dates": [
+    "2012-10-30T21:48:23.000+0100",
+    "2012-10-30T22:37:26.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7868",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7666",
+   "target_resolution": "Fixed",
+   "created": "2012-05-30T18:39:32.000+0200",
+   "resolved": "2012-08-18T19:57:51.000+0200",
+   "target_resolved": "2012-03-29T10:57:43.000+0200",
+   "comment_dates": [
+    "2012-05-30T18:42:47.000+0200",
+    "2012-06-01T15:16:11.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7728",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7729",
+   "target_resolution": "Fixed",
+   "created": "2012-04-13T15:24:21.000+0200",
+   "resolved": "2012-04-18T12:47:34.000+0200",
+   "target_resolved": "2012-04-17T11:08:09.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7722",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8462",
+   "target_resolution": "Fixed",
+   "created": "2012-04-13T11:33:45.000+0200",
+   "resolved": "2013-02-28T15:26:58.000+0100",
+   "target_resolved": "2012-12-14T14:43:36.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7706",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7705",
+   "target_resolution": "Fixed",
+   "created": "2012-04-11T14:17:04.000+0200",
+   "resolved": "2012-04-12T08:09:44.000+0200",
+   "target_resolved": "2012-04-11T07:50:13.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7548",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8214",
+   "target_resolution": "Fixed",
+   "created": "2012-02-17T14:11:09.000+0100",
+   "resolved": "2012-10-23T11:57:38.000+0200",
+   "target_resolved": "2012-09-20T17:59:17.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7511",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8954",
+   "target_resolution": "Fixed",
+   "created": "2012-02-09T12:03:10.000+0100",
+   "resolved": "2013-04-04T14:36:30.000+0200",
+   "target_resolved": "2013-03-22T14:42:57.000+0100",
+   "comment_dates": [
+    "2012-02-09T12:12:14.000+0100",
+    "2012-02-09T13:40:15.000+0100"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7295",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7276",
+   "target_resolution": "Fixed",
+   "created": "2011-12-14T18:20:23.000+0100",
+   "resolved": "2011-12-14T18:46:59.000+0100",
+   "target_resolved": "2011-12-12T10:30:22.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7208",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7955",
+   "target_resolution": "Fixed",
+   "created": "2011-11-30T14:53:59.000+0100",
+   "resolved": "2012-10-04T14:21:04.000+0200",
+   "target_resolved": "2012-06-20T19:54:53.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7154",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7969",
+   "target_resolution": "Fixed",
+   "created": "2011-11-17T09:37:15.000+0100",
+   "resolved": "2013-04-22T17:45:03.000+0200",
+   "target_resolved": "2012-06-25T18:27:08.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7107",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-7254",
+   "target_resolution": "Fixed",
+   "created": "2011-10-31T09:28:26.000+0100",
+   "resolved": "2011-12-09T18:42:26.000+0100",
+   "target_resolved": "2011-12-09T18:35:01.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7078",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-6840",
+   "target_resolution": "Fixed",
+   "created": "2011-10-20T14:47:17.000+0200",
+   "resolved": "2011-10-24T06:22:50.000+0200",
+   "target_resolved": "2011-08-13T07:53:37.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7077",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-8783",
+   "target_resolution": "Fixed",
+   "created": "2011-10-20T12:06:46.000+0200",
+   "resolved": "2013-03-14T17:02:06.000+0100",
+   "target_resolved": "2013-02-06T13:41:23.000+0100",
+   "comment_dates": [
+    "2011-10-20T12:11:26.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-7046",
+   "group": "dup_of_Fixed",
+   "target": "XWIKI-3357",
+   "target_resolution": "Fixed",
+   "created": "2011-10-10T12:32:53.000+0200",
+   "resolved": "2011-10-10T13:29:09.000+0200",
+   "target_resolved": "2011-06-01T03:05:16.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-23750",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-19853",
+   "target_resolution": "Won't Fix",
+   "created": "2025-11-24T15:11:12.000+0100",
+   "resolved": "2025-11-25T12:11:44.000+0100",
+   "target_resolved": "2023-04-19T17:12:26.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-15846",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-14055",
+   "target_resolution": "Won't Fix",
+   "created": "2018-11-12T00:46:33.000+0100",
+   "resolved": "2018-11-12T00:48:43.000+0100",
+   "target_resolved": "2017-03-07T11:02:09.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-12770",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-12619",
+   "target_resolution": "Won't Fix",
+   "created": "2015-11-04T22:26:01.000+0100",
+   "resolved": "2015-11-04T22:29:26.000+0100",
+   "target_resolved": "2015-09-26T19:31:22.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XE-1279",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-7893",
+   "target_resolution": "Won't Fix",
+   "created": "2013-01-29T08:25:43.000+0100",
+   "resolved": "2013-01-29T08:34:35.000+0100",
+   "target_resolved": "2012-06-08T19:58:59.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-5966",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-5287",
+   "target_resolution": "Won't Fix",
+   "created": "2011-02-08T08:14:20.000+0100",
+   "resolved": "2011-02-08T09:58:02.000+0100",
+   "target_resolved": "2010-06-18T07:26:10.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XE-1020",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-5183",
+   "target_resolution": "Won't Fix",
+   "created": "2011-09-22T09:17:08.000+0200",
+   "resolved": "2013-03-14T18:11:32.000+0100",
+   "target_resolved": "2010-07-02T09:43:22.000+0200",
+   "comment_dates": [
+    "2012-07-02T14:56:18.000+0200"
+   ],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-4200",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-4199",
+   "target_resolution": "Won't Fix",
+   "created": "2009-08-24T11:03:19.000+0200",
+   "resolved": "2011-02-21T17:18:17.000+0100",
+   "target_resolved": "2011-02-21T17:14:15.000+0100",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-1319",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-2463",
+   "target_resolution": "Won't Fix",
+   "created": "2007-06-03T08:36:05.000+0200",
+   "resolved": "2008-06-24T14:42:15.000+0200",
+   "target_resolved": "2008-06-16T14:23:31.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XE-427",
+   "group": "dup_of_Won't Fix",
+   "target": "XWIKI-2370",
+   "target_resolution": "Won't Fix",
+   "created": "2009-04-15T11:11:18.000+0200",
+   "resolved": "2009-04-16T11:49:33.000+0200",
+   "target_resolved": "2008-06-12T12:35:03.000+0200",
+   "comment_dates": [],
+   "related_link": false
+  },
+  {
+   "key": "XWIKI-21332",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20716",
+   "target_resolution": "Fixed",
+   "created": "2023-09-20T13:43:12.000+0200",
+   "resolved": "2023-09-25T13:33:58.000+0200",
+   "target_resolved": "2023-03-08T16:38:25.000+0100",
+   "comment_dates": [
+    "2023-09-24T11:00:05.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-21224",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-22034",
+   "target_resolution": "Fixed",
+   "created": "2023-08-16T11:20:55.000+0200",
+   "resolved": "2025-01-25T20:28:01.000+0100",
+   "target_resolved": "2024-04-16T12:24:54.000+0200",
+   "comment_dates": [
+    "2023-08-16T11:22:23.000+0200",
+    "2023-08-16T16:47:15.000+0200",
+    "2023-08-31T12:09:02.000+0200",
+    "2023-08-31T12:33:40.000+0200",
+    "2023-09-19T19:04:45.000+0200",
+    "2023-09-20T13:45:27.000+0200",
+    "2023-09-25T10:58:38.000+0200",
+    "2024-01-11T12:24:53.000+0100",
+    "2024-03-26T09:27:30.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-21195",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19334",
+   "target_resolution": "Fixed",
+   "created": "2023-08-01T16:27:33.000+0200",
+   "resolved": "2023-08-31T16:34:01.000+0200",
+   "target_resolved": "2023-06-15T13:47:52.000+0200",
+   "comment_dates": [
+    "2023-08-01T16:40:38.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-21043",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20741",
+   "target_resolution": "Fixed",
+   "created": "2023-06-20T19:35:50.000+0200",
+   "resolved": "2023-09-01T15:41:18.000+0200",
+   "target_resolved": "2023-04-08T15:06:48.000+0200",
+   "comment_dates": [
+    "2023-06-20T19:37:48.000+0200",
+    "2023-06-21T09:56:34.000+0200",
+    "2023-06-21T10:30:57.000+0200",
+    "2023-06-21T12:27:30.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-21009",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19449",
+   "target_resolution": "Fixed",
+   "created": "2023-06-12T15:43:52.000+0200",
+   "resolved": "2024-01-16T16:33:37.000+0100",
+   "target_resolved": "2023-09-20T18:08:59.000+0200",
+   "comment_dates": [
+    "2023-10-17T16:31:19.000+0200",
+    "2023-10-17T17:39:36.000+0200",
+    "2023-11-06T18:36:57.000+0100",
+    "2023-11-10T17:43:08.000+0100",
+    "2023-11-13T16:48:57.000+0100",
+    "2023-11-13T17:25:35.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20996",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-22579",
+   "target_resolution": "Fixed",
+   "created": "2023-06-12T10:59:58.000+0200",
+   "resolved": "2025-06-05T09:58:59.000+0200",
+   "target_resolved": "2024-12-09T11:19:37.000+0100",
+   "comment_dates": [
+    "2023-11-27T11:35:31.000+0100",
+    "2023-11-29T14:23:19.000+0100",
+    "2024-10-16T15:42:31.000+0200",
+    "2024-10-22T17:32:22.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20908",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19145",
+   "target_resolution": "Fixed",
+   "created": "2023-05-10T11:15:50.000+0200",
+   "resolved": "2023-07-19T11:55:13.000+0200",
+   "target_resolved": "2023-06-01T14:51:08.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20897",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17143",
+   "target_resolution": "Fixed",
+   "created": "2023-05-03T13:23:24.000+0200",
+   "resolved": "2023-06-08T06:21:52.000+0200",
+   "target_resolved": "2022-03-28T13:54:49.000+0200",
+   "comment_dates": [
+    "2023-05-03T13:52:38.000+0200",
+    "2023-06-06T19:21:59.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20781",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18270",
+   "target_resolution": "Fixed",
+   "created": "2023-03-27T10:43:57.000+0200",
+   "resolved": "2023-04-11T15:50:38.000+0200",
+   "target_resolved": "2021-04-19T09:51:23.000+0200",
+   "comment_dates": [
+    "2023-04-03T14:39:33.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20741",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19555",
+   "target_resolution": "Fixed",
+   "created": "2023-03-14T14:34:48.000+0100",
+   "resolved": "2023-04-08T15:06:48.000+0200",
+   "target_resolved": "2022-05-06T11:39:23.000+0200",
+   "comment_dates": [
+    "2023-03-14T14:40:30.000+0100",
+    "2023-04-04T16:13:29.000+0200",
+    "2023-04-05T14:38:23.000+0200",
+    "2023-04-05T22:20:28.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20696",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16144",
+   "target_resolution": "Fixed",
+   "created": "2023-03-01T17:49:08.000+0100",
+   "resolved": "2023-09-19T15:33:38.000+0200",
+   "target_resolved": "2023-04-13T14:03:10.000+0200",
+   "comment_dates": [
+    "2023-03-07T14:08:05.000+0100",
+    "2023-03-07T17:42:08.000+0100",
+    "2023-04-13T11:41:49.000+0200",
+    "2023-04-13T13:42:27.000+0200",
+    "2023-06-19T16:05:25.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20601",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20333",
+   "target_resolution": "Fixed",
+   "created": "2023-02-01T16:45:13.000+0100",
+   "resolved": "2023-04-12T15:29:10.000+0200",
+   "target_resolved": "2023-01-13T17:06:30.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20595",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20496",
+   "target_resolution": "Fixed",
+   "created": "2023-01-31T13:19:17.000+0100",
+   "resolved": "2025-03-06T14:04:17.000+0100",
+   "target_resolved": "2022-12-21T14:47:45.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20573",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18989",
+   "target_resolution": "Fixed",
+   "created": "2023-01-20T16:26:36.000+0100",
+   "resolved": "2023-01-20T17:34:24.000+0100",
+   "target_resolved": "2022-11-03T14:59:51.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20537",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20034",
+   "target_resolution": "Fixed",
+   "created": "2023-01-06T16:00:59.000+0100",
+   "resolved": "2023-01-10T14:50:47.000+0100",
+   "target_resolved": "2022-07-28T17:02:36.000+0200",
+   "comment_dates": [
+    "2023-01-09T09:50:06.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20519",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15196",
+   "target_resolution": "Fixed",
+   "created": "2023-01-02T16:04:15.000+0100",
+   "resolved": "2023-02-21T17:20:10.000+0100",
+   "target_resolved": "2019-09-05T08:58:45.000+0200",
+   "comment_dates": [
+    "2023-01-18T14:53:33.000+0100",
+    "2023-01-24T17:26:46.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20499",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19432",
+   "target_resolution": "Fixed",
+   "created": "2022-12-23T13:11:43.000+0100",
+   "resolved": "2023-02-03T09:09:49.000+0100",
+   "target_resolved": "2022-02-17T12:19:55.000+0100",
+   "comment_dates": [
+    "2023-01-03T13:52:51.000+0100",
+    "2023-01-04T09:53:45.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20331",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-20385",
+   "target_resolution": "Fixed",
+   "created": "2022-11-08T10:38:50.000+0100",
+   "resolved": "2023-11-24T17:00:00.000+0100",
+   "target_resolved": "2023-02-28T11:49:36.000+0100",
+   "comment_dates": [
+    "2022-11-08T10:38:51.000+0100",
+    "2022-11-08T10:38:51.000+0100",
+    "2022-11-08T10:38:52.000+0100",
+    "2022-11-08T10:50:51.000+0100",
+    "2022-11-18T17:56:11.000+0100",
+    "2023-02-09T15:42:08.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20193",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19730",
+   "target_resolution": "Fixed",
+   "created": "2022-10-05T10:37:58.000+0200",
+   "resolved": "2022-10-13T16:07:52.000+0200",
+   "target_resolved": "2022-05-18T09:12:36.000+0200",
+   "comment_dates": [
+    "2022-10-05T10:43:04.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20002",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8810",
+   "target_resolution": "Fixed",
+   "created": "2022-07-12T11:31:18.000+0200",
+   "resolved": "2023-01-19T09:47:01.000+0100",
+   "target_resolved": "2013-02-12T16:30:45.000+0100",
+   "comment_dates": [
+    "2022-12-12T15:11:34.000+0100",
+    "2022-12-16T10:10:19.000+0100",
+    "2022-12-16T10:12:45.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19948",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9017",
+   "target_resolution": "Fixed",
+   "created": "2022-07-07T16:50:30.000+0200",
+   "resolved": "2023-10-16T11:07:47.000+0200",
+   "target_resolved": "2013-04-09T17:28:44.000+0200",
+   "comment_dates": [
+    "2023-09-30T09:40:20.000+0200",
+    "2023-09-30T09:41:37.000+0200",
+    "2023-10-02T09:12:23.000+0200",
+    "2023-10-02T10:41:09.000+0200",
+    "2023-10-03T09:00:07.000+0200",
+    "2023-10-03T09:50:40.000+0200",
+    "2023-10-03T10:21:32.000+0200",
+    "2023-10-05T17:01:38.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19814",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11205",
+   "target_resolution": "Fixed",
+   "created": "2022-06-10T10:32:39.000+0200",
+   "resolved": "2022-06-10T10:56:10.000+0200",
+   "target_resolved": "2021-01-29T11:47:26.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19780",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19590",
+   "target_resolution": "Fixed",
+   "created": "2022-05-30T13:09:08.000+0200",
+   "resolved": "2022-06-01T10:26:23.000+0200",
+   "target_resolved": "2022-04-01T14:29:46.000+0200",
+   "comment_dates": [
+    "2022-05-30T13:10:41.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19400",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19307",
+   "target_resolution": "Fixed",
+   "created": "2022-02-04T13:19:52.000+0100",
+   "resolved": "2022-02-17T14:28:42.000+0100",
+   "target_resolved": "2022-01-13T14:32:07.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19283",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18893",
+   "target_resolution": "Fixed",
+   "created": "2021-12-30T16:29:59.000+0100",
+   "resolved": "2022-01-03T10:32:13.000+0100",
+   "target_resolved": "2021-08-26T11:20:23.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19281",
+   "group": "outlived_Fixed",
+   "target": "DISCUSSION-38",
+   "target_resolution": "Fixed",
+   "created": "2021-12-29T17:04:45.000+0100",
+   "resolved": "2025-09-09T14:06:46.000+0200",
+   "target_resolved": "2021-12-31T14:53:10.000+0100",
+   "comment_dates": [
+    "2021-12-30T09:52:31.000+0100",
+    "2021-12-30T10:25:57.000+0100",
+    "2022-01-03T09:26:47.000+0100",
+    "2022-01-03T09:28:33.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19224",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16995",
+   "target_resolution": "Fixed",
+   "created": "2021-12-10T12:58:26.000+0100",
+   "resolved": "2021-12-17T09:46:04.000+0100",
+   "target_resolved": "2020-01-23T15:36:08.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19134",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15719",
+   "target_resolution": "Fixed",
+   "created": "2021-11-12T12:31:03.000+0100",
+   "resolved": "2021-11-17T11:06:40.000+0100",
+   "target_resolved": "2018-10-11T17:37:52.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-19038",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16566",
+   "target_resolution": "Fixed",
+   "created": "2021-10-12T10:30:38.000+0200",
+   "resolved": "2021-10-15T11:54:18.000+0200",
+   "target_resolved": "2021-09-14T09:01:56.000+0200",
+   "comment_dates": [
+    "2021-10-13T10:45:10.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18827",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18618",
+   "target_resolution": "Fixed",
+   "created": "2021-07-08T15:52:42.000+0200",
+   "resolved": "2021-07-09T13:38:34.000+0200",
+   "target_resolved": "2021-06-07T16:00:23.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18813",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18631",
+   "target_resolution": "Fixed",
+   "created": "2021-07-06T10:40:16.000+0200",
+   "resolved": "2021-07-06T12:35:52.000+0200",
+   "target_resolved": "2021-05-12T10:11:14.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18787",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18384",
+   "target_resolution": "Fixed",
+   "created": "2021-06-24T13:42:06.000+0200",
+   "resolved": "2021-06-29T10:03:27.000+0200",
+   "target_resolved": "2021-03-09T14:20:01.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18782",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13285",
+   "target_resolution": "Fixed",
+   "created": "2021-06-23T10:19:38.000+0200",
+   "resolved": "2021-06-23T17:02:28.000+0200",
+   "target_resolved": "2016-04-04T12:27:38.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18728",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18606",
+   "target_resolution": "Fixed",
+   "created": "2021-06-08T19:01:09.000+0200",
+   "resolved": "2021-06-11T12:34:37.000+0200",
+   "target_resolved": "2021-05-03T15:05:14.000+0200",
+   "comment_dates": [
+    "2021-06-09T10:17:28.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18618",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17689",
+   "target_resolution": "Fixed",
+   "created": "2021-05-03T15:00:02.000+0200",
+   "resolved": "2021-06-07T16:00:23.000+0200",
+   "target_resolved": "2020-08-25T15:12:34.000+0200",
+   "comment_dates": [
+    "2021-06-03T09:53:22.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18524",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17787",
+   "target_resolution": "Fixed",
+   "created": "2021-03-31T16:16:33.000+0200",
+   "resolved": "2021-04-13T17:00:25.000+0200",
+   "target_resolved": "2020-09-14T11:10:46.000+0200",
+   "comment_dates": [
+    "2021-03-31T16:17:06.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18508",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16381",
+   "target_resolution": "Fixed",
+   "created": "2021-03-26T16:25:58.000+0100",
+   "resolved": "2023-06-21T16:29:34.000+0200",
+   "target_resolved": "2021-06-09T17:48:34.000+0200",
+   "comment_dates": [
+    "2021-04-08T10:48:02.000+0200",
+    "2021-08-02T21:49:07.000+0200",
+    "2021-08-03T10:53:37.000+0200",
+    "2021-08-04T10:29:24.000+0200",
+    "2021-08-04T16:20:54.000+0200",
+    "2021-08-04T16:43:02.000+0200",
+    "2021-08-04T17:46:10.000+0200",
+    "2021-08-04T17:57:43.000+0200",
+    "2021-08-11T09:54:04.000+0200",
+    "2021-08-11T10:28:05.000+0200",
+    "2021-08-19T09:54:26.000+0200",
+    "2021-08-20T15:13:22.000+0200",
+    "2021-08-23T09:24:09.000+0200",
+    "2021-12-13T20:54:45.000+0100",
+    "2021-12-14T09:21:04.000+0100",
+    "2022-03-04T09:42:00.000+0100",
+    "2022-05-18T09:21:41.000+0200",
+    "2022-12-15T15:18:01.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18482",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16758",
+   "target_resolution": "Fixed",
+   "created": "2021-03-22T11:57:55.000+0100",
+   "resolved": "2021-09-22T13:50:29.000+0200",
+   "target_resolved": "2020-09-24T15:51:19.000+0200",
+   "comment_dates": [
+    "2021-03-23T11:58:40.000+0100",
+    "2021-03-29T10:28:11.000+0200",
+    "2021-06-21T13:51:29.000+0200",
+    "2021-09-17T14:52:15.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18479",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17593",
+   "target_resolution": "Fixed",
+   "created": "2021-03-20T00:02:12.000+0100",
+   "resolved": "2021-05-06T13:49:30.000+0200",
+   "target_resolved": "2021-03-20T00:03:37.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18478",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17285",
+   "target_resolution": "Fixed",
+   "created": "2021-03-19T23:42:00.000+0100",
+   "resolved": "2021-03-19T23:46:49.000+0100",
+   "target_resolved": "2020-04-30T19:45:54.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18399",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9730",
+   "target_resolution": "Fixed",
+   "created": "2021-03-03T16:13:28.000+0100",
+   "resolved": "2021-05-10T12:13:19.000+0200",
+   "target_resolved": "2013-11-26T15:47:46.000+0100",
+   "comment_dates": [
+    "2021-03-03T16:19:22.000+0100",
+    "2021-03-03T16:23:28.000+0100",
+    "2021-04-26T18:10:17.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18368",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9366",
+   "target_resolution": "Fixed",
+   "created": "2021-02-19T17:00:33.000+0100",
+   "resolved": "2021-03-30T16:14:32.000+0200",
+   "target_resolved": "2013-09-04T14:50:23.000+0200",
+   "comment_dates": [
+    "2021-03-19T11:38:20.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18344",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-19776",
+   "target_resolution": "Fixed",
+   "created": "2021-02-15T15:24:08.000+0100",
+   "resolved": "2022-09-13T08:35:08.000+0200",
+   "target_resolved": "2022-06-02T16:35:21.000+0200",
+   "comment_dates": [
+    "2021-02-15T15:54:26.000+0100",
+    "2021-02-15T16:55:02.000+0100",
+    "2021-02-16T06:58:06.000+0100",
+    "2022-06-16T15:44:15.000+0200",
+    "2022-06-16T15:46:37.000+0200",
+    "2022-07-08T15:14:33.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18133",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17468",
+   "target_resolution": "Fixed",
+   "created": "2020-12-03T11:57:14.000+0100",
+   "resolved": "2020-12-03T16:03:52.000+0100",
+   "target_resolved": "2020-10-30T14:52:36.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18130",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17468",
+   "target_resolution": "Fixed",
+   "created": "2020-12-03T11:28:02.000+0100",
+   "resolved": "2020-12-03T16:03:29.000+0100",
+   "target_resolved": "2020-10-30T14:52:36.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18053",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17658",
+   "target_resolution": "Fixed",
+   "created": "2020-11-12T09:26:41.000+0100",
+   "resolved": "2020-11-13T22:34:22.000+0100",
+   "target_resolved": "2020-10-12T10:29:56.000+0200",
+   "comment_dates": [
+    "2020-11-12T10:24:08.000+0100",
+    "2020-11-12T11:15:15.000+0100",
+    "2020-11-12T11:16:28.000+0100",
+    "2020-11-12T13:57:12.000+0100",
+    "2020-11-12T14:00:38.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-18007",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-18843",
+   "target_resolution": "Fixed",
+   "created": "2020-10-29T14:13:31.000+0100",
+   "resolved": "2023-11-03T12:41:20.000+0100",
+   "target_resolved": "2023-06-16T15:23:26.000+0200",
+   "comment_dates": [
+    "2021-08-22T18:31:07.000+0200",
+    "2022-06-14T11:07:01.000+0200",
+    "2023-02-04T09:21:35.000+0100",
+    "2023-04-28T17:03:59.000+0200",
+    "2023-04-29T10:36:51.000+0200",
+    "2023-05-10T15:55:10.000+0200",
+    "2023-06-16T10:57:20.000+0200",
+    "2023-06-21T11:22:06.000+0200",
+    "2023-08-08T13:56:59.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-22750",
+   "group": "outlived_Fixed",
+   "target": "CKEDITOR-380",
+   "target_resolution": "Fixed",
+   "created": "2020-10-23T09:10:06.000+0200",
+   "resolved": "2025-01-09T09:20:51.000+0100",
+   "target_resolved": "2020-10-23T10:15:07.000+0200",
+   "comment_dates": [
+    "2020-10-23T09:11:32.000+0200",
+    "2020-10-23T09:48:21.000+0200",
+    "2021-05-24T15:12:18.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17958",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17639",
+   "target_resolution": "Fixed",
+   "created": "2020-10-20T14:57:48.000+0200",
+   "resolved": "2020-12-28T14:14:44.000+0100",
+   "target_resolved": "2020-09-18T17:29:10.000+0200",
+   "comment_dates": [
+    "2020-10-22T11:50:29.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17814",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17719",
+   "target_resolution": "Fixed",
+   "created": "2020-09-16T17:32:59.000+0200",
+   "resolved": "2023-09-11T11:31:06.000+0200",
+   "target_resolved": "2020-09-16T18:49:40.000+0200",
+   "comment_dates": [
+    "2020-09-16T18:15:33.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17794",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14247",
+   "target_resolution": "Fixed",
+   "created": "2020-09-14T13:00:48.000+0200",
+   "resolved": "2021-01-12T16:37:10.000+0100",
+   "target_resolved": "2020-01-09T16:21:06.000+0100",
+   "comment_dates": [
+    "2020-09-17T18:19:29.000+0200",
+    "2020-09-17T18:21:09.000+0200",
+    "2020-09-18T09:34:35.000+0200",
+    "2020-09-18T10:40:49.000+0200",
+    "2020-09-18T11:23:18.000+0200",
+    "2020-09-18T11:38:50.000+0200",
+    "2020-09-18T11:56:05.000+0200",
+    "2020-09-18T12:44:29.000+0200",
+    "2020-10-06T16:02:10.000+0200",
+    "2020-10-06T18:31:34.000+0200",
+    "2020-10-15T13:31:05.000+0200",
+    "2020-10-29T15:50:54.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17658",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16343",
+   "target_resolution": "Fixed",
+   "created": "2020-08-18T15:53:15.000+0200",
+   "resolved": "2020-10-12T10:29:56.000+0200",
+   "target_resolved": "2019-04-26T16:59:20.000+0200",
+   "comment_dates": [
+    "2020-08-18T15:55:04.000+0200",
+    "2020-08-18T16:05:44.000+0200",
+    "2020-08-18T17:38:20.000+0200",
+    "2020-08-20T09:36:42.000+0200",
+    "2020-08-20T09:56:45.000+0200",
+    "2020-08-20T10:00:43.000+0200",
+    "2020-08-20T10:05:31.000+0200",
+    "2020-08-20T17:52:11.000+0200",
+    "2020-08-21T11:49:21.000+0200",
+    "2020-08-21T14:22:38.000+0200",
+    "2020-08-31T19:18:15.000+0200",
+    "2020-09-24T18:42:40.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17628",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14113",
+   "target_resolution": "Fixed",
+   "created": "2020-08-10T19:44:25.000+0200",
+   "resolved": "2020-08-11T08:41:04.000+0200",
+   "target_resolved": "2017-03-23T09:54:19.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17478",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17364",
+   "target_resolution": "Fixed",
+   "created": "2020-06-29T16:20:35.000+0200",
+   "resolved": "2020-07-02T11:01:16.000+0200",
+   "target_resolved": "2020-05-28T16:40:46.000+0200",
+   "comment_dates": [
+    "2020-06-30T11:23:03.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17470",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17461",
+   "target_resolution": "Fixed",
+   "created": "2020-06-26T15:49:37.000+0200",
+   "resolved": "2023-09-11T11:09:05.000+0200",
+   "target_resolved": "2020-06-26T15:44:51.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17423",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17141",
+   "target_resolution": "Fixed",
+   "created": "2020-06-11T08:55:43.000+0200",
+   "resolved": "2020-06-11T09:50:42.000+0200",
+   "target_resolved": "2020-04-03T08:56:38.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17374",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9680",
+   "target_resolution": "Fixed",
+   "created": "2020-05-28T10:24:15.000+0200",
+   "resolved": "2020-09-25T11:16:06.000+0200",
+   "target_resolved": "2013-11-22T01:05:41.000+0100",
+   "comment_dates": [
+    "2020-05-28T11:03:18.000+0200",
+    "2020-05-28T12:29:55.000+0200",
+    "2020-05-28T14:53:51.000+0200",
+    "2020-05-28T14:55:19.000+0200",
+    "2020-05-28T16:13:21.000+0200",
+    "2020-05-29T10:43:03.000+0200",
+    "2020-05-29T12:05:57.000+0200",
+    "2020-06-04T12:16:00.000+0200",
+    "2020-06-04T17:34:34.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17211",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13181",
+   "target_resolution": "Fixed",
+   "created": "2020-04-14T14:44:59.000+0200",
+   "resolved": "2020-04-16T10:26:40.000+0200",
+   "target_resolved": "2017-03-30T17:00:59.000+0200",
+   "comment_dates": [
+    "2020-04-14T14:59:24.000+0200",
+    "2020-04-14T15:04:22.000+0200",
+    "2020-04-14T15:08:36.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17187",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16496",
+   "target_resolution": "Fixed",
+   "created": "2020-04-06T15:56:57.000+0200",
+   "resolved": "2020-04-09T17:38:15.000+0200",
+   "target_resolved": "2019-06-19T16:30:46.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17177",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11370",
+   "target_resolution": "Fixed",
+   "created": "2020-04-02T11:32:16.000+0200",
+   "resolved": "2020-11-10T15:49:25.000+0100",
+   "target_resolved": "2014-11-01T04:00:43.000+0100",
+   "comment_dates": [
+    "2020-08-29T10:02:34.000+0200",
+    "2020-08-31T14:40:15.000+0200",
+    "2020-08-31T22:10:43.000+0200",
+    "2020-09-09T20:53:24.000+0200",
+    "2020-09-09T21:26:36.000+0200",
+    "2020-09-09T23:03:17.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17166",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15756",
+   "target_resolution": "Fixed",
+   "created": "2020-03-28T17:22:50.000+0100",
+   "resolved": "2020-03-31T14:02:17.000+0200",
+   "target_resolved": "2018-10-20T16:56:28.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17086",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-17874",
+   "target_resolution": "Fixed",
+   "created": "2020-03-02T11:41:15.000+0100",
+   "resolved": "2022-03-31T15:20:20.000+0200",
+   "target_resolved": "2020-09-28T17:56:02.000+0200",
+   "comment_dates": [
+    "2020-09-11T15:08:37.000+0200",
+    "2020-09-29T09:39:13.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16967",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16461",
+   "target_resolution": "Fixed",
+   "created": "2020-01-13T11:31:55.000+0100",
+   "resolved": "2020-04-16T16:46:12.000+0200",
+   "target_resolved": "2019-08-08T14:04:57.000+0200",
+   "comment_dates": [
+    "2020-01-13T11:37:37.000+0100",
+    "2020-01-13T13:11:01.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16921",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16146",
+   "target_resolution": "Fixed",
+   "created": "2019-12-15T17:34:51.000+0100",
+   "resolved": "2019-12-16T17:59:21.000+0100",
+   "target_resolved": "2019-02-14T18:48:49.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16911",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16834",
+   "target_resolution": "Fixed",
+   "created": "2019-12-09T14:11:04.000+0100",
+   "resolved": "2019-12-09T17:28:58.000+0100",
+   "target_resolved": "2019-11-05T17:18:13.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16782",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8910",
+   "target_resolution": "Fixed",
+   "created": "2019-10-15T14:50:07.000+0200",
+   "resolved": "2020-01-09T16:09:46.000+0100",
+   "target_resolved": "2016-12-21T12:45:20.000+0100",
+   "comment_dates": [
+    "2019-10-16T15:11:11.000+0200",
+    "2019-10-17T10:06:25.000+0200",
+    "2019-10-17T10:13:51.000+0200",
+    "2019-10-17T13:55:08.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16708",
+   "group": "outlived_Fixed",
+   "target": "XRENDERING-576",
+   "target_resolution": "Fixed",
+   "created": "2019-09-06T10:17:14.000+0200",
+   "resolved": "2019-12-10T16:32:22.000+0100",
+   "target_resolved": "2019-09-09T18:17:41.000+0200",
+   "comment_dates": [
+    "2019-09-06T10:18:36.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16516",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11076",
+   "target_resolution": "Fixed",
+   "created": "2019-06-22T12:39:26.000+0200",
+   "resolved": "2019-06-24T15:41:18.000+0200",
+   "target_resolved": "2014-09-22T11:07:43.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16470",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15215",
+   "target_resolution": "Fixed",
+   "created": "2019-06-10T12:36:07.000+0200",
+   "resolved": "2019-06-17T15:14:52.000+0200",
+   "target_resolved": "2019-03-19T14:37:38.000+0100",
+   "comment_dates": [
+    "2019-06-10T17:13:54.000+0200",
+    "2019-06-11T09:55:43.000+0200",
+    "2019-06-13T13:43:22.000+0200",
+    "2019-06-14T16:26:28.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16461",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9025",
+   "target_resolution": "Fixed",
+   "created": "2019-06-07T11:24:09.000+0200",
+   "resolved": "2019-08-08T14:04:57.000+0200",
+   "target_resolved": "2013-05-14T18:13:47.000+0200",
+   "comment_dates": [
+    "2019-06-12T14:44:43.000+0200",
+    "2019-06-12T14:55:17.000+0200",
+    "2019-06-12T14:58:31.000+0200",
+    "2019-06-14T08:08:44.000+0200",
+    "2019-06-14T08:32:40.000+0200",
+    "2019-06-16T19:12:54.000+0200",
+    "2019-06-29T14:25:08.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16405",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6665",
+   "target_resolution": "Fixed",
+   "created": "2019-05-14T15:59:00.000+0200",
+   "resolved": "2019-05-15T11:34:24.000+0200",
+   "target_resolved": "2019-03-18T15:31:56.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16390",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15943",
+   "target_resolution": "Fixed",
+   "created": "2019-05-07T15:33:22.000+0200",
+   "resolved": "2020-02-27T17:40:48.000+0100",
+   "target_resolved": "2018-12-05T15:52:52.000+0100",
+   "comment_dates": [
+    "2019-05-07T15:35:43.000+0200",
+    "2019-06-26T16:29:07.000+0200",
+    "2019-11-14T10:48:53.000+0100",
+    "2020-01-23T12:12:14.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16388",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15450",
+   "target_resolution": "Fixed",
+   "created": "2019-05-07T10:53:52.000+0200",
+   "resolved": "2019-05-09T15:45:05.000+0200",
+   "target_resolved": "2019-04-04T09:40:23.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16381",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16899",
+   "target_resolution": "Fixed",
+   "created": "2019-05-03T11:47:34.000+0200",
+   "resolved": "2021-06-09T17:48:34.000+0200",
+   "target_resolved": "2019-12-02T19:45:40.000+0100",
+   "comment_dates": [
+    "2019-05-03T11:48:36.000+0200",
+    "2019-09-27T14:07:25.000+0200",
+    "2019-11-04T16:54:45.000+0100",
+    "2021-03-10T14:21:26.000+0100",
+    "2021-03-10T14:33:07.000+0100",
+    "2021-03-15T11:18:02.000+0100",
+    "2021-03-24T13:09:45.000+0100",
+    "2021-04-08T23:51:49.000+0200",
+    "2021-04-19T15:13:45.000+0200",
+    "2021-05-06T09:54:37.000+0200",
+    "2021-05-11T13:46:55.000+0200",
+    "2021-05-11T17:20:26.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16343",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6665",
+   "target_resolution": "Fixed",
+   "created": "2019-04-15T15:30:52.000+0200",
+   "resolved": "2019-04-26T16:59:20.000+0200",
+   "target_resolved": "2019-03-18T15:31:56.000+0100",
+   "comment_dates": [
+    "2019-04-15T15:32:39.000+0200",
+    "2019-04-15T15:45:24.000+0200",
+    "2019-04-18T17:53:47.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16305",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16363",
+   "target_resolution": "Fixed",
+   "created": "2019-04-03T13:14:12.000+0200",
+   "resolved": "2019-11-14T09:22:47.000+0100",
+   "target_resolved": "2019-04-30T11:34:22.000+0200",
+   "comment_dates": [
+    "2019-04-03T13:48:21.000+0200",
+    "2019-04-03T13:58:52.000+0200",
+    "2019-04-03T14:02:09.000+0200",
+    "2019-04-18T12:05:04.000+0200",
+    "2019-04-18T12:13:21.000+0200",
+    "2019-04-18T14:37:53.000+0200",
+    "2019-04-18T14:39:15.000+0200",
+    "2019-04-19T06:25:16.000+0200",
+    "2019-04-19T12:24:57.000+0200",
+    "2019-04-22T15:17:29.000+0200",
+    "2019-04-23T14:12:43.000+0200",
+    "2019-04-23T15:08:44.000+0200",
+    "2019-04-25T09:37:16.000+0200",
+    "2019-04-25T17:41:51.000+0200",
+    "2019-04-25T18:27:37.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16236",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15756",
+   "target_resolution": "Fixed",
+   "created": "2019-03-17T09:45:31.000+0100",
+   "resolved": "2019-03-19T09:34:47.000+0100",
+   "target_resolved": "2018-10-20T16:56:28.000+0200",
+   "comment_dates": [
+    "2019-03-17T10:20:05.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16207",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16141",
+   "target_resolution": "Fixed",
+   "created": "2019-03-06T10:25:53.000+0100",
+   "resolved": "2020-02-14T09:39:29.000+0100",
+   "target_resolved": "2019-02-14T18:36:43.000+0100",
+   "comment_dates": [
+    "2019-03-06T15:19:01.000+0100",
+    "2019-03-19T09:53:05.000+0100",
+    "2019-03-19T10:07:39.000+0100",
+    "2019-04-01T15:12:52.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16186",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14732",
+   "target_resolution": "Fixed",
+   "created": "2019-02-25T13:59:53.000+0100",
+   "resolved": "2019-02-25T15:56:02.000+0100",
+   "target_resolved": "2018-02-07T14:12:51.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16149",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15717",
+   "target_resolution": "Fixed",
+   "created": "2019-02-14T17:00:03.000+0100",
+   "resolved": "2019-02-14T17:15:48.000+0100",
+   "target_resolved": "2018-10-20T16:59:52.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16143",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15710",
+   "target_resolution": "Fixed",
+   "created": "2019-02-14T16:28:26.000+0100",
+   "resolved": "2019-03-27T14:59:13.000+0100",
+   "target_resolved": "2019-01-30T06:58:07.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16142",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15718",
+   "target_resolution": "Fixed",
+   "created": "2019-02-14T16:17:11.000+0100",
+   "resolved": "2019-03-22T15:40:55.000+0100",
+   "target_resolved": "2018-10-12T11:11:57.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-16024",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15980",
+   "target_resolution": "Fixed",
+   "created": "2019-01-09T17:42:31.000+0100",
+   "resolved": "2019-01-17T13:34:43.000+0100",
+   "target_resolved": "2018-12-17T13:04:38.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15930",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14692",
+   "target_resolution": "Fixed",
+   "created": "2018-11-29T22:49:57.000+0100",
+   "resolved": "2019-01-23T11:44:20.000+0100",
+   "target_resolved": "2017-09-21T17:26:55.000+0200",
+   "comment_dates": [
+    "2018-12-17T19:14:09.000+0100",
+    "2018-12-18T14:48:43.000+0100",
+    "2018-12-18T16:09:16.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15727",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14164",
+   "target_resolution": "Fixed",
+   "created": "2018-10-11T19:37:39.000+0200",
+   "resolved": "2018-10-16T14:30:17.000+0200",
+   "target_resolved": "2017-04-10T18:07:28.000+0200",
+   "comment_dates": [
+    "2018-10-12T11:41:24.000+0200",
+    "2018-10-13T14:26:09.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15710",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15707",
+   "target_resolution": "Fixed",
+   "created": "2018-10-08T18:43:38.000+0200",
+   "resolved": "2019-01-30T06:58:07.000+0100",
+   "target_resolved": "2018-12-06T15:53:28.000+0100",
+   "comment_dates": [
+    "2018-10-30T09:21:24.000+0100",
+    "2018-10-30T09:26:58.000+0100",
+    "2018-10-30T09:46:40.000+0100",
+    "2018-10-30T11:05:37.000+0100",
+    "2018-10-30T11:10:37.000+0100",
+    "2018-10-30T11:21:08.000+0100",
+    "2018-10-30T12:22:42.000+0100",
+    "2018-10-30T12:26:21.000+0100",
+    "2018-10-30T13:36:48.000+0100",
+    "2018-12-28T21:02:42.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15684",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15691",
+   "target_resolution": "Fixed",
+   "created": "2018-10-05T17:59:49.000+0200",
+   "resolved": "2019-03-27T14:25:13.000+0100",
+   "target_resolved": "2018-10-31T10:26:56.000+0100",
+   "comment_dates": [
+    "2019-03-15T15:34:48.000+0100",
+    "2019-03-19T15:16:04.000+0100",
+    "2019-03-20T12:27:17.000+0100",
+    "2019-03-20T15:00:35.000+0100",
+    "2019-03-22T11:26:03.000+0100",
+    "2019-03-26T12:24:00.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15663",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15599",
+   "target_resolution": "Fixed",
+   "created": "2018-10-03T15:26:06.000+0200",
+   "resolved": "2019-03-15T18:21:32.000+0100",
+   "target_resolved": "2018-09-18T18:22:58.000+0200",
+   "comment_dates": [
+    "2018-10-04T15:01:07.000+0200",
+    "2018-10-30T15:31:16.000+0100",
+    "2018-10-30T15:38:54.000+0100",
+    "2018-10-30T15:43:01.000+0100",
+    "2018-10-31T12:15:58.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15601",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15388",
+   "target_resolution": "Fixed",
+   "created": "2018-09-17T16:40:18.000+0200",
+   "resolved": "2018-10-08T09:58:46.000+0200",
+   "target_resolved": "2018-06-26T16:56:40.000+0200",
+   "comment_dates": [
+    "2018-10-04T17:21:38.000+0200",
+    "2018-10-04T17:27:01.000+0200",
+    "2018-10-04T17:47:00.000+0200",
+    "2018-10-05T11:20:08.000+0200",
+    "2018-10-05T11:26:23.000+0200",
+    "2018-10-05T17:02:51.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15599",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11595",
+   "target_resolution": "Fixed",
+   "created": "2018-09-17T16:36:43.000+0200",
+   "resolved": "2018-09-18T18:22:58.000+0200",
+   "target_resolved": "2014-12-30T17:49:27.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15566",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13678",
+   "target_resolution": "Fixed",
+   "created": "2018-09-06T11:39:50.000+0200",
+   "resolved": "2018-09-06T12:18:25.000+0200",
+   "target_resolved": "2016-09-05T10:05:51.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15525",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9679",
+   "target_resolution": "Fixed",
+   "created": "2018-08-24T09:41:04.000+0200",
+   "resolved": "2018-08-24T11:42:47.000+0200",
+   "target_resolved": "2013-11-21T23:27:10.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15450",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6073",
+   "target_resolution": "Fixed",
+   "created": "2018-07-18T18:40:17.000+0200",
+   "resolved": "2019-04-04T09:40:23.000+0200",
+   "target_resolved": "2019-02-12T11:37:29.000+0100",
+   "comment_dates": [
+    "2019-03-28T17:47:55.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15381",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15297",
+   "target_resolution": "Fixed",
+   "created": "2018-06-21T13:16:12.000+0200",
+   "resolved": "2018-07-09T17:52:35.000+0200",
+   "target_resolved": "2018-05-31T14:23:44.000+0200",
+   "comment_dates": [
+    "2018-07-04T14:01:58.000+0200",
+    "2018-07-05T15:16:24.000+0200",
+    "2018-07-05T15:34:26.000+0200",
+    "2018-07-05T15:37:42.000+0200",
+    "2018-07-05T15:38:42.000+0200",
+    "2018-07-05T15:40:12.000+0200",
+    "2018-07-05T15:42:55.000+0200",
+    "2018-07-05T15:42:58.000+0200",
+    "2018-07-05T15:50:11.000+0200",
+    "2018-07-05T18:32:31.000+0200",
+    "2018-07-05T18:37:05.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15119",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11035",
+   "target_resolution": "Fixed",
+   "created": "2018-03-15T08:47:06.000+0100",
+   "resolved": "2021-04-06T11:57:15.000+0200",
+   "target_resolved": "2014-10-02T13:43:28.000+0200",
+   "comment_dates": [
+    "2020-01-20T10:55:18.000+0100",
+    "2021-03-28T14:32:32.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-15029",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-16228",
+   "target_resolution": "Fixed",
+   "created": "2018-02-19T17:12:02.000+0100",
+   "resolved": "2019-09-30T10:20:59.000+0200",
+   "target_resolved": "2019-03-16T11:04:07.000+0100",
+   "comment_dates": [
+    "2018-10-24T16:55:17.000+0200",
+    "2019-09-26T10:25:20.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14803",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15310",
+   "target_resolution": "Fixed",
+   "created": "2017-10-25T15:32:38.000+0200",
+   "resolved": "2018-07-06T09:31:47.000+0200",
+   "target_resolved": "2018-05-31T17:40:40.000+0200",
+   "comment_dates": [
+    "2018-03-15T15:42:47.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14534",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7680",
+   "target_resolution": "Fixed",
+   "created": "2017-07-15T12:12:30.000+0200",
+   "resolved": "2017-07-15T12:15:33.000+0200",
+   "target_resolved": "2012-04-03T13:24:18.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14319",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14252",
+   "target_resolution": "Fixed",
+   "created": "2017-05-31T16:57:15.000+0200",
+   "resolved": "2019-07-25T16:23:35.000+0200",
+   "target_resolved": "2017-05-12T16:11:13.000+0200",
+   "comment_dates": [
+    "2017-05-31T17:29:31.000+0200",
+    "2017-05-31T21:15:50.000+0200",
+    "2017-05-31T21:20:43.000+0200",
+    "2017-06-06T17:17:14.000+0200",
+    "2017-06-06T17:26:44.000+0200",
+    "2017-06-24T20:22:24.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14204",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13524",
+   "target_resolution": "Fixed",
+   "created": "2017-04-13T17:19:08.000+0200",
+   "resolved": "2017-07-12T10:31:37.000+0200",
+   "target_resolved": "2016-10-13T18:48:25.000+0200",
+   "comment_dates": [
+    "2017-04-18T15:12:14.000+0200",
+    "2017-06-23T21:10:04.000+0200",
+    "2017-06-26T16:54:33.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14168",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14608",
+   "target_resolution": "Fixed",
+   "created": "2017-04-04T15:52:02.000+0200",
+   "resolved": "2024-09-13T12:42:17.000+0200",
+   "target_resolved": "2017-08-22T12:54:08.000+0200",
+   "comment_dates": [
+    "2017-04-04T16:06:05.000+0200",
+    "2017-04-04T16:10:20.000+0200",
+    "2017-04-04T16:11:27.000+0200",
+    "2017-04-04T16:18:55.000+0200",
+    "2017-04-04T16:21:13.000+0200",
+    "2020-11-12T15:15:20.000+0100",
+    "2024-02-08T13:57:49.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14165",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-15991",
+   "target_resolution": "Fixed",
+   "created": "2017-04-04T11:50:21.000+0200",
+   "resolved": "2019-04-03T16:41:20.000+0200",
+   "target_resolved": "2019-02-22T17:36:25.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14073",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14309",
+   "target_resolution": "Fixed",
+   "created": "2017-03-08T08:24:42.000+0100",
+   "resolved": "2024-10-25T17:16:02.000+0200",
+   "target_resolved": "2017-09-25T17:48:47.000+0200",
+   "comment_dates": [
+    "2017-03-08T08:25:19.000+0100",
+    "2024-10-24T17:14:03.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14032",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-21864",
+   "target_resolution": "Fixed",
+   "created": "2017-02-20T13:23:44.000+0100",
+   "resolved": "2024-08-27T11:46:30.000+0200",
+   "target_resolved": "2024-02-16T12:03:21.000+0100",
+   "comment_dates": [
+    "2017-11-10T16:22:27.000+0100",
+    "2024-03-28T11:50:41.000+0100",
+    "2024-03-28T13:57:18.000+0100",
+    "2024-03-28T15:40:32.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13858",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8734",
+   "target_resolution": "Fixed",
+   "created": "2016-11-10T10:50:07.000+0100",
+   "resolved": "2024-12-10T22:06:28.000+0100",
+   "target_resolved": "2013-01-30T13:10:24.000+0100",
+   "comment_dates": [
+    "2016-11-10T11:05:41.000+0100",
+    "2016-11-10T11:28:42.000+0100",
+    "2016-11-11T07:34:34.000+0100",
+    "2016-11-11T09:47:47.000+0100",
+    "2023-12-22T17:04:30.000+0100",
+    "2024-10-24T15:11:32.000+0200",
+    "2024-10-24T16:00:23.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13852",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11988",
+   "target_resolution": "Fixed",
+   "created": "2016-11-08T15:29:21.000+0100",
+   "resolved": "2016-11-08T15:34:49.000+0100",
+   "target_resolved": "2016-07-19T16:00:08.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13679",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13092",
+   "target_resolution": "Fixed",
+   "created": "2016-09-06T10:12:31.000+0200",
+   "resolved": "2017-02-17T09:19:05.000+0100",
+   "target_resolved": "2016-05-09T10:45:03.000+0200",
+   "comment_dates": [
+    "2016-09-08T15:14:19.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13634",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11087",
+   "target_resolution": "Fixed",
+   "created": "2016-08-17T16:46:04.000+0200",
+   "resolved": "2016-08-17T16:49:02.000+0200",
+   "target_resolved": "2014-10-02T10:35:52.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13493",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13106",
+   "target_resolution": "Fixed",
+   "created": "2016-06-13T12:05:26.000+0200",
+   "resolved": "2016-11-16T14:56:54.000+0100",
+   "target_resolved": "2016-02-19T01:01:49.000+0100",
+   "comment_dates": [
+    "2016-06-13T16:37:12.000+0200",
+    "2016-06-14T09:58:27.000+0200",
+    "2016-06-16T11:46:24.000+0200",
+    "2016-09-13T18:28:40.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14408",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-13735",
+   "target_resolution": "Fixed",
+   "created": "2016-03-15T16:38:14.000+0100",
+   "resolved": "2017-09-26T18:18:39.000+0200",
+   "target_resolved": "2016-09-26T11:35:31.000+0200",
+   "comment_dates": [
+    "2016-09-26T09:38:46.000+0200",
+    "2016-09-26T10:01:50.000+0200",
+    "2016-09-26T10:25:01.000+0200",
+    "2016-09-26T11:38:05.000+0200",
+    "2017-04-24T10:43:57.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13160",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11347",
+   "target_resolution": "Fixed",
+   "created": "2016-03-02T17:11:49.000+0100",
+   "resolved": "2016-10-25T15:08:03.000+0200",
+   "target_resolved": "2014-10-29T12:11:06.000+0100",
+   "comment_dates": [
+    "2016-03-02T17:12:35.000+0100",
+    "2016-03-14T16:49:42.000+0100",
+    "2016-05-26T16:04:55.000+0200",
+    "2016-10-12T13:38:58.000+0200",
+    "2016-10-24T12:42:28.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12987",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-14847",
+   "target_resolution": "Fixed",
+   "created": "2016-01-12T17:39:35.000+0100",
+   "resolved": "2024-11-18T10:13:14.000+0100",
+   "target_resolved": "2017-11-15T09:20:09.000+0100",
+   "comment_dates": [
+    "2016-01-12T17:45:58.000+0100",
+    "2016-01-12T18:08:27.000+0100",
+    "2016-01-12T18:59:48.000+0100",
+    "2017-11-10T10:57:22.000+0100",
+    "2017-11-10T11:17:42.000+0100",
+    "2017-11-10T13:46:15.000+0100",
+    "2017-11-14T15:12:55.000+0100",
+    "2017-11-15T09:20:54.000+0100",
+    "2017-11-15T12:40:16.000+0100",
+    "2018-06-27T16:06:18.000+0200",
+    "2018-06-27T16:13:44.000+0200",
+    "2019-02-14T11:27:19.000+0100",
+    "2019-02-14T12:07:21.000+0100",
+    "2019-02-14T12:14:22.000+0100",
+    "2019-02-14T12:16:44.000+0100",
+    "2019-02-14T12:20:47.000+0100",
+    "2023-12-22T15:02:32.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12661",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-12660",
+   "target_resolution": "Fixed",
+   "created": "2015-10-06T22:45:50.000+0200",
+   "resolved": "2015-11-11T11:33:05.000+0100",
+   "target_resolved": "2015-10-12T10:24:18.000+0200",
+   "comment_dates": [
+    "2015-10-06T23:43:02.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12446",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-5261",
+   "target_resolution": "Fixed",
+   "created": "2015-08-26T10:30:35.000+0200",
+   "resolved": "2015-08-26T10:43:35.000+0200",
+   "target_resolved": "2014-10-21T16:25:19.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12432",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-12433",
+   "target_resolution": "Fixed",
+   "created": "2015-08-24T16:48:21.000+0200",
+   "resolved": "2015-10-02T17:27:16.000+0200",
+   "target_resolved": "2015-08-24T19:44:40.000+0200",
+   "comment_dates": [
+    "2015-08-24T17:18:58.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12222",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11382",
+   "target_resolution": "Fixed",
+   "created": "2015-06-19T15:51:38.000+0200",
+   "resolved": "2020-08-17T11:37:59.000+0200",
+   "target_resolved": "2014-11-10T09:38:25.000+0100",
+   "comment_dates": [
+    "2015-06-19T15:57:29.000+0200",
+    "2015-06-19T15:59:04.000+0200",
+    "2020-08-13T10:43:53.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11993",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11239",
+   "target_resolution": "Fixed",
+   "created": "2015-04-07T10:43:22.000+0200",
+   "resolved": "2015-09-24T16:56:56.000+0200",
+   "target_resolved": "2014-10-16T15:41:54.000+0200",
+   "comment_dates": [
+    "2015-04-23T18:02:54.000+0200",
+    "2015-05-10T12:25:11.000+0200",
+    "2015-05-15T13:21:42.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11875",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10438",
+   "target_resolution": "Fixed",
+   "created": "2015-03-03T17:45:21.000+0100",
+   "resolved": "2015-03-04T12:44:15.000+0100",
+   "target_resolved": "2014-06-10T15:12:16.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11800",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-299",
+   "target_resolution": "Fixed",
+   "created": "2015-02-17T12:12:26.000+0100",
+   "resolved": "2015-02-17T16:20:10.000+0100",
+   "target_resolved": "2008-02-06T22:40:53.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11665",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10721",
+   "target_resolution": "Fixed",
+   "created": "2015-01-15T15:24:58.000+0100",
+   "resolved": "2015-03-26T13:49:57.000+0100",
+   "target_resolved": "2014-08-14T11:36:10.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11596",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10838",
+   "target_resolution": "Fixed",
+   "created": "2014-12-24T12:02:17.000+0100",
+   "resolved": "2016-05-26T15:25:16.000+0200",
+   "target_resolved": "2014-09-04T13:41:20.000+0200",
+   "comment_dates": [
+    "2015-01-05T14:16:48.000+0100",
+    "2015-01-05T14:20:27.000+0100",
+    "2015-01-05T14:42:55.000+0100",
+    "2015-01-12T16:24:47.000+0100",
+    "2015-01-20T09:37:58.000+0100",
+    "2015-01-20T10:05:43.000+0100",
+    "2015-05-19T15:55:14.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11315",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7694",
+   "target_resolution": "Fixed",
+   "created": "2014-10-23T11:23:29.000+0200",
+   "resolved": "2014-10-23T11:29:06.000+0200",
+   "target_resolved": "2012-04-05T18:21:58.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11287",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11124",
+   "target_resolution": "Fixed",
+   "created": "2014-10-21T16:19:10.000+0200",
+   "resolved": "2014-11-07T12:13:01.000+0100",
+   "target_resolved": "2014-09-26T15:34:21.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11206",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10664",
+   "target_resolution": "Fixed",
+   "created": "2014-10-10T18:58:40.000+0200",
+   "resolved": "2014-10-20T12:40:31.000+0200",
+   "target_resolved": "2014-09-02T15:29:08.000+0200",
+   "comment_dates": [
+    "2014-10-13T10:06:20.000+0200",
+    "2014-10-13T10:29:39.000+0200",
+    "2014-10-13T10:43:02.000+0200",
+    "2014-10-13T10:44:12.000+0200",
+    "2014-10-13T10:53:48.000+0200",
+    "2014-10-13T11:44:27.000+0200",
+    "2014-10-13T12:12:00.000+0200",
+    "2014-10-13T12:26:33.000+0200",
+    "2014-10-13T12:47:14.000+0200",
+    "2014-10-13T13:01:04.000+0200",
+    "2014-10-13T17:06:37.000+0200",
+    "2014-10-14T11:00:41.000+0200",
+    "2014-10-14T11:55:09.000+0200",
+    "2014-10-14T16:22:35.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11205",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-11072",
+   "target_resolution": "Fixed",
+   "created": "2014-10-10T18:31:36.000+0200",
+   "resolved": "2021-01-29T11:47:26.000+0100",
+   "target_resolved": "2014-09-25T17:08:08.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11169",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6328",
+   "target_resolution": "Fixed",
+   "created": "2014-10-04T11:19:44.000+0200",
+   "resolved": "2021-10-29T13:54:44.000+0200",
+   "target_resolved": "2014-10-04T11:52:37.000+0200",
+   "comment_dates": [
+    "2014-10-04T11:21:09.000+0200",
+    "2015-10-01T12:00:14.000+0200",
+    "2015-10-01T12:03:01.000+0200",
+    "2021-10-04T14:19:40.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11124",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10537",
+   "target_resolution": "Fixed",
+   "created": "2014-09-26T14:20:55.000+0200",
+   "resolved": "2014-09-26T15:34:21.000+0200",
+   "target_resolved": "2014-06-24T16:01:43.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-11035",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10574",
+   "target_resolution": "Fixed",
+   "created": "2014-09-16T09:20:38.000+0200",
+   "resolved": "2014-10-02T13:43:28.000+0200",
+   "target_resolved": "2014-06-30T16:13:47.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10920",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10537",
+   "target_resolution": "Fixed",
+   "created": "2014-09-02T13:51:28.000+0200",
+   "resolved": "2014-09-26T15:34:46.000+0200",
+   "target_resolved": "2014-06-24T16:01:43.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10859",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7390",
+   "target_resolution": "Fixed",
+   "created": "2014-08-28T09:17:15.000+0200",
+   "resolved": "2014-10-16T19:46:42.000+0200",
+   "target_resolved": "2012-01-16T14:23:46.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10853",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10854",
+   "target_resolution": "Fixed",
+   "created": "2014-08-27T15:00:17.000+0200",
+   "resolved": "2018-10-15T11:09:23.000+0200",
+   "target_resolved": "2014-08-27T16:45:29.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10782",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10663",
+   "target_resolution": "Fixed",
+   "created": "2014-08-08T12:00:01.000+0200",
+   "resolved": "2014-08-18T18:33:38.000+0200",
+   "target_resolved": "2014-07-17T16:29:38.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-10389",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-10360",
+   "target_resolution": "Fixed",
+   "created": "2014-05-28T14:07:49.000+0200",
+   "resolved": "2014-08-14T15:10:22.000+0200",
+   "target_resolved": "2014-06-10T15:29:25.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9854",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9678",
+   "target_resolution": "Fixed",
+   "created": "2014-01-06T02:07:38.000+0100",
+   "resolved": "2014-01-06T02:09:15.000+0100",
+   "target_resolved": "2013-11-21T22:35:35.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9826",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-925",
+   "target_resolution": "Fixed",
+   "created": "2013-12-18T11:43:58.000+0100",
+   "resolved": "2014-01-06T16:19:56.000+0100",
+   "target_resolved": "2007-08-01T01:50:12.000+0200",
+   "comment_dates": [
+    "2013-12-19T13:52:18.000+0100",
+    "2013-12-20T10:55:47.000+0100",
+    "2013-12-20T13:48:03.000+0100",
+    "2013-12-20T13:54:28.000+0100",
+    "2013-12-20T14:05:17.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9680",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8575",
+   "target_resolution": "Fixed",
+   "created": "2013-11-15T18:43:35.000+0100",
+   "resolved": "2013-11-22T01:05:41.000+0100",
+   "target_resolved": "2012-12-13T10:41:16.000+0100",
+   "comment_dates": [
+    "2013-11-15T18:47:39.000+0100",
+    "2013-11-15T18:52:52.000+0100",
+    "2013-11-18T11:27:45.000+0100",
+    "2013-11-18T11:38:23.000+0100",
+    "2013-11-18T12:25:10.000+0100",
+    "2013-11-18T12:46:26.000+0100",
+    "2013-11-18T15:44:25.000+0100",
+    "2013-11-19T14:53:40.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9655",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8592",
+   "target_resolution": "Fixed",
+   "created": "2013-11-11T16:23:22.000+0100",
+   "resolved": "2013-11-12T09:02:19.000+0100",
+   "target_resolved": "2013-09-19T14:31:46.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9653",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8592",
+   "target_resolution": "Fixed",
+   "created": "2013-11-08T18:01:12.000+0100",
+   "resolved": "2013-11-12T09:01:03.000+0100",
+   "target_resolved": "2013-09-19T14:31:46.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9652",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8592",
+   "target_resolution": "Fixed",
+   "created": "2013-11-08T16:03:29.000+0100",
+   "resolved": "2013-11-12T09:00:16.000+0100",
+   "target_resolved": "2013-09-19T14:31:46.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9616",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8605",
+   "target_resolution": "Fixed",
+   "created": "2013-11-04T07:46:01.000+0100",
+   "resolved": "2013-11-04T08:27:33.000+0100",
+   "target_resolved": "2012-12-13T15:38:28.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9553",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8572",
+   "target_resolution": "Fixed",
+   "created": "2013-10-15T15:05:38.000+0200",
+   "resolved": "2013-11-14T11:29:09.000+0100",
+   "target_resolved": "2012-12-07T18:26:45.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9476",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7952",
+   "target_resolution": "Fixed",
+   "created": "2013-09-18T17:15:56.000+0200",
+   "resolved": "2013-11-29T11:05:34.000+0100",
+   "target_resolved": "2013-09-18T18:05:54.000+0200",
+   "comment_dates": [
+    "2013-11-20T09:28:20.000+0100",
+    "2013-11-22T18:20:18.000+0100",
+    "2013-11-25T16:23:22.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9474",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9203",
+   "target_resolution": "Fixed",
+   "created": "2013-09-18T14:27:52.000+0200",
+   "resolved": "2013-09-19T14:50:42.000+0200",
+   "target_resolved": "2013-06-06T11:08:54.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9470",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-9290",
+   "target_resolution": "Fixed",
+   "created": "2013-09-18T13:36:00.000+0200",
+   "resolved": "2013-09-19T12:45:51.000+0200",
+   "target_resolved": "2013-07-04T11:25:28.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9460",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7842",
+   "target_resolution": "Fixed",
+   "created": "2013-09-16T14:05:14.000+0200",
+   "resolved": "2013-09-26T12:24:13.000+0200",
+   "target_resolved": "2012-05-31T15:30:57.000+0200",
+   "comment_dates": [
+    "2013-09-16T15:30:40.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9152",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8477",
+   "target_resolution": "Fixed",
+   "created": "2013-05-17T16:40:43.000+0200",
+   "resolved": "2013-05-17T16:47:26.000+0200",
+   "target_resolved": "2013-04-11T12:38:11.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9046",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8910",
+   "target_resolution": "Fixed",
+   "created": "2013-04-22T12:03:17.000+0200",
+   "resolved": "2024-03-21T11:41:42.000+0100",
+   "target_resolved": "2016-12-21T12:45:20.000+0100",
+   "comment_dates": [
+    "2016-03-07T12:06:26.000+0100",
+    "2016-12-21T13:27:36.000+0100",
+    "2024-01-18T16:22:01.000+0100",
+    "2024-01-18T16:53:52.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9025",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7874",
+   "target_resolution": "Fixed",
+   "created": "2013-04-10T16:52:04.000+0200",
+   "resolved": "2013-05-14T18:13:47.000+0200",
+   "target_resolved": "2012-06-08T05:31:14.000+0200",
+   "comment_dates": [
+    "2013-04-18T11:28:13.000+0200",
+    "2013-04-18T11:53:50.000+0200",
+    "2013-04-25T11:11:03.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9004",
+   "group": "outlived_Fixed",
+   "target": "XE-1288",
+   "target_resolution": "Fixed",
+   "created": "2013-04-04T18:41:41.000+0200",
+   "resolved": "2013-05-22T17:31:28.000+0200",
+   "target_resolved": "2013-04-04T18:39:13.000+0200",
+   "comment_dates": [
+    "2013-04-04T18:43:16.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8888",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8474",
+   "target_resolution": "Fixed",
+   "created": "2013-03-07T12:27:45.000+0100",
+   "resolved": "2013-03-07T18:48:10.000+0100",
+   "target_resolved": "2012-11-21T15:48:12.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8691",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-8754",
+   "target_resolution": "Fixed",
+   "created": "2013-01-15T12:19:11.000+0100",
+   "resolved": "2014-11-10T19:31:02.000+0100",
+   "target_resolved": "2013-06-13T20:36:02.000+0200",
+   "comment_dates": [
+    "2013-01-15T13:27:01.000+0100",
+    "2013-05-23T17:19:38.000+0200",
+    "2014-11-06T09:50:41.000+0100",
+    "2014-11-06T16:59:36.000+0100",
+    "2014-11-06T17:39:38.000+0100",
+    "2014-11-06T17:43:28.000+0100",
+    "2014-11-07T10:28:15.000+0100",
+    "2014-11-07T10:47:05.000+0100",
+    "2014-11-07T10:53:28.000+0100",
+    "2014-11-07T11:33:49.000+0100",
+    "2014-11-07T16:10:04.000+0100",
+    "2014-11-08T11:17:53.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8670",
+   "group": "outlived_Fixed",
+   "target": "XE-1249",
+   "target_resolution": "Fixed",
+   "created": "2013-01-10T07:04:33.000+0100",
+   "resolved": "2013-01-10T07:05:30.000+0100",
+   "target_resolved": "2012-11-12T17:41:18.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8663",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7749",
+   "target_resolution": "Fixed",
+   "created": "2013-01-08T09:34:26.000+0100",
+   "resolved": "2013-01-08T21:52:07.000+0100",
+   "target_resolved": "2012-12-07T02:09:31.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8599",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6792",
+   "target_resolution": "Fixed",
+   "created": "2012-12-12T12:58:34.000+0100",
+   "resolved": "2013-01-17T17:24:54.000+0100",
+   "target_resolved": "2011-07-14T18:41:25.000+0200",
+   "comment_dates": [
+    "2012-12-12T14:23:36.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8406",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7321",
+   "target_resolution": "Fixed",
+   "created": "2012-11-04T22:32:37.000+0100",
+   "resolved": "2012-11-06T14:19:35.000+0100",
+   "target_resolved": "2011-12-26T11:15:11.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-8116",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7617",
+   "target_resolution": "Fixed",
+   "created": "2012-07-26T11:31:41.000+0200",
+   "resolved": "2012-08-06T19:01:08.000+0200",
+   "target_resolved": "2012-03-14T18:39:45.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-7993",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-5917",
+   "target_resolution": "Fixed",
+   "created": "2012-06-30T01:18:18.000+0200",
+   "resolved": "2013-09-12T16:47:48.000+0200",
+   "target_resolved": "2011-02-02T22:54:21.000+0100",
+   "comment_dates": [
+    "2012-06-30T07:40:19.000+0200",
+    "2012-06-30T08:10:21.000+0200",
+    "2012-06-30T08:14:35.000+0200",
+    "2012-06-30T08:19:04.000+0200",
+    "2013-04-05T02:16:05.000+0200",
+    "2013-06-26T17:50:38.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-7885",
+   "group": "outlived_Fixed",
+   "target": "XE-856",
+   "target_resolution": "Fixed",
+   "created": "2012-06-06T15:21:04.000+0200",
+   "resolved": "2012-06-08T13:20:31.000+0200",
+   "target_resolved": "2011-03-22T20:17:21.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-7751",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-7747",
+   "target_resolution": "Fixed",
+   "created": "2012-04-19T21:45:32.000+0200",
+   "resolved": "2013-10-17T18:34:36.000+0200",
+   "target_resolved": "2012-04-19T22:36:17.000+0200",
+   "comment_dates": [
+    "2012-04-20T10:10:27.000+0200",
+    "2012-04-20T11:42:50.000+0200",
+    "2012-04-20T14:50:06.000+0200",
+    "2012-04-20T15:22:20.000+0200",
+    "2012-04-20T15:53:12.000+0200",
+    "2012-04-20T16:08:42.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-7496",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6914",
+   "target_resolution": "Fixed",
+   "created": "2012-02-07T20:55:14.000+0100",
+   "resolved": "2012-02-12T22:21:04.000+0100",
+   "target_resolved": "2011-09-05T07:59:54.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-7423",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-5268",
+   "target_resolution": "Fixed",
+   "created": "2012-01-19T20:19:57.000+0100",
+   "resolved": "2012-01-20T21:46:48.000+0100",
+   "target_resolved": "2010-09-28T01:20:58.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-6823",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6822",
+   "target_resolution": "Fixed",
+   "created": "2011-08-08T14:07:50.000+0200",
+   "resolved": "2014-11-20T14:52:39.000+0100",
+   "target_resolved": "2011-08-30T08:47:43.000+0200",
+   "comment_dates": [
+    "2011-12-13T18:41:41.000+0100",
+    "2011-12-14T04:27:09.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-6700",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-6559",
+   "target_resolution": "Fixed",
+   "created": "2011-06-10T16:14:03.000+0200",
+   "resolved": "2013-10-17T21:18:25.000+0200",
+   "target_resolved": "2011-05-11T20:43:03.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-6697",
+   "group": "outlived_Fixed",
+   "target": "XWIKI-1621",
+   "target_resolution": "Fixed",
+   "created": "2011-06-10T12:06:15.000+0200",
+   "resolved": "2011-06-15T12:29:36.000+0200",
+   "target_resolved": "2008-02-06T22:39:59.000+0100",
+   "comment_dates": [
+    "2011-06-12T17:24:11.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XDOCKER-176",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-18306",
+   "target_resolution": "Won't Fix",
+   "created": "2021-01-29T12:19:50.000+0100",
+   "resolved": "2026-07-17T21:52:40.000+0200",
+   "target_resolved": "2021-02-01T09:34:46.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-17077",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-16717",
+   "target_resolution": "Won't Fix",
+   "created": "2020-02-27T14:09:30.000+0100",
+   "resolved": "2020-03-17T12:24:52.000+0100",
+   "target_resolved": "2019-10-10T17:05:53.000+0200",
+   "comment_dates": [
+    "2020-03-05T17:30:05.000+0100",
+    "2020-03-12T10:36:51.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-14732",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-14731",
+   "target_resolution": "Won't Fix",
+   "created": "2017-09-25T18:56:35.000+0200",
+   "resolved": "2018-02-07T14:12:51.000+0100",
+   "target_resolved": "2017-10-05T09:40:40.000+0200",
+   "comment_dates": [
+    "2017-10-23T12:45:54.000+0200"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-12944",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-12327",
+   "target_resolution": "Won't Fix",
+   "created": "2015-12-24T14:11:58.000+0100",
+   "resolved": "2015-12-24T14:16:37.000+0100",
+   "target_resolved": "2015-09-08T13:17:13.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-20233",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-11038",
+   "target_resolution": "Won't Fix",
+   "created": "2022-10-17T17:11:48.000+0200",
+   "resolved": "2023-12-11T14:07:39.000+0100",
+   "target_resolved": "2021-05-12T14:28:00.000+0200",
+   "comment_dates": [
+    "2023-12-08T15:30:13.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-9728",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-9727",
+   "target_resolution": "Won't Fix",
+   "created": "2013-11-25T16:30:09.000+0100",
+   "resolved": "2016-01-13T16:02:51.000+0100",
+   "target_resolved": "2014-02-27T18:57:56.000+0100",
+   "comment_dates": [
+    "2013-11-28T20:51:31.000+0100",
+    "2014-01-23T16:23:53.000+0100",
+    "2015-09-09T14:27:17.000+0200",
+    "2015-09-09T15:06:40.000+0200",
+    "2015-12-11T15:13:18.000+0100"
+   ],
+   "related_link": true
+  },
+  {
+   "key": "FULLCAL-26",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-5791",
+   "target_resolution": "Won't Fix",
+   "created": "2015-02-25T16:11:07.000+0100",
+   "resolved": "2021-01-08T21:06:26.000+0100",
+   "target_resolved": "2020-11-09T15:51:54.000+0100",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-13990",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-3576",
+   "target_resolution": "Won't Fix",
+   "created": "2017-01-26T11:37:23.000+0100",
+   "resolved": "2017-01-26T12:35:12.000+0100",
+   "target_resolved": "2009-04-14T11:05:56.000+0200",
+   "comment_dates": [],
+   "related_link": true
+  },
+  {
+   "key": "XWIKI-4275",
+   "group": "outlived_Won't Fix",
+   "target": "XWIKI-1176",
+   "target_resolution": "Won't Fix",
+   "created": "2009-09-03T15:49:55.000+0200",
+   "resolved": "2009-10-19T10:31:23.000+0200",
+   "target_resolved": "2009-04-09T11:05:45.000+0200",
+   "comment_dates": [
+    "2009-09-03T16:23:37.000+0200",
+    "2009-09-12T17:19:50.000+0200",
+    "2009-09-14T10:34:08.000+0200",
+    "2009-09-14T11:09:46.000+0200",
+    "2009-09-25T23:02:38.000+0200",
+    "2009-09-25T23:08:55.000+0200",
+    "2009-09-29T10:27:29.000+0200",
+    "2009-09-29T10:42:25.000+0200",
+    "2009-10-16T22:05:37.000+0200",
+    "2009-10-17T16:36:25.000+0200",
+    "2009-10-17T18:42:59.000+0200",
+    "2009-10-17T18:54:08.000+0200",
+    "2009-10-17T20:51:13.000+0200"
+   ],
+   "related_link": true
+  }
+ ],
+ "related_pairs": {
+  "pairs": 1750,
+  "became_duplicate": 8
+ }
+}
