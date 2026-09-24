@@ -27,3 +27,6 @@ evals/
 
 # Python bytecode from running the skills' tools
 __pycache__/
+
+# xwiki-jira-bfd runs from a checkout write here when BFD_RESULTS_DIR is unset
+xwiki/skills/xwiki-jira-bfd/tools/results/

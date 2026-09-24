@@ -143,6 +143,7 @@ means it needs nothing.
 | Skill | What it does | Needs | Example |
 |---|---|---|---|
 | [`xwiki-jira`](xwiki/skills/xwiki-jira/) | View, search, create, update and transition jira.xwiki.org issues | `JIRA_API_TOKEN` | "file a bug for this in XWIKI" |
+| [`xwiki-jira-bfd`](xwiki/skills/xwiki-jira-bfd/) | Prepare a Bug Fixing Day: score the old backlog, propose closes and quick wins, apply only the approved closes (you run the apply) | `JIRA_API_TOKEN`; `TYPESAFE_TOKEN`, or the `claude` CLI as the judge | "prepare the BFD on the 5-year-old XWIKI bugs" |
 | [`xwiki-pull-request`](xwiki/skills/xwiki-pull-request/) | Commit format, PR template, squash and backport conventions | `gh` login | "open a PR for this branch" |
 | [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | One specialist reviewer per angle, each finding challenged before it is posted | `gh` login | `/xwiki-review PR 6453` |
 | [`xwiki-backport`](xwiki/skills/xwiki-backport/) | Cherry-pick to an older branch and *adapt* it (poms, Java level, `@since`, API drift) | `gh` login | "backport this to stable-18.8.x" |
