@@ -153,7 +153,14 @@ Behaviour worth knowing before writing a client:
   `aggregated=true` folds in its milestones and release candidates — which is what the release note
   itself displays. Paged with `limit` (100 by default) / `offset`; the answer carries `hasMore`.
   Filters: `audience`, `category`, `importance` (comma-separated, names or numbers),
-  `containsScreenshots`.
+  `containsScreenshots`. **Since 2.8 a filter value is matched exactly** — no `%` wildcard, no
+  `>=`-style operator prefix (those belong to the `getChanges` wiki macro, not to REST) — an empty
+  parameter (`audience=`) filters nothing, and an unknown audience or importance, a
+  `containsScreenshots` other than `true`/`false`, a `limit` below 1 or not a number, or a negative
+  `offset` answers `400`. **Up to 2.7** the value went through the macro syntax, so `%` and a
+  prefix were interpreted, `audience=` matched no change, an unknown audience or importance silently
+  returned an empty list, and a bad `containsScreenshots`/`limit`/`offset` fell back to its default:
+  check the wiki's version before trusting an empty answer to a filtered listing.
 - `POST …/changes` on a version with no release note answers `404`.
 - **In 2.7 there is no update endpoint** — the resources carry `GET` and `POST` only, so a change is
   written once and anything set afterwards (notably `screenshots`, whose names must already be
@@ -165,7 +172,12 @@ Behaviour worth knowing before writing a client:
   means it is older. Either way, never pre-create an entry page to work around the ordering: a page
   sitting at the next `Entry###` corrupts the allocation.
 - Failures answer `{message, reference}`: `409` exists, `401` (guest) or `403` (logged in) not
-  allowed, `404` no such release note, `400` unusable, `500` wiki failure.
+  allowed, `404` no such release note, `400` unusable, `500` wiki failure. Since 2.8 the rights are
+  checked before the payload is validated, so a request that is both unauthorised and invalid gets
+  `401`/`403`, not `400` — fix the credentials before reading a 400 into it. A release note posted
+  with no `product` in a wiki with no default product answers `400` "No product was given, and this
+  wiki has no default product configured." (2.7 worded it differently): match the status, not the
+  message.
 
 **`reference` → the URL a JIRA field wants.** The returned reference escapes the dots inside a page
 name: `ReleaseNotes.Data.XWiki.18\.7\.0RC1.Entry008.WebHome`. Split it on *unescaped* dots, unescape
