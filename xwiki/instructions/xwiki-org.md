@@ -36,8 +36,8 @@ follows.
   `XCOMMONS-…`, `XRENDERING-…`, etc.). What *this* commit does goes in the body as `*` bullets.
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
   developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
-- **A change with a visible result carries before/after images** — on its JIRA issue, and in the PR
-  body when there is one. Producing them is also how you check it works: `okf/servers/jira.md`.
+- **A change with a visible result carries images, plus a "before" for a UI fix** — on its JIRA
+  issue, and in the PR body when there is one. Producing them is also how you check it works: `okf/servers/jira.md`.
 
 ## Building & tests
 

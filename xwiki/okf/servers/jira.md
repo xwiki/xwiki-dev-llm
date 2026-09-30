@@ -151,11 +151,12 @@ workflow state, and a close may be gated behind an intermediate state.
 
 ## Attachments (screenshots)
 
-**A change with a visible result carries its before/after images on the issue** — a new feature, an
-improvement or a fix alike, and a "before" whenever the issue reports a regression. The issue is what
-whoever writes the release note, or reopens the bug years later, actually reads. This holds
-independently of any pull request: a fix committed straight to `master` has no PR body to show it, and
-is exactly the case where the images are otherwise never captured. Producing them is also the check
+**A change with a visible result carries images of that result on the issue** — a new feature, an
+improvement or a fix alike — **plus a "before" when it fixes existing UI**, a regression included.
+A new feature has no "before" to show. The issue is what whoever writes the release note, or reopens
+the bug years later, actually reads. This holds independently of any pull request: a fix committed
+straight to `master` has no PR body to show it, and is exactly the case where the images are
+otherwise never captured. Producing them is also the check
 that the change works — a test asserts only what it was written to assert.
 
 `jira-cli` has **no `attach` command** — attaching is REST-only, and Atlassian requires the

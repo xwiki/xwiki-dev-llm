@@ -137,11 +137,16 @@ else
 fi
 
 # `sips` ships with macOS; there is no PIL or ImageMagick to assume. A region given at the target
-# width is already there, and resampling it would only soften it.
+# width is already there, and resampling it would only soften it — which also makes it the one
+# capture that needs no `sips`, so it is the one that works on Linux.
 if [ "$RW" != "$WIDTH" ]; then
+  if ! command -v sips >/dev/null; then
+    echo "resampling to ${WIDTH}px needs macOS sips — give an x,y,w,h region ${WIDTH}px wide" >&2
+    exit 1
+  fi
   sips --resampleWidth "$WIDTH" "$OUT" >/dev/null
 fi
-sips -g pixelWidth -g pixelHeight "$OUT" | tr '\n' ' '
+if command -v sips >/dev/null; then sips -g pixelWidth -g pixelHeight "$OUT" | tr '\n' ' '; fi
 echo "-> $OUT"
 
 # Check the box here rather than leaving it to the caller. Whether the box survived the capture is a

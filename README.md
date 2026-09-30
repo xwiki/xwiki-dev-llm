@@ -176,6 +176,7 @@ means it needs nothing.
 |---|---|---|---|
 | [`xwiki-rest-api`](xwiki/skills/xwiki-rest-api/) | Read and write a live instance over REST: pages, xobjects, Solr search | the instance's login (`~/.xwiki-credentials` for xwiki.org) | "what's in the sandbox page?" |
 | [`xwiki-deploy-extension`](xwiki/skills/xwiki-deploy-extension/) | Install a built XAR/JAR into a running XWiki via the job REST API | the instance's login | "deploy this XAR to localhost:8080" |
+| [`xwiki-capture-ui-change`](xwiki/skills/xwiki-capture-ui-change/) | Capture the "before" screenshot of a subtle fix to existing UI that the branch can no longer produce, on the released version's Docker image, or by building and deploying the pre-fix code on a local instance. Expensive (minutes to tens of minutes): runs only with your approval | the `agent-browser` skill; Docker, or a prebuilt jetty+hsqldb distribution | "show the before of this corner-radius fix" |
 
 ### What the skills use
 

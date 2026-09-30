@@ -31,8 +31,9 @@ set. Two habits matter as much as the scripts:
 - **Batch the shell.** One script that answers five questions costs one turn; five commands cost
   five, each at full context.
 
-Requirements: Python 3 (standard library only), `agent-browser` and macOS `sips` for the screenshot
-pair, and `~/.xwiki-credentials` (see `okf/servers/index.md`). Source the credentials **inside** the
+Requirements: Python 3 (standard library only), `agent-browser` for the screenshot pair — plus macOS
+`sips` whenever a shot is resampled, i.e. unless it is an `x,y,w,h` region at the target width — and
+`~/.xwiki-credentials` (see `okf/servers/index.md`). Source the credentials **inside** the
 command so they are never printed:
 
 ```bash
