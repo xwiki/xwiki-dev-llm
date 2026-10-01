@@ -398,6 +398,10 @@ Key point: no `@ExtendWith` needed — `@ComponentTest` already sets up `Mockito
 | `assertThat(arr, equalTo(arr2))` (byte[]) | `assertArrayEquals(arr2, arr)` |
 | `assertThat(arr, not(equalTo(arr2)))` (byte[]) | `assertFalse(Arrays.equals(arr, arr2))` |
 
+Only these. A matcher JUnit 5 has no equivalent for — `containsString`, `hasItem`,
+`containsInAnyOrder`, … — stays Hamcrest: rewriting it as `assertTrue(x.contains(y))` drops the
+actual value from the failure message. See the assertion rule in `okf/testing/strategy.md`.
+
 ## Mockito Answer: anonymous class → lambda
 
 ```java

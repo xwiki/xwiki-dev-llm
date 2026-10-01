@@ -2,13 +2,15 @@
 title: XWiki testing strategy (overview)
 stability: durable
 summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the prefer-the-lightest-base
-  rule, the scenario rule (no two @Test methods build the same fixture, a distinct fixture is what
+  rule, the assertion rule (JUnit 5 where it fits, Hamcrest assertThat where it reports better), the
+  scenario rule (no two @Test methods build the same fixture, a distinct fixture is what
   justifies a distinct method, and @Order is not a substitute), the page-object boundary (no
   getDriver() in a test), the don't-pay-the-timeout rule, how to read a PRChecker log line and how to grant
   Programming Rights to a test's own content, the bare @UITest on an AllIT container, coverage, and where each
   test framework lives. Procedures live in the test skills.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDon27tpaythetimeout
 ---
 
@@ -34,6 +36,14 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   with `-Dxwiki.surefire.captureconsole.skip=true` only when justified.
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
+- **Assertions: the JUnit 5 one where it fits, Hamcrest `assertThat` where it reports better** —
+  JUnit 5 has no substring or collection matcher, and `assertTrue(content.contains(x))` fails with
+  `expected: <true> but was: <false>`, never showing `content`, where
+  `assertThat(content, containsString(x))` prints it. It runs the other way too: `assertThat(a,
+  equalTo(b))` has a good JUnit 5 equivalent and belongs as `assertEquals(b, a)`. A message that
+  restates the matcher is then noise — keep one only where it says something the matcher does not,
+  as `assertThat(reason, actual, matcher)`.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices)
 - **A functional test is a scenario, not a unit test — never pay for the same fixture twice** — a
   `*IT` pays a wiki start, a browser start and a page load per navigation, so what drives its runtime
   is the number of *fixtures*, not the number of assertions. Write scenarios: a method builds its
