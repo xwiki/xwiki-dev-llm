@@ -10,7 +10,9 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
 - Reference the JIRA issue, and make the summary line **the issue's title, verbatim** rather than a
   description you compose: `XWIKI-NNNNN: <the JIRA issue title>` (use `XCOMMONS-NNNNN:` in
   xwiki-commons, `XRENDERING-NNNNN:` in xwiki-rendering). Put what the commit actually does in the
-  body, as `*` bullets. See `okf/conventions/commit-messages.md`.
+  body, as `*` bullets. See `okf/conventions/commit-messages.md`. **Security fixes are the
+  exception**: until disclosure, the summary is a neutral description of the change, never the issue
+  title, and nothing public describes the vulnerability (`okf/processes/security-policy.md`).
 - For trivial changes that do not warrant a JIRA issue, prefix with `[Misc] <description>`.
   Do not create unnecessary JIRA issues
   (see https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices).
@@ -37,7 +39,10 @@ for you, so fetch it and fill it yourself (check the repo first: a contrib repo 
 gh api repos/xwiki/.github/contents/.github/pull_request_template.md -q .content | base64 -d
 ```
 
-Keep its headings and their levels (`# Jira URL`, `# Changes` with `## Description` and
+Don't hard-wrap the body: GitHub renders every newline of a PR description as a line break, so write
+each paragraph and list item on a single line.
+
+Keep the template's headings and their levels (`# Jira URL`, `# Changes` with `## Description` and
 `## Clarifications`, `# Screenshots & Video`, `# Executed Tests`, `# Expected merging strategy`), and
 complete every section meaningfully:
 

@@ -114,6 +114,22 @@ value being rejected with a 400, so a change documented on more pages than fit n
 ones there and the rest in a comment. The rest, including how an entry is created, is in
 [[../processes/release-notes]]; the procedure is the **`xwiki-release-documentation`** skill.
 
+## The CVSS fields (security issues)
+
+A security issue records its severity in two custom fields:
+
+- **"CVSS Vector"** (`customfield_11870`) — the vector string, e.g.
+  `CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N`.
+- **"CVSS Score"** (`customfield_11871`) — its score, a **number** (`8.7`, not `"8.7"`).
+
+They are set when the issue is validated and stay equal to what the GitHub advisory says: when the
+advisory ends up scoring differently, update both fields (`PUT /rest/api/2/issue/<KEY>` with
+`{"fields": {"customfield_11870": "CVSS:4.0/…", "customfield_11871": 8.7}}`), the score being the
+one the vector computes to. An advisory covering several issues carries a single score, but each
+issue keeps the vector of its own impact. How the metrics are valued is in
+[[../processes/security-policy]]. To find a field id that isn't listed here, read an issue with
+`?expand=names`, which maps each `customfield_*` to its display name.
+
 ## Resolving / closing an issue
 
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
