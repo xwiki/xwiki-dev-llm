@@ -68,5 +68,8 @@ backports) use the `xwiki-pull-request` skill.
 
 **Security fixes are the exception:** until an issue is officially disclosed, the public commit
 message must be **obfuscated** — describe the mechanical change, never that it closes a vulnerability
-or how it was exploitable. This overrides the copy-the-title rule, since the title would leak the
-nature of the issue. See [[security-policy]].
+or how it was exploitable. Obfuscate only the message *content*: **keep the `XWIKI-NNNNN:` key**
+(it discloses nothing on its own and preserves traceability to the restricted issue and the
+backports), and replace just the verbatim title with the neutral description. So it overrides the
+copy-the-title rule only — not `[Misc]`, not a dropped key — since the title would leak the nature of
+the issue. See [[security-policy]].
