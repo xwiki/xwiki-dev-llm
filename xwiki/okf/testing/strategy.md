@@ -93,6 +93,14 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   own name must allow a prefix (`.*:.*MyIT\..*`), because `TestReference` names the page after the
   *running* class's simple name — `NestedMyIT` once the test runs inside an `AllIT`, which is how CI
   runs it.
+- **Asserting whose rights code runs with — use Script Right, not Programming Right** — to check
+  in a functional test that some stored code runs with the rights of the right author (not with
+  those of a more privileged user who wrote the page's content, say), have the unprivileged author's
+  code output a value that only executed Velocity produces (`#set ($x = 'EXEC')${x}UTED`) and assert
+  it is absent. Standard users lack Script Right on XWiki 14.10+, so the assertion fails as soon as
+  the code runs with a privileged author's rights. A Programming Right check proves nothing here:
+  PRChecker (above) denies Programming Right to all wiki content, so the test passes with the bug
+  still in. Then run the test once against the unfixed code to see it fail.
 - **An `AllIT` container class carries a bare `@UITest`** — the Docker framework resolves the
   `@UITest` of the container class **and of every nested class** (walking each nested class's
   superclass chain) and merges them all into one configuration
@@ -104,6 +112,22 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   keep the physical (source) order of the `@Test` methods aligned with their `@Order` values (1, 2,
   3 …) so the file reads in execution order. When adding a new test, place it according to its
   `@Order` value rather than simply appending it at the end.
+- **A mandatory class in an `@OldcoreTest`** — to get a real XClass from its
+  `MandatoryDocumentInitializer` (rather than mocking `BaseObject`s), list the initializer in
+  `@ComponentList` and call `oldcore.getSpyXWiki().initializeMandatoryDocuments(context)` in the
+  setup; `MockitoOldcore` does not run it on its own. The initializer then needs mocks of
+  `ObservationManager`, `JobProgressManager`, `SheetBinder` named `document` and
+  `ContextualLocalizationManager` (`DefaultIOServiceTest` in xwiki-platform-annotation-io and
+  `UpdatedDocumentMentionsAnalyzerTest` follow this pattern). `MockitoOldcore`'s save behaves like
+  the real store regarding authors: it sets the content author to the effective metadata author only
+  when the content is dirty, so a page saved by one user and then modified by another through its
+  objects only really has two different authors.
+- **`@MockComponent` and an injected raw `Provider`** — a component injecting
+  `Provider<SomeComponent>` (raw type) looks up the raw role, so a mock declared as
+  `@MockComponent SomeComponent<?> mock` (a parameterized role) is not what the provider returns:
+  `@InjectMockComponents` silently creates another mock for the raw role. Declare the mock with the
+  raw type (`@SuppressWarnings("rawtypes") @MockComponent SomeComponent mock`), and the automatically
+  injected provider returns it.
 - **Coverage** — keep a module's coverage current by running the `xwiki-increase-test-coverage`
   skill as part of any unit-test change: it raises the module pom's `xwiki.jacoco.instructionRatio`
   when the achieved ratio has grown, and otherwise guides adding the missing tests. (The mvn command

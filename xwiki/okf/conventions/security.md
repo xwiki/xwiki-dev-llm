@@ -125,6 +125,11 @@ more privileged user merely views would store content in their name, which then 
 rights. `Document#save()` already falls back to the script's author in that case — reuse it or apply
 the same check.
 
+**Serializing an author.** The `document` `UserReferenceSerializer<DocumentReference>` resolves a
+`null` user reference to the **current user**, so passing an author that may be missing makes it
+whoever the code runs for. Check for `null` (and for `GuestUserReference.INSTANCE`, which it
+serializes to `null`) before calling it, and use a `null` `DocumentReference`, i.e. guest, for both.
+
 ## Rendering an XObject property — display it, never parse its raw value
 
 `$doc.display('property', $object)` runs the property with the rights of its document's effective
