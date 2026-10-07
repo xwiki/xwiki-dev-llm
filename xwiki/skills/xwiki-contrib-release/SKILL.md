@@ -90,7 +90,11 @@ import creates:
   (with the `XWiki-Form-Token` header from `<html data-xwiki-form-token>`) work.
 
 Verify that `lastVersion` is `X.Y` on the `ProjectClass`/`ExtensionClass` object, and that
-`Extension/<Space>/Versions/X.Y/` exists.
+`Extension/<Space>/Versions/X.Y/` exists. Also check the page history: the import can be followed,
+in the same second, by an "Updated last version of the extension" save. That save can write back
+the pre-import page and revert fields such as a changed pom `<name>` (a race in the Repository
+application's `updateLastProjectVersion`). If that happened, click "Update project" again. With
+`lastVersion` already up to date, the second save doesn't run.
 
 ## 7. Release notes
 
