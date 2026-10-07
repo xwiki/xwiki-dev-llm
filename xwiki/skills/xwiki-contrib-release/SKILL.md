@@ -105,6 +105,9 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
   in subjects (`{{image}}` → `~{~{image}}`). `PUT` it as `text/plain` on
   `…/objects/<class>/0/properties/notes`, read it back, and check that the Versions table renders it
   without errors.
+  Then `PATCH` every work package of the version so its **Release Notes Documentation** custom field
+  (find its `customFieldN` key in the work package schema) is the version page URL
+  (`okf/processes/release-notes.md`), and read them back.
 
 ## 8. Recovering from a failed release
 

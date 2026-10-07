@@ -58,6 +58,11 @@ So for a fixed issue of such an extension:
 
 - **`Documentation in Release Notes` is `N/A`**, and that is not an oversight: there is no per-issue
   entry to point at, the issue being in the release note by virtue of its Fix Version.
+- **An OpenProject-tracked extension differs**: once the version page exists, every work package of
+  the version gets its **Release Notes Documentation** custom field set to that page,
+  `https://extensions.xwiki.org/xwiki/bin/view/Extension/<Space>/Versions/<version>/` (the Project's
+  page for a multi-module project). Older work packages point at a `#H<version>` anchor of the
+  extension page; that anchor no longer exists, so don't copy that form.
 - **Nothing is owed until the version is released.** The version page is created by the Repository
   application from the Maven repository once the artifacts are deployed, and the release itself is
   announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
