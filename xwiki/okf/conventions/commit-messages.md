@@ -77,4 +77,6 @@ or how it was exploitable. Obfuscate only the message *content*: **keep the `XWI
 (it discloses nothing on its own and preserves traceability to the restricted issue and the
 backports), and replace just the verbatim title with the neutral description. So it overrides the
 copy-the-title rule only — not `[Misc]`, not a dropped key — since the title would leak the nature of
-the issue. See [[security-policy]].
+the issue. The neutral summary of the issue's first commit then **plays the role of the title**: every
+later commit for the issue (a follow-up fixing a wrong `@since`, a backport) reuses it verbatim and
+says what it does in the bullets. See [[security-policy]].
