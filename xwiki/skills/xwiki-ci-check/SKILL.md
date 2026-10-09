@@ -501,14 +501,11 @@ Follow `xwiki-pull-request` for the commit message and the description.
   would read as that colleague's work. Without a working `GH_TOKEN_BOT`, open no PR and put the
   pushed branch in the paste.
 
-**Then watch it — auto-fix — but only once it is locked.** A routine's PR is the routine's to drive
-to green: right after `pull-request.mjs` succeeds, subscribe this session to its activity
-(`subscribe_pr_activity`) and handle its CI, review and comment events like any PR you opened. The
-lock is what makes that safe: once watched, every comment on the PR reaches a model that can push,
-and locking limits who may write one to collaborators. So if the tool exits 3 (`NOT locked — …`),
-**do not subscribe**: leave the PR unwatched, say so in the report, and never lock or retry through
-the session's own GitHub access. While watching, §5's limits still bind every push — Tier C never
-— and replies go out under the session's account, so keep them to what the harness requires.
+**The lock is required, not cosmetic.** The routine runs with *Auto-fix PRs* turned on in its
+config, so every comment on its PRs reaches a model that can push, and the lock limits who may write
+one to collaborators. If the tool exits 3 (`NOT locked — …`), this session must not act on that PR:
+unsubscribe from it (`unsubscribe_pr_activity`) in case auto-fix subscribed it, put **unlocked PR
+#N** at the top of the report, and never lock or retry through the session's own GitHub access.
 
 **A fix PR from a local run is the developer's own PR**, opened under their own name by
 `xwiki-pull-request` with their own credentials, because there is no App token on a laptop. That

@@ -38,13 +38,15 @@ Personal overrides on top of the skill:
 * Any commit you make carries the bot as its author: --author="XWiki LLM Bot <llm-bot@xwiki.org>".
 * Open every pull request with the skill's tools/pull-request.mjs, never with gh or the GitHub MCP
   server.
-* Auto-fix: watch every pull request you open, once it is locked, as SKILL.md §5 says.
 ```
 
 > ⚠️ Paste this into the routine whenever it changes here: the live config is not read from this file.
 
-The last two bullets repeat §5 of the skill on purpose: the session's own GitHub access is right at
-hand and wrong, and a PR opened by a script is easy to forget to watch.
+The last bullet repeats §5 of the skill on purpose: the session's own GitHub access is right at hand
+and wrong, so the prompt names it too.
+
+**Auto-fix PRs** is on in the routine's config. It is safe only because every PR the routine opens is
+locked to collaborators, which needs the bot's Write role (below).
 
 ## Environment the routine needs
 
@@ -52,7 +54,7 @@ hand and wrong, and a PR opened by a script is easy to forget to watch.
   - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
     opens and locks the fix PRs. Locking needs the bot to hold the **Write** role on
     `xwiki-commons`, `xwiki-rendering` and `xwiki-platform`; with less, PRs are opened unlocked and
-    left unwatched (SKILL.md §5). The branch is still pushed by the Claude GitHub App (see below).
+    not acted on (SKILL.md §5). The branch is still pushed by the Claude GitHub App (see below).
   - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
     developer's own JIRA credential is never the one filing.
   - `MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT` — **the password, not `MATRIX_TOKEN_BOT`.** matrix.org

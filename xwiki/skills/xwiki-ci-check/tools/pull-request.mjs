@@ -5,8 +5,8 @@
  * the GitHub MCP server act as the routine's owner).
  *
  * The branch is pushed beforehand by the Claude GitHub App. Locking needs the bot's `write` role;
- * a PR that could not be locked is reported and the process exits 3, because SKILL.md §5 forbids
- * watching (auto-fixing) an unlocked PR.
+ * a PR that could not be locked is reported and the process exits 3, because the routine's auto-fix
+ * must not act on an unlocked PR (SKILL.md §5).
  *
  * An open PR for the same head is reused and every later step is idempotent, so a re-run completes
  * a half-done PR instead of opening a second one.
