@@ -61,10 +61,11 @@ The cost here is almost entirely file reads while evaluating candidates. Rules:
 * **Always trim the JSON.** Some rules attach huge `flows`/`locations` arrays. Pipe every
   `issues/search` response through `jq`/`python3` and keep only `key,rule,component,line,message,effort`.
   Never dump a raw response into context.
-* **Skip issues that already have an open agent PR.** Fetch the list once, up front, with
-  `gh pr list --search "is:pr label:llm-agent is:open"`. Scope the off-limits check by **(rule +
-  module)**, not rule alone — a per-module PR only claims the files it touched. But a **same-file** open
-  PR is off-limits even for a different rule, because a concurrent edit risks a merge conflict.
+* **Skip issues that already have an open fix PR.** Fetch the list once, up front, with
+  `gh pr list --search "is:pr is:open in:title SonarQube OR SonarCloud"` (the title convention
+  below). Scope the off-limits check by **(rule + module)**, not rule alone — a per-module PR only
+  claims the files it touched. But a **same-file** open PR is off-limits even for a different rule,
+  because a concurrent edit risks a merge conflict.
 * **Ask what else the lines you are about to rewrite already carry.** One query per candidate file —
   `"…/issues/search?componentKeys=<the issue's full component>&resolved=false&ps=100"` — then compare
   with the lines your edit touches. A rewrite SonarCloud cannot match re-dates those findings into the
@@ -132,12 +133,12 @@ compiles, so the build will not catch it.
   `-Plegacy,quality`. See `okf/sonarqube/verification.md` and the **xwiki-build** skill.
 * One PR per rule family; the PR's commits must be relevant only to the issues it fixes.
 * Open the PR with `gh`. For commit/PR conventions use the **xwiki-pull-request** skill; SonarQube
-  fixes normally have no JIRA issue, so use `[Misc] <description>` and mention SonarQube in it:
+  fixes normally have no JIRA issue, so use `[Misc] <description>` with the word "SonarQube" in it:
   ```
   [Misc] <short description of the problem; mention SonarQube>
   * <optional detail bullets>
   ```
-* Add the `llm-agent` label to the PR.
+* Add the `llm-agent` label when running as the scheduled routine (rule in **xwiki-pull-request**).
 * Include a link to the SonarCloud issue in the PR description, and note any module you excluded from
   the change (and why) — see `okf/sonarqube/verification.md`.
 * **Security issues:** do not reveal what was fixed (commit logs are public and could expose a
