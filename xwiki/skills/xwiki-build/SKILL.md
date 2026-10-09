@@ -261,7 +261,9 @@ definitions.
 - The `legacy` profile activates backward-compatibility shim modules and is almost always required.
 - Skip flags worth knowing: `-Dxwiki.checkstyle.skip=true` (Checkstyle),
   `-Dxwiki.revapi.skip=true` (API compat), `-Dxwiki.surefire.captureconsole.skip=true`
-  (stdout capture check).
+  (stdout capture check), `-Dxwiki.jacoco.skip=true` (JaCoCo; `-Djacoco.skip` does not stop the
+  check). Under `-Pquality`, running one test of a module (`-Dtest`, `-Dit.test`) fails the
+  coverage check after the test passed: skip it, or read the test result rather than the build's.
 - Checkstyle and Revapi run in the `verify` phase (not `test`), so `mvn test` won't catch them —
   use `mvn clean verify` or `install` to validate.
 - **The JaCoCo test-coverage check runs ONLY under `-Pquality`.** The `jacoco:check` goal that

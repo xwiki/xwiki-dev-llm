@@ -47,6 +47,11 @@ pipeline round trip.
 `xwikiBuild` `profiles`/`properties`) and the Docker testing page above, rather than assuming a
 matrix.
 
+`-Dxwiki.test.ui.keepRunning=true` keeps the wiki and its containers up after the tests, to inspect or
+probe it: the Maven process then waits until a `stop.txt` file exists in the test module directory
+(the log says so after `Access XWiki at: [...]`), so a run in the background never completes on its
+own.
+
 ## A setup failure is never evidence about your change
 
 `RuntimeException: Error setting up the XWiki testing environment` is raised from `beforeAll`: **no
