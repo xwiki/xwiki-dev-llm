@@ -71,8 +71,8 @@ all be set, and they are the **bot's**, never a developer's. `node <skill>/tools
 says which account will post, and is the cheap way to find a dead token before the digest is due. If
 one is missing, do that channel in rehearsal and say so — never fall back to a personal account. A
 developer whose commit broke master must not receive what looks like a personal reprimand from a
-colleague, and a wrong attribution must not be wrong in someone's name. `commit-comment.mjs`
-enforces this itself: it reads `GH_TOKEN_BOT` and no other variable.
+colleague, and a wrong attribution must not be wrong in someone's name. `commit-comment.mjs` and
+`pull-request.mjs` enforce this themselves: they read `GH_TOKEN_BOT` and no other variable.
 
 Before invoking `xwiki-jira` to file a flicker issue, export the bot credential into the variable
 that skill reads — `JIRA_API_TOKEN="$JIRA_TOKEN_BOT" JIRA_AUTH_TYPE=bearer` — so the issue is filed
@@ -467,23 +467,44 @@ author** and say plainly, in its body, that the ITs were not run and the author 
 merging. Jenkins does not build PRs, so there is no free oracle: this verification is the only one.
 Follow `xwiki-pull-request` for the commit message and the description.
 
-**No fork is involved.** The routine pushes its branch into the upstream repo itself, the way the
-existing SonarQube routine does: it runs under the Claude GitHub App installed on the `xwiki` org,
-and that App can push a `claude/<slug>` branch to `xwiki/*` directly. The bot's own PAT cannot —
-`xwikiorg-llm-bot` has `push: false` on all three repos — and takes no part in a PR at all; it is
-the commit-comment credential and nothing else. The bot identity is carried by the **commit
-author** instead:
+**No fork is involved, and the bot opens the PR.** Two identities do two halves of the job:
 
-```bash
-git commit --author="XWiki LLM Bot <llm-bot@xwiki.org>" …
-```
+- **The branch** is pushed into the upstream repo by the Claude GitHub App installed on the `xwiki`
+  org, which can push a `claude/<slug>` branch to `xwiki/*` directly. The bot cannot —
+  `xwikiorg-llm-bot` has `push: false` on all three repos — so the commit carries the bot as its
+  **author** instead:
+
+  ```bash
+  git commit --author="XWiki LLM Bot <llm-bot@xwiki.org>" …
+  ```
+- **The PR** is opened by `xwikiorg-llm-bot` (`triage` role: enough to open, label and assign a
+  PR, not to lock it), with this tool and nothing else:
+
+  ```bash
+  node <skill>/tools/pull-request.mjs --repo xwiki-platform --head claude/<slug> --base master \
+    --title "<subject>" --file pr-body.md --assignee <culprit login> [--draft] [--write]
+  ```
+
+  It labels the PR **`llm-agent`**, assigns `--assignee`, and tries to lock it to collaborators;
+  like every writer here it prints instead of posting without `--write`, and a re-run completes a
+  half-done PR instead of opening a second one. **Never open a routine's PR with `gh` or the GitHub
+  MCP server**: they act as the session's account — the developer who owns the routine — so the PR
+  would read as that colleague's work. Without a working `GH_TOKEN_BOT`, open no PR and put the
+  pushed branch in the paste.
+
+  **The lock is not needed yet**, so its refusal (`NOT locked — …`) is expected and goes in the
+  report as a fact, not a warning. It guards against a prompt injection in a PR comment, which only
+  reaches a model once "autofix PRs" is enabled (a session acting on its PR's comments) — and that
+  is off. Before enabling it, give the bot admin rights on the repos; never lock through the
+  session's own access.
 
 **A fix PR from a local run is the developer's own PR**, opened under their own name by
 `xwiki-pull-request` with their own credentials, because there is no App token on a laptop. That
 asymmetry with the commit comment — which is the bot's, always, everywhere — is deliberate: a
 comment lands unasked on someone else's commit and must never read as coming from a colleague,
 whereas a PR is proposed work someone has to own, and the developer who said yes to it is that
-someone. The body still says the fix was machine-generated and that the ITs were not run.
+someone. The body still says the fix was machine-generated and that the ITs were not run, and the
+PR still carries the `llm-agent` label.
 
 ### Flicker-stabilisation draft PRs — one per run, and only when nothing blocks a release
 
@@ -515,7 +536,8 @@ Then, and only for that one:
    times I ran it" is what makes every later one unreadable.
 
 The PR is **draft**, **unassigned** (a flicker usually has no culprit, and a wrong auto-assignment
-discredits the whole system), and its subject is the issue's key and its title verbatim, per
+discredits the whole system), opened by the bot like any other — `pull-request.mjs --draft` with no
+`--assignee` — and its subject is the issue's key and its title verbatim, per
 `xwiki-pull-request`. Its body carries, and a reviewer should not have to ask for any of it:
 
 - the **two rates with their execution counts** — *"failed 5/60 before, 0/60 after"* — and what a
@@ -670,11 +692,11 @@ so this needs no state file and survives the sandbox being new every morning.
 
 | | Branch | What | Age | Done |
 |---|---|---|---|---|
-| 🆕🔴 | platform/master | checkstyle break → a1b2c3d (jdoe) | 0d | commented |
+| 🆕🔴 | platform/master | checkstyle break → [a1b2c3d](https://github.com/xwiki/xwiki-platform/commit/a1b2c3d) (jdoe) | 0d | [commented](https://github.com/xwiki/xwiki-platform/commit/a1b2c3d#commitcomment-1) |
 | 🔄🔴 | platform/18.4.x+17.10.x | `AllIT#foo` flicker → systematic since #412 | 4d | no owner found |
 | 🔄🟠 | platform/master | `ImageIT#editImage` | 1d | quiet: announced by jdoe before it broke |
 | ✅ | commons/16.10.x | docker rate limit | — | green since #221 |
-| ✅ | platform/master | `DocExtraTabsIT` | — | discussed 09-17 17:34 (asmith), XWIKI-25019 |
+| ✅ | platform/master | `DocExtraTabsIT` | — | [discussed 09-17 17:34](https://matrix.to/#/!room/$event) (asmith), [XWIKI-25019](https://jira.xwiki.org/browse/XWIKI-25019) |
 
 … 3 unchanged · +12 long-standing
 ```
@@ -683,6 +705,11 @@ The headline opens with `status.worst`, the grid's worst cell. The first cell of
 row's `dot` from `--delta` — the same colours as the grid, so a 🔴 row is the reason for a 🔴 cell.
 `matrix.mjs` posts a pipe table as an HTML table, which Element renders; the Markdown stays in the
 plain body a bridge relays. Keep a cell to a clause: a table is scanned, and a wrapped cell is read.
+
+**Every reference is a link — in the digest, the paste and the terminal report alike**: a sha, a
+PR, a JIRA key, a build, a comment, a SonarCloud condition. Take the URL from the work order
+(`blame.culprit.url`, `buildUrl`, `fixState.url`, `sonar.url`, …) rather than rebuilding it; a bare
+`89576e8092` is one the reader the digest exists for will not go and look up.
 
 Incidents with `beyondHorizon` are **aggregated into a single `+N long-standing` count**, never
 listed — the grid still shows their colour. The rows are chosen, not rendered: a break with an
@@ -730,7 +757,7 @@ on that instance.
 ## 7. Report
 
 Finish with, in the terminal: the mode, the counts (`red jobs`, `incidents`, `deep-treated`,
-`beyond horizon`), what was written where (with URLs), and what was deliberately *not* written and
+`beyond horizon`), what was written where (linked, per §6), and what was deliberately *not* written and
 why — silent duplicates, ambiguous blame, beyond-horizon, budget. The "what I did not do" half is
 the one that tells a reader whether the brakes are working.
 

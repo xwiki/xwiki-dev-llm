@@ -36,16 +36,25 @@ Run the xwiki-ci-check skill with --write.
 
 Personal overrides on top of the skill:
 * Any commit you make carries the bot as its author: --author="XWiki LLM Bot <llm-bot@xwiki.org>".
-* Once a fix PR is created, assign it to the culprit author and lock it to collaborators with a PUT
-  to /repos/{owner}/{repo}/issues/{pull_number}/lock.
+* Open every pull request with the skill's tools/pull-request.mjs, never with gh or the GitHub MCP
+  server.
 ```
+
+> ⚠️ The live routine still runs the earlier version, which assigned and locked the PR by hand and
+> let the session open it — under the routine owner's name, without the `llm-agent` label. Paste
+> this in.
+
+The last bullet repeats §5 of the skill on purpose: the session's own GitHub access is right at hand
+and wrong, so the prompt names it too.
 
 ## Environment the routine needs
 
 - **Bot credentials** (never a developer's account), in the routine's secret store:
   - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
-    nothing else. Do not expect it to push: `xwikiorg-llm-bot` has `push: false` on all three repos,
-    which is correct and not a misconfiguration (see the PR note below).
+    opens the fix PRs, for which the bot's `triage` role suffices; locking them needs admin rights,
+    which only matters once "autofix PRs" is enabled (SKILL.md §5). Do not expect it to push: the
+    bot has `push: false` on all three repos, which is correct and not a misconfiguration (see the
+    PR note below).
   - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
     developer's own JIRA credential is never the one filing.
   - `MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT` — **the password, not `MATRIX_TOKEN_BOT`.** matrix.org
@@ -79,8 +88,9 @@ Personal overrides on top of the skill:
   wanting 17 up to stable-17.10.x and 21 from stable-18.4.x on, and a build on a too-new JDK fails
   in ways that read as code problems and are not.
 - **The Claude GitHub App**, installed on the `xwiki` org — that, and not `GH_TOKEN_BOT`, is what
-  pushes a fix branch and opens the PR, exactly as it does for the SonarQube routine. The branch
-  lives in the upstream repo (`claude/<slug>`); there is no fork anywhere in this design.
+  pushes a fix branch, exactly as it does for the SonarQube routine. The branch lives in the
+  upstream repo (`claude/<slug>`); there is no fork anywhere in this design. The PR on top of it is
+  the bot's, opened by `tools/pull-request.mjs`.
 - **Full network access** for the sandbox — "trusted" reaches none of the XWiki hosts, and
   fails the setup script itself; the header of `routine-setup.sh` says how it fails.
 - The `xwiki` plugin loaded, so the skill and the shared `scripts/` are present.
