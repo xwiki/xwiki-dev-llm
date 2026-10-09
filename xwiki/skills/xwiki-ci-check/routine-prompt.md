@@ -40,21 +40,21 @@ Personal overrides on top of the skill:
   server.
 ```
 
-> ⚠️ The live routine still runs the earlier version, which assigned and locked the PR by hand and
-> let the session open it — under the routine owner's name, without the `llm-agent` label. Paste
-> this in.
+> ⚠️ Paste this into the routine whenever it changes here: the live config is not read from this file.
 
 The last bullet repeats §5 of the skill on purpose: the session's own GitHub access is right at hand
 and wrong, so the prompt names it too.
+
+**Auto-fix PRs** is on in the routine's config. It is safe only because every PR the routine opens is
+locked to collaborators, which needs the bot's Write role (below).
 
 ## Environment the routine needs
 
 - **Bot credentials** (never a developer's account), in the routine's secret store:
   - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
-    opens the fix PRs, for which the bot's `triage` role suffices; locking them needs admin rights,
-    which only matters once "autofix PRs" is enabled (SKILL.md §5). Do not expect it to push: the
-    bot has `push: false` on all three repos, which is correct and not a misconfiguration (see the
-    PR note below).
+    opens and locks the fix PRs. Locking needs the bot to hold the **Write** role on
+    `xwiki-commons`, `xwiki-rendering` and `xwiki-platform`; with less, PRs are opened unlocked and
+    not acted on (SKILL.md §5). The branch is still pushed by the Claude GitHub App (see below).
   - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
     developer's own JIRA credential is never the one filing.
   - `MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT` — **the password, not `MATRIX_TOKEN_BOT`.** matrix.org
