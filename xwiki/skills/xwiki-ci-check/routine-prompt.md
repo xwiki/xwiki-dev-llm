@@ -37,28 +37,24 @@ Run the xwiki-ci-check skill with --write.
 Personal overrides on top of the skill:
 * Any commit you make carries the bot as its author: --author="XWiki LLM Bot <llm-bot@xwiki.org>".
 * Open every pull request with the skill's tools/pull-request.mjs, never with gh or the GitHub MCP
-  server: it opens the PR as xwikiorg-llm-bot, labels it llm-agent, assigns it to the culprit author
-  and tries to lock it to collaborators (a refused lock is expected, see below).
+  server.
 ```
 
 > ⚠️ The live routine still runs the earlier version, which assigned and locked the PR by hand and
 > let the session open it — under the routine owner's name, without the `llm-agent` label. Paste
 > this in.
 
-The last bullet restates what §5 of the skill already says, on purpose: opening the PR is the one
-write where the session's own GitHub access is right at hand and wrong, so the prompt names it too.
+The last bullet repeats §5 of the skill on purpose: the session's own GitHub access is right at hand
+and wrong, so the prompt names it too.
 
 ## Environment the routine needs
 
 - **Bot credentials** (never a developer's account), in the routine's secret store:
   - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
-    opens the fix PRs (labelled `llm-agent`, assigned), which needs `triage` on the repo — what
-    `xwikiorg-llm-bot` has. **Locking** the PR to collaborators needs admin rights on the repo,
-    which the bot does not have, so `pull-request.mjs` reports the PR as `NOT locked` and carries
-    on. That is fine for now: the lock only matters once "autofix PRs" is enabled, when a session
-    reads the PR's comments and acts on them. Grant the bot admin rights (or lock another way)
-    before enabling it. Do not expect it to push: the bot has `push: false` on all three
-    repos, which is correct and not a misconfiguration (see the PR note below).
+    opens the fix PRs, for which the bot's `triage` role suffices; locking them needs admin rights,
+    which only matters once "autofix PRs" is enabled (SKILL.md §5). Do not expect it to push: the
+    bot has `push: false` on all three repos, which is correct and not a misconfiguration (see the
+    PR note below).
   - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
     developer's own JIRA credential is never the one filing.
   - `MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT` — **the password, not `MATRIX_TOKEN_BOT`.** matrix.org
@@ -94,8 +90,7 @@ write where the session's own GitHub access is right at hand and wrong, so the p
 - **The Claude GitHub App**, installed on the `xwiki` org — that, and not `GH_TOKEN_BOT`, is what
   pushes a fix branch, exactly as it does for the SonarQube routine. The branch lives in the
   upstream repo (`claude/<slug>`); there is no fork anywhere in this design. The PR on top of it is
-  the bot's, opened by `tools/pull-request.mjs` with `GH_TOKEN_BOT`: the session's own GitHub
-  access acts as the routine's owner, so a PR opened through it carries a developer's name.
+  the bot's, opened by `tools/pull-request.mjs`.
 - **Full network access** for the sandbox — "trusted" reaches none of the XWiki hosts, and
   fails the setup script itself; the header of `routine-setup.sh` says how it fails.
 - The `xwiki` plugin loaded, so the skill and the shared `scripts/` are present.

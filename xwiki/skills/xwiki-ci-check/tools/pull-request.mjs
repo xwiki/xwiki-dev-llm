@@ -1,20 +1,14 @@
 #!/usr/bin/env node
 /*
- * Opens a fix pull request as the CI bot, labels it `llm-agent`, assigns it and locks its
- * conversation to collaborators — the one way a routine opens a PR.
+ * Opens a fix pull request as the CI bot, labels it `llm-agent`, assigns it and tries to lock its
+ * conversation to collaborators — the one way a routine opens a PR (SKILL.md §5 says why: `gh` and
+ * the GitHub MCP server act as the routine's owner).
  *
- * This exists rather than `gh pr create` or the GitHub MCP server because both of those act as
- * whoever the session is authenticated as, and in a cloud routine that is the developer who owns
- * the routine: a PR opened that way reads as a colleague's proposed work, not the machine's. Reading
- * GH_TOKEN_BOT and nothing else is what keeps the author the bot, exactly as for commit-comment.mjs.
+ * The branch is pushed beforehand by whatever can push (the Claude GitHub App in a routine); the
+ * bot's `triage` role can open, label and assign, but neither push nor lock.
  *
- * The branch itself is pushed beforehand by whatever can push (the Claude GitHub App in a routine):
- * the bot has `triage` on `xwiki/*`, which is enough to open a PR from an upstream branch, label,
- * assign and lock it, and not enough to push — which is correct.
- *
- * Every step after the creation is idempotent, and an open PR for the same head is reused rather
- * than duplicated, so re-running after a partial failure (say the lock was refused) completes the
- * PR instead of opening a second one.
+ * An open PR for the same head is reused and every later step is idempotent, so a re-run completes
+ * a half-done PR instead of opening a second one.
  *
  * Nothing is written without an explicit `--write`: the default prints the PR it would have opened.
  *
@@ -87,11 +81,8 @@ export async function openPullRequest({ repo, head, base, title, body, assignee 
     });
     steps.push(`assigned ${assignee}`);
   }
-  // Locked so that only collaborators can comment: the PR is public, unattended and written by a
-  // machine, which is what a drive-by prompt injection in a comment would aim at. GitHub wants admin
-  // rights on the repo for this, more than the `triage` the bot has, so a refusal is reported rather
-  // than thrown: the PR is open, labelled and assigned, and is still worth more than no PR. Nothing
-  // needs the lock until "autofix PRs" is enabled — until then no model reads the PR's comments.
+  // Needs admin rights the bot lacks, and is not needed until "autofix PRs" is enabled (SKILL.md §5),
+  // so a refusal is reported, not thrown.
   try {
     await github(`/repos/xwiki/${repo}/issues/${pr.number}/lock`, { method: 'PUT', body: JSON.stringify({}) });
     steps.push('locked to collaborators');
