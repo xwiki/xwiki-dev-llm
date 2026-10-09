@@ -693,11 +693,11 @@ so this needs no state file and survives the sandbox being new every morning.
 
 | | Branch | What | Age | Done |
 |---|---|---|---|---|
-| 🆕🔴 | platform/master | checkstyle break → a1b2c3d (jdoe) | 0d | commented |
+| 🆕🔴 | platform/master | checkstyle break → [a1b2c3d](https://github.com/xwiki/xwiki-platform/commit/a1b2c3d) (jdoe) | 0d | [commented](https://github.com/xwiki/xwiki-platform/commit/a1b2c3d#commitcomment-1) |
 | 🔄🔴 | platform/18.4.x+17.10.x | `AllIT#foo` flicker → systematic since #412 | 4d | no owner found |
 | 🔄🟠 | platform/master | `ImageIT#editImage` | 1d | quiet: announced by jdoe before it broke |
 | ✅ | commons/16.10.x | docker rate limit | — | green since #221 |
-| ✅ | platform/master | `DocExtraTabsIT` | — | discussed 09-17 17:34 (asmith), XWIKI-25019 |
+| ✅ | platform/master | `DocExtraTabsIT` | — | [discussed 09-17 17:34](https://matrix.to/#/!room/$event) (asmith), [XWIKI-25019](https://jira.xwiki.org/browse/XWIKI-25019) |
 
 … 3 unchanged · +12 long-standing
 ```
@@ -706,6 +706,15 @@ The headline opens with `status.worst`, the grid's worst cell. The first cell of
 row's `dot` from `--delta` — the same colours as the grid, so a 🔴 row is the reason for a 🔴 cell.
 `matrix.mjs` posts a pipe table as an HTML table, which Element renders; the Markdown stays in the
 plain body a bridge relays. Keep a cell to a clause: a table is scanned, and a wrapped cell is read.
+
+**Every reference is a link — in the digest, the paste and the terminal report alike.** A commit
+sha, a PR or issue number, a JIRA key, a build number, a commit comment, a SonarCloud condition: each
+one is written as a Markdown link to the thing itself (`[89576e8092](https://github.com/xwiki/xwiki-platform/commit/89576e8092…)`,
+`[#6699](https://github.com/xwiki/xwiki-platform/pull/6699)`, `[XWIKI-23126](https://jira.xwiki.org/browse/XWIKI-23126)`,
+`[#9004](https://ci.xwiki.org/job/XWiki/job/xwiki-platform/job/master/9004)`). The work order
+already carries the URLs (`blame.culprit.url`, `buildUrl`, `fixState.url`, `sonar.url`, the issue
+URLs) — use them, never rebuild one by hand. A bare `89576e8092` makes every reader copy it into a
+search box, and the reader the digest exists for is the one who will not.
 
 Incidents with `beyondHorizon` are **aggregated into a single `+N long-standing` count**, never
 listed — the grid still shows their colour. The rows are chosen, not rendered: a break with an
@@ -753,7 +762,8 @@ on that instance.
 ## 7. Report
 
 Finish with, in the terminal: the mode, the counts (`red jobs`, `incidents`, `deep-treated`,
-`beyond horizon`), what was written where (with URLs), and what was deliberately *not* written and
+`beyond horizon`), what was written where (with URLs — and every sha, PR, issue and build named
+anywhere in the report linked, per §6), and what was deliberately *not* written and
 why — silent duplicates, ambiguous blame, beyond-horizon, budget. The "what I did not do" half is
 the one that tells a reader whether the brakes are working.
 
