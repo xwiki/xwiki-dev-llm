@@ -263,7 +263,10 @@ export async function lastDigest({ server = homeserver, roomId = room, pages = 5
       throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
     }
     const body = await res.json();
-    const event = (body.chunk || []).find(entry => entry.sender === userId && entry.type === 'm.room.message');
+    // The newest message carrying the state marker: the bot also posts corrections and
+    // announcements, and comparing against one of those would repeat everything.
+    const event = (body.chunk || []).find(entry => entry.sender === userId && entry.type === 'm.room.message'
+      && stateOf(entry.content?.formatted_body));
     if (event) {
       return {
         eventId: event.event_id,

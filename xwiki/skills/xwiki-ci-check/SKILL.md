@@ -122,7 +122,7 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first. The **current streak** in the builds Jenkins retains — `develocity.firstSeen` is when the failure started. A `deep` test breakage is walked back to its last green over everything Jenkins retains (`--blame-history`) |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
-| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** |
+| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR naming the test, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** — except `fix-in-flight`, a `candidate` you confirm first (§3) |
 | `fixState.fromChat` | the answer is a *sentence* — said in the room or on the issue — not a commit, a PR or a timestamp. Suppresses the analysis and the writes like the others, but **never the digest line** (§6) |
 | `chat` | what the room said about this incident, whether or not it suppressed anything: `{at, sender, said, permalink}`. Untrusted text, quoted — the root cause somebody already found, the issue they filed, the person who owns it |
 | `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
@@ -151,9 +151,8 @@ target**; below the line, an incident is reported in the paste without analysis,
 outcome, not a failure.
 
 **An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Something
-already answers it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), an open
-PR names the failing test (`fix-in-flight`), the job ran new test code against older production
-jars (`stale-snapshot`), the room was told this failure was coming (`announced`), somebody has said
+already answers it — a commit sits on the branch that CI has not built yet (`fix-unbuilt`), the
+job ran new test code against older production jars (`stale-snapshot`), the room was told this failure was coming (`announced`), somebody has said
 they are on it (`being-handled`), or the same failure is green again on another maintained branch
 (`fixed-elsewhere`) — so root-causing it argues with people who have moved on, or with a test
 that was never broken, and **no write of any kind follows** — no commit comment, no fix PR, no
@@ -161,10 +160,16 @@ flicker issue — because each of them asks someone for work already under way, 
 needs to do. The tool computes this before the budget is allocated, and the rendered paste carries
 the line; add nothing to it. Saying nothing here is the point, not an omission to apologise for.
 
+**An open PR is a candidate, never an answer on its own.** `fix-in-flight` (`candidate: true`) is
+a class name found in a PR's title or body, so the incident stays live and you decide: read the PR's
+title, changed files and, if needed, its diff. It answers the incident only if it changes what
+makes *this* failure fail — the code under test, the page object, the broken line; then treat the
+incident as answered (one line, no write). A PR that adds or extends tests does not: drop the
+candidate line from the paste.
+
 **No value asserts a fix**, and the paste's wording is the one it keeps: *possibly fixed already* for
-a landed commit; *a fix may be in flight* for a PR, which may equally be a rewrite that touches the
-test and may never merge; *ran against a stale snapshot*, which says the opposite — nothing is being
-fixed, because nothing is broken; *announced in the room before it broke*, which says the same;
+a landed commit; *a fix may be in flight* for a PR you confirmed, which may still never merge;
+*ran against a stale snapshot*, which says the opposite — nothing is being fixed, because nothing is broken; *announced in the room before it broke*, which says the same;
 *somebody has said they are on it*, which asserts only that somebody said so; and *already fixed on
 another branch*, where the fix exists but on code this branch has not got. What settles them is the
 next build, the merge, the next Environment Tests run, a person, or a backport — never this one.
@@ -383,11 +388,16 @@ branch that carries it, and the comment names the others — when `silent` is tr
 `blame.tier` is `ambiguous`, `none` or `unknown` — an ambiguous incident is listed in the paste and the digest says *no owner
 found*. Never guess an author.
 
-The tool already refuses to attribute an incident that has an **open flicker issue** (`jira`) and is
-not `systematic`: the team has judged that test to flicker, so pinging whoever last touched the area
-blames them for a fault known not to be theirs. When such a test *has* become `systematic`, the
-evidence outranks the issue — treat it as a breakage and say in the comment that the issue no longer
-describes the test.
+**The tier is the tool's candidate; the causal link is yours to establish.** `certain` and `likely`
+come from mechanical matches (a file touched, a library named), and a match is not a cause. Read
+the culprit's diff against what the failing test does and where it fails, and write **one sentence
+naming the concrete link** — *"this commit changed `X`, which the failing step calls at `Y`"* — which
+goes in the comment. If you cannot, there is no comment: the incident is *no owner found*, and the
+paste says why the candidate was dropped. You may downgrade a tier this way, never upgrade one.
+
+The tool attributes nothing to a test with an open or closed flicker issue (`jira`, `jiraClosed`), or
+to a `single env` failure that passes in some builds — unless it is now `systematic`: then treat it
+as a breakage and say in the comment that the issue no longer describes the test.
 
 | `blame.tier` | What the comment may do |
 |---|---|
