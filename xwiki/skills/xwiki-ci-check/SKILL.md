@@ -490,9 +490,14 @@ Follow `xwiki-pull-request` for the commit message and the description.
 
   It reads `GH_TOKEN_BOT` and no other variable, labels the PR **`llm-agent`** (every
   machine-generated PR carries it), assigns `--assignee`, and tries to lock the conversation to
-  collaborators — an unattended public PR is what a prompt injection in a comment would aim at. A
-  refused lock is reported (`NOT locked — …`), not fatal: say so in the terminal report, and never
-  retry it with the session's own GitHub access, which would act as the routine's owner. Like
+  collaborators. **The lock is not needed yet**: it guards against a prompt injection in a PR
+  comment, and a comment only reaches a model once "autofix PRs" is enabled — a session watching
+  its PR and acting on what is said there — which it is not. Until then the comments on a bot PR
+  are read by humans only, so a refused lock (`NOT locked — …`, the bot's `triage` role is not
+  admin) is the expected outcome: mention it in the terminal report as a fact, not a warning, and
+  never retry it with the session's own GitHub access, which would act as the routine's owner.
+  Before autofix is enabled, the bot needs admin rights on the repos, or the lock done some other
+  way. Like
   every writer here it prints instead of posting without `--write`, and re-running it completes a
   half-done PR rather than opening a second one. **Never open a routine's PR with `gh pr create` or
   the GitHub MCP server**: both act as whoever the session is authenticated as, which in a routine

@@ -90,7 +90,8 @@ export async function openPullRequest({ repo, head, base, title, body, assignee 
   // Locked so that only collaborators can comment: the PR is public, unattended and written by a
   // machine, which is what a drive-by prompt injection in a comment would aim at. GitHub wants admin
   // rights on the repo for this, more than the `triage` the bot has, so a refusal is reported rather
-  // than thrown: the PR is open, labelled and assigned, and is still worth more than no PR.
+  // than thrown: the PR is open, labelled and assigned, and is still worth more than no PR. Nothing
+  // needs the lock until "autofix PRs" is enabled — until then no model reads the PR's comments.
   try {
     await github(`/repos/xwiki/${repo}/issues/${pr.number}/lock`, { method: 'PUT', body: JSON.stringify({}) });
     steps.push('locked to collaborators');
