@@ -173,9 +173,11 @@ mvn -B -ntp -Plegacy -DskipTests test-compile
   proves it resolves the reactor build, not the stale snapshot.
 - **Page-object gotcha:** building only a leaf `*-test-docker` module fails to compile a backported
   test when the sibling `*-test-pageobjects` (holding a newly-added page-object API) is pulled as a
-  *published* dependency without the new class. First `install` the changed page-object module(s) from
-  the branch (or build from the reactor root with `-pl <module> -am`). CI builds the full reactor so it
-  doesn't hit this.
+  *published* dependency without the new class. The same staleness makes a Docker IT fail at XWiki
+  startup — not a backport defect; see "Mixed SNAPSHOT jars after the branch moved" in
+  `okf/testing/running-docker-its.md`. First `install` the changed sibling module(s) from the branch
+  (or build from the reactor root with `-pl <module> -am`). CI builds the full reactor so it doesn't
+  hit this.
 - **CI on each PR is authoritative** for functional runs on real infrastructure. To run a Docker IT
   locally as a demo, use the `xwiki/build` DockerHub image (github.com/xwiki/xwiki-docker-build),
   mounting the docker socket (Docker-out-of-Docker) and your `~/.m2`:

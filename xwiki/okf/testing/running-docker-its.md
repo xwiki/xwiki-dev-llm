@@ -61,9 +61,19 @@ below. Repair the machine and re-run; do not start debugging the change.
 | `Reached error page: about:neterror?e=dnsNotFound&u=http://xwikiweb:8080/…` | containerised engine only — the browser cannot resolve the `xwikiweb` alias. Daemon under load, or a stale/broken testcontainers network |
 | `SocketException: Connection reset` while provisioning extensions | the servlet container was still booting when provisioning started; daemon starved |
 | `NullPointerException: networkMode was not specified` starting `standalone-firefox`, or `all predefined address pools have been fully subnetted` | the daemon has no address pool left for a new network: earlier runs leaked their testcontainers networks (see below) |
+| `Can't find descriptor for the component …` or `Failed to initialize mandatory document` at startup, then a `500` while provisioning | the WAR mixes SNAPSHOT jars built before and after a recent commit of the branch (see below) |
 
 `JETTY_STANDALONE` needs the right JDK **on `PATH`**, not only in `JAVA_HOME`, because the wiki's JVM
 is spawned by a shell script.
+
+### Mixed SNAPSHOT jars after the branch moved
+
+Every module of the test WAR you did not `install` yourself comes from the last Nexus deploy, which
+lags the branch (the same mechanism as Environment Tests in [[jenkins]]). When a commit since that
+deploy changed several modules together, the WAR can mix jars from before and after it, and XWiki
+fails at startup. `install` from the branch the modules touched by the commits since the jars' date
+(`git log origin/<branch> --since=<date>`), plus `xwiki-platform-web-war` when templates changed; the
+profiles the test framework modules need are in `xwiki-build`.
 
 ## Leftover containers and networks: ryuk has to reach the daemon
 
