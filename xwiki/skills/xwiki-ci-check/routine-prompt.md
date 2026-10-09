@@ -38,7 +38,7 @@ Personal overrides on top of the skill:
 * Any commit you make carries the bot as its author: --author="XWiki LLM Bot <llm-bot@xwiki.org>".
 * Open every pull request with the skill's tools/pull-request.mjs, never with gh or the GitHub MCP
   server: it opens the PR as xwikiorg-llm-bot, labels it llm-agent, assigns it to the culprit author
-  and locks it to collaborators.
+  and locks it to collaborators (or reports that the bot was not allowed to).
 ```
 
 > ⚠️ The live routine still runs the earlier version, which assigned and locked the PR by hand and
@@ -52,8 +52,10 @@ write where the session's own GitHub access is right at hand and wrong, so the p
 
 - **Bot credentials** (never a developer's account), in the routine's secret store:
   - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
-    opens the fix PRs (labelled `llm-agent`, assigned, locked), which needs `triage` on the repo —
-    what `xwikiorg-llm-bot` has. Do not expect it to push: the bot has `push: false` on all three
+    opens the fix PRs (labelled `llm-agent`, assigned), which needs `triage` on the repo — what
+    `xwikiorg-llm-bot` has. **Locking** the PR to collaborators needs admin rights on the repo,
+    which the bot does not have: until an org owner grants them, `pull-request.mjs` reports the PR
+    as `NOT locked` and carries on. Do not expect it to push: the bot has `push: false` on all three
     repos, which is correct and not a misconfiguration (see the PR note below).
   - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
     developer's own JIRA credential is never the one filing.

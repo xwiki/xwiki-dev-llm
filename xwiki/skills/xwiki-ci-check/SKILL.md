@@ -480,7 +480,8 @@ Follow `xwiki-pull-request` for the commit message and the description.
   git commit --author="XWiki LLM Bot <llm-bot@xwiki.org>" …
   ```
 - **The PR** is opened by `xwikiorg-llm-bot`, which has `triage` — enough to open a PR from an
-  upstream branch, label, assign and lock it. Open it with this tool and nothing else:
+  upstream branch, label and assign it, but not to lock it (GitHub wants admin rights for that).
+  Open it with this tool and nothing else:
 
   ```bash
   node <skill>/tools/pull-request.mjs --repo xwiki-platform --head claude/<slug> --base master \
@@ -488,8 +489,10 @@ Follow `xwiki-pull-request` for the commit message and the description.
   ```
 
   It reads `GH_TOKEN_BOT` and no other variable, labels the PR **`llm-agent`** (every
-  machine-generated PR carries it), assigns `--assignee`, and locks the conversation to
-  collaborators — an unattended public PR is what a prompt injection in a comment would aim at. Like
+  machine-generated PR carries it), assigns `--assignee`, and tries to lock the conversation to
+  collaborators — an unattended public PR is what a prompt injection in a comment would aim at. A
+  refused lock is reported (`NOT locked — …`), not fatal: say so in the terminal report, and never
+  retry it with the session's own GitHub access, which would act as the routine's owner. Like
   every writer here it prints instead of posting without `--write`, and re-running it completes a
   half-done PR rather than opening a second one. **Never open a routine's PR with `gh pr create` or
   the GitHub MCP server**: both act as whoever the session is authenticated as, which in a routine
