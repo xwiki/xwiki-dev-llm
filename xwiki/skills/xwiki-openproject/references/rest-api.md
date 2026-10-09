@@ -194,6 +194,15 @@ curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Ty
 Read the existing thread with `GET /api/v3/work_packages/<ID>/activities` — elements are
 `Activity` objects whose `comment.raw` is Markdown; many carry only field changes and no comment.
 
+## Preview how Markdown renders
+
+Plain-text body in, HTML out; a work package link shows as `<a class="issue work_package …">`.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Type: text/plain" \
+  --data-binary 'See #DA-103.' https://op.xwiki.org/api/v3/render/markdown
+```
+
 ## Errors
 
 Errors are HAL too: `_type: "Error"` with an `errorIdentifier` and `message`.

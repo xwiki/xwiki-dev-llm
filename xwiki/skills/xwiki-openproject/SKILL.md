@@ -42,6 +42,9 @@ replies, commit messages, PR titles and bodies (`DA-96: <subject>`), links
 the instance no longer uses. The REST paths accept either (`/api/v3/work_packages/DA-96` works),
 while `_links` hrefs carry the numeric one.
 
+**Inside OpenProject text** (descriptions, comments) write `#DA-103`: a bare `DA-103` is not linked,
+and `##DA-103` renders a summary card instead.
+
 **Creating a work package:**
 1. **Search first**, so you do not file a duplicate.
 2. Resolve the project, then pick a type from the types that project enables. A project with no
