@@ -196,9 +196,7 @@ Read the existing thread with `GET /api/v3/work_packages/<ID>/activities` — el
 
 ## Preview how Markdown renders
 
-Work package references need a leading `#` (`#DA-103`) to become links — see `SKILL.md`. To check a
-description or comment before writing it, render it (plain-text body, returns HTML; a link shows as
-`<a class="issue work_package …">`):
+Plain-text body in, HTML out; a work package link shows as `<a class="issue work_package …">`.
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Type: text/plain" \
