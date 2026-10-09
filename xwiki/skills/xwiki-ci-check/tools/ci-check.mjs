@@ -627,10 +627,8 @@ function attribute(incident, commits) {
         ' which the failure reports'
     };
   }
-  // No "every commit in the window is by the same author" rule: that is a coincidence of who pushed
-  // that day, not evidence about the failure, and it pinged surli about a Solr fix for a navigation
-  // panel test that had flickered twice before (2026-10-09). An author is named on evidence or not
-  // at all; whether the evidence holds is then the model's to judge (SKILL.md §4).
+  // Deliberately no "every commit in the window is by the same author" rule: who pushed that day is
+  // not evidence (it pinged an unrelated Solr fix on 2026-10-09). The model judges the rest (§4).
   const relevant = new Set([...byPath, ...byWord]);
   return {
     tier: 'ambiguous', suspects: commits,
@@ -810,7 +808,10 @@ function openPullRequests(repo, args) {
   return pullRequests.get(repo);
 }
 
-/** Test-suite class names shared by many modules, which therefore identify none of them. */
+/**
+ * Test-suite class names shared by many modules, which therefore identify none of them: `AllIT` tied
+ * a repository-module failure to a PR touching only `NotificationsIT` (2026-10-09).
+ */
 const GENERIC_CLASS = /^All\w*(IT|Test)s?$/;
 
 /** Whether `text` names `word` on its own, rather than inside a longer identifier. */
@@ -827,9 +828,6 @@ const mentions = (text, word) =>
 function inFlightKeys(incident) {
   const groups = forwardKeys(incident).groups.map(keys => keys
     .filter(key => key.endsWith('.java')).map(key => key.replace(/\.java$/, ''))
-    // A suite class (`AllIT`) exists in dozens of modules: a PR naming one says nothing about this
-    // one. Measured on 2026-10-09, `AllIT` tied a repository-module setup failure to a PR that
-    // only touched `NotificationsIT`.
     .filter(name => !GENERIC_CLASS.test(name)));
   return { groups, jira: incident.jira?.key || null };
 }
@@ -876,9 +874,8 @@ async function inFlightFix(incident, args) {
     covers: covered.map(keys => keys[keys.length - 1]),
     of: groups.length,
     partial: groups.length > 1 && covered.length < groups.length,
-    // A name match is not a fix: "Add automated test for Export PDF" names `PDFExportIT` and fixes
-    // nothing (2026-10-09). So an open PR never silences on its own — it stays a candidate the
-    // model reads and confirms or discards (SKILL.md §3), and the incident is analysed meanwhile.
+    // A name match is not a fix ("Add automated test for Export PDF" names `PDFExportIT`), so an open
+    // PR never silences on its own: the model confirms or discards it (SKILL.md §3).
     candidate: true,
     reason: named
       ? `it names ${named}, the class the failure names`
@@ -1836,9 +1833,8 @@ async function investigate(incident, job, args) {
     };
     return;
   }
-  // A *closed* flicker issue is the same history: the test has been seen flickering, was fixed once,
-  // and is failing again — the first explanation is that it still flickers, not that today's
-  // commits broke it. Systematic is again the exception.
+  // A *closed* flicker issue is the same history: the likeliest explanation is that it still
+  // flickers, not that today's commits broke it.
   if (incident.jiraClosed && incident.state !== 'systematic') {
     incident.blame = {
       tier: 'none', suspects: [],
@@ -1847,9 +1843,8 @@ async function investigate(incident, job, args) {
     };
     return;
   }
-  // `single env`: one environment, which passed the test in some of the builds examined. A commit
-  // does not break a test some of the time, so there is no culprit to look for until it fails
-  // every build.
+  // `single env` passed in some of the builds examined: a commit does not break a test some of the
+  // time.
   if (incident.class === 1 && incident.state === 'single env') {
     incident.blame = {
       tier: 'none', suspects: [],
@@ -2180,8 +2175,7 @@ function fixBlock(incident) {
   const where = fix.where[0].toUpperCase() + fix.where.slice(1);
   if (fix.candidate) {
     return ['', `**Candidate fix, unconfirmed** — ${head}`,
-      `${where}; ${fix.reason}. A name match only: this incident stands unless the PR, once read, ` +
-      'actually fixes this failure — a PR adding or extending tests does not.'];
+      `${where}; ${fix.reason}. A name match only: this incident stands unless the PR fixes this failure.`];
   }
   if (fix.partial) {
     const rest = fix.of - fix.covers.length;
@@ -2894,10 +2888,8 @@ for (const incident of incidents) {
 incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.testCount || 1));
 // Beyond the horizon nothing may be written, so spending root-cause budget there buys nothing:
 // those incidents are aggregated into one digest line and that is all.
-// A failing quality gate takes its slot first, whatever else is red: it is the run's first fix (§5),
-// it costs no log reading (its facts come from SonarCloud), and only a deep incident carries the
-// blame its commit comment needs. Once open PRs stopped silencing incidents by name alone, five
-// test breakages could otherwise push it out of the budget.
+// A failing quality gate takes the first slot: it is the run's first fix (§5), costs no log
+// reading, and only a deep incident carries the blame its commit comment needs.
 const gateFirst = incident => (/sonar-gate:failed$/.test(incident.signature || '') ? 0 : 1);
 const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon
   && !settled(incident) && incident.primary !== false)

@@ -263,9 +263,8 @@ export async function lastDigest({ server = homeserver, roomId = room, pages = 5
       throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
     }
     const body = await res.json();
-    // The newest message that *is* a digest — one carrying the state marker. The bot also posts
-    // other things (a correction, an announcement), and taking one of those as the last digest
-    // would make the next run compare against nothing and repeat everything.
+    // The newest message carrying the state marker: the bot also posts corrections and
+    // announcements, and comparing against one of those would repeat everything.
     const event = (body.chunk || []).find(entry => entry.sender === userId && entry.type === 'm.room.message'
       && stateOf(entry.content?.formatted_body));
     if (event) {
