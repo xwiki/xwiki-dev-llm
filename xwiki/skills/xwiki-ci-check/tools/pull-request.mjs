@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /*
- * Opens a fix pull request as the CI bot, labels it `llm-agent`, assigns it and tries to lock its
+ * Opens a fix pull request as the CI bot, labels it `llm-agent`, assigns it and locks its
  * conversation to collaborators — the one way a routine opens a PR (SKILL.md §5 says why: `gh` and
  * the GitHub MCP server act as the routine's owner).
  *
- * The branch is pushed beforehand by whatever can push (the Claude GitHub App in a routine); the
- * bot's `triage` role can open, label and assign, but neither push nor lock.
+ * The branch is pushed beforehand by the Claude GitHub App. Locking needs the bot's `write` role;
+ * a PR that could not be locked is reported and the process exits 3, because SKILL.md §5 forbids
+ * watching (auto-fixing) an unlocked PR.
  *
  * An open PR for the same head is reused and every later step is idempotent, so a re-run completes
  * a half-done PR instead of opening a second one.
@@ -81,15 +82,17 @@ export async function openPullRequest({ repo, head, base, title, body, assignee 
     });
     steps.push(`assigned ${assignee}`);
   }
-  // Needs admin rights the bot lacks, and is not needed until "autofix PRs" is enabled (SKILL.md §5),
-  // so a refusal is reported, not thrown.
+  // Reported rather than thrown: the PR is open, labelled and assigned either way, and the caller
+  // decides from `locked` whether it may watch it.
+  let locked = false;
   try {
     await github(`/repos/xwiki/${repo}/issues/${pr.number}/lock`, { method: 'PUT', body: JSON.stringify({}) });
+    locked = true;
     steps.push('locked to collaborators');
   } catch (error) {
     steps.push(`NOT locked — ${error.message}`);
   }
-  return { url: pr.html_url, steps };
+  return { url: pr.html_url, steps, locked };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -117,4 +120,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const result = await openPullRequest({ ...options, body: readFileSync(options.file, 'utf8') });
   console.log(`${result.url ?? 'not opened (rehearsal — pass --write to open)'}\n${result.steps.map(s => `  - ${s}`).join('\n')}`);
+  if (result.url && !result.locked) process.exit(3);
 }
