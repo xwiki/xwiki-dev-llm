@@ -7,8 +7,9 @@ summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the pr
   distinct method, and @Order is how methods share one), @Order on every @UITest method, the
   page-object boundary (a test holds no HTML/JS knowledge: no getDriver(), selector or WebElement),
   page-object actions (and reads after input) that wait for their own outcome,
-  the don't-pay-the-timeout rule, how to read a PRChecker log line and how to grant Programming
-  Rights to a test's own content, asserting whose rights code runs with, the assertion channel
+  the don't-pay-the-timeout rule, expected console output, TestReference, configuration cleanup, no
+  volume mapping (DOOD), the wiki descriptor target, how to read a PRChecker log line and how to grant
+  Programming Rights to a test's own content, asserting whose rights code runs with, the assertion channel
   (browser vs REST), the bare @UITest on an AllIT container, the functional-test module layout
   (which pom lists which module under which profile, the -test-docker pom), getting a mandatory class in an
   @OldcoreTest, MockitoOldcore's save authors, mocking a raw injected Provider, coverage, and where
@@ -16,8 +17,7 @@ summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the pr
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices
-  - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios
-  - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDon27tpaythetimeout
+  - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HBestPractices
 ---
 
 # XWiki testing strategy (overview)
@@ -39,7 +39,11 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
 ## Durable rules
 
 - **No stdout/stderr in tests** — enforced by Surefire's `CaptureConsole` listener. Skip per-module
-  with `-Dxwiki.surefire.captureconsole.skip=true` only when justified.
+  with `-Dxwiki.surefire.captureconsole.skip=true` only when justified. A functional test's console
+  is validated too: output it provokes on purpose is declared with `registerExpected(...)` on an
+  injected `LogCaptureConfiguration`; an unexpected error is fixed, `registerExcludes(...)` being
+  technical debt.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HStdout2Fstderrvalidationerrors)
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required.
 - **Assertions: the JUnit 5 one where it fits, Hamcrest `assertThat` where it reports better** —
@@ -69,7 +73,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   on its own when debugging.
   Whatever is fixture rather than subject is built with `TestUtils` (`createPage`, `createUser`,
   `loginAsSuperAdmin`, REST), never by driving the UI as a user would.
-  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HBestPractices)
+  A page the test needs is named by an injected `TestReference` parameter, not hardcoded.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios,
+  https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HTestReference)
 - **A test knows nothing of the HTML or JavaScript — the page-object boundary** — a functional test
   (`*IT.java`) drives *and inspects* the UI only through page objects, in the user's terms. Any
   knowledge of the markup or scripts in the test class — `getDriver()`, a `By`, a CSS selector or
@@ -106,16 +112,33 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   skip the page load. `executeAndGetBodyAsString` is not that shortcut: it drives the browser too.
   `ViewPage` (`BasePage`) already waits for the window `load` event and every pending request, so
   images in the content are loaded — don't add a wait of your own for that.
-- **Don't pay the timeout (Docker functional tests)** — a test must never burn the full Selenium
-  wait timeout waiting for something that will not appear. The waiting APIs (`findElement`,
-  `findElements`, and the `waitUntil…` helpers) are for elements *expected to be present*; to assert
-  an element's absence, or to look without blocking, use `findElementWithoutWaiting()`,
+- **Don't pay the timeout (Docker functional tests)** — never wait on a timer (`Thread.sleep()`),
+  and never burn the full Selenium wait timeout waiting for something that will not appear. The waiting APIs (`findElement`, `findElements`, and
+  the `waitUntil…` helpers) are for elements *expected to be present*; to assert an element's
+  absence, or to look without blocking, use `findElementWithoutWaiting()`,
   `hasElementWithoutWaiting()` or `waitUntilElementDisappears()` instead. Since XWiki 18.6.0 a
   wasteful wait logs an `org.xwiki.test.ui.XWikiWebDriver - The currently running test wasted [N] ms
   waiting for element …` WARN, with a stack trace (`warnIfWastefulWait`) pointing at the offending
   `findElement*` call — treat any such warning for the test/page-objects you are touching as a defect
   to fix (fix the page object doing the wait, not just the test). A warning charged to an unrelated,
   untouched test is out of scope for your change — just report it.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDon27tpaythetimeout)
+- **Cleanup only where other domains' tests follow** — a test that changes existing configuration
+  (default language, rights, …) restores it only if it also runs among other domains' tests (flavor
+  tests); a module's own `-test-docker` skips that cleanup to save time. Created pages need not be
+  deleted.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HConfigurationandCleanup)
+- **No volume mapping in a test's own containers** — CI builds inside a Docker agent whose containers
+  run beside it (Docker out of Docker), so a host path is not the agent's. Copy files in and out (`withCopyFileToContainer(MountableFile.forHostPath(…), …)`,
+  `copyFileFromContainer`).
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDockeroutofDocker)
+- **A URL generated outside a request uses the wiki descriptor** (XWiki 18.8.0+) — a scheduler mail
+  or a reset-password link takes its host/port from the main wiki descriptor, which the framework
+  points at the browser's address. Change it for the whole instance with the `wikiDescriptorTarget`
+  `@UITest` option (one value per `AllIT`; `-Dxwiki.test.ui.wikiDescriptorTarget=http_client`), for
+  one test with `@UseWikiDescriptorTarget` (the closest declaration wins), or to any value with
+  `TestUtils.setMainWikiDescriptorTarget()`, which needs no restoring.
+  (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HWikiDescriptorTarget)
 - **A `PRChecker` log line reports a probe, not a requirement** — functional tests run with
   `ProgrammingRightCheckerAuthorizationManager` (`xwiki-platform-test-checker`), which overrides the
   authorization manager so that wiki content never obtains Programming Right, and logs

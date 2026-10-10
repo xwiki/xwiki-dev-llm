@@ -310,4 +310,4 @@ mvn clean verify -B -ntp \
 3. Run `mvn clean verify` with the `docker` profile and confirm 0 failures, 0 errors.
 4. Verify the DOOD use case by running the build itself inside the `xwiki/build` container (Docker socket mounted, e.g. on Tomcat) — this matches how CI runs it and validates everything in one run. See "Verify the DOOD use case" above.
 5. Check that `@Order` values cover the expected dependency chain between tests.
-6. Confirm `@BeforeEach` cleanup uninstalls/deletes all state that tests create, so tests are independent.
+6. Drop cleanup that only deletes what the tests created: a module's tests need none (cleanup rule in `okf/testing/strategy.md`). Keep a reset a later assertion depends on, as above.
