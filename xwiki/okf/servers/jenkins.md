@@ -183,7 +183,9 @@ useful question — "how long has *this cause* been red, and did anyone already 
 Docker/Selenium tests archive, **per failing test method**, a screenshot and a video under
 `…/target/<db>-<servlet>-<browser>/screenshots/<config>-<FQCN>-<method>.png` (plus `.flv`). List them
 via the `artifacts` endpoint and look at the `.png` first — it usually shows in one glance what the
-page really looked like, which is faster than reasoning from the stack trace.
+page really looked like, which is faster than reasoning from the stack trace. A pipeline build archives
+every configuration it ran, so filter by the configuration prefix, not only the test name, and encode
+the `$` of a nested class as `%24` in the download URL. Reading the video: [[flickers]].
 
 When a functional test starts failing **with no source change**, suspect the *resolved dependency
 versions* rather than the test: XWiki functional tests run against `${platform.version}`, which is
@@ -208,14 +210,8 @@ match. See [[versioning]] for why the version itself must always be read, never 
 - Quality-gate failures are a Sonar concern, not a Jenkins one: use the `sonarqube` MCP and the
   `xwiki-fix-sonarqube-issue` skill.
 - A test that fails intermittently rather than deterministically is a flicker: Jenkins only shows
-  the one run, so take its history across builds from Develocity, then use the
-  `xwiki-fix-flickering-docker-test` skill. Prefer
-  [`dv-test-history`](https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history)
-  (`bash/` in `xwiki/xwiki-dev-tools`) over the `develocity` MCP for that: it gives 28 days of the
-  test's executions grouped by what actually failed, broken down by branch, browser, database and
-  servlet container, with the configurations a failure concentrates in and how many clean runs it
-  would take to call it fixed. `xwiki-ci-check` wraps it as `tools/dv-test-history.mjs`, which finds
-  a checkout and passes the Develocity key.
+  the one run, so take its history across builds from Develocity — [[develocity]] — then use the
+  `xwiki-fix-flickering-docker-test` skill.
 - To triage a whole branch's failures at once — flickers vs. real breakages, before a release — use
   the `xwiki-release-test-triage` skill, which automates the correlation described above. To *act*
   on what is red across every maintained branch — attribute it, comment on the culprit commit, file

@@ -527,42 +527,59 @@ never promote a second candidate because the first looked hard.
 
 The candidate is a flicker that is `proven`, already **filed** (it has a `jira`), answered by
 nothing (`fixState` null), inside the horizon, and not `systematic` — and, among those, the one that
-fails most often, because a fix can only be *shown* to work on a test the oracle can catch failing.
+fails most often: it costs the most re-runs, and its recent failures are the ones whose screenshot,
+video and logs Jenkins still holds.
 
-Then, and only for that one:
+Then, and only for that one, run `xwiki-fix-flickering-docker-test`, which owns the procedure:
+evidence, a hypothesis from the test and production code, an experiment that forces the race, the fix.
+Whether to also measure an unforced local rate is that skill's call, not a gate here.
 
-1. **Measure before.** `xwiki-fix-flickering-docker-test` owns the whole procedure; its first step is
-   `xwiki/scripts/xwiki-it-repeat.mjs`, on the configuration `develocity` names in the work order —
-   the browser, database and servlet container the failure concentrates in, not the default. Take
-   those three and not the branch in that label: it is where the failure concentrates across all of
-   them, and the branch to reproduce on is the incident's own.
-2. **Fix it inside Tier C.** The table above is unchanged and is not negotiable here: no assertion,
-   no expected value, no timeout, no production logic. A flicker whose fix needs one of those is a
-   **comment on its JIRA issue** saying what was found, and no PR.
-3. **Measure after**, with `--label after --baseline <before>/report.json`.
-4. **Fail closed on the rate.** No improvement, or too few executions to tell, means **no PR** — the
-   two measurements go on the flicker issue instead. A draft PR whose evidence is "it passed the
-   times I ran it" is what makes every later one unreadable.
+1. **Evidence comes from the work order.** `develocity` carries the history, the failure group, the
+   configurations it concentrates in and the archived screenshot and video; reproduce on the
+   incident's own branch, with the browser, database and servlet container the failure concentrates
+   in.
+2. **Bound the loop.** At most three hypotheses, each with its experiment. A routine has nobody to
+   say "enough", and a fourth guess on the same evidence is rarely better than the third.
+3. **The fix stays clear of Tier C's assertions, expected values and timeouts** — those hide a
+   flicker rather than fix it. A confirmed race in **production code** is the exception to Tier C's
+   last line: the experiment is the proof Tier C otherwise lacks, so the draft fixes it there and
+   says so first in its body. Such a fix is a **product bug** and needs its own JIRA issue, which
+   this routine **does not file**: the PR body says a committer must file it before merging, and
+   carries the bug description the skill's step 4 asks for. The comment on the flicker issue that
+   names the PR repeats it.
+4. **Open the PR on proof, and only on proof** — the skill's step 3 red with the CI symptom, then
+   its step 4 green, unforced included. A hypothesis confirmed **only in isolation** is weaker proof
+   but still proof: the draft is opened, and says so in its first line. No confirmed hypothesis, or
+   a fix the experiment does not turn green, means **no PR**: the evidence, each hypothesis and what
+   its experiment showed go as a comment **on the flicker issue**, where the next attempt — this
+   routine's or a developer's — starts from them instead of from zero. That comment is where the
+   routine asks the question the skill would ask a developer: it names the hypothesis it considers
+   most likely, why, and what would confirm it.
 
 The PR is **draft**, **unassigned** (a flicker usually has no culprit, and a wrong auto-assignment
 discredits the whole system), opened by the bot like any other — `pull-request.mjs --draft` with no
 `--assignee` — and its subject is the issue's key and its title verbatim, per
 `xwiki-pull-request`. Its body carries, and a reviewer should not have to ask for any of it:
 
-- the **two rates with their execution counts** — *"failed 5/60 before, 0/60 after"* — and what a
-  clean series does and does not prove: zero failures in n executions bounds the rate below ~3/n,
-  not at zero, which is why 20 repetitions are an argument and 5 are not;
+- the **mechanism** in two or three sentences — what races with what, and why it fails on the
+  configurations it does and spares the others;
+- the **experiment**: the temporary patch that forces the race, inline, so a reviewer can re-run it
+  (or, for a reliable local reproduction, the command and configuration; for an isolated one, the
+  test), and the runs as a table — unchanged code *red n/m with the CI symptom*, fixed code *green*,
+  each with its count and the configuration it ran on, plus the fixed code unforced green when the
+  experiment was forced or isolated;
 - the **Develocity breakdown** from `develocity` — the 28-day rate, the day the failure started, the
   configuration it concentrates in with its p-value, and the build scan — quoted, never reworded;
-- the configuration the repetitions actually ran on, and plainly that **the ITs were not run in CI**:
-  Jenkins does not build PRs, this measured one test on one machine, and nothing ran the suite;
+- plainly that the local runs **do not reproduce CI's timing** and that **the ITs were not run in
+  CI**: Jenkins does not build PRs, so CI after the merge is the final confirmation, and
+  `develocity` says how many clean runs it takes;
 - a link to the flicker issue, and one comment **on that issue** naming the PR — a draft PR assigned
   to nobody is otherwise invisible to the person who owns the flicker.
 
 This PR does not consume the two mechanical fix-PR slots above: it is different work, at a different
 price, and both together are still at most three PRs from one run. On a laptop it is the one write
-to **ask about before starting** rather than after — twenty repetitions hold port 8080 and a slice of
-the Docker daemon for around half an hour — and, like every other PR from a local run, it is opened
+to **ask about before starting** rather than after — the experiments hold port 8080 and a slice of
+the Docker daemon for up to an hour — and, like every other PR from a local run, it is opened
 under the developer's own name.
 
 ### Flicker issues — file on evidence, not on sight
@@ -669,9 +686,9 @@ so this needs no state file and survives the sandbox being new every morning.
   silent morning the paste URL lives in the run log alone.
 - **A stabilisation PR is news, and it makes the morning non-silent.** The one thing here a
   dashboard could never print is a fix, so when §5 opened one it gets its own row — *"→ draft fix
-  for `ImageIT#editImage`: 5/60 → 0/60 on Chrome, XWIKI-24749"* — even on a morning where nothing
-  else moved and the digest would otherwise be withheld. Nothing else about that flicker is
-  repeated: it was already red yesterday, and the PR is the whole of the news.
+  for `ImageIT#editImage`: forced race red 4/4 → green 4/4 on Chrome, XWIKI-24749"* — even on a
+  morning where nothing else moved and the digest would otherwise be withheld. Nothing else about
+  that flicker is repeated: it was already red yesterday, and the PR is the whole of the news.
 - List `new`, `changed` and `fixed`, one table row each. **`fixed` is the line the dashboard can never
   show**: it says what went green, and it is the only place anyone learns that.
 - Collapse `same` to a count, and `longStanding` (beyond the horizon) to `+N long-standing`.
@@ -780,8 +797,8 @@ are the mode working.
 
 - `xwiki-release-test-triage` — the read-only counterpart, and the right answer to every question
   about CI state. It reports and asks; this skill acts. Both share `scripts/jenkins.mjs`.
-- `xwiki-fix-flickering-docker-test` — how a flicker is actually stabilised, and the owner of the
-  repeat-run oracle (`xwiki/scripts/xwiki-it-repeat.mjs`) the draft PR of §5 gets its rates from.
+- `xwiki-fix-flickering-docker-test` — how a flicker is actually stabilised: the evidence, the
+  hypothesis and the forced experiment the draft PR of §5 is opened on.
   This skill decides *which* flicker and *when*; that one does the work.
 - `xwiki-backport` — where a `fixed-elsewhere` commit goes; this skill notices it and never lands it.
 - `xwiki-build` (Maven, `xmvn`, the IT slot limiter), `xwiki-pull-request` (the PR),

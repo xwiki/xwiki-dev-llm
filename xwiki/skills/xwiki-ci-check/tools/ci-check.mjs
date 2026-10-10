@@ -1707,7 +1707,7 @@ async function incidentsOf(target, args, flickerFor) {
         evidence: [row.detail || '(no error detail)'],
         failedIn: `${failedBuilds}/${seenBuilds} builds, ${row.failedEnvs.size}/${row.ranEnvs.size} envs`,
         // The same ratio as a number, for the one decision that has to compare two flickers: which
-        // of them a repeat run can actually catch failing (the stabilisation pick below).
+        // of them to stabilise first (the stabilisation pick below).
         failRatio: seenBuilds ? failedBuilds / seenBuilds : 0,
         // *Which* environments, not only how many: "fails on the two MySQL rows and passes on the
         // PostgreSQL ones" is a diagnosis, while "2/4 envs" is a statistic — and the matrix is the
@@ -2351,7 +2351,7 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause }) {
         `(${incident.blame.culprit.author || 'unknown'})`);
     }
     if (filing) lines.push(`bot → file **one** issue for \`${filing.className}\` (${filing.scope})`);
-    if (stabilising) lines.push('bot → measure the rate, fix, measure again, draft PR');
+    if (stabilising) lines.push('bot → find the cause, force the race, fix, draft PR on proof');
     if (incident.jira && incident.state === 'systematic') {
       lines.push(`someone → re-triage ${jiraKey(incident)}: filed as a flicker, failing every run`);
     }
@@ -3106,8 +3106,8 @@ const stabilisable = incident => incident.class === 1 && incident.kind === 'flic
   && incident.primary !== false && incident.state !== 'systematic';
 
 const blockers = incidents.filter(blocksRelease);
-// Highest failure rate first: the oracle can only measure what it can catch failing, and a fix for
-// a test that fails 1 in 40 cannot be shown to work in an affordable number of repetitions.
+// Highest failure rate first: it costs the most re-runs, and its recent failures are the ones whose
+// screenshot, video and logs Jenkins still holds — the evidence the investigation starts from.
 const stabiliseCandidates = incidents.filter(stabilisable)
   .sort((a, b) => (b.failRatio || 0) - (a.failRatio || 0));
 let stabilise = { skipped: 'no proven, filed, unanswered flicker inside the horizon' };
@@ -3120,8 +3120,8 @@ if (blockers.length) {
 } else if (stabiliseCandidates.length) {
   const [pick] = stabiliseCandidates;
   pick.stabilise = true;
-  // The configuration the repeat run must use, and the before/after rate's own baseline, come from
-  // Develocity — so the candidate gets the history whether or not it won a deep slot. One extra
+  // The configuration to reproduce on, the failure group and the archived screenshot and video come
+  // from Develocity — so the candidate gets the history whether or not it won a deep slot. One extra
   // invocation, once per run, and only on the mornings nothing more urgent is open.
   if (!pick.develocity && !develocityOff && pick.tests?.length) {
     const facts = develocityFacts(pick.tests[0], { match: pick.evidence?.[0] });

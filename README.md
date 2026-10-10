@@ -126,7 +126,7 @@ means it needs nothing.
 | [`xwiki-convert-tests`](xwiki/skills/xwiki-convert-tests/) | Convert unit tests to JUnit 5 + Mockito | — | "convert this test class to JUnit 5" |
 | [`xwiki-convert-tests-docker`](xwiki/skills/xwiki-convert-tests-docker/) | Convert functional ITs to the Docker `@UITest` framework | — | "convert these ITs to `@UITest`" |
 | [`xwiki-increase-test-coverage`](xwiki/skills/xwiki-increase-test-coverage/) | Recompute a module's JaCoCo ratio and raise the pom's floor | — | "bump the coverage ratio for this module" |
-| [`xwiki-fix-flickering-docker-test`](xwiki/skills/xwiki-fix-flickering-docker-test/) | Diagnose and fix a flicker, then prove it with a pass rate | Docker | "fix the `NotificationsIT` flicker" |
+| [`xwiki-fix-flickering-docker-test`](xwiki/skills/xwiki-fix-flickering-docker-test/) | Investigate a flicker from its CI evidence, confirm a hypothesis by forcing the race, then fix it | Docker | "fix the `NotificationsIT` flicker" |
 
 **Code & APIs**
 

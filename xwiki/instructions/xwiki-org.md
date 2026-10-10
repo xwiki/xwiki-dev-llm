@@ -97,14 +97,14 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
   `xwiki-doc-writing` / `xwiki-doc-convert`.
 - `okf/architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
   `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`.
-- `okf/testing/` — `strategy`, `running-docker-its`.
+- `okf/testing/` — `strategy`, `running-docker-its`, `flickers`.
 - `okf/sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
   rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,
-  `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by the
-  `xwiki-fix-sonarqube-issue` skill, which owns the procedure.
-- `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum: how to reach each, and writing over
-  REST), `jira`, `jenkins`.
+  `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by
+  `xwiki-fix-sonarqube-issue`.
+- `okf/servers/` — `index` (reaching and writing to JIRA, CI, Nexus, SonarCloud, forum, xwiki.org),
+  `jira`, `jenkins`, `develocity`.
 - `okf/processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
 - `okf/decisions/` — ADRs (the *why* behind durable architectural choices).
 

@@ -95,6 +95,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **running-docker-its** — running the Docker functional tests on a developer machine: container
   networking, setup failures, leftover containers and networks (ryuk), what parallel runs contend
   for. Commands in `xwiki-build`.
+- **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
+  mechanics most flickers turn out to be, forcing a race to prove a fix, the realtime debug dump.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
@@ -116,6 +118,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
   and writing over REST.
 - **jira** — working with jira.xwiki.org: whether to file at all, the issue fields, resolving,
   attachments, wiki markup.
+- **develocity** — a test's failure history across CI builds with `dv-test-history`: what it
+  reports, keeping its report out of context, finding candidates, and why `flaky` means failed.
 - **jenkins** — querying ci.xwiki.org over its REST API, and how to read a result without drawing the
   wrong conclusion.
 
