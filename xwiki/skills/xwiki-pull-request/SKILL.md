@@ -100,3 +100,12 @@ what it reports before asking for review. Two facts that make this safe and chea
 stored separately from the branch's, so it never affects `master`'s measures or issues, and on
 xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
 Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.
+
+In xwiki-commons, xwiki-rendering and xwiki-platform (not in contrib repositories), the PR's own
+`Quality / Analyze` check (a smaller GitHub Actions setup, not the Jenkins CI) runs this analysis too,
+and **fails on any new Sonar issue**, even when the gate passes. A moved or restructured
+line counts as new, so splitting a method can turn an existing finding into a new one. Its results
+are public, no token needed: `https://sonarcloud.io/api/qualitygates/project_status?projectKey=<key>&pullRequest=<n>`
+and `https://sonarcloud.io/api/issues/search?componentKeys=<key>&pullRequest=<n>&resolved=false`,
+with `<key>` `org.xwiki.platform:xwiki-platform`, `org.xwiki.commons:xwiki-commons` or
+`org.xwiki.rendering:xwiki-rendering`.
