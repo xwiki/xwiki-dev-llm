@@ -4,7 +4,8 @@ stability: durable
 summary: How to escape user input and other untrusted values for each output context, why
   translation values are untrusted, which right each scripting language requires, the context-author
   and pass-the-entity right-check rules, saving as author in script services and serializing a
-  possibly-null author, displaying rather than parsing XObject properties, safe XML parsing, and
+  possibly-null author, isolating the rendering of another document (and why the restricted flag
+  stays behind), displaying rather than parsing XObject properties, safe XML parsing, and
   never interpolating identifiers or references into queries and include/display targets.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Security/
@@ -129,6 +130,22 @@ the same check.
 `null` user reference into the **current user**, so an author that may be missing becomes whoever
 the code runs for — check for `null` first. Guest needs no special case: it serializes to `null`,
 the only `DocumentReference` for guest (`XWiki.XWikiGuest` is deprecated).
+
+## Rendering another document — isolate it
+
+Code that renders the content of **another** document (through `DocumentDisplayer`, like the display
+macro does) must set `DocumentDisplayerParameters#setExecutionContextIsolated(true)`. Pushing the
+document into the context removes the inherited secure document (`sdoc`), so its content runs with
+**its own content author's** rights. Without it, the content runs with the rights of the author of
+the *calling* document, and a user who can edit the displayed document gets the caller's author's
+rights.
+
+Don't propagate the caller's restricted flag (`TransformationContext#isRestricted`) to an isolated
+document: it runs with its own author's rights, as when the current user views it, so check the
+current user's view right on it instead. This is by design in the display macro (XWIKI-20394). A
+document that is itself restricted is still rendered restricted (`DocumentContentAsyncRenderer`).
+The flag does need propagating when content is rendered in the *current* context, e.g. a
+non-isolated include, which is why the include macro passes it on.
 
 ## Rendering an XObject property — display it, never parse its raw value
 
