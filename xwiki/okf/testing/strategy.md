@@ -6,7 +6,7 @@ summary: The kinds of tests XWiki uses, their naming, the no-stdout rule, the pr
   scenario rule (no two @Test methods build the same fixture, a distinct fixture is what justifies a
   distinct method, and @Order is how methods share one), @Order on every @UITest method, the
   page-object boundary (a test holds no HTML/JS knowledge: no getDriver(), selector or WebElement),
-  page-object actions that wait for their own outcome,
+  page-object actions (and reads after input) that wait for their own outcome,
   the don't-pay-the-timeout rule, how to read a PRChecker log line and how to grant Programming
   Rights to a test's own content, asserting whose rights code runs with, the assertion channel
   (browser vs REST), the bare @UITest on an AllIT container, the functional-test module layout
@@ -93,11 +93,12 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   any other reason is the moment to move its calls behind a page object.
 - **A page-object action waits for its own outcome** — a page-object method that acts (click, insert,
   submit, open, select) returns only once the UI is in the state that action produces: the dialog
-  open or closed, the menu closed, the button toggled, the macro rendered, the list filtered. The test
-  must not need a `waitUntil…` after calling it; a wait in the test after a page-object call means
-  the wait belongs in that method. The test waits only for what the page object cannot know, such as
-  content specific to the test, and it is not always possible (a modal shared by several editors
-  cannot wait for one editor's refresh).
+  open or closed, the menu closed, the button toggled, the macro rendered, the list filtered. A read
+  that follows input waits for the result of that input, not a stale one (suggestions after typing).
+  A wait in the test right after a page-object call belongs in that method. A page object shared by
+  several callers is handed the wait by the one that opens it (`MacroDialogEditModal` gets its
+  editor's content refresh to run on submit). The test keeps only the waits no page object can know,
+  such as content specific to the test, and a wait that *is* the check (a query selects a given item).
 - **Assert through the channel that matches what is checked** — what the *user* sees (rendered
   content, an error message, an image, a button's state) goes through the browser and page objects
   (`ViewPage#getContent`, `BasePage#hasRenderingError`); data no user looks at in the UI (a
