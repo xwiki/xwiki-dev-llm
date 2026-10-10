@@ -101,7 +101,8 @@ documents and handles both.
 Two custom fields record where a fixed issue ended up documented, and they are independent of each
 other:
 
-- **"Documentation"** (`customfield_10270`) — the URL of the page documenting the change.
+- **"Documentation"** (`customfield_10270`) — the URL of the page documenting the change; for a
+  security issue, its GitHub security advisory (`…/security/advisories/GHSA-…`).
 - **"Documentation in Release Notes"** (`customfield_10273`) — the URL of the release-note entry, or
   `N/A` for an extension that is not bundled in XWiki Standard, which has no per-issue entry to point
   at ([[../processes/release-notes]]).
