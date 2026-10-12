@@ -138,7 +138,7 @@ function orgs() {
 const PR_QUERY = `query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){
 pullRequest(number:$number){number title url body isDraft createdAt mergeable reviewDecision
 author{login __typename} repository{nameWithOwner}
-latestReviews(first:30){nodes{state submittedAt author{login}}}
+latestReviews(first:30){nodes{state submittedAt body url author{login}}} participants(first:100){nodes{login}}
 reviewThreads(first:100){nodes{isResolved isOutdated comments(first:1){nodes{author{login} body url}}}}
 comments(last:8){nodes{author{login} createdAt body url}}
 commits(last:1){nodes{commit{committedDate statusCheckRollup{state}}}}}}}`;
@@ -184,11 +184,40 @@ function classifyPr(item) {
   if (item.changesRequestedBy.length) b.push(`changes requested by ${item.changesRequestedBy.join(", ")}`);
   if (item.liveThreads.length) b.push(`${item.liveThreads.length} open review thread(s)`);
   if (item.waitingOnYou) b.push(`answer ${item.lastOther.by}`);
+  if (item.waitingOn) b.push(`waiting on ${item.waitingOn.who.join(", ")} (asked ${item.waitingOn.at.slice(0, 10)})`);
   if (item.needsApproval && !item.approved) b.push(`needs an approval (${item.issueType})`);
   const hard = item.changesRequestedBy.length > 0 || item.liveThreads.length > 3 || (item.draft && !item.approved)
-    || (item.conflict && /FAILURE|ERROR/.test(item.ci ?? ""));
+    || (item.conflict && /FAILURE|ERROR/.test(item.ci ?? "")) || Boolean(item.waitingOn);
   const cls = b.length === 0 ? "ready" : !hard && b.length <= 2 ? "close" : "not-close";
   return { cls, blockers: b };
+}
+
+// Words that make an @-mention a request rather than a thank-you.
+const REQUEST = /\?|\b(review|look|approve|check|could you|can you|please|let me know)\b/i;
+
+// Who the developer's own last message leaves the next step to: the author of a PR they reviewed with comments, and
+// the participants they @-mention with a request. Only participants count, since an "@Something" in prose is as often
+// a Java annotation or a javadoc tag as a login. A person stops being waited on once they comment or review after that
+// message, or, for the author, push a commit after it.
+function waitingOnOthers(me, author, participants, comments, reviews, lastCommitAt) {
+  const last = [...comments.filter((c) => c.by === me).map((c) => ({ at: c.at, url: c.url, text: c.text })),
+    ...reviews.filter((r) => r.author?.login === me && r.body?.trim())
+      .map((r) => ({ at: r.submittedAt, url: r.url, text: r.body, review: r.state }))]
+    .sort((x, y) => x.at.localeCompare(y.at)).at(-1);
+  if (!last) return null;
+  // Quoted lines are someone else's words, and code is not prose.
+  const own = last.text.replace(/```[\s\S]*?(```|$)/g, "").replace(/`[^`\n]*`/g, "")
+    .split("\n").filter((l) => !l.trimStart().startsWith(">")).join("\n");
+  const known = new Map(participants.map((l) => [l.toLowerCase(), l]));
+  const who = new Set(REQUEST.test(own)
+    ? [...own.matchAll(/(?<![\w@])@([A-Za-z0-9-]+)/g)].map((m) => known.get(m[1].toLowerCase()))
+      .filter((l) => l && l !== me && !isBot(l)) : []);
+  if (author !== me && /COMMENTED|CHANGES_REQUESTED/.test(last.review ?? "")) who.add(author);
+  const answered = (login) => [...comments.filter((c) => c.by === login).map((c) => c.at),
+    ...reviews.filter((r) => r.author?.login === login).map((r) => r.submittedAt),
+    login === author ? lastCommitAt : null].some((at) => at && at > last.at);
+  const left = [...who].filter((l) => !answered(l));
+  return left.length ? { who: left, at: last.at, url: last.url } : null;
 }
 
 function collectGithub(me) {
@@ -243,6 +272,8 @@ async function buildGithubItems({ prs, keys, me }) {
         .map((t) => ({ by: t.comments.nodes[0]?.author?.login, url: t.comments.nodes[0]?.url, text: t.comments.nodes[0]?.body.slice(0, 800) })),
       outdatedThreads: pr.reviewThreads.nodes.filter((t) => !t.isResolved && t.isOutdated).length,
       lastOther, waitingOnYou: Boolean(lastOther && (!myLast || lastOther.at > myLast)),
+      waitingOn: waitingOnOthers(me, author, pr.participants.nodes.map((p) => p.login), comments, reviews,
+        lastCommit?.committedDate),
       issueKeys, issueType,
       dependsOn: [...(pr.body ?? "").matchAll(/depends on (?:#|https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/)(\d+)/gi)]
         .map((m) => `gh:${repo}#${m[1]}`),
