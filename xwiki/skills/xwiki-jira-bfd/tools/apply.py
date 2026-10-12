@@ -10,7 +10,8 @@ For every row with disposition == "close" it, per the xwiki-jira workflow:
      These are the resolutions XWiki committers actually use to retire a bug (in the
      project's history: 1175 Duplicate, 874 Cannot Reproduce, 746 Won't Fix, 324 Invalid,
      322 Solved By — and 6 Inactive). Rows with disposition `suggest` are report-only and
-     are never written here, whatever their resolution says;
+     are never written here, whatever their resolution says. The same transition sets
+     Fix Version/s as okf/servers/jira.md requires: the target's for Solved By, else none;
   4. for Duplicate/Solved By, best-effort adds an issue link to the target (a Duplicate
      link, or a Related link for Solved By — there is no dedicated "Solved By" link type).
      A failed link never undoes the close.
@@ -68,6 +69,13 @@ def link_for(resolution, bug_key, target_key):
     if not link_type or not target_key:
         return None
     return (link_type, bug_key, target_key)
+
+
+def fix_versions_for(resolution, transition, target_fix_versions):
+    """The Fix Version/s to set, or None when the transition's screen has no such field."""
+    if "fixVersions" not in (transition.get("fields") or {}):
+        return None
+    return list(target_fix_versions) if resolution == "Solved By" else []
 
 
 def pick_closing_transition(transitions):
@@ -166,6 +174,16 @@ def main():
             continue
         transitions = jira.get_transitions(key)
         t = pick_closing_transition(transitions)
+        target_fix_versions = []
+        if resolution == "Solved By":
+            target_issue = jira.get_issue(target, ["fixVersions"])
+            target_fix_versions = [v["name"] for v in
+                                   target_issue.get("fields", {}).get("fixVersions") or []]
+        fix_versions = fix_versions_for(resolution, t, target_fix_versions) if t else None
+        if resolution == "Solved By" and fix_versions == []:
+            print(f"[skip] {key}: Solved By {target}, which has no Fix Version/s yet to copy.")
+            failed += 1
+            continue
 
         if not args.apply:
             names = ", ".join(tr.get("name") for tr in transitions) or "—"
@@ -175,6 +193,8 @@ def main():
             print(f"      would use transition: {chosen}  → resolution {resolution}")
             if target:
                 print(f"      target issue: {target}")
+            if fix_versions is not None:
+                print(f"      would set Fix Version/s: {', '.join(fix_versions) or 'none'}")
             if link:
                 print(f"      would add link: {link[0]} ({link[1]} → {link[2]})")
             print(f"      would comment: {comment[:120]}{'...' if len(comment) > 120 else ''}\n")
@@ -192,7 +212,8 @@ def main():
             print(f"[FAIL] {key}: comment failed (HTTP {cstat}). Not transitioning.")
             failed += 1
             continue
-        tstat, tdata = jira.do_transition(key, t["id"], resolution=resolution)
+        tstat, tdata = jira.do_transition(key, t["id"], resolution=resolution,
+                                         fix_versions=fix_versions)
         if tstat not in (200, 204):
             print(f"[FAIL] {key}: transition failed (HTTP {tstat}): {json.dumps(tdata)[:200]}")
             failed += 1

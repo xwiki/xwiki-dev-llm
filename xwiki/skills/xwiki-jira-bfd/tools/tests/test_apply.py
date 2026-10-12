@@ -38,6 +38,22 @@ class TestLinkFor(unittest.TestCase):
         self.assertIsNone(apply.link_for("Duplicate", "XWIKI-1", None))
 
 
+class TestFixVersionsFor(unittest.TestCase):
+    CLOSE = {"id": "2", "name": "Close Issue", "fields": {"resolution": {}, "fixVersions": {}}}
+
+    def test_solved_by_takes_the_target_fix_versions(self):
+        self.assertEqual(apply.fix_versions_for("Solved By", self.CLOSE, ["17.10.0", "17.4.6"]),
+                         ["17.10.0", "17.4.6"])
+
+    def test_other_resolutions_clear_the_fix_versions(self):
+        for resolution in ("Duplicate", "Cannot Reproduce", "Won't Fix", "Invalid", "Inactive"):
+            self.assertEqual(apply.fix_versions_for(resolution, self.CLOSE, ["17.10.0"]), [])
+
+    def test_a_screen_without_the_field_leaves_it_alone(self):
+        close = {"id": "2", "name": "Close Issue", "fields": {"resolution": {}}}
+        self.assertIsNone(apply.fix_versions_for("Solved By", close, ["17.10.0"]))
+
+
 # A small fake-transition fixture, modeled on jira.xwiki.org's real transition shapes.
 FAKE_TRANSITIONS = [
     {"id": "1", "name": "Start Progress", "to": {"name": "In Progress",

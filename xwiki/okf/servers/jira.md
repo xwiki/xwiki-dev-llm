@@ -126,12 +126,17 @@ Choose the **resolution** that matches reality and **assign the issue to yoursel
 (you are the one resolving/verifying it). The distinction that is easy to get wrong:
 
 - **A change fixed it** → resolution **Fixed** (set the Fix Version/s where the project has them).
+- **A change made for another issue fixed it** → **Solved By**, linked to that issue, with **its Fix
+  Version/s**, so that querying JIRA by version finds it (e.g. a security issue fixed by a
+  non-security change).
 - **The reported problem no longer occurs, but no single change fixed it** — it was already
   implemented or fixed as a *side effect* of other work, so there is no commit to attribute — →
   resolution **Cannot Reproduce**, *not* Fixed (Fixed would falsely imply a dedicated fix and a Fix
   Version). Add a comment saying why it can no longer be reproduced (what now covers it). Example:
   `XDOCKER-83` ("Support for ARM architectures") was closed **Cannot Reproduce** once the image had
   become multi-arch as a side effect of other work, with no ARM-specific fix to point at.
+- **Won't Fix, Duplicate, Cannot Reproduce, Incomplete** → **no Fix Version/s**, or the issue shows
+  up in that version's release notes.
 
 ### Fill the two documentation fields when closing
 

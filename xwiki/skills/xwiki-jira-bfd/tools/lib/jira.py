@@ -106,7 +106,8 @@ def get_issue(key, fields):
 
 
 def get_transitions(key):
-    status, data = _request("GET", f"/issue/{key}/transitions")
+    # The fields each transition's screen offers tell apply.py whether Fix Version/s can be set.
+    status, data = _request("GET", f"/issue/{key}/transitions?expand=transitions.fields")
     if status != 200:
         raise SystemExit(f"Transitions for {key} failed (HTTP {status}): {json.dumps(data)[:300]}")
     return data.get("transitions", [])
@@ -116,10 +117,16 @@ def add_comment(key, body):
     return _request("POST", f"/issue/{key}/comment", {"body": body})
 
 
-def do_transition(key, transition_id, resolution=None):
+def do_transition(key, transition_id, resolution=None, fix_versions=None):
+    """fix_versions: None leaves Fix Version/s untouched; a list (possibly empty) replaces it."""
     payload = {"transition": {"id": str(transition_id)}}
+    fields = {}
     if resolution:
-        payload["fields"] = {"resolution": {"name": resolution}}
+        fields["resolution"] = {"name": resolution}
+    if fix_versions is not None:
+        fields["fixVersions"] = [{"name": v} for v in fix_versions]
+    if fields:
+        payload["fields"] = fields
     return _request("POST", f"/issue/{key}/transitions", payload)
 
 

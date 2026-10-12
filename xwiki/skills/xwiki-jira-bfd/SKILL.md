@@ -112,8 +112,9 @@ BFD_RESULTS_DIR="<run dir>" python3 <skill>/tools/apply.py --apply --limit 5
 ```
 
 It comments, transitions each approved issue with its resolution, and links a
-Duplicate / Solved By target. It skips an issue someone already resolved, but it does
-**not** re-read comments posted since the analysis. So when days have passed, re-run
+Duplicate / Solved By target. A Solved By close copies its target's Fix Version/s (skipped
+while the target has none); any other close clears them. It skips an issue someone already
+resolved, but it does **not** re-read comments posted since the analysis. So when days have passed, re-run
 `fetch_candidates.py` and the steps after it before applying.
 
 ## 5. After applying
