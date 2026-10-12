@@ -97,6 +97,9 @@ the type-grouped landing pages.
 | Reference | **Does not** start with a verb; indicates the topic is covered extensively — "All Wiki Pages" |
 | Explanation | **Does not** start with a verb; a phrase naming the subject, answering "why" — "Conflict Resolution" |
 
+An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title; the accepted
+words are listed on [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/).
+
 **Titles use English title case** — capitalise the significant words, not just the first:
 *"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. This rule is **not currently
 stated** on the guide's
@@ -334,7 +337,8 @@ The fields:
   - **A top-level page** (directly under an audience page) **must link to its same-topic counterparts for
     the other audiences**, when they exist — the `topLevelRelatedLinks` check matches them by page name,
     within the same section.
-  - **Labels are `<exact page title> (for <target>)`**, `<target>` being User, Administrator or Developer.
+  - **Labels are `<exact page title> (for <target>)`**, `<target>` being **plural**: Users, Administrators or
+    Developers. A linked title already ending with its qualifier is the whole label.
   - **After a restructure, re-check it.** Moving a page *in* under a hub turns it into a child, which
     silently puts it in breach of the not-children rule inside that hub's `related` — the link still
     resolves, so no broken-reference sweep can detect it. The check a restructure needs is not only
