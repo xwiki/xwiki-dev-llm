@@ -40,6 +40,9 @@ word-order and escaping mechanics.)
   macro through user input. Sufficient for text that is simply displayed.
 - **HTML attribute:** `$escapetool.xml`, **not** `$escapetool.html`, which leaves the single quote.
 - **XWiki syntax:** `$services.rendering.escape($content, 'xwiki/2.1')`.
+  A user-controlled **link label** (`[[label>>target]]`) needs it **twice**: the parser unescapes the
+  link once to split label from target, then parses the label as wiki syntax again, so a single
+  escape still lets markup in the label run. The target takes a single escape.
 - **JavaScript string:** `$escapetool.javascript` (or `$escapetool.json` for a JSON value) —
   `$escapetool.xml` leaves the backslash. No tool supports a JS **template literal**: never insert a
   value into one.
