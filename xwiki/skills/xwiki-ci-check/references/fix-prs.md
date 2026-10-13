@@ -73,9 +73,8 @@ Follow `xwiki-pull-request` for the commit message and the description.
 
 **The lock is required, not cosmetic.** The routine runs with *Auto-fix PRs* turned on in its
 config, so every comment on its PRs reaches a model that can push, and the lock limits who may write
-one to collaborators. If the tool exits 3 (`NOT locked — …`), this session must not act on that PR:
-unsubscribe from it (`unsubscribe_pr_activity`) in case auto-fix subscribed it, put **unlocked PR
-#N** at the top of the report, and never lock or retry through the session's own GitHub access.
+one to collaborators. If the tool exits 3 (`NOT locked — …`), this session must not act on that PR,
+and the tool prints what to do instead — auto-fix may already have subscribed the session to it.
 
 **A fix PR from a local run is the developer's own PR**, opened under their own name by
 `xwiki-pull-request` with their own credentials, because there is no App token on a laptop. That

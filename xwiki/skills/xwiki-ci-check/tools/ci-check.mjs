@@ -43,6 +43,9 @@ const USAGE = `Usage: node ci-check.mjs [options]
                       last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, the
                       repo × branch status grid, and the state for the next run. Reads yesterday's
                       with --previous.
+  --render-digest <f> Render the Matrix digest from a work order ('-' for stdin) against --previous,
+                      instead of sweeping: the grid, the rows, their order and links, with a marker
+                      for what only the run knows. --paste <url> fills the paste link.
   --previous <f>      What matrix.mjs --last-state printed (default: an unknown yesterday).
   --chat <f>          What matrix.mjs --since printed ('-' for stdin): the room's messages since
                       the last digest. They can only ever buy an incident silence, never raise one.
@@ -56,7 +59,7 @@ function parseArgs(argv) {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
     budget: 5, history: 8, blameHistory: 25, absence: 3, maxConsole: 4, github: true, develocity: true,
     full: false, pretty: false,
-    renderDetail: null, live: false, delta: null, previous: null, chat: null
+    renderDetail: null, live: false, delta: null, previous: null, chat: null, renderDigest: null, paste: null
   };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
@@ -74,6 +77,8 @@ function parseArgs(argv) {
     else if (key === '--pretty') out.pretty = true;
     else if (key === '--render-detail') out.renderDetail = argv[++i];
     else if (key === '--delta') out.delta = argv[++i];
+    else if (key === '--render-digest') out.renderDigest = argv[++i];
+    else if (key === '--paste') out.paste = argv[++i];
     else if (key === '--previous') out.previous = argv[++i];
     else if (key === '--chat') out.chat = argv[++i];
     else if (key === '--live') out.live = true;
@@ -2724,6 +2729,155 @@ function deltaOf(report, previous) {
   };
 }
 
+// ---- The digest ----------------------------------------------------------------------------------
+// Rendered like the paste, and for the same reason: its shape — the grid, which rows, in what
+// order, their links and their counts — is mechanical, and a digest re-invented every morning drifts
+// from the dashboard it summarises and from the rules of references/digest.md. What only the run
+// knows is left as a marker: what it wrote about an incident (`DONE`), the paste URL (`PASTE`) and
+// a stabilisation PR (`STABILISE`). `matrix.mjs` refuses a digest that still holds one.
+
+/** Rows the table holds before the rest is left to the paste — `fromChat` rows come on top. */
+const DIGEST_ROWS = 5;
+const roomName = sender => String(sender || 'somebody').replace(/^@/, '').split(':')[0];
+const linked = (text, url) => (url ? `[${text}](${url})` : text);
+const browse = key => `${JIRA}/browse/${key}`;
+
+/** The *Done* cell: what is already known, or a marker for what this run did about it. */
+function doneOf(incident) {
+  const fix = incident.fixState;
+  if (settled(incident)) {
+    const sha = linked(`\`${fix.sha}\``, fix.url);
+    if (fix.kind === 'fix-unbuilt') return `likely fixed, unbuilt: ${sha}`;
+    if (fix.kind === 'fix-in-flight') return `fix in flight: ${linked(`PR #${fix.number}`, fix.url)}`;
+    if (fix.kind === 'stale-snapshot') return `stale snapshot, not a break: ${sha}`;
+    if (fix.kind === 'fixed-elsewhere') return `fixed on ${shortBranch(fix.branch || 'another branch')} by ${sha}, backport candidate`;
+    if (fix.kind === 'announced') return `quiet: ${linked('announced', fix.url)} by ${roomName(fix.author)} before it broke`;
+    if (fix.kind === 'being-handled') return `quiet: ${roomName(fix.author)} ${linked('is on it', fix.url)}`;
+  }
+  // What the run itself may have done — commented, filed, commented on a closed issue, confirmed a
+  // candidate PR — is known only once it has done it.
+  if (incident.commentable || incident.flickerGroup || incident.jiraClosed || fix?.candidate) {
+    return `<!-- DONE: ${incident.id} -->`;
+  }
+  if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
+  return incident.deep ? 'no owner found' : 'in the paste, not analysed';
+}
+
+/** The *What* cell: what is red, and the one fact a dashboard does not have. */
+function whatOf(incident, moves = []) {
+  const sonar = incident.sonar;
+  let what;
+  if (isGate(incident)) {
+    // Whose code, never who broke it: `sonar.culprits` holds GitHub logins, never an address.
+    what = `${linked('sonar gate', sonar?.url)} red`
+      + (sonar?.conditions?.length ? ` — ${sonar.conditions.map(c => `${c.name} is ${c.actual}`).join('; ')}` : '')
+      + (sonar?.culprits?.length ? `: ${sonar.culprits.map(c => `${plural(c.issues, 'issue')} in `
+        + `${c.files.map(file => `\`${file}\``).join(', ')} (${c.who})`).join(', ')}` : '');
+  } else if (incident.class === 1) {
+    const name = shortName(incident);
+    what = `\`${name.length > 60 ? `${name.slice(0, 59)}…` : name}\` ${kindOf(incident)}`;
+  } else {
+    what = `${kindOf(incident)} \`${subjectOf(incident)}\``;
+  }
+  const dv = incident.develocity;
+  if (dv) what += `, ${dv.failures}/${dv.runs} over ${dv.windowDays}d${dv.firstSeen ? `, first failed ${dv.firstSeen}` : ''}`;
+  if (incident.jiraClosed) what += `, ${linked(incident.jiraClosed.key, browse(incident.jiraClosed.key))} closed`;
+  if (moves.length) what += ` — ${moves.join(', ')}`;
+  return what;
+}
+
+/** The room's word on an incident, as one clause the *Done* cell carries. */
+const citeRoom = incident => said(incident).slice(-1).map(message =>
+  `, ${linked(`discussed ${message.at.slice(5, 16).replace('T', ' ')}`, message.permalink)} (${roomName(message.sender)})`)
+  .join('');
+
+/**
+ * The digest, from a work order and what the last digest carried (`--previous`).
+ *
+ * @returns {string} Markdown for `matrix.mjs --file`, holding markers until the run fills them
+ */
+function renderDigest(report, previous, { paste = null } = {}) {
+  const delta = deltaOf(report, previous);
+  const incidents = report.incidents || [];
+  const byId = new Map(incidents.map(incident => [incident.id, incident]));
+  const primaryOf = incident => (incident.primary === false
+    ? incidents.find(other => other.primary === true && causeKey(other) === causeKey(incident)) || incident
+    : incident);
+  // One cause, one row: a peer that moved puts its primary on the table, whose branch list names it.
+  const rows = new Map();
+  const put = (incident, mark, moves = []) => {
+    if (!incident || incident.beyondHorizon) return;
+    const primary = primaryOf(incident);
+    const own = primary === incident;
+    const known = rows.get(primary.id);
+    if (known && (known.own || !own)) return;
+    rows.set(primary.id, { incident: primary, own, mark: own ? mark : '🔄', moves: own ? moves : [] });
+  };
+  if (delta.previous.available) {
+    for (const entry of delta.new) put(byId.get(entry.id), '🆕');
+    for (const entry of delta.changed) put(byId.get(entry.id), '🔄', entry.moved);
+  } else {
+    for (const incident of incidents) put(incident, '');
+  }
+  const owned = incident => !!incident.commentable;
+  const rank = ({ incident }) => (unreleasable(incident) ? (owned(incident) ? 0 : 1) : 2);
+  const moved = [...rows.values()].sort((a, b) => rank(a) - rank(b) || rowRank(a.incident) - rowRank(b.incident));
+
+  // Gone green: one row per test class or signature, whatever the branch count.
+  const fixed = new Map();
+  for (const { id } of delta.fixed) {
+    const [repo, branch, ...rest] = id.split('/');
+    const signature = rest.join('/');
+    const [what, method] = testName(signature).split('#');
+    const key = `${repo}\u0000${method ? what : signature}`;
+    const entry = fixed.get(key) || { repo, what: method ? what : signature.split('/').pop(), branches: new Set(), methods: new Set() };
+    entry.branches.add(shortBranch(branch));
+    if (method) entry.methods.add(method);
+    fixed.set(key, entry);
+  }
+  const line = (mark, incident, moves) => `| ${mark}${incident ? DOTS[unreleasable(incident) ? 'red' : 'orange'] : ''} `
+    + `| ${shortRepo(incident.repo)}/${[incident.branch, ...(incident.alsoOn || [])].map(shortBranch).join('+')} `
+    + `| ${cell(whatOf(incident, moves))} | ${incident.ageDays == null ? '—' : agedAs(incident)} `
+    + `| ${cell(doneOf(incident) + citeRoom(incident))} |`;
+  // What went green is the line no dashboard shows, so it is never cut: one row per repo.
+  const greenRows = [...new Set([...fixed.values()].map(entry => entry.repo))].map(repo => {
+    const entries = [...fixed.values()].filter(entry => entry.repo === repo);
+    const branches = [...new Set(entries.flatMap(entry => [...entry.branches]))];
+    return `| ✅ | ${repo}/${branches.join('+')} | ${cell(entries.map(entry => (entry.methods.size > 1
+      ? `${entry.methods.size} × \`${entry.what}\``
+      : `\`${entry.what}${entry.methods.size ? `#${[...entry.methods][0]}` : ''}\``)).join('; '))} | — | green |`;
+  });
+  const shown = moved.slice(0, Math.max(1, DIGEST_ROWS - greenRows.length));
+  // A suppression on a *sentence* always goes back to the room that said it, whatever else is cut:
+  // the person who wrote it is the one reader who can say it was misread.
+  const chatRows = incidents.filter(incident => settled(incident) && incident.fixState.fromChat
+    && incident.primary !== false && !incident.beyondHorizon && !shown.some(row => row.incident === incident))
+    .map(incident => line('', incident));
+  const kept = [...shown.map(({ incident, mark, moves }) => line(mark, incident, moves)), ...greenRows];
+  const more = moved.length - shown.length;
+  const counts = delta.previous.available
+    ? `${delta.new.length} new, ${delta.changed.length} changed, ${delta.fixed.length} fixed`
+    : `${delta.unknown} red`;
+  const tail = [more ? `${more} more in the paste` : null, delta.same ? `${delta.same} unchanged` : null,
+    delta.longStanding ? `+${delta.longStanding} long-standing` : null].filter(Boolean);
+  return [
+    ...(delta.silent ? ['<!-- SILENT: nothing moved since the last digest. Post nothing, unless §5 opened a '
+      + 'stabilisation PR: then fill STABILISE, delete this line, and post. -->', ''] : []),
+    `${delta.status.worst} CI ${report.generatedAt.slice(0, 10)} — ${counts} · detail → ${paste || '<!-- PASTE -->'} (1 week)`,
+    '',
+    delta.status.grid,
+    '',
+    '| | Branch | What | Age | Done |',
+    '|---|---|---|---|---|',
+    ...kept,
+    ...chatRows,
+    '<!-- STABILISE: the row of the stabilisation draft PR §5 opened (→ draft fix for `Test#method`: its proof, '
+      + 'its PR link), or delete this line -->',
+    ...(tail.length ? ['', `… ${tail.join(' · ')}`] : []),
+    ...(delta.previous.available ? [] : ['', '(could not read the last digest — this is a full snapshot)'])
+  ].join('\n');
+}
+
 // ---- Run -------------------------------------------------------------------------------------
 
 const args = parseArgs(process.argv.slice(2));
@@ -2738,10 +2892,10 @@ if (args.renderDetail) {
 
 // The delta reads two files and no server, so yesterday's comparison can be redone — after a fix
 // to the classification, or on another machine — without a second pass over Jenkins either.
-if (args.delta) {
-  const report = JSON.parse(readFileSync(args.delta === '-' ? 0 : args.delta, 'utf8'));
+if (args.delta || args.renderDigest) {
+  const report = JSON.parse(readFileSync((args.delta || args.renderDigest) === '-' ? 0 : args.delta || args.renderDigest, 'utf8'));
   const previous = args.previous ? JSON.parse(readFileSync(args.previous, 'utf8')) : { available: false };
-  console.log(JSON.stringify(deltaOf(report, previous), null, 2));
+  console.log(args.delta ? JSON.stringify(deltaOf(report, previous), null, 2) : renderDigest(report, previous, args));
   process.exit(0);
 }
 
@@ -3152,6 +3306,31 @@ for (const incident of incidents) {
   incident.blame ??= { tier: 'none', reason: 'below the per-run budget: reported, not investigated', suspects: [] };
   delete incident.window?.firstBad;
   delete incident.window?.lastGood;
+  incident.commentable = commentTarget(incident);
+}
+
+/**
+ * Where §4 may comment on this incident, or null — SKILL.md §4's skip list, applied here so that it
+ * is a field rather than a paragraph, and so that `commit-comment.mjs --work-order` can refuse any
+ * other target. Null when something answers the whole incident, when it is the same cause seen on
+ * another branch, when it was already said in this state, beyond the horizon, or without a
+ * `certain`/`likely` culprit — and for a gate, without its one unequivocal author.
+ *
+ * A partial or an unconfirmed (`candidate`) answer leaves the incident live, as everywhere else
+ * here; confirming a candidate is the model's (references/fix-signals.md), and a confirmed one
+ * earns no comment.
+ */
+function commentTarget(incident) {
+  if (settled(incident) || incident.primary === false || incident.silent || incident.beyondHorizon) return null;
+  const at = { repo: incident.repo, state: incident.state, tier: incident.blame?.tier };
+  if (isGate(incident)) {
+    const target = incident.sonar?.unequivocal && incident.sonar.target;
+    if (!target) return null;
+    return target.kind === 'pr' ? { ...at, pr: target.number, url: target.url } : { ...at, sha: target.sha, url: target.url };
+  }
+  const { culprit, tier } = incident.blame || {};
+  if (!culprit || !['certain', 'likely'].includes(tier)) return null;
+  return { ...at, sha: culprit.sha, author: culprit.author || null, url: culprit.url };
 }
 
 const jobStatus = [];
@@ -3165,6 +3344,34 @@ for (const target of targets) {
       url: latest ? `${job.url}/${latest.number}` : job.url
     });
   }
+}
+
+/**
+ * The reference files this run's fields call for, each with the step it is read before.
+ *
+ * Every one of them is opened on a trigger — a field on some incident — and a trigger sentence in
+ * SKILL.md is one a model can skim past; a list in the work order, naming the file and the moment,
+ * is not. Only what the work order can see is here: whether a run is local (references/local-run.md)
+ * or posts a digest (references/digest.md) is the mode's, and SKILL.md says so.
+ */
+function toRead(incidents, stabilise) {
+  const live = incidents.filter(incident => incident.primary !== false && !incident.beyondHorizon);
+  const read = {};
+  const when = (test, file, why) => { if (test) read[`references/${file}`] = why; };
+  when(incidents.some(incident => isGate(incident) && incident.primary !== false), 'quality-gate.md',
+    'before the quality-gate row\'s cells, its comment or handing it to xwiki-fix-sonarqube-issue (§3)');
+  when(live.some(incident => incident.deep && (incident.class === 1 || incident.kind === 'unclassified')),
+    'deep-analysis.md', 'before root-causing a deep class 1 incident, or retrying an unclassified break (§3)');
+  when(live.some(incident => incident.fixState?.candidate || incident.fixState?.kind === 'fixed-elsewhere'
+    || incident.jiraClosed), 'fix-signals.md',
+  'before the line or Next cell of a candidate fix-in-flight, a fixed-elsewhere or a jiraClosed incident (§3)');
+  when(live.some(incident => incident.commentable), 'commit-comment.md', 'before writing a commit comment (§4)');
+  when(live.some(incident => incident.deep && !settled(incident)), 'fix-prs.md', 'before preparing a fix PR (§5)');
+  when(live.some(incident => incident.flickerGroup || incident.jiraClosed), 'flicker-issues.md',
+    'before filing a flicker issue, or commenting on a closed one (§5)');
+  when(stabilise.id, 'stabilise.md', 'before invoking xwiki-fix-flickering-docker-test for the stabilise incident (§5)');
+  when(incidents.length, 'paste.md', 'before filling the paste\'s markers (§6)');
+  return read;
 }
 
 /**
@@ -3183,6 +3390,8 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // §4's skip list, already applied: where a comment may go, or nothing.
+    commentable: incident.commentable || undefined,
     jiraClosed: incident.jiraClosed || undefined,
     // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
     // deliberately low in the analysis budget — so it is flagged here and given the full shape
@@ -3287,7 +3496,8 @@ const report = {
     sonar: sonarOff ? { unavailable: sonarOff } : undefined,
     // The one flicker this run may try to fix, or why it may not try — and the second is the more
     // common morning, which is the point of printing it (SKILL.md §5).
-    stabilise
+    stabilise,
+    read: toRead(incidents, stabilise)
   },
   incidents: args.full ? incidents : incidents.map(incident => digest(incident, blameKeys(incident)))
 };

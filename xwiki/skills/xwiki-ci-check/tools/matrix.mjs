@@ -419,6 +419,7 @@ export async function send(text, { server = homeserver, token = null, roomId = r
     if (!value) throw new Error(`${name} is not set — the digest cannot be posted`);
   }
   if (addressesIn(text).length) throw new Error(`the digest holds an email address (${addressesIn(text).join(', ')})`);
+  if (text.includes('<!--')) throw new Error('the digest still holds a marker of ci-check.mjs --render-digest');
   token ??= (await credential(server)).token;
   roomId = await resolveRoom(roomId, server, token);
   const body = JSON.stringify({
@@ -516,6 +517,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (addressesIn(text).length) {
     console.error(`matrix.mjs: not posting — the digest holds an email address (${addressesIn(text).join(', ')}).`
       + ' The room is public: name a person by their GitHub login, as sonar.culprits does.');
+    process.exit(2);
+  }
+  // `--render-digest` leaves a marker for what only the run knows; one still here is a digest
+  // half-written — or, for SILENT, a morning that posts nothing.
+  if (text.includes('<!--')) {
+    console.error(`matrix.mjs: not posting — the digest still holds a marker: ${text.match(/<!--[^>]{0,80}/)[0]}…`
+      + ' Fill or delete every marker (references/digest.md).');
     process.exit(2);
   }
   // The delta report can be handed over as it is: what the next run needs from it is its `state`.

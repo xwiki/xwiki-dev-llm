@@ -17,10 +17,15 @@
  * exported — a developer's own laptop during a local sweep — and there one forgotten flag is a real
  * comment on a colleague's commit. A mistaken invocation must be a no-op, not a message.
  *
+ * And it comments only where the sweep said a comment may go: `--work-order` is the file
+ * `ci-check.mjs` wrote, and the incident must carry `commentable` naming this very commit or PR —
+ * SKILL.md §4's skip list, computed there. Anything else is `not posted`, in a rehearsal too.
+ *
  * Usage:
- *   node commit-comment.mjs --repo xwiki-platform --sha <sha> --incident <id> --state systematic \
- *     --file body.md [--write]
- *   node commit-comment.mjs --repo xwiki-platform --pr 5928 --incident <id> --state … --file body.md
+ *   node commit-comment.mjs --work-order work-order.json --incident <id> --sha <sha> --file body.md [--write]
+ *   node commit-comment.mjs --work-order work-order.json --incident <id> --pr 5928 --file body.md
+ *
+ * `--repo` and `--state` default to the incident's; given, they must match it.
  *
  * `--pr` posts the same comment, with the same marker and the same idempotency, on a pull request
  * instead of a commit. It exists for the quality gate: the issues that fail it were introduced in a
@@ -48,6 +53,25 @@ const FOOTER = '_Posted by the automated `xwiki-ci-check` sweep. If the attribut
   ' here and ignore it — this failure will not be commented on again._';
 
 const MARKER_RE = /<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/;
+
+/**
+ * Why the work order does not allow this comment, or null when it does.
+ *
+ * @param {object} report the work order `ci-check.mjs` printed
+ * @param {{incident: string, repo?: string, state?: string, sha?: string, pr?: string}} options
+ */
+export function refusal(report, { incident, repo, state, sha, pr }) {
+  const found = (report?.incidents || []).find(entry => entry.id === incident);
+  if (!found) return `incident ${incident} is not in the work order`;
+  const target = found.commentable;
+  if (!target) return 'the work order does not make this incident commentable (SKILL.md §4)';
+  if (repo && repo !== target.repo) return `the incident is in ${target.repo}, not ${repo}`;
+  if (state && state !== target.state) return `the incident's state is ${target.state}, not ${state}`;
+  if (pr ? String(target.pr) !== String(pr) : !(target.sha && sha && target.sha.startsWith(sha) && sha.length >= 7)) {
+    return `the work order's target is ${target.pr ? `PR #${target.pr}` : target.sha}, not ${pr ? `PR #${pr}` : sha}`;
+  }
+  return null;
+}
 
 async function github(path, init = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
@@ -101,7 +125,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // loud remains possible and older invocations keep working; it is simply what happens anyway.
   const options = { write: false };
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--repo') options.repo = argv[++i];
+    if (argv[i] === '--work-order') options.workOrder = argv[++i];
+    else if (argv[i] === '--repo') options.repo = argv[++i];
     else if (argv[i] === '--sha') options.sha = argv[++i];
     else if (argv[i] === '--pr') options.pr = argv[++i];
     else if (argv[i] === '--incident') options.incident = argv[++i];
@@ -111,10 +136,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--dry-run') options.write = false;
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
-  for (const required of ['repo', 'incident', 'state']) {
-    if (!options[required]) { console.error(`--${required} is required`); process.exit(2); }
+  for (const required of ['workOrder', 'incident']) {
+    if (!options[required]) { console.error(`--${required.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)} is required`); process.exit(2); }
   }
   if (!options.sha && !options.pr) { console.error('one of --sha or --pr is required'); process.exit(2); }
+  const report = JSON.parse(readFileSync(options.workOrder, 'utf8'));
+  const refused = refusal(report, options);
+  // A normal outcome, like "already commented": the skip list said no, and saying so is the output.
+  if (refused) {
+    console.log(`not posted: ${refused}`);
+    process.exit(0);
+  }
+  const { commentable } = report.incidents.find(entry => entry.id === options.incident);
+  options.repo ??= commentable.repo;
+  options.state ??= commentable.state;
   if (!token && options.write) {
     console.error('GH_TOKEN_BOT is not set. This tool posts as the CI bot and will not fall back to a '
       + 'personal token — set the bot token, or drop --write.');
