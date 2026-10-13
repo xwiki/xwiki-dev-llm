@@ -5,9 +5,11 @@ summary: Use the next release of the current dev version, written <X.Y.0>RC1, fo
   @Deprecated(since=…). The current version itself is volatile — read it from pom.xml, and another
   branch's from its pom.xml on origin, never from local tags. A deprecation
   done on several branches lists ALL its versions, comma-separated, in the annotation. An issue's
-  affected version is the oldest released version that has the problem.
+  affected version is always set: the oldest released version that has the problem, else the latest
+  release or the current LTS.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/#HRule:Non-codeissuesareallowed
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HDeprecation
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HUseone40sinceperversion
 ---
@@ -73,9 +75,12 @@ See also [[backward-compatibility]] for the `@Unstable` lifecycle that pairs wit
 
 ## Affected version of an issue
 
-Whatever the tracker — JIRA's **Affects Version/s**, OpenProject's **Observed in versions** — set the
-**oldest released version that has the problem**, never just the latest release: that understates the
-range and defeats backport triage. For a bug, it is the first release containing the faulty code
-(`git tag --contains <commit>`); for a missing feature, the first release containing what it builds on.
-If that predates the versions the tracker defines, use its oldest one; if pinning it is impractical,
-fall back to the last LTS that has the problem (the LTS: [[jira]]).
+Whatever the tracker — JIRA's **Affects Version/s**, OpenProject's **Observed in versions** — always set
+it, whatever the issue type or component (even `Development Issues only`). For a bug, set the **oldest
+released version that has the problem**, never just the latest release: that understates the range and
+defeats backport triage. It is the first release containing the faulty code (`git tag --contains
+<commit>`); if that predates the versions the tracker defines, use its oldest one; if pinning it is
+impractical, fall back to the last LTS that has the problem. When no released version is really affected
+(a new feature, a new check, an improvement), use the latest release or the current LTS — usually the
+LTS's `.0`, e.g. `17.10.0` while dev is on `18.x` — not the first release of the code it touches (the
+LTS: [[jira]]).

@@ -64,8 +64,7 @@ below). When filing/curating an issue — Bug, Improvement, New Feature **or Tas
 
 - **Component/s** — always set at least one (e.g. `REST`, `Rendering`, `Platform - …`). Required for
   triage; do not leave empty.
-- **Affects Version/s** — the oldest released version that has the problem, per [[versioning]]; for
-  an Improvement/Task, the first release containing the code it changes.
+- **Affects Version/s** — always set, per [[versioning]].
 - **Fix Version/s** — the version the fix ships in: normally the next release of the current dev
   version. Note the naming: JIRA version names use dashes (e.g. `18.7.0-rc-1`), whereas the source
   `@since` / `@Deprecated(since=…)` tag for the *same* release uses `18.7.0RC1` — see [[versioning]]
