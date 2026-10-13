@@ -421,9 +421,10 @@ for (const p of trackedMd) {
   const max = budgets[p] ?? (p.endsWith("/SKILL.md") ? SKILL_MAX_BYTES : DEFAULT_MAX_BYTES);
   if (size > max) {
     errors.push(
-      `${p}: ${size} bytes exceeds its ${max}-byte budget — tighten the text, move detail the model only ` +
-        `sometimes needs into a file the skill opens on demand, or raise its entry in ` +
-        `scripts/size-budgets.json and give the reason in the commit message`
+      `${p}: ${size} bytes exceeds its ${max}-byte budget. Raise its entry in scripts/size-budgets.json ` +
+        `only if the new text passes all three tests, saying why in the commit message: every reader of the ` +
+        `file needs it (else move it to the skill's references/ or a narrower OKF topic), it has no other home (else point to the OKF topic ` +
+        `or skill that holds it), and it is as short as it can be — see "Each fact has one home" in CLAUDE.md`
     );
   }
 }
