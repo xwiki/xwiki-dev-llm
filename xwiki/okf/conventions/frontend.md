@@ -2,9 +2,10 @@
 title: Front-end conventions (JavaScript, HTML/CSS, accessibility)
 stability: durable
 summary: JavaScript must be AMD/RequireJS modules prefixed xwiki-, shipped as WebJars or JSX, never
-  inline; server-side scripting must not be mixed into minified JavaScript; deprecated JavaScript APIs
-  live in compatibility.js; CSS ships as a Skin Extension, LESS-typed to read colour-theme variables;
-  XWiki commits to WCAG 2.2 level AA.
+  inline; XWiki custom events go through jQuery, native ones through the DOM API; server-side
+  scripting must not be mixed into minified JavaScript; deprecated JavaScript APIs live in
+  compatibility.js; CSS ships as a Skin Extension, LESS-typed to read colour-theme variables; XWiki
+  commits to WCAG 2.2 level AA.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFrontendDevelopmentPractices
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
@@ -27,6 +28,10 @@ sources:
 - Localize through the dedicated i18n module and its loader (see the `xwiki-translations` skill).
 - Enable strict mode. Rewrite Prototype.js code to jQuery or plain JavaScript, and when touching
   non-AMD code convert it to AMD instead of mixing both styles in one file.
+- Native events (`click`, …) use the plain DOM API. XWiki custom events (`xwiki:dom:refresh`, …) must
+  go through jQuery (`trigger`/`on`): `xwiki-events-bridge` forwards them only between Prototype.js
+  and jQuery, never as native events, so a Prototype `document.fire` rewritten to `dispatchEvent`
+  reaches no existing listener.
 - Check the supported-browser list (plus MDN / caniuse) before using a newer API or syntax; the
   minifier may or may not down-level it.
 - JavaScript modules should have unit-like automated tests, and pass the jsHint/ESLint limits, which
