@@ -156,8 +156,10 @@ field (for the version(s) in Fix Version/s).
 
 - Put the literal string **`N/A`** in a field that genuinely does not apply — never leave it empty:
   emptiness is what a JQL query looks for to find undocumented issues.
-- A bug fix with **no** user- or developer-visible impact is the `N/A` case. But a bug fix that changes
-  the user experience **still needs a release-note entry**.
+- A bug fix gets a release-note entry only when it is **noteworthy** to someone deciding whether to
+  upgrade — not merely because it is user-visible, which nearly every bug fix is. One that just
+  restores the documented behaviour is `N/A`: the release note already lists it among the issues
+  fixed. The full test is §4 of the `xwiki-release-documentation` skill.
 - Documentation written **after** the issue closes — a separate doc task, a later session — leaves the
   documentation field unfillable at close time, and it is then the half that silently stays empty while
   the release-note field still gets its `N/A`. Filling it in is the **last step of the doc task**, over
