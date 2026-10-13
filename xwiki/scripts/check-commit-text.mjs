@@ -208,7 +208,7 @@ export function formatCommitTextMessage({ findings }) {
   if (refs.length) {
     out +=
       `${refs.join(", ")} would be resolved by GitHub as an issue/PR reference in this repo, but ` +
-      `XWiki's issues live in JIRA.\n`;
+      `XWiki's issues live in JIRA. To link a PR, write \`owner/repo#N\` or its URL instead.\n`;
   }
   out +=
     "Wrap each of them in backticks and run the command again. A pushed commit message cannot be " +
