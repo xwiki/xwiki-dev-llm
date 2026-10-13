@@ -11,6 +11,11 @@ reason on its line: a failure seen once is not a flicker, it is an event — and
 shape of a Docker or GitHub blip. The evidence threshold *is* the confirmation step, made
 structural, because a routine running at 06:00 has nobody to ask.
 
+**A group whose primary fails every build is not a flicker.** When the incidents of a `flickerGroup`
+are `primary: false` and their primary is a systematic breakage of the same test (on master, say),
+the test is broken, not flaky: file nothing, and list the group under "Flickers not filed" with the
+breakage as the reason. The breakage itself is the incident to report and comment on.
+
 **One issue per `flickerGroup`, never one per incident.** Several methods of one test class that
 started failing in the same build broke together, and the same test failing on three branches is one
 flaky test: filing an issue each is how an auto-filer is switched off in its first week. So:
