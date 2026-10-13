@@ -402,6 +402,15 @@ export async function roomSince({ server = homeserver, roomId = room, since, pag
 }
 
 /**
+ * The email addresses in a digest — which must be none. The room is public, and the one source of
+ * addresses upstream (SonarCloud's SCM author) is turned into logins by the sweep; this is the
+ * brake for an address that reaches the text some other way. A Matrix id (`@jdoe:matrix.org`, in a
+ * matrix.to link or not) is not an address and does not match.
+ */
+export const addressesIn = text => String(text).match(
+  /(?<![\w.%+/#-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w-])/g) || [];
+
+/**
  * @param {object|null} state carried forward for the next run's comparison; see `withState`.
  * @returns {Promise<string>} the event id of the posted message.
  */
@@ -409,6 +418,7 @@ export async function send(text, { server = homeserver, token = null, roomId = r
   for (const [name, value] of [['MATRIX_HOMESERVER', server], ['MATRIX_ROOM', roomId]]) {
     if (!value) throw new Error(`${name} is not set — the digest cannot be posted`);
   }
+  if (addressesIn(text).length) throw new Error(`the digest holds an email address (${addressesIn(text).join(', ')})`);
   token ??= (await credential(server)).token;
   roomId = await resolveRoom(roomId, server, token);
   const body = JSON.stringify({
@@ -502,6 +512,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
   if (!text.trim()) { console.error('Nothing to post'); process.exit(2); }
+  // Refused in a rehearsal too, so that a dry run shows the digest a live run would not post.
+  if (addressesIn(text).length) {
+    console.error(`matrix.mjs: not posting — the digest holds an email address (${addressesIn(text).join(', ')}).`
+      + ' The room is public: name a person by their GitHub login, as sonar.culprits does.');
+    process.exit(2);
+  }
   // The delta report can be handed over as it is: what the next run needs from it is its `state`.
   const carried = stateFile ? (JSON.parse(readFileSync(stateFile, 'utf8')) ?? {}) : null;
   const state = carried && (carried.state ?? carried);

@@ -136,9 +136,10 @@ export async function gateFacts(repo, branch, { issueLimit = 12 } = {}) {
         line: issue.line ?? null,
         severity: (issue.impacts || []).map(impact => impact.severity).join(',') || issue.severity || null,
         message: String(issue.message || '').slice(0, 160),
-        // The SCM author of the line, as the analysis recorded it. Often empty — a file with no SCM
-        // data, or a line older than the blame the analysis had — which is why `ci-check.mjs` looks
-        // the commit up by path as well, and why neither alone is allowed to assert anything.
+        // The SCM author of the line, as the analysis recorded it — an email address, which
+        // `nameAuthors` turns into a login before anything is emitted. Often empty — a file with no
+        // SCM data, or a line older than the blame the analysis had — which is why `ci-check.mjs`
+        // looks the commit up by path as well, and why neither alone is allowed to assert anything.
         author: issue.author || null,
         raisedOn: (issue.creationDate || '').slice(0, 10),
         url: `${SONAR}/project/issues?id=${encodeURIComponent(projectKey)}&branch=${encodeURIComponent(branch)}&open=${encodeURIComponent(issue.key)}`
@@ -149,6 +150,36 @@ export async function gateFacts(repo, branch, { issueLimit = 12 } = {}) {
     facts.total = (facts.total || 0) + (found.total ?? found.paging?.total ?? (found.issues || []).length);
   }
   return facts;
+}
+
+/**
+ * Names the author of each issue's line by GitHub login, and drops SonarCloud's email address.
+ *
+ * The SCM author SonarCloud records is the git author's **email address**, and everything the sweep
+ * emits ends up in a public place — the digest in the team's Matrix room, a commit comment, the
+ * paste linked from both. An address is not a name to print there. The commits `ci-check.mjs`
+ * fetched for the issue's file carry their git author's address beside the GitHub login, so an
+ * address one of them carries becomes that login; one none of them carries keeps only its local
+ * part and is marked `authorUnresolved` — the line was written by somebody who did not touch the
+ * file in the window, which is exactly the "line author who is not the committer" of
+ * `gateCulprit`. The addresses are removed from the commits once used.
+ *
+ * @param {object[]} issues `gateFacts` issues, each with the `commits` ci-check.mjs attached
+ *   (`{author: login, email}`); changed in place.
+ */
+export function nameAuthors(issues) {
+  const loginOf = new Map();
+  for (const commit of issues.flatMap(issue => issue.commits || [])) {
+    if (commit.email && commit.author) loginOf.set(commit.email.toLowerCase(), commit.author);
+  }
+  for (const issue of issues) {
+    for (const commit of issue.commits || []) delete commit.email;
+    if (!issue.author || !issue.author.includes('@')) continue;
+    const login = loginOf.get(issue.author.toLowerCase());
+    if (!login) issue.authorUnresolved = true;
+    issue.author = login || issue.author.split('@')[0];
+  }
+  return issues;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

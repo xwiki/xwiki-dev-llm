@@ -19,7 +19,7 @@ import {
 } from '../../../scripts/jenkins.mjs';
 import { JIRA, knownFlickers, closedFlickers } from '../../../scripts/jira-flickers.mjs';
 import { develocityFacts } from './dv-test-history.mjs';
-import { gateFacts } from './sonar-gate.mjs';
+import { gateFacts, nameAuthors } from './sonar-gate.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -2083,7 +2083,7 @@ function sonarBlock(incident) {
   for (const issue of sonar.issues) {
     out.push(`- \`${issue.file.split('/').pop()}:${issue.line ?? '?'}\` — ${issue.rule}` +
       `${issue.severity ? ` (${issue.severity})` : ''}, raised ${issue.raisedOn} — ${issue.message}` +
-      `${issue.author ? `\n    author: ${issue.author}` : ''}` +
+      `${issue.author ? `\n    author: ${issue.author}${issue.authorUnresolved ? ' (no commit in the window is theirs)' : ''}` : ''}` +
       `${issue.commit ? `${issue.author ? ' ·' : '\n   '} introduced by \`${issue.commit.short}\`` +
         ` (${issue.commit.author}, ${issue.commit.date}) — ${issue.commit.title}`
         : `${issue.author ? ' ·' : '\n   '} no commit touched this file when it was raised — an existing` +
@@ -2983,6 +2983,8 @@ for (const incident of incidents) {
         sha: commit.sha,
         short: commit.sha.slice(0, 10),
         author: commit.author?.login || commit.commit?.author?.name || null,
+        // Only to turn SonarCloud's address for the line into this login; `nameAuthors` drops it.
+        email: commit.commit?.author?.email || null,
         title: (commit.commit?.message || '').split('\n')[0].slice(0, 100),
         date: (commit.commit?.author?.date || '').slice(0, 10),
         url: commit.html_url
@@ -2993,9 +2995,11 @@ for (const incident of incidents) {
       // and the Sonar author are already the answer to "who", and the sha was the convenience.
     }
   }
-  // One name per person, with what each of them is on the hook for. `author` is Sonar's SCM email
-  // and `commit.author` is the GitHub account that last touched the file — the same person by two
+  // One name per person, with what each of them is on the hook for. `author` is Sonar's line
+  // author, by now a GitHub login (`nameAuthors`: an address never leaves this tool), and
+  // `commit.author` is the GitHub account that last touched the file — the same person by two
   // routes when they agree, and two candidates worth printing when they do not.
+  nameAuthors(newest);
   const by = new Map();
   for (const issue of newest) {
     // Sonar's author is the author of the *line*, which is the closer claim; the commit is only the
@@ -3043,13 +3047,21 @@ async function gateCulprit(incident, issues, args) {
   const commits = issues.flatMap(issue => issue.commits || []);
   const authors = new Set(commits.map(commit => commit.author).filter(Boolean));
   const lineAuthors = new Set(issues.map(issue => issue.author).filter(Boolean));
-  incident.sonar.unequivocal = authors.size === 1 && lineAuthors.size <= 1;
+  // A line author is the committer only when one of the window's commits carries their address
+  // (`nameAuthors`); anyone else is a second person under the gate. A file with no commit in the
+  // window takes no part, as above.
+  const strangers = issues.filter(issue => issue.commits?.length
+    && (issue.authorUnresolved || (issue.author && !authors.has(issue.author))));
+  incident.sonar.unequivocal = authors.size === 1 && lineAuthors.size <= 1 && !strangers.length;
   if (!incident.sonar.unequivocal) {
     incident.sonar.equivocalBecause = authors.size === 0
       ? 'no commit touched these files in the two days before the analysis — a rule applied to existing code'
-      : `${authors.size} people touched the files under the failing condition`
-        + `${lineAuthors.size > 1 ? `, and SonarCloud attributes the lines to ${lineAuthors.size} of them` : ''}`
-        + ' — nobody is pinged for a gate two people could have caused';
+      : authors.size === 1
+        ? 'SonarCloud attributes a line under the failing condition to someone other than the one committer'
+          + ' — nobody is pinged for a gate two people could have caused'
+        : `${authors.size} people touched the files under the failing condition`
+          + `${lineAuthors.size > 1 ? `, and SonarCloud attributes the lines to ${lineAuthors.size} of them` : ''}`
+          + ' — nobody is pinged for a gate two people could have caused';
     // The blame line and the gate block must not say different things about the same incident.
     incident.blame = { tier: 'none', suspects: [], reason: incident.sonar.equivocalBecause };
     return;

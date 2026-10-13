@@ -6,7 +6,7 @@ numbers are those of SKILL.md.
 
 | Field | Meaning |
 |---|---|
-| `sonar` | on a quality-gate incident: the failing conditions with their actual and wanted values, the new-code period, the newest issues under them (file, line, rule, severity, the day it was raised, the SCM author, the commit that last touched that file) and `culprits`, the people whose code is under the failing condition |
+| `sonar` | on a quality-gate incident: the failing conditions with their actual and wanted values, the new-code period, the newest issues under them (file, line, rule, severity, the day it was raised, the line's author by GitHub login, the commit that last touched that file) and `culprits`, the people whose code is under the failing condition |
 
 **Sonar quality-gate failures (`sonar-gate:failed`): the build is red for everyone, so this is the
 run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
@@ -20,7 +20,9 @@ SonarCloud holds the failing condition, the new-code issues under it, and for ea
 the line, the rule, the day it was raised and usually the SCM author of that line; the sweep reads
 that into **`sonar`** and asks GitHub which commit last touched each file by that day. Report what
 is in the field, and do not go querying for more: the condition and how far off it is, the newest
-issues that fail it, and `sonar.culprits` — the people whose code is under it.
+issues that fail it, and `sonar.culprits` — the people whose code is under it. SonarCloud records an
+author as an email address; the sweep turns it into the GitHub login of a commit carrying it, or
+keeps only its local part, so an address never reaches the room (and `matrix.mjs` refuses one).
 
 **One name or none.** `sonar.unequivocal` is true only when every commit that touched any of the
 gate-causing files in the two days before the analysis is by the *same* author and SonarCloud
