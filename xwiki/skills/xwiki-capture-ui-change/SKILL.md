@@ -67,70 +67,9 @@ code (a regression on the branch the fix targets), or a released UI that differs
 around the fixture enough that the two shots stop being comparable. The "after" is shot on your
 branch's instance either way.
 
-```bash
-V=18.7.0   # the latest release the bug affects
-docker network create xwiki-before
-docker run -d --name xwiki-before-db --net xwiki-before -e MYSQL_ROOT_PASSWORD=xwiki \
-  -e MYSQL_DATABASE=xwiki mysql:8.4 --character-set-server=utf8mb4 \
-  --collation-server=utf8mb4_bin --explicit-defaults-for-timestamp=1
-docker run -d --name xwiki-before --net xwiki-before -p 127.0.0.1:8089:8080 \
-  -e DB_HOST=xwiki-before-db \
-  -e DB_USER=root -e DB_PASSWORD=xwiki -e DB_DATABASE=xwiki "xwiki:$V-mysql-tomcat"
-```
-
-Pick a host port nothing listens on (8089 here), and keep it bound to `127.0.0.1`: the instance
-runs with a well-known `superadmin` password. Four things about the image are not obvious:
-
-- **XWiki connects as the database root user.** A `MYSQL_USER` account lacks the `PROCESS`
-  privilege XWiki's schema migration needs, and a first start that fails on it leaves a
-  half-created schema behind: recreate both containers rather than restarting one.
-- **It serves XWiki at the root context:** `http://localhost:8089`, with no `/xwiki`. Keep that
-  in its own `BEFORE_URL`; `XWIKI_BASE_URL` stays the branch's instance, which step 0 waits on.
-- **It starts as an empty wiki** that sends every request, REST included, to the Distribution
-  Wizard. Skip the wizard: enable `superadmin`, turn off the wizard's automatic start, restart, and
-  install the flavor as `superadmin:system` with the install-job request body of
-  `xwiki-deploy-extension`, saved as `$CAPTURE_DIR/installjobrequest.xml` and filled with extension
-  `org.xwiki.platform:xwiki-platform-distribution-flavor-mainwiki` and version `$V` (its namespace
-  `wiki:xwiki` is already right). The job downloads from
-  extensions.xwiki.org and takes a couple of minutes.
-- **The wizard also creates `XWiki.Admin`**, and the flavor's pages name it as their author.
-  Skipped, it does not exist, so every script those pages hold fails to render ("the execution of
-  the [velocity] script macro is not allowed … check the rights of its last author"). Create it
-  with admin and programming rights, after which `Admin:admin` works here as on the branch's
-  instance and `superadmin` is only needed for this setup.
-
-```bash
-docker exec xwiki-before sh -c 'W=/usr/local/tomcat/webapps/ROOT/WEB-INF
-  sed -i "s/^# xwiki.superadminpassword=system/xwiki.superadminpassword=system/" $W/xwiki.cfg
-  echo distribution.automaticStartOnMainWiki=false >> $W/xwiki.properties'
-docker restart xwiki-before
-BEFORE_URL=http://localhost:8089
-UP=""
-for i in $(seq 1 60); do
-  curl -sf -o /dev/null -u superadmin:system "$BEFORE_URL/rest/wikis/xwiki" && { UP=1; break; }
-  sleep 3
-done
-[ -n "$UP" ] || echo "not up after 3min, check: docker logs xwiki-before"
-curl -s -u superadmin:system -X PUT -H "Content-Type: text/xml" \
-  --upload-file "$CAPTURE_DIR/installjobrequest.xml" "$BEFORE_URL/rest/jobs?jobType=install&async=false" \
-  | grep -o '<state>[^<]*</state>'   # expect FINISHED
-P="$BEFORE_URL/rest/wikis/xwiki/spaces/XWiki/pages"
-X=(-s -o /dev/null -w '%{http_code}\n' -u superadmin:system -H "Content-Type: application/xml")
-curl "${X[@]}" -X PUT "$P/Admin" --data '<page xmlns="http://www.xwiki.org"><title>Admin</title>
-  <content>{{include reference="XWiki.XWikiUserSheet"/}}</content></page>'
-curl "${X[@]}" -X POST "$P/Admin/objects" --data '<object xmlns="http://www.xwiki.org">
-  <className>XWiki.XWikiUsers</className><property name="first_name"><value>Admin</value></property>
-  <property name="password"><value>admin</value></property>
-  <property name="active"><value>1</value></property></object>'
-curl "${X[@]}" -X POST "$P/XWikiPreferences/objects" --data '<object xmlns="http://www.xwiki.org">
-  <className>XWiki.XWikiGlobalRights</className>
-  <property name="users"><value>XWiki.Admin</value></property>
-  <property name="levels"><value>admin,programming</value></property>
-  <property name="allow"><value>1</value></property></object>'   # each: 201
-```
-
-Then pick the fixture (step 2) and shoot it as step 3 does, against `$BEFORE_URL`. Remove the
-containers when done: `docker rm -f xwiki-before xwiki-before-db && docker network rm xwiki-before`.
+When that is the route, open `references/released-image.md` before the first `docker run`: it
+sets up the "before" instance at `$BEFORE_URL`, bound to `127.0.0.1` only since it runs with a
+well-known `superadmin` password, and step 4 removes its containers.
 
 ## 0. An instance to reuse
 
@@ -172,7 +111,7 @@ grep -m1 '<packaging>' path/to/module/pom.xml
 
 | Packaging | Path | Build? Restart? |
 | --- | --- | --- |
-| `jar`, `webjar`, or absent | the jar route of step 3 — builds at a ref, swaps the jar in `WEB-INF/lib` | yes, both |
+| `jar`, `webjar`, or absent | the jar route of step 3, `references/jar-route.md` — builds at a ref, swaps the jar in `WEB-INF/lib` | yes, both |
 | `xar` | follow **`xwiki-deploy-extension`** (REST job API); its uninstall-then-reinstall step is what the second state hits | build only |
 | static CSS/JS under `webapps/xwiki/resources/` | `sync-static-resource.sh` | neither |
 | `pom` resources-only (skin `.vm`/`.less`) | `sync-static-resource.sh --target-root skins` | neither |
@@ -231,32 +170,10 @@ agent-browser --session capture eval "document.querySelector('#globalsearch').ou
 
 Run this once per state, with the deploy route the table in step 1 picked.
 
-**The jar route** is three steps other skills already own, for `REF=WORKTREE` or any commit-ish:
-
-1. **Build** at `REF` — the working tree itself for `WORKTREE`, otherwise a throwaway worktree, as
-   `xwiki-backport` makes one. Build per `xwiki-build`: `xmvn` for the JDK the branch targets
-   (these are old commits, the likeliest to target an older Java), and a `-legacy` module that
-   weaves the changed one rebuilt too, since its woven jar is what ships. Use `package`, never
-   `install`: an `install` of the "before" publishes the pre-fix jar into the shared `~/.m2` as the
-   current SNAPSHOT. A first build can outlast a tool harness's per-command ceiling, so run it in
-   the background and wait on its output.
-2. **Swap** the jar, per `xwiki-deploy-extension` step 0: a core extension is replaced in place in
-   `WEB-INF/lib`, under the file name already there: the instance's version can differ from the
-   branch's, and copying under the built name would add a second jar rather than replace the first.
-   No jar of that artifactId there means the module does not ship as that jar — find the one
-   holding the changed class before going further.
-3. **Restart** the instance, with step 0's stop and start, then remove the worktree.
-
-```bash
-MODULE=xwiki-platform-core/.../xwiki-platform-index-tree-webjar   # relative to the repo root
-SRC=.; [ "$REF" = WORKTREE ] || { SRC="$WORK/ref-worktree"; git worktree add --detach "$SRC" "$REF"; }
-(cd "$SRC/$MODULE" && xmvn package -B -ntp -DskipTests)      # mvn where xmvn is not installed
-LIB="$INSTANCE_DIR"/webapps/xwiki/WEB-INF/lib; DEPLOYED=$(ls "$LIB"/<artifactId>-[0-9]*.jar)
-[ -e "$CAPTURE_DIR/original.jar" ] || cp "$DEPLOYED" "$CAPTURE_DIR/original.jar"   # step 4 restores it
-cp "$SRC/$MODULE"/target/<artifactId>-<version>.jar "$DEPLOYED"
-(cd "$INSTANCE_DIR" && ./stop_xwiki.sh)   # then step 0's start and wait
-[ "$SRC" = . ] || git worktree remove --force "$SRC"
-```
+**The jar route:** open `references/jar-route.md` before the first build, and follow it for each
+state. Two of its rules guard what outlives the capture: build with `package`, never `install`,
+which would publish the pre-fix jar into the shared `~/.m2` as the current SNAPSHOT; and copy the
+deployed jar to `$CAPTURE_DIR/original.jar` before the first swap, since step 4 restores it.
 
 **Then assert the change from the capture script.** A swap can land the wrong bytes, and the page
 may render the same even when it landed the right ones; the file-copy paths have nothing to check
@@ -321,6 +238,8 @@ Then **restore** — do not skip it: put back what the instance had before the f
 instance you leave behind is the one you found. On the jar route that is a copy and step 0's
 restart, no build: `cp "$CAPTURE_DIR/original.jar" "$DEPLOYED"`. On the file-copy paths the
 "before" sync already put the pre-fix files back.
+On the released-image route, remove its containers (the last line of
+`references/released-image.md`).
 
 **The assertion log lines are the authority**, and they need nothing installed. If they are
 identical, stop: the cause is a deploy that did not land or a selector on the wrong node, not a
@@ -358,24 +277,8 @@ them at native resolution, side by side:
 
 When the point is a pixel comparison (a radius, a 2px shift, a colour), post **one composite**
 instead: both states juxtaposed in a single image, so one click zooms the two together rather than
-leaving the reader to arrange two tabs. Build it in the same browser session, with each panel at its
-natural size — no width rule, so neither state is resampled — and attach it in place of the pair:
-
-```bash
-cat > "$CAPTURE_DIR/composite.html" <<'HTML'
-<body style="margin:0;background:#fff;font:600 14px sans-serif">
-<div id="c" style="display:inline-flex;gap:16px;padding:8px">
-  <figure style="margin:0">Before<br><img src="before.png"></figure>
-  <figure style="margin:0">After<br><img src="after.png"></figure>
-</div></body>
-HTML
-agent-browser --session capture set viewport 3000 2000 1   # wide enough for both panels
-agent-browser --session capture open "file://$CAPTURE_DIR/composite.html"
-REGION=$(agent-browser --session capture eval "(() => { const r = document.querySelector('#c')
-  .getBoundingClientRect(); return [0, 0, Math.ceil(r.width), Math.ceil(r.height)].join(','); })()" \
-  | tr -d '"')
-"$DOCSHOT" composite "$(cut -d, -f3 <<<"$REGION")" "$REGION"   # -> $CAPTURE_DIR/composite.png
-```
+leaving the reader to arrange two tabs.
+Build it as `references/composite-image.md` says, and attach it in place of the pair.
 
 Either way, add one line of prose saying what to look at, and name the fixture so a reader can
 reproduce it. Do not publish an Artifact unless asked.

@@ -7,8 +7,8 @@
 # $xwiki.get('ssfx').use('path/to/foo.css', true) is served that sibling in preference, so copying
 # only the raw file would have no visible effect.
 #
-# Not for xar-packaged pages (use the xwiki-deploy-extension skill) nor jar-packaged code (SKILL.md's
-# jar route).
+# Not for xar-packaged pages (use the xwiki-deploy-extension skill) nor jar-packaged code (the jar
+# route, references/jar-route.md).
 #
 # Usage:
 #   sync-static-resource.sh [--target-root <dir>] <instance-dir> <source-file> <relative-path>
