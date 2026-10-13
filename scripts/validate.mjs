@@ -30,6 +30,18 @@
 //      Claude matches against is gone and the skill simply never triggers. This is NOT covered by
 //      `claude plugin validate`: measured against the `yaml` package, three skills here were
 //      unparseable while that command reported only one of them and then passed the repo.
+//  10. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
+//      route work to each other through these pointers, so a renamed or removed skill leaves the
+//      others sending the model to nothing.
+//  11. No paragraph is copied across files. Each fact has one home — a skill, an OKF topic, the
+//      injected xwiki-org.md, README.md — and the other places link to it; a copy drifts from its
+//      original at the first edit of either, and the model then has two rules to choose from.
+//  12. Each skill and OKF file stays within its size budget (scripts/size-budgets.json). Like the
+//      budgets of invariants 5 and 8, it turns growth into a decision: a file only gets longer
+//      when its budget is raised, in the same change and with the reason in the commit message.
+//      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
+//      a loaded skill body — and the budget of one already above the cap may only go down: detail
+//      past it moves into a file the skill opens on demand.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -316,6 +328,121 @@ if (Buffer.byteLength(okfIndex) > OKF_INDEX_MAX_BYTES) {
     }
   }
   flush();
+}
+
+// ---- Invariants 10-12 read every tracked Markdown file ---------------------------------------
+// Tracked files only, so a scratch note in a working tree is neither compared nor budgeted.
+const trackedMd = (git(["ls-files", "-z", "--", "*.md"]) ?? "")
+  .split("\0")
+  .filter((p) => p && existsSync(join(repoRoot, p)));
+
+// ---- Invariant 10: skill pointers resolve ----------------------------------------------------
+// Only a name in a pointer phrase is checked: a bare `xwiki-…` is usually a Maven module or a repo.
+// Skills that live in another plugin are named here, since this repo cannot see them.
+const EXTERNAL_SKILLS = new Set(["xwiki-security-review", "xwiki-security-pass"]);
+const skillName = "(xwiki-[a-z0-9]+(?:-[a-z0-9]+)*)";
+const pointerPattern = new RegExp(
+  `\`?\\b${skillName}\\b\`?(?=\\*{0,2}\\s+(?:skill|instead))` +
+    `|(?:skills?|[Uu]se|via|run|load|invoke)\\s+\\*{0,2}\`?${skillName}\\b`,
+  "g"
+);
+for (const p of trackedMd) {
+  const text = read(p);
+  for (const name of new Set([...text.matchAll(pointerPattern)].map((m) => m[1] ?? m[2]))) {
+    if (!skills.includes(name) && !EXTERNAL_SKILLS.has(name)) {
+      errors.push(`${p}: points to the skill '${name}', which does not exist under xwiki/skills/`);
+    }
+  }
+}
+
+// ---- Invariant 11: no paragraph copied across files ------------------------------------------
+// A block (paragraph or list item, code fences and frontmatter left out) is a copy when at least half
+// of its 8-word sequences also appear in one block of another file. Below 20 words a repeat is a
+// phrase, not a rule. This catches copy-paste only; a paraphrase is a reviewer's job.
+// A block naming a host's path variable is exempt: each skill has to say for itself where the shared
+// okf/ and scripts/ are on each host, as a skill cannot include another file.
+const SHINGLE_WORDS = 8;
+const MIN_BLOCK_WORDS = 20;
+const COPY_RATIO = 0.5;
+const dupScope = trackedMd.filter(
+  (p) => /^(xwiki\/|docs\/|README\.md$|CLAUDE\.md$)/.test(p) && !/\/tools\//.test(p)
+);
+const blocks = [];
+const owners = new Map(); // shingle -> indexes of the blocks holding it
+for (const p of dupScope) {
+  const body = read(p)
+    .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
+    .replace(/^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1/gm, ""); // fences, indented ones in list items too
+  for (const block of body.split(/\r?\n\s*\r?\n|\r?\n(?=\s*(?:[-*]|\d+\.)\s)/)) {
+    if (/CLAUDE_PLUGIN_ROOT|KIMI_SKILL_DIR|XWIKI_LLM_HOME/.test(block)) continue;
+    const words = block.toLowerCase().replace(/[`*_>#|[\]()]/g, " ").match(/[a-z0-9][a-z0-9'./-]*/g) ?? [];
+    if (words.length < MIN_BLOCK_WORDS) continue;
+    const shingles = new Set();
+    for (let i = 0; i + SHINGLE_WORDS <= words.length; i++) {
+      shingles.add(words.slice(i, i + SHINGLE_WORDS).join(" "));
+    }
+    const index = blocks.push({ path: p, text: block.trim(), shingles }) - 1;
+    for (const s of shingles) (owners.get(s) ?? owners.set(s, []).get(s)).push(index);
+  }
+}
+const reported = new Set();
+blocks.forEach((block, i) => {
+  const shared = new Map(); // other block index -> shingles in common
+  for (const s of block.shingles) {
+    for (const j of owners.get(s)) {
+      if (blocks[j].path !== block.path) shared.set(j, (shared.get(j) ?? 0) + 1);
+    }
+  }
+  for (const [j, count] of shared) {
+    const pair = `${Math.min(i, j)}-${Math.max(i, j)}`; // report a copy once, not from both sides
+    if (count / block.shingles.size < COPY_RATIO || reported.has(pair)) continue;
+    reported.add(pair);
+    errors.push(
+      `${block.path} and ${blocks[j].path} hold the same paragraph ` +
+        `(${Math.round((100 * count) / block.shingles.size)}% shared: "${block.text.slice(0, 80).replace(/\s+/g, " ")}…") — ` +
+        `keep the fact in one of the two and point to it from the other`
+    );
+  }
+});
+
+// ---- Invariant 12: skill and OKF files stay within their size budget -------------------------
+// Covers what the model reads as instructions: skills (not their tools/, which hold data and the
+// scripts' own docs) and OKF topics. okf/index.md has its own budgets (invariant 8). A file with no
+// entry gets the default, so a new file needs an entry only once it outgrows it.
+// A SKILL.md is read whole once the skill fires, so its ceiling is the published guideline for a skill
+// body (https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices): under 500 lines,
+// about 5,000 tokens. OKF topics and reference files are opened on demand and have no such ceiling.
+const SKILL_MAX_BYTES = 20000;
+const DEFAULT_MAX_BYTES = 12000;
+const budgets = JSON.parse(read("scripts/size-budgets.json"));
+for (const p of trackedMd) {
+  if (!/^xwiki\/(skills|okf)\//.test(p) || /\/tools\//.test(p) || p === "xwiki/okf/index.md") continue;
+  const size = Buffer.byteLength(read(p));
+  const max = budgets[p] ?? (p.endsWith("/SKILL.md") ? SKILL_MAX_BYTES : DEFAULT_MAX_BYTES);
+  if (size > max) {
+    errors.push(
+      `${p}: ${size} bytes exceeds its ${max}-byte budget — tighten the text, move detail the model only ` +
+        `sometimes needs into a file the skill opens on demand, or raise its entry in ` +
+        `scripts/size-budgets.json and give the reason in the commit message`
+    );
+  }
+}
+for (const p of Object.keys(budgets)) {
+  if (!trackedMd.includes(p)) errors.push(`scripts/size-budgets.json: '${p}' no longer exists — remove its entry`);
+}
+// Compared with the merge base, like invariant 6, so only what this branch did is judged. Skipped when
+// the base has no budgets yet: the change introducing them is what sets the over-cap entries.
+const baseBudgetsText = baseSha && git(["show", `${baseSha}:scripts/size-budgets.json`]);
+const baseBudgets = baseBudgetsText ? JSON.parse(baseBudgetsText) : null;
+for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
+  if (!p.endsWith("/SKILL.md") || max <= SKILL_MAX_BYTES) continue;
+  const before = baseBudgets[p] ?? SKILL_MAX_BYTES;
+  if (max > before) {
+    errors.push(
+      `scripts/size-budgets.json: '${p}' is raised from ${before} to ${max} bytes, but a SKILL.md over ` +
+        `${SKILL_MAX_BYTES} bytes may only shrink — move detail into a file the skill opens on demand`
+    );
+  }
 }
 
 // ---- Report ----------------------------------------------------------------------------------

@@ -17,7 +17,7 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, always-on budget)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, size budgets, copied paragraphs)
 ```
 
 Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI (GitHub Actions) on
@@ -115,6 +115,11 @@ Inside `xwiki/`:
 - **`xwiki/instructions/xwiki-org.md` is injected into every session** in every `xwiki/*` repo, so
   it has a byte budget the validator enforces. Its OKF map lists topic *names*; a topic is described
   in `xwiki/okf/index.md`. Put a rule there only when it must be obeyed without opening any OKF file.
+- **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
+  point to it instead of restating it. The validator fails a paragraph copied across files and a skill
+  or OKF file over its entry in `scripts/size-budgets.json`; raise a budget only with the reason in the
+  commit message, and lower it when a cleanup shrinks the file. A `SKILL.md` stops at 20,000 bytes
+  (Anthropic's 500-line / 5,000-token guideline); one already above it may only shrink.
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
   instead) — that text is the only thing Claude sees when deciding to invoke it.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the

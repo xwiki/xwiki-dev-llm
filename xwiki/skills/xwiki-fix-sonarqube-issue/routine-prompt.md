@@ -44,8 +44,7 @@ Per-run overrides on top of the skill:
 
 ### Network access
 
-**Full**, not "trusted": trusted reaches none of the XWiki hosts, and fails the setup script itself
-— the header of `routine-setup.sh` says how it fails.
+**Full**, not "trusted" — the header of `routine-setup.sh` says why.
 
 ### Setup script
 

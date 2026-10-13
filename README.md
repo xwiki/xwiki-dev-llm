@@ -201,7 +201,7 @@ credentials for JIRA, the forum, Develocity, SonarCloud and xwiki.org.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map, size budgets, copied paragraphs)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.

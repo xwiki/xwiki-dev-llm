@@ -91,8 +91,7 @@ locked to collaborators, which needs the bot's Write role (below).
   pushes a fix branch, exactly as it does for the SonarQube routine. The branch lives in the
   upstream repo (`claude/<slug>`); there is no fork anywhere in this design. The PR on top of it is
   the bot's, opened by `tools/pull-request.mjs`.
-- **Full network access** for the sandbox — "trusted" reaches none of the XWiki hosts, and
-  fails the setup script itself; the header of `routine-setup.sh` says how it fails.
+- **Full network access** for the sandbox, not "trusted" — the header of `routine-setup.sh` says why.
 - The `xwiki` plugin loaded, so the skill and the shared `scripts/` are present.
 
 Without the bot credentials the skill does that channel in rehearsal and says so; it never falls back
