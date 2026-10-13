@@ -53,8 +53,8 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       longer answers split into an Explanation page.
 - [ ] **Attachments** — kebab-case names with lowercase extensions; images use `{{image}}` with an
       `alt`; **videos are `webm` embedded with `{{embed}}`, not links**; no animated GIFs.
-- [ ] **Structure fields** — Content, FAQ and Related links filled; Technical ID set when an extension
-      applies. **Highlights empty** unless the page has many children (and then only a subset of them);
+- [ ] **Structure fields** — Content filled (the FAQ is optional); a top-level page's Related links
+      its same-topic counterparts for the other audiences; Technical ID set when an extension applies. **Highlights empty** unless the page has many children (and then only a subset of them);
       **Related holds no children** and never links to the page itself.
 - [ ] **Title case** — significant words capitalised ("Using", not "using").
 - [ ] **Style** — UI elements in `"quotes"`, terminology uppercased, literals in `##…##`, code macro

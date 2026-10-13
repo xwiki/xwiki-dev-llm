@@ -64,8 +64,9 @@ edit.
 
 ## Tooling — `tools/`
 
-For anything larger than a single page edit, use the scripts in this skill's `tools/` directory rather
-than hand-rolling REST calls: draft the pages as a `pages.py` data module, then
+For every new or rewritten page, a single one included, use the scripts in this skill's `tools/`
+directory rather than hand-rolling REST calls (only a minor fix, per step 13, is made by hand): draft
+the pages as a `pages.py` data module, then
 
 ```bash
 set -a; . ~/.xwiki-credentials; set +a
@@ -91,11 +92,14 @@ applies to everything a regex cannot decide.
 3. **Choose the location** — first, **bundled vs not**: a bundled extension's page goes under
    `documentation.xs`, a non-bundled one under `documentation.extensions`; then the most relevant
    existing topic/subtopic for that audience and type; create a new top-level topic only when nothing
-   fits.
+   fits. A new topic is a page of its own, an **Explanation** (`okf/conventions/documentation.md`), so
+   a How-to that opens one brings that topic page with it: put both in the placement proposal.
 4. **Write the title and page name** per the type's rules (verb-led for How-to/Tutorial; noun phrase
    for Reference/Explanation; kebab-case page name, stop words removed, no parent/child repetition).
 5. **Fill the page-structure fields** — Content (per type), FAQ (questions with 1–2 sentence
    answers), Related links (**non-child** pages only), Technical ID (`xwiki:<extension id>`, or empty).
+   When the extension page's `id` is empty, completing it is a write to extensions.xwiki.org: propose
+   the value to the developer (from the module's `pom.xml`) and save it only on their yes.
    **Leave Highlights empty unless the page has many children**: it is a two-level list of the most
    important *child* pages, not a "key points" summary, and the automatic "More" table already lists
    every child — see `okf/conventions/documentation.md`.
@@ -146,7 +150,8 @@ applies to everything a regex cannot decide.
 12. **Run the de-duplication *and trimming* pass before saving** — this is a separate step because every
     page reads fine on its own and both defects are invisible while writing. Start with the two that need
     no judgement and that `lint` decides for you — **the sibling How-tos' step 1** and **an attachment
-    name declared by more than one page** — then lay the page's intro next
+    name declared by more than one page**, which it sees only among the pages of the set, so compare a
+    lone new page with its siblings by hand — then lay the page's intro next
     to its own FAQ, then next to its parent/hub and sibling pages, and hunt for **the same fact stated
     twice in different words**. Each hit: pick one home, and reduce the others to a clause with a link or
     delete them. Then **cut verbosity**: take each sentence and ask *does the reader lose something they

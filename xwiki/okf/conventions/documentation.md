@@ -30,8 +30,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/CreateNewDocumentation/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/LandingPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle/
-  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HighlightsPage/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationNavigationPanel/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HorizontalMenu/
@@ -101,17 +102,16 @@ An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Re
 words are listed on [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/).
 
 **Titles use English title case** — capitalise the significant words, not just the first:
-*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. This rule is **not currently
-stated** on the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/)
-page even though existing pages follow it, so it is worth adding upstream.
+*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. Per the guide's
+[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
+page, which also lets a title be **more explicit than its page name** where readability requires it.
 
 **Titles and page names must not contain the page type** — no "How to", "Explanation", "Reference",
 "Tutorial", etc. These are **reserved terms**: the type is already conveyed by the content, the
 structure and the badge, so repeating it is redundant. Nor may they repeat the **audience**: a topic
 page is titled just "AntiSpam" under `…admin.` *and* under `…dev.` — never "AntiSpam for Developers" —
 since the path and the badge already carry it. Per the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/)
+[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
 page.
 
 **Disambiguation is a parenthetical in the title, and is not added to the page name** — e.g. "All the
@@ -126,8 +126,8 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
 - **Remove stop words** manually ("a", "the", "on", "when", "while"…) until xwiki.org is on XWiki
   18.1.0+ (which does it automatically).
 - Follow the title as closely as possible while respecting the rules above.
-- **No repetition between parent and child paths** — rely on the parent for context
-  (`../wiki-editor-toolbar/support`, not `../wiki-editor-toolbar/wiki-editor-toolbar-support`).
+- **No repetition between parent and child paths** — the same word **or a variation of it** — rely on
+  the parent for context (`../wiki-editor-toolbar/support`, not `../wiki-editor-toolbar/wiki-editor-toolbar-support`).
 
 ## Content rules per type
 
@@ -303,7 +303,7 @@ The fields:
 
 - **Content** — the main content for the page type. Additional headings go under it as level-2 (or
   lower) headings.
-- **FAQ** — level-2 headings phrased as **questions** a user/admin/developer might have, with answers
+- **FAQ** — **optional**; level-2 headings phrased as **questions** a user/admin/developer might have, with answers
   limited to **1–2 sentences**. If a longer answer is needed, create a dedicated Explanation page.
   **At most 5 entries, and at most 25 lines of FAQ content**: beyond either limit the `faqEntryCount`
   documentation check reports a **warning**, and the surplus must become a separate troubleshooting
@@ -353,6 +353,9 @@ The fields:
 
   The prefix is what makes the badge at the bottom of the page resolve to the Extensions wiki, so an
   unprefixed id renders no badge. Empty when no extension applies (e.g. installation pages).
+  An **empty `id` on the extension page is completed there** (`<groupId>:<artifactId>`), and an
+  extension with no page on the Extensions wiki is imported first, per
+  [Link the Documentation Page to its Extension](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/).
   **Older pages carrying an unprefixed id are the non-conformant ones** — do not "fix" a prefixed id
   to match them. The generic
   [Apply Diataxis](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis/) page does

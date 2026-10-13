@@ -226,8 +226,10 @@ def lint(mod):
                                 f'`name: meaning` bullet list — that is a table')
 
         if name in (p['ref'] for p in mod.ALL):
-            parent = '.'.join(p['space'][:-1]) + '.WebHome'
-            if parent not in refs:            # a root of this page set = a topic page
+            # A topic page is a top-level page: its parent is an audience page, i.e. the path is
+            # documentation.<xs|extensions>.<audience>.<topic>. Read from the path, not from the page
+            # set, so that a set holding one new page below an existing topic is not taken for one.
+            if len(p['space']) == 4 and p['page'] == 'WebHome':
                 if p['type'] != 'explanation':
                     problems.append(f'{name}: topic page is not an explanation')
                 if 'doc:extensions:' not in p['content'].split('. ')[0]:

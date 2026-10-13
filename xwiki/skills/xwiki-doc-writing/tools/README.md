@@ -118,7 +118,9 @@ halves every `{{`, and the halved macro renders as literal text), an absolute UR
 (renders external and is **never indexed as a backlink**), a `caption` carrying the capture version,
 a title repeating the page type or the audience, an image without `size`/`alt`, an attachment
 declared but not shown (or shown but not declared), a How-to with no result-step visual or with one
-on only a minority of its steps, a topic page that is not an Explanation linking to its
+on only a minority of its steps, a topic page (read from the path: directly under an audience
+page, so a set holding one page below an existing topic is not mistaken for one) that is not an
+Explanation linking to its
 Extensions-wiki page. What counts as that visual follows the audience: a **screenshot**, except on a
 `target=developer` page, where it is a **code example** — a Developer procedure has no UI to shoot,
 and asking it for screenshots is what leaves a correct page permanently reported as broken. Three
