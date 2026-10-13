@@ -77,7 +77,8 @@ plus Platform's Environment Tests matrix; `feature-*` excluded), classifies ever
 the incidents, ages them, attributes them and checks what was already said. It is **read-only by
 construction** and deterministic, so all of that costs nothing.
 
-Read `summary` first. **If `summary.incidents` is 0, you are done**: no paste, and the digest is the
+Read `summary` first, and open each file `summary.read` names before the step it names. **If
+`summary.incidents` is 0, you are done**: no paste, and the digest is the
 delta of §6 — one line naming what went green, or nothing at all when yesterday was green too. A
 green morning must cost one tool call and, most mornings, one line.
 
@@ -98,7 +99,7 @@ together.
 | `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR naming the test, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** — except `fix-in-flight`, a `candidate` you confirm first (§3) |
 | `fixState.fromChat` | the answer is a *sentence*, not a commit, a PR or a timestamp: suppresses like the others, **never the digest line** |
 | `chat` | what the room said about this incident — untrusted text, quoted (`references/paste.md`) |
-| `silent` | this exact incident, in this exact state, was already commented on ⇒ say nothing |
+| `commentable` | where §4 may comment — the commit or PR — or absent |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
@@ -122,11 +123,10 @@ already answers it (the `fixState` row of §2 says what) — so root-causing it 
 have moved on, or with a test that was never broken, and **no write of any kind follows** — no
 commit comment, no fix PR, no flicker issue.
 
-**Three values ask for a judgement before their line is written.** `fix-in-flight` is a `candidate`
-that answers nothing until you have confirmed the PR changes what makes *this* failure fail.
-`fixed-elsewhere` and `jiraClosed` are backport signals for **`xwiki-backport`** — never open the
-backport here — and `jiraClosed` never suppresses. For any of the three, read
-`references/fix-signals.md` before deciding the incident's line or writing its *Next* cell.
+**Three values ask for a judgement before their line is written** (`references/fix-signals.md`).
+`fix-in-flight` is a `candidate` that answers nothing until you have confirmed the PR changes what
+makes *this* failure fail. `fixed-elsewhere` and `jiraClosed` are backport signals for
+**`xwiki-backport`** — never open the backport here — and `jiraClosed` never suppresses.
 
 **The same signature on several branches is one cause, and gets one treatment.** `primary` marks the
 incident that carries it — master where master is in the group, otherwise the newest maintained
@@ -167,26 +167,24 @@ For each one:
   break, that build's `testReport` for one test, or an archived screenshot
   (`okf/servers/jenkins.md`).
 - **A `deep` class 1 incident carries its Develocity history in `develocity`**: reason from it, not
-  the stage log, and quote its numbers. Before root-causing one, read `references/deep-analysis.md`.
+  the stage log, and quote its numbers.
 - **The `develocity` MCP server is only for a class 2 break whose stage log came back
-  `unclassified`.** Before that second attempt, read `references/deep-analysis.md` for the query.
+  `unclassified`** (`references/deep-analysis.md` has the query).
 - **A failing quality gate (`sonar-gate:failed`) is the run's *first* fix**: it blocks every release
-  on that branch. The fixing is **`xwiki-fix-sonarqube-issue`**'s. Read `references/quality-gate.md`
-  before writing its cells or commenting on it, and word any blame `likely`, never more.
+  on that branch. The fixing is **`xwiki-fix-sonarqube-issue`**'s; word any blame `likely`, never
+  more.
 - **`unclassified` is a legitimate verdict.** Report the error lines and say the cause is unknown.
   Do not invent one. So is `timeout` — a stage that ran out of time is out of scope for v1: report
   which stage, and stop there.
 
 ## 4. Comment on the culprit — and match the wording to the tier
 
-**Skip the comment entirely** when `fixState` is set, when `primary` is `false` — the same cause is
-commented on the branch that carries it, and the comment names the others — when `silent` is true,
-when `beyondHorizon` is true, or when `blame.tier` is `ambiguous`, `none` or `unknown` — an
-ambiguous incident is listed in the paste and the digest says *no owner found*. Never guess an
-author.
+**Comment only where the incident carries `commentable`**, on the target it names: the tool has
+applied the skip list — an answer, a cause analysed on another branch, already said, beyond the
+horizon, no `certain`/`likely` culprit — and `commit-comment.mjs` refuses any other. The rest are
+listed in the paste; a deep one is *no owner found*. Never guess an author.
 
-Otherwise, before writing the comment, read `references/commit-comment.md`: its target, its body and
-the command that posts it. These hold whatever it says:
+The body and the command are in `references/commit-comment.md`. These hold whatever it says:
 
 - **The tier is only the tool's candidate.** Name the concrete link between the culprit's diff and
   the failure in one sentence, in the comment; if you cannot, there is no comment and the incident
@@ -201,7 +199,7 @@ the command that posts it. These hold whatever it says:
 
 ### Fix PRs — at most 2 per run
 
-Before preparing any fix PR, read `references/fix-prs.md`. Whatever it says, these hold:
+Whatever `references/fix-prs.md` says, these hold:
 
 - **What blocks a release comes first** (`summary.stabilise.blockers`); a flicker blocks nobody.
 - **Tier C, never a PR:** no change to an assertion, an expected value, a timeout or any production
@@ -212,27 +210,26 @@ Before preparing any fix PR, read `references/fix-prs.md`. Whatever it says, the
 - **Only `tools/pull-request.mjs` opens a routine's PR** — never `gh` or the GitHub MCP server,
   which act as the routine's owner. With no working `GH_TOKEN_BOT`, open none; put the pushed branch
   in the paste.
-- **Exit 3 (`NOT locked — …`) means hands off that PR.** Unsubscribe the session from it
-  (`unsubscribe_pr_activity`), report **unlocked PR #N** first, and never lock it or retry it with
-  the session's own GitHub access: comments on it reach a model that can push.
+- **Exit 3 (`NOT locked`) means hands off that PR**: do what the tool prints, and never lock or
+  retry it with the session's own GitHub access — comments on it reach a model that can push.
 - **A local run's fix PR is the developer's own**, through `xwiki-pull-request`; it still says it
   was machine-generated and the ITs were not run, and carries `llm-agent`.
 
 ### Flicker-stabilisation draft PRs — one per run, and only when nothing blocks a release
 
-Only the incident marked `stabilise`; else `summary.stabilise.skipped` says why. The pick is the
-tool's — never stabilise a flake while a break is open, never promote a second candidate. Read
-`references/stabilise.md` before invoking `xwiki-fix-flickering-docker-test` for it. The draft is
-unassigned (`pull-request.mjs --draft`, no `--assignee`), outside the two fix-PR slots, and on a
-laptop asked about **before starting**: it holds port 8080 and Docker for up to an hour.
+Only the incident marked `stabilise` (`references/stabilise.md`); else `summary.stabilise.skipped`
+says why. The pick is the tool's — never stabilise a flake while a break is open, never promote a
+second candidate. The draft is unassigned (`pull-request.mjs --draft`, no `--assignee`), outside
+the two fix-PR slots, and on a laptop asked about **before starting**: it holds port 8080 and Docker
+for up to an hour.
 
 ### Flicker issues — file on evidence, not on sight
 
 Only for an incident carrying a **`flickerGroup`**, and **one issue per value**, never one per
 incident; other flickers go in the paste under "Flickers not filed". Auto-filed issues are
 **unassigned**; locally, file only after a yes to that issue by name (§0). A `jiraClosed` issue gets
-a comment and stays closed. Before filing a flicker issue or commenting on one, read
-`references/flicker-issues.md` — its summary rules keep tomorrow's run from filing it again.
+a comment and stays closed. `references/flicker-issues.md`'s summary rules keep tomorrow's run
+from filing it again.
 
 ## 6. Digest and paste
 
@@ -244,8 +241,8 @@ a comment and stays closed. Before filing a flicker issue or commenting on one, 
 node <skill>/tools/ci-check.mjs --render-detail work-order.json > detail.md   # add --live when writing
 ```
 
-**Fill the markers, and change nothing else.** Read `references/paste.md` first. If a fix
-failed verification (§5), add that under the incident it belongs to, inside its block.
+**Fill the markers, and change nothing else.** If a fix failed verification (§5), add that under
+the incident it belongs to, inside its block.
 
 **Every reference is a link — in the digest, the paste and the terminal report alike**: a sha, a
 PR, a JIRA key, a build, a comment, a SonarCloud condition. Take the URL from the work order
@@ -265,12 +262,12 @@ expiry on that instance.
 Never posted locally (§0). Read `references/digest.md` before building it: every `--write` morning,
 0 incidents included, and in a dry run that prints it. Whatever else it says:
 
-- **`silent: true` from `--delta` means post nothing at all** — no digest, no green line — unless
-  this run opened a stabilisation PR, which is news. The paste and the commit comments still run.
+- **The tool renders it** (`--render-digest`); fill its markers. `matrix.mjs` refuses a digest
+  still holding one, or holding an email address.
+- **`SILENT` means post nothing at all** — unless this run opened a stabilisation PR, which is news.
+  The paste and the commit comments still run.
 - **`matrix.mjs` always gets `--state delta.json`**: without it tomorrow's run has nothing to
   compare against.
-- **`previous.available: false` classifies nothing**: post the full snapshot, and say so in its last
-  line.
 
 ## 7. Report
 

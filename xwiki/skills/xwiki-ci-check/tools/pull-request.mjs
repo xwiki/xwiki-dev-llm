@@ -92,7 +92,7 @@ export async function openPullRequest({ repo, head, base, title, body, assignee 
   } catch (error) {
     steps.push(`NOT locked — ${error.message}`);
   }
-  return { url: pr.html_url, steps, locked };
+  return { url: pr.html_url, number: pr.number, steps, locked };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -120,5 +120,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const result = await openPullRequest({ ...options, body: readFileSync(options.file, 'utf8') });
   console.log(`${result.url ?? 'not opened (rehearsal — pass --write to open)'}\n${result.steps.map(s => `  - ${s}`).join('\n')}`);
-  if (result.url && !result.locked) process.exit(3);
+  if (result.url && !result.locked) {
+    // Printed here, where the failure is, rather than left to a rule the session may have skimmed:
+    // auto-fix may already have subscribed the session, and every comment on an unlocked PR then
+    // reaches a model that can push.
+    console.error(`unlocked PR #${result.number} (${result.url}) — hands off it:\n`
+      + `  1. unsubscribe this session from it: unsubscribe_pr_activity, PR #${result.number};\n`
+      + `  2. put "unlocked PR #${result.number}" first in the report;\n`
+      + '  3. never lock it, comment on it or retry it with the session\'s own GitHub access (gh, the GitHub MCP server).');
+    process.exit(3);
+  }
 }

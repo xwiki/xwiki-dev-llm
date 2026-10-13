@@ -1,13 +1,13 @@
 # Writing and posting the commit comment
 
-Read by `xwiki-ci-check` (SKILL.md §4) before writing any commit comment, in either mode — once
-SKILL.md §4's skip conditions have left an incident to comment on. The rules SKILL.md §4 states
-inline hold whatever this file says. § numbers are those of SKILL.md.
+Read by `xwiki-ci-check` (SKILL.md §4) before writing any commit comment, in either mode — on an
+incident carrying `commentable`. The rules SKILL.md §4 states inline hold whatever this file says.
+§ numbers are those of SKILL.md.
 
 The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA — with
 one exception, the quality gate: there the issues were introduced in a squashed PR whose author and
 reviewer are both still subscribed to it, and that review is where the gate would have been caught,
-so `sonar.target` names the PR when the commit had one and the commit when it did not. Pass it with
+so `commentable` names the PR when the commit had one and the commit when it did not. Pass it with
 `--pr <number>` instead of `--sha` (same tool, same marker, same "already said" check).
 
 **The tier is the tool's candidate; the causal link is yours to establish.** `certain` and `likely`
@@ -35,21 +35,21 @@ the one break whose author can confirm or dismiss it in a minute.
 A system that asserts wrongly is switched off after one mistake; a system that asks is forgiven. The
 tier is the whole of that difference, so never upgrade the wording.
 
-Keep the comment short and self-contained: what is failing (the test count, not forty names), since
-when, the evidence line, the build URL, and what you are asking for. Say nothing about being a bot —
-the tool appends that, and the line telling the reader they may ignore a wrong attribution is not
-one to leave to the wording of the day. Then post it — this tool and
-nothing else, because its marker is what makes tomorrow's run stay quiet:
+Keep the comment short and self-contained: what is failing (the test count, not forty names) and on
+which branches (`alsoOn`), since when, the evidence line, the build URL, and what you are asking
+for. Say nothing about being a bot — the tool appends that, and the line telling the reader they may
+ignore a wrong attribution is not one to leave to the wording of the day. Then post it — this tool
+and nothing else, because its marker is what makes tomorrow's run stay quiet:
 
 ```bash
-node <skill>/tools/commit-comment.mjs --repo xwiki-platform --sha <sha> \
-  --incident "<incident.id>" --state "<incident.state>" --file body.md [--write]
+node <skill>/tools/commit-comment.mjs --work-order work-order.json --incident "<incident.id>" \
+  --sha <commentable.sha> --file body.md [--write]        # --pr <commentable.pr> for a gate
 ```
 
 **Without `--write` it prints the comment and posts nothing** — that is the default, so the flag is
 what a live routine adds and what a local run adds only after the developer has said yes. It
 re-checks for a prior comment before posting and reports `not posted: already commented` as a
-normal outcome. A prior comment in a *different* state posts again — a flicker that has become a
+normal outcome, and `not posted: <why>` for a target the work order does not make `commentable`. A prior comment in a *different* state posts again — a flicker that has become a
 systematic breakage is news.
 
 The comment is the bot's, never a developer's (§0): a developer whose commit broke master must not
