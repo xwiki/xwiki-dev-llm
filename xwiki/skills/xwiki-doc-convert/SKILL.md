@@ -224,7 +224,8 @@ only complete record of what the legacy page said — comparing legacy → new, 
   superseded page, or an intermediate page created during this conversion), the backlinks were handled
   **before** the delete, per `okf/conventions/page-deletion.md`.
 - **Guideline compliance** — titles, page names, page-structure fields and style follow
-  `okf/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist).
+  `okf/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist,
+  `xwiki-doc-writing/references/review-checklist.md`).
 
 Do **not** raise a finding merely because you would have phrased something differently: every finding
 must be justified by lost information, changed meaning, outdated content, a Diataxis violation, a

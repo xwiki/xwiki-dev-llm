@@ -3,7 +3,7 @@
 Five scripts for the mechanical half of writing or converting a documentation tree: draft the pages
 as data, check them offline, publish them, prove what landed. The rules they enforce are the subset
 of `okf/conventions/documentation.md` a regex can decide — they replace the tedium, not the review
-checklist in `SKILL.md`.
+checklist in `references/review-checklist.md`.
 
 They exist because each of these steps has a failure mode that **passes silently**. Every rule below
 was added the first time it produced a defect on a live page.

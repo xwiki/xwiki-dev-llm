@@ -78,14 +78,16 @@ python3 tools/docpages.py verify    # audit + BOTH doc-checker surfaces
 plus `tools/docshot.sh` and `tools/checkredbox.py` for screenshots. `tools/README.md` documents the
 page-set contract and, for each step, the silent failure it protects against — a lost `202`, an object
 write blanked by a `#`-less field name, a finding that creates no violation object, a red box clipped
-into three sides. Read it before writing the first page; the review checklist below still applies to
-everything a regex cannot decide.
+into three sides. Read it before writing the first page; the review checklist (see "Review") still
+applies to everything a regex cannot decide.
 
 ## Flow — create a new page
 
 1. **Check it doesn't already exist** elsewhere in `/documentation` (avoid duplication).
 2. **Classify** the content: pick the single Diataxis type and the audience
-   (see `okf/conventions/documentation.md`). If it mixes types, split it into several pages.
+   (see `okf/conventions/documentation.md`). If it mixes types, split it into several pages. Before
+   drafting a type you have not written in this session, read the real pages for it listed in
+   `references/live-examples.md` to calibrate structure, title style and voice.
 3. **Choose the location** — first, **bundled vs not**: a bundled extension's page goes under
    `documentation.xs`, a non-bundled one under `documentation.extensions`; then the most relevant
    existing topic/subtopic for that audience and type; create a new top-level topic only when nothing
@@ -152,8 +154,9 @@ everything a regex cannot decide.
     length itself hides content. A How-to whose numbered list is wrapped in explanatory paragraphs, and
     a hub page that narrates the feature instead of **linking every page it introduces**, both fail this
     step.
-13. **Save.** A new or substantially rewritten page is a **major** change: save it via a **Change
-    Request**, adding to an existing open one on that page if there is one. A pure typo, broken-link
+13. **Review, then save.** Apply the review checklist first (see "Review"). A new or substantially
+    rewritten page is a **major** change: save it via a **Change Request**, adding to an existing open
+    one on that page if there is one. A pure typo, broken-link
     or small-rephrasing fix is a **minor** change: save it **directly**, ticked "minor", with a short
     summary — do **not** open a Change Request for it. See `okf/conventions/documentation.md`.
     Then read any automatic documentation-check violations the save reports.
@@ -165,7 +168,8 @@ for the latest version and prune version macros/content for versions no longer s
 explanation that crept into How-to steps out to the FAQ field or a dedicated Explanation page. An update
 is also the moment to fix what the page is **missing**: add the **result step** if the procedure has
 none, add the **screenshots / code examples / diagram** the prose is doing badly, cut the prose the reader
-does not need, and add the links a hub page owes the pages below it.
+does not need, and add the links a hub page owes the pages below it. Review it (see "Review") before
+saving.
 
 ## Flow — delete a page
 
@@ -174,110 +178,8 @@ created yourself earlier in the task and then decided to remove. The breakage la
 nothing in the delete flow names them for you. Follow `okf/conventions/page-deletion.md`, which holds
 the procedure, what the deletion wizard does and does not repoint, and the triage.
 
-## Review checklist
+## Review
 
-Apply it **page by item**: every item against every page, and record the ones that came back clean
-alongside the findings. A checklist run as a list of things to look for stops at the pages that
-already have findings, and "not looked at" then reads exactly like "no finding". `docpages.py lint`
-covers only the mechanical subset, so an item it cannot decide — duplication, verbosity, whether a
-visual is missing — is only covered if this pass covers it.
-
-Each finding cites the rule it relates to; confirm against the live guide when borderline.
-
-- [ ] **Type** — clearly one Diataxis type (not mixing How-to + Reference + …) with a target audience.
-- [ ] **Title** — follows the verb rule for its type; Tutorial titles are specific.
-- [ ] **Page name** — kebab-case, no stop words, follows the title, no parent/child path repetition.
-- [ ] **Steps** — in How-to/Tutorial each step starts with a verb and is in a numbered list, no
-      inline explanations.
-- [ ] **Result step** — a How-to/Tutorial's **last step shows the result** (what the reader should now
-      see), normally with a screenshot, or a code macro when the result is text; the list does not stop
-      at the final action.
-- [ ] **Shows — User/Administrator** — **screenshots** of the UI the page describes, on the steps that
-      need them.
-- [ ] **Shows — no screenshots of text** — anything that is itself text (configuration file, command,
-      log line, query) is in a **code macro**, not an image, whatever the audience — above all where the
-      reader has to edit or copy it.
-- [ ] **Shows — Developer** — **code examples**, and a result step showing the **produced output**
-      rather than a screenshot of a UI the page does not have.
-- [ ] **Shows — Explanation** — a **diagram** where there is a component structure, a request or data
-      flow, a lifecycle or a decision between alternatives; none for a risk narrative, a
-      single-concept definition or a FAQ-shaped page.
-- [ ] **Shows — Reference** — member-by-member data is **one table**, not a section per member
-      (heading + signature + a line of prose) and not a `name: meaning` bullet list. A bare signature
-      is a column, not a code example; the code example is for what a cell cannot hold. Check this
-      **even on a page whose facts are all correct** — the observed miss was a review that pronounced a
-      seven-member API reference "complete and correct" and never asked about its shape.
-- [ ] **No gratuitous visual** — flag a decorative screenshot, a diagram of something that is not a
-      structure, or a snippet added to satisfy a rule. The test is whether it replaces or clarifies
-      something the prose does badly.
-- [ ] **Verbosity** — no sentence survives that the reader does not need in order to act; no paragraph
-      restates the next section, motivates the feature at length, or describes what a screenshot shows.
-- [ ] **Hub pages link** — a landing/hub page **names and links every page it introduces** (in the prose
-      or Highlights) instead of narrating the feature and leaving the "More" table to do the routing.
-- [ ] **Intro** — a How-to's intro is **one short paragraph**; no second or trailing paragraph
-      explaining the steps.
-- [ ] **No duplication** — no fact is stated on two pages (or in both a page's intro and its own FAQ),
-      *however differently it is worded*. Compare against the parent/hub and the siblings, not just
-      within the page.
-- [ ] **No repeated entry step, one home per attachment** — sibling How-tos do not open with the same
-      navigation step, and no attachment name is declared by two pages. The fix is a **visible** page the
-      others link to (here, its own How-to), not a hidden `{{display}}` fragment.
-- [ ] **FAQ** — reader questions live in the FAQ field (1–2 sentence answers), not buried in steps;
-      longer answers split into an Explanation page.
-- [ ] **Attachments** — kebab-case names with lowercase extensions; images use `{{image}}` with an
-      `alt`; **videos are `webm` embedded with `{{embed}}`, not links**; no animated GIFs.
-- [ ] **Structure fields** — Content, FAQ and Related links filled; Technical ID set when an extension
-      applies. **Highlights empty** unless the page has many children (and then only a subset of them);
-      **Related holds no children** and never links to the page itself.
-- [ ] **Title case** — significant words capitalised ("Using", not "using").
-- [ ] **Style** — UI elements in `"quotes"`, terminology uppercased, literals in `##…##`, code macro
-      uses a `language` parameter.
-- [ ] **Punctuation** — no em dash is doing the job of a comma, period, colon or parentheses. Dashes
-      inside a **direct quote** are never a finding.
-- [ ] **Links** — link-reference syntax (no hardcoded xwiki.org URLs); `{{scm}}` for GitHub files; a
-      JIRA issue is linked only for a bug or limitation that is still unresolved, never for the issue
-      that added a feature or fixed a bug.
-- [ ] **Location** — `documentation.xs` for a bundled extension, `documentation.extensions` otherwise;
-      then the most relevant existing topic for its audience/type.
-- [ ] **Versioning** — written for the latest version; `{{version}}` only for new/changed behavior;
-      no obsolete macros or content for unsupported versions. **Every version on the page is inside a
-      `{{version}}` macro** — no bare version in prose and **no `Since` / `Version` column in a
-      reference table** — and every version cited is at or after the current LTS; an older one is
-      removed outright rather than reformatted.
-- [ ] **FAQ size** — at most **5** entries **and at most 25 lines**; the surplus became a separate
-      troubleshooting page.
-- [ ] **Title/name has no type word** — no "How to", "Explanation", "Reference", "Tutorial" in the
-      title or the page name; disambiguation, if any, is a parenthetical in the **title only**.
-- [ ] **Understandable out of context** — the title and page name make sense from a search result.
-- [ ] **No inline styles** — no `(% style="…" %)`; no raw HTML where XWiki syntax exists.
-- [ ] **Images in list items** — wrapped in `(((…)))` so the list is not split.
-- [ ] **Screenshot standards** — latest skin, captured while using the feature, captured at the exact
-      `size` width, PNG, red (`255, 0, 0`) box around the UI element concerned.
-- [ ] **Screenshot framing** — each shot is cropped to the element plus the landmark that locates it,
-      not a whole window repeated on every step; the box marks what the step asks for; only the entry
-      step keeps the surrounding chrome.
-- [ ] **Technical ID** — prefixed: `xwiki:<extension id>` (or `npm:<package id>`), empty only when no
-      extension applies. An unprefixed id is the defect; do not "fix" a prefixed one.
-
-Report findings as a list of concrete, actionable items. Do **not** flag a pure style preference:
-every finding must be justified by a rule violation (type/title/page-name/structure/style/link/
-location/versioning) or a concrete usability or maintainability problem.
-
-## Live examples per page type
-
-Real, well-formed pages in the new tree — read them to calibrate structure, title style, and voice
-for each Diataxis type:
-
-- **How-to** (verb-led title, numbered verb-led steps):
-  - [Edit a Page](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/edit-page/)
-  - [Configure a Servlet Container](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/installation/methods/install-xwiki-war/configure-servlet-container/)
-- **Tutorial** (verb-led, more specific / end-to-end than a How-to):
-  - [Create an npm package](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/front-end/create-npm-package/) (Developer)
-  - [Set up NginX Proxy Server](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/installation/http-reverse-proxy/nginx-key-configurations/set-nginx/) (Administrator)
-- **Reference** (noun-phrase title, tables, concise, code for APIs):
-  - [Realtime Edit Actions](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/edit-page/realtime-edit-actions/)
-  - [Ways to Resolve Edit Conflicts](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/edit-page/resolve-conflict-page/ways-resolve-edit-conflicts/)
-  - [Blob Store API](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/store/blob/)
-- **Explanation** (noun-phrase title, answers "why", concepts/limitations/consequences):
-  - [Class Page Deletion](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/refactoring-operations-pages/delete-page/class-page-deletion/)
-  - [Comments Tab in Page Extra Area](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/view-page/comments-tab/)
+Reviewing a page — when asked to, and on **every page you wrote or updated, before step 13 saves it**
+— means applying `references/review-checklist.md` to it, page by item. Read that file at that point
+each time: `lint` covers only its mechanical subset.
