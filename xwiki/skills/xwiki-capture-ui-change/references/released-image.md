@@ -66,5 +66,8 @@ curl "${X[@]}" -X POST "$P/XWikiPreferences/objects" --data '<object xmlns="http
   <property name="allow"><value>1</value></property></object>'   # each: 201
 ```
 
-Then pick the fixture (step 2) and shoot it as step 3 does, against `$BEFORE_URL`. Remove the
+Then pick the fixture (step 2) and shoot it as step 3 does, against `$BEFORE_URL`. A page or
+object the fixture needs is created on both instances by the same REST write as `Admin:admin`,
+with only the base URL changing: `$BEFORE_URL/rest/…` here, `$XWIKI_BASE_URL/rest/…` (with its
+`/xwiki`) on the branch's. Remove the
 containers when done: `docker rm -f xwiki-before xwiki-before-db && docker network rm xwiki-before`.

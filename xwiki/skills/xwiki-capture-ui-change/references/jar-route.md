@@ -3,7 +3,9 @@
 Read by `xwiki-capture-ui-change` when its step 1 picked the jar route (a `jar` or `webjar` module,
 or a translation bundle inside one), before the first build; step 3 runs it once per state. Step
 numbers are those of that skill's `SKILL.md`; `$WORK`, `$CAPTURE_DIR` and `$INSTANCE_DIR` come from
-its environment block, and `$DEPLOYED` and `original.jar` set here are what its step 4 restores.
+its environment block, and the backups under `$CAPTURE_DIR/original/` made here are what its step 4
+restores, one per jar. A fix spanning several jar modules runs the block's build, backup and `cp` lines
+once per module, in one worktree, then restarts once.
 
 **The jar route** is three steps other skills already own, for `REF=WORKTREE` or any commit-ish:
 
@@ -26,8 +28,13 @@ MODULE=xwiki-platform-core/.../xwiki-platform-index-tree-webjar   # relative to 
 SRC=.; [ "$REF" = WORKTREE ] || { SRC="$WORK/ref-worktree"; git worktree add --detach "$SRC" "$REF"; }
 (cd "$SRC/$MODULE" && xmvn package -B -ntp -DskipTests)      # mvn where xmvn is not installed
 LIB="$INSTANCE_DIR"/webapps/xwiki/WEB-INF/lib; DEPLOYED=$(ls "$LIB"/<artifactId>-[0-9]*.jar)
-[ -e "$CAPTURE_DIR/original.jar" ] || cp "$DEPLOYED" "$CAPTURE_DIR/original.jar"   # step 4 restores it
+ORIG="$CAPTURE_DIR/original/webapps/xwiki/WEB-INF/lib"; mkdir -p "$ORIG"
+[ -e "$ORIG/${DEPLOYED##*/}" ] || cp "$DEPLOYED" "$ORIG/"   # step 4 restores it
 cp "$SRC/$MODULE"/target/<artifactId>-<version>.jar "$DEPLOYED"
 (cd "$INSTANCE_DIR" && ./stop_xwiki.sh)   # then step 0's start and wait
 [ "$SRC" = . ] || git worktree remove --force "$SRC"
 ```
+
+The restart also empties the in-memory cache of LESS that XWiki compiles at request time (a
+webjar's `.less` served with `evaluate=true`): no flush is needed after a swap. The browser's cache
+is another matter, which `SKILL.md` step 3 covers.
