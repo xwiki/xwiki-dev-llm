@@ -143,8 +143,9 @@ review, not a failed one.
 
 ## 6. Post
 
-Re-run the eligibility gate from step 1 (the PR may have been merged or closed while you worked).
-Then post **one** comment. Never split a review across many comments; never post inline comments
+Re-run the eligibility gate from step 1 (the PR may have been merged or closed while you worked),
+and check the comment against the Write / Never-write list in `references/reviewer-contract.md` (§6b
+says why it binds the comment). Then post **one** comment. Never split a review across many comments; never post inline comments
 for anything below `major`.
 
 The comment opens with this disclaimer, verbatim, always:
