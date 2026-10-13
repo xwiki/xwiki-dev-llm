@@ -226,7 +226,8 @@ not the repository one.
   GitHub also rejects a patched version lower than the band's highest vulnerable version.
 - **First affected release:** verify JIRA's "Affects Version/s" instead of taking it as is. Find the commit(s) that
   introduced the vulnerable code and take the lowest release tag that contains them —
-  `git tag --contains <sha> | grep -E '^xwiki-platform-[0-9]' | sort -V | head` — which also catches
+  `git tag --contains <sha> | grep -E '^xwiki-platform-[0-9.]+(-(milestone|rc)-[0-9]+)?$' | sed -E 's/-(milestone|rc)/~\1/' | sort -V | sed 's/~/-/' | head`
+  (the `~` sorts `16.0.0-rc-1` before `16.0.0`; a plain `sort -V` puts it after). It also catches
   backports to an older branch (XWIKI-24737: the code came with 6.0-milestone-1, but a backport put
   it in 5.4.2 already). When the attack also depends on something else (a bundled library version,
   another feature), check that it works in that release too, and tell the user when the attack
@@ -333,9 +334,6 @@ assumed. When the user asks for that step:
 
 ## Troubleshooting
 
-- **JIRA fetch fails** (missing token, network/auth error, or 404) → don't block: ask the user
-  directly for the missing fields (see Step 1) and draft from their answers. A 404 on a restricted
-  issue usually means the account can't see it, not that the key is wrong.
 - **No CVSS vector in `customfield_11870`** → it may not have been scored yet; compute it with the
   user using the Step 2 guidance and the official calculator (https://www.first.org/cvss/v4.0/)
   rather than guessing a score.
