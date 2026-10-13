@@ -52,7 +52,8 @@ as a **parameter** — otherwise the call site cannot see what the macro changes
 
 ## Related — the Velocity rules that live in another topic
 
-- [[server-side-rendering]] — space gobbling, and the blank lines that separate generated blocks.
+- [[server-side-rendering]] — space gobbling: which lines need a closing `##`, and the blank lines
+  that separate generated blocks.
 - [[script-services]] — calling a script service: `#try()` rather than a `getLastError()` check.
 - [[translations]] — rendering a translation, and escaping its parameters.
 - [[security]] — escaping a value before it reaches the output.

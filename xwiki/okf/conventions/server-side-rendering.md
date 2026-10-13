@@ -3,7 +3,8 @@ title: Server-side rendering conventions (Velocity in wiki pages, sheets and tem
 stability: durable
 summary: Rules for code that runs on the server inside a wiki page, sheet or template and produces
   wiki syntax or HTML. Blocks in generated wiki syntax are separated by blank lines, which Velocity's
-  space gobbling and the document display API silently remove.
+  space gobbling and the document display API silently remove; only a line ending with content needs
+  a closing `##`.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/
   - https://velocity.apache.org/engine/2.3/user-guide.html
@@ -26,6 +27,13 @@ A missing separator nests a paragraph inside another — invisible until the HTM
 standalone-only macro such as `{{gallery}}` fail with *"is a standalone macro and it cannot be used
 inline"*. Only rendering the page catches either: a page test asserting the element it is about passes
 whichever way the blocks came out.
+
+## Only a line ending with content needs a closing `##`
+
+That same gobbling (XWiki runs Velocity with `bc`), plus the `indent` filter stripping leading
+whitespace, means a line ending with a directive — `#foreach`, `#if`, `#else`, `#end`, `#set` — already
+emits nothing. Inline output split over several lines needs `##` only on the lines ending with text or
+a reference.
 
 Related, in their own layers: escaping a value before it reaches generated syntax is [[security]];
 the accessibility of the markup a page emits, and the colour-theme variables an SSX can read, are
