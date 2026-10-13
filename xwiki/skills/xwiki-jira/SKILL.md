@@ -75,7 +75,10 @@ per `okf/servers/jira.md`. Pass `--no-input` only when every required field is s
    **Then establish that a new issue is the right answer at all:** a defect in code the *unreleased*
    dev version introduced belongs on the issue that introduced it, reopened — see "Whether to file an
    issue at all" in `okf/servers/jira.md`. Reaching for the dev version as the Affects Version is the
-   signal you are in that case.
+   signal you are in that case. Likewise, a follow-up to an issue whose fix turns out incomplete
+   reopens that issue as long as **none** of its Fix Version/s is released — check the `released`
+   flag of each one live, stable branches included; only once one is released does the follow-up
+   get a new issue, linked as `Related`.
 2. Read `okf/servers/jira.md` and resolve the fields: issue type, **Component/s**, **Affects
    Version/s** (oldest affected, else last LTS — verify the version values, don't cache them),
    **Fix Version/s**. Write the description in JIRA wiki markup, explaining the *user-visible* problem,
