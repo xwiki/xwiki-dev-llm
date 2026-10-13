@@ -23,7 +23,9 @@ not the repository one.
   carries the vulnerable code — never an umbrella/parent artifact. Examples from past advisories:
   `org.xwiki.platform:xwiki-platform-oldcore`, `org.xwiki.platform:xwiki-platform-office-viewer`,
   `org.xwiki.platform:xwiki-platform-repository-rest-server`. More than one module affected → one
-  set of **Affected product** entries per module, not a single combined one.
+  set of **Affected product** entries per module, not a single combined one. A `zip` or `war`
+  artifact is named the same way, without its type (GHSA-53gx-j3p6-2rw9:
+  `org.xwiki.platform:xwiki-platform-tool-jetty-resources`, a zip).
 - **Legacy counterpart:** when the vulnerable module has a backward-compatibility module that also
   ships the vulnerable code, list it as its own **Affected product**, mirroring the main module's
   ranges and patched versions one-for-one. These modules live under
@@ -84,12 +86,22 @@ not the repository one.
   further than a few years' worth of renames is rarely worth it — but a recent rename matters.
 - **Repackaging modules:** some modules embed a copy of another module's artifact through a
   `maven-dependency-plugin` `<artifactItem>` (unpack/copy) — e.g. `xwiki-platform-web-war` unpacks
-  `xwiki-platform-web-templates` into the WAR — so an installation can run the vulnerable code
-  while only the repackaging artifact is visible. Find them with
-  `rg -l --glob pom.xml '<artifactId>VULNERABLE_ARTIFACT_ID</artifactId>' | xargs grep -l artifactItem`,
-  confirm the `<artifactItem>` really names the vulnerable module, and list the repackaging module
-  as its own **Affected product** with the same bands (like a legacy counterpart; mind its own module
-  history). The same applies to webjars bundling JavaScript built by `xwiki-platform-node`.
+  `xwiki-platform-web-templates` into the WAR — or through a `maven-assembly-plugin`
+  `<dependencySet>` in an assembly descriptor (`src/assemble/*.xml`, not the pom) — e.g. the
+  Jetty/HSQLDB distribution zip unpacks `xwiki-platform-tool-jetty-resources` — so an installation
+  can run the vulnerable code while only the repackaging artifact is visible. Find both with
+  `git grep -l -E --all-match -e '(<artifactId>|:)ARTIFACT_ID(</artifactId>|:|</include>)' -e '<(artifactItem|dependencySet)>' -- '*.xml'`,
+  confirm each hit really unpacks or copies the vulnerable module (the module's own pom and
+  test-scope dependencies also match), and list the repackaging module as its own **Affected
+  product** with the same bands (like a legacy counterpart; mind its own module history). The same
+  applies to webjars bundling JavaScript built by `xwiki-platform-node`. A repackaging artifact that
+  is a distribution (the Jetty/HSQLDB zip, the Debian packages) is no dependency of anyone's build:
+  name it in the Impact prose, and ask the user whether to list it as an **Affected product** too.
+- **Variants the fix did not touch:** look beside each fixed file for the same logic in a sibling —
+  another script for another OS, another template or skin, another module with the same code (e.g.
+  `start_xwiki.bat` beside `start_xwiki.sh`, which XWIKI-23438's fix changed alone). Record for each
+  whether it is vulnerable; one that is vulnerable and unfixed means the fix is incomplete, so tell
+  the user before writing any patched version.
 - **Keep JIRA in sync:** when the verified first affected release differs from JIRA's "Affects
   Version/s", or the patched versions from its "Fix Version/s", update the issue with the verified
   values (xwiki-jira skill; the field conventions are in `okf/servers/jira.md`), so that JIRA, the

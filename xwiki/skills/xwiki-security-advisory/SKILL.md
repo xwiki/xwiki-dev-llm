@@ -56,7 +56,10 @@ From the response's `fields`, collect:
 
 - `summary`, `description` (the vulnerability write-up, in JIRA wiki markup — usually has an
   `h2. Impact` / `h2. PoC` structure — lift the impact from it, never the PoC), `security` (confirms it's
-  restricted), `priority`, `versions` (Affects), `fixVersions`, `reporter`.
+  restricted), `priority`, `versions` (Affects), `fixVersions`, `reporter`. An empty `security`
+  means the issue is public: either it was disclosed, and the check below finds its published
+  advisory, or it was filed public, and the policy's checklist ("Verify that the Confidential level
+  is set") comes first — tell the user before drafting.
 - The **CVSS vector** (`customfield_11870`, e.g. `CVSS:4.0/…`) and its numeric **score**
   (`customfield_11871`); both fields are described in `okf/processes/security-policy.md`.
 - A `customfield_*` holding a `devSummaryJson`/pull-request bean can reveal whether a fix PR/commit
@@ -72,6 +75,22 @@ vulnerability description (impact, affected component, how to reproduce); affect
 fix version(s) if already decided; the reporter's name and whether they've agreed to be credited; and
 a CVSS vector/score if one has already been agreed on. Draft with whatever they provide, and mark
 anything still missing as an explicit `[TBD]` in the draft rather than inventing a value for it.
+
+### Check that no advisory exists yet
+
+The JIRA web link can be missing (XWIKI-23438 has none, yet GHSA-53gx-j3p6-2rw9 covers it), so
+check both places:
+
+```bash
+curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" "https://jira.xwiki.org/rest/api/2/issue/<KEY>/remotelink" \
+  | jq '.[].object | select(.title == "Security Advisory") | .url'
+gh api --paginate "repos/<owner>/<repo>/security-advisories?per_page=100" \
+  --jq '.[] | select((.description // "") | test("<KEY>\\b")) | {ghsa_id, state, html_url}'
+```
+
+GitHub lists drafts only to an organization owner or a collaborator on them, so an empty result
+from another account rules out published advisories only. When one exists, stop and show it to the
+user: the job becomes reviewing or editing it (`references/github-advisory.md`), never a second one.
 
 ## Step 2 — Fetch the live advisory template and scoring guidance
 
@@ -121,12 +140,16 @@ still-private/draft one — whose vector is close to the one at hand, and read h
 row's comment:
 
 ```bash
-gh api repos/<owner>/<repo>/security-advisories --jq \
-  '.[] | select(.state=="published") | {ghsa_id, summary, cvss: .cvss.vector_string}'
+gh api --paginate "repos/<owner>/<repo>/security-advisories?state=published&per_page=100" --jq \
+  '.[] | {ghsa_id, summary, cvss: (.cvss_severities.cvss_v4.vector_string // .cvss.vector_string)}'
 gh api repos/<owner>/<repo>/security-advisories/<ghsa_id> --jq '.description'
 ```
 
-Pick precedents that have a CVSS table (older advisories give only the vector).
+(`.cvss` holds only a CVSS 3 vector.) Precedents that comment each metric are rare: the published
+advisories give the vector alone, except GHSA-5446-j3r6-h5xp (`xwiki-contrib/application-activitypub`,
+the template's table) and GHSA-jm43-hrq7-r7w6 (`xwiki-platform`, a "CVSS explanation" list). Find
+others with `select(.description | test("CVSS Score Computation|Attack vector:"; "i"))`; without a
+close one, write each comment from Step 2's guidance alone.
 
 Match the **register** — tight and mechanism-specific, one sentence per row (e.g. "Reachable by a
 guest, who does not need an account." rather than a generic "Low privileges needed") — not the
@@ -176,7 +199,8 @@ the outcome of each one, "none" included:
 - the leaf module(s) holding the vulnerable code, under the `maven` ecosystem;
 - a legacy counterpart weaving that module in (the `legacy-` infix, confirmed in its pom);
 - each module's history over the affected range (renames, splits, merges);
-- modules repackaging it (an `artifactItem`, a webjar);
+- modules repackaging it (an `artifactItem`, an assembly `<dependencySet>`, a webjar);
+- variants of the vulnerable code that the fix did not touch;
 - the first affected release, from the release tags containing the introducing commit;
 - one band per fixed branch, both bounds set, one patched version per band;
 - the Maven version format and the operator syntax GitHub and OSV accept;
@@ -197,7 +221,7 @@ reminders), and request the CVE.
 ## Step 6 — Creating the real draft advisory on GitHub (only when asked)
 
 Creating the advisory is visible to every organization owner at once, so it happens only when the
-user asks for it. Then open `references/github-advisory.md` and follow it: the create request, the
+user asks for it, and only after re-running Step 1's check that no advisory exists yet. Then open `references/github-advisory.md` and follow it: the create request, the
 Security team as collaborator, editing a draft others may have changed, the JIRA link, the Security
 Advisory Application import and the CVE request. Two rules hold whatever the user asks:
 
