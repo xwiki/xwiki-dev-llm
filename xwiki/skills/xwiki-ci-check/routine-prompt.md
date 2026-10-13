@@ -1,9 +1,9 @@
 # The routine prompt
 
 What the scheduled Claude routine is given, and nothing more. It names the skill and the mode; all
-behaviour lives in `SKILL.md` and `tools/`, which are versioned, validated and reviewed. **Changing
-what the routine does is a pull request to `xwiki-dev-llm`, not an edit to an unreviewed routine
-config** — and going live changes one word.
+behaviour lives in `SKILL.md`, its `references/` and `tools/`, which are versioned, validated and
+reviewed. **Changing what the routine does is a pull request to `xwiki-dev-llm`, not an edit to an
+unreviewed routine config** — and going live changes one word.
 
 **Schedule: 06:00 Europe/Paris, daily.** After the overnight builds finish (a platform build takes
 3.4–6.5 h) and before anyone starts work. Monday's run covers the weekend on its own; the 7-day

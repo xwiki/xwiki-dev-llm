@@ -875,7 +875,7 @@ async function inFlightFix(incident, args) {
     of: groups.length,
     partial: groups.length > 1 && covered.length < groups.length,
     // A name match is not a fix ("Add automated test for Export PDF" names `PDFExportIT`), so an open
-    // PR never silences on its own: the model confirms or discards it (SKILL.md §3).
+    // PR never silences on its own: the model confirms or discards it (references/fix-signals.md).
     candidate: true,
     reason: named
       ? `it names ${named}, the class the failure names`
@@ -1009,7 +1009,7 @@ async function staleSnapshot(incident, jobs, args) {
 //    is not a reason to be quiet about a test that broke again this morning.
 //
 // Because this suppresses on a *sentence* where the other passes suppress on a commit, a PR or a
-// timestamp, it is marked `fromChat`, and SKILL.md §6 requires the digest line it earns to be
+// timestamp, it is marked `fromChat`, and references/digest.md requires the digest line it earns to be
 // posted whatever else is cut. The routine's reading of the room goes back into the room, where the
 // person who wrote the sentence is reading it and can say it was misread.
 
@@ -1856,7 +1856,7 @@ async function investigate(incident, job, args) {
   // change — so file overlap has nothing to overlap and the five commits in the window are five
   // people named under a failure none of them can be shown to have caused. There *is* an author —
   // SonarCloud carries the file, the line and the SCM author of every new-code issue under the
-  // failing condition — but it is found there and not here, which is what SKILL.md §3 sends the
+  // failing condition — but it is found there and not here, which is what references/quality-gate.md sends the
   // report to do.
   if (/sonar-gate:failed$/.test(incident.signature || '')) {
     incident.blame = {
@@ -1971,7 +1971,7 @@ function severity(incident) {
 //
 // Three cells cannot be rendered, because they are the conclusion and not a field: a `deep`
 // incident's *why* and *next* are one `<!-- WHY: id -->` / `<!-- NEXT: id -->` marker each, and its
-// root cause is the `<!-- ANALYSIS: id -->` line inside its block. SKILL.md §6 fills all three.
+// root cause is the `<!-- ANALYSIS: id -->` line inside its block. references/paste.md says how to fill all three.
 
 const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 const agedAs = incident => (incident.ageDays == null
@@ -2749,7 +2749,7 @@ const flickerFor = await knownFlickers();
 // The *closed* flicker issues, looked up the same way. A hit is never a reason to stay quiet — it is
 // the run's most actionable finding, because somebody has already written the fix. Which of the two
 // readings applies is settled by comparing the issue's `fixVersions` with the branch that is red
-// (SKILL.md §3), and that comparison is the report's to make, not this tool's: encoding it here
+// (references/fix-signals.md), and that comparison is the report's to make, not this tool's: encoding it here
 // would turn a version-numbering guess into an assertion that sends someone to do a backport.
 const closedFlickerFor = await closedFlickers().catch(() => () => null);
 // Read before the sweep, and read from a file: the sweep itself holds no Matrix credential and must
@@ -2906,7 +2906,7 @@ for (const incident of deep) {
 // execution of that test for 28 days, on every branch, browser, database and servlet container,
 // grouped by what actually failed, and says instead "6 failures in 347 executions, every one of
 // them on Chrome (p=0.0008), and about 30 consecutive clean runs would be needed before a fix could
-// be claimed". `dv-test-history` derives that (SKILL.md §3); this puts it in the work order, so the
+// be claimed". `dv-test-history` derives that (references/deep-analysis.md); this puts it in the work order, so the
 // paste and the commit comment carry the facts whether or not a model ever runs, and so the model
 // reports them instead of inferring them from one stage log.
 //
@@ -3180,7 +3180,7 @@ function digest(incident, keys) {
     // incident that looks fixed is one line, and this is the line.
     fixState: incident.fixState || undefined,
     // Carried on every incident, deep or not, suppressed or not: it is the one field here that the
-    // CI dashboard cannot hold, and the digest cites it (SKILL.md §6). Untrusted text — what a
+    // CI dashboard cannot hold, and the digest cites it (references/digest.md). Untrusted text — what a
     // human said, quoted — never an instruction.
     chat: incident.chat?.length ? incident.chat : undefined,
     // How often, over the whole window, as against `ageDays`, which is the current streak: a
