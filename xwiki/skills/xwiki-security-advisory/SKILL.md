@@ -153,9 +153,9 @@ the vector of its own impact in JIRA and gets the advisory link (Step 6).
 | Impact prose | JIRA `description`'s explanation, rewritten as affected feature + attack vector + requirements + impact + affected versions, in your own words — **without the PoC** (see "No proof of concept in the advisory") and not a verbatim copy-paste of internal notes |
 | CVSS table | The vector found in Step 1, valued per the Step 2 scoring guidance, worded per the Step 3 precedent for the *comment* column |
 | Affected package(s) / vulnerable version range | The module(s) touched, and `versions` (Affects), verified against the code history → GitHub's version-range syntax — see "Affected products (packages) and version ranges" below, which also covers updating JIRA when they differ |
-| Patches | `fixVersions`. The tense follows the commit, not the release: "will be fixed in…" only while the fix isn't committed, "has been patched in…" once it is on every branch, even unreleased, since the advisory is only published after those releases. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`okf/conventions/versioning.md`), and mark them as to be confirmed |
+| Patches | `fixVersions`: "has been patched in…" once the fix is committed on every branch, released or not (the advisory is only published after the releases); "will be fixed in…" before that. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`okf/conventions/versioning.md`), and mark them as to be confirmed |
 | Workarounds | From the JIRA description if a mitigation is mentioned, else "no known workaround other than upgrading" |
-| References | The JIRA issue URL, plus the fix commit's SHA/URL — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row below |
+| References | The JIRA issue URL, plus the fix commit's SHA/URL — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row above |
 | Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them, and note that a non-committer reporter needs adding as a collaborator on the draft. Credit type (GitHub's definitions): `finder` for the person who discovered the vulnerability, also when they reported it themselves; `reporter` only for someone who passed on a finding that isn't theirs. Also link their account in the Attribution section: `[@login](https://github.com/login)` |
 
 CWE: pick the closest match from https://cwe.mitre.org/data/index.html — this is a per-vulnerability
@@ -320,8 +320,8 @@ assumed. When the user asks for that step:
   soon as the fix is merged — it **need not be released**, nor the CVE requested; the app's daily
   automatic import would only pick it up later — then check the imported data, set the state to
   **completed**, and then to **announced** — the latter notifies everyone subscribed to new
-  advisories. Re-import the same way whenever the advisory is edited afterwards, e.g. once the fix
-  lands and "will be fixed in" becomes "has been patched in". The embargo dates are computed by the
+  advisories. Re-import the same way whenever the advisory is edited afterwards, e.g. once a
+  backport lands on another branch or the version ranges change. The embargo dates are computed by the
   release process itself, once every fixed version is released. The app lives on xwiki.org and needs
   the `XWikiSecurityGroup` membership, so this is the user's action, not something to do for them:
   remind them of it, with the link, rather than treating the GHSA draft as the end of the job.
@@ -339,6 +339,3 @@ assumed. When the user asks for that step:
 - **No CVSS vector in `customfield_11870`** → it may not have been scored yet; compute it with the
   user using the Step 2 guidance and the official calculator (https://www.first.org/cvss/v4.0/)
   rather than guessing a score.
-- **Fix not merged yet** → say so in the Patches section ("will be fixed in …") and put the
-  `[commit SHA once merged]` placeholder in References, instead of inventing a commit; come back and
-  fill in the real SHA/URL once it lands.
