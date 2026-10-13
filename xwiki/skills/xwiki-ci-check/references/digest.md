@@ -1,7 +1,8 @@
 # The Matrix digest
 
-Read by `xwiki-ci-check` (SKILL.md §6) in `--write` mode only, before building the digest — on every
-morning, a 0-incident one included. A local run never posts one. § numbers are those of SKILL.md.
+Read by `xwiki-ci-check` (SKILL.md §6) before building the digest: in `--write` mode every morning,
+a 0-incident one included, and in the routine's dry run, which prints it instead of posting. A local
+run never posts one. § numbers are those of SKILL.md.
 
 **The Matrix digest is never local, even if asked.** It is the one broadcast here: it lands in the
 team's room with no addressee and no undo, and it is the *routine's* own output — a second digest

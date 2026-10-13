@@ -37,7 +37,7 @@ the digest. Reopening overrides someone's triage decision; filing a duplicate is
 
 A locally-filed flicker issue **cannot duplicate tomorrow's routine**: the routine files only a
 `proven` flicker whose `jira` is null, and that field comes from a live JIRA lookup, so the issue
-filed today is what makes tomorrow's run stay quiet. The §5 thresholds hold locally in full — the
+filed today is what makes tomorrow's run stay quiet. These thresholds hold locally in full — the
 evidence bar and one issue per `flickerGroup` are what make an auto-filer tolerable, and a developer
 saying yes is not a reason to file on weaker evidence than a routine would.
 

@@ -262,8 +262,8 @@ expiry on that instance.
 
 ### The digest — routine only
 
-Never in a local run (§0). In `--write` mode, read `references/digest.md` before building it — every
-morning, a 0-incident one included. Whatever else it says:
+Never posted locally (§0). Read `references/digest.md` before building it: every `--write` morning,
+0 incidents included, and in a dry run that prints it. Whatever else it says:
 
 - **`silent: true` from `--delta` means post nothing at all** — no digest, no green line — unless
   this run opened a stabilisation PR, which is news. The paste and the commit comments still run.
