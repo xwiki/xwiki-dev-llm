@@ -84,23 +84,8 @@ renders `{{jira}}` — the list of issues fixed, queried from JIRA — *instead 
 says so). An entry posted against that version is stored and never rendered, so **never post one
 there**. Say this at triage rather than discovering it afterwards.
 
-**That is a fact about the page, not about the issues.** A bugfix release is mostly bug fixes, which
-§4 sends to `N/A` anyway — but **improvements do get slipped into one when they are what
-fixes the bug, and an improvement needs its entry here as much as anywhere**. Every issue in one
-is also fixed forward, so its Fix Version list names the `.0` or RC version too, and *that* is where
-its entry goes and renders. The bugfix note is not left silent: its `{{jira}}` list covers the issue
-by summary, and the feature note carries the prose.
-
-So the triage row for a bugfix sweep carries the RC alongside the bugfix version, and its release
-status with it — an entry against an **already-released** note is a retroactive edit and needs the
-developer's say-so.
-
-`verify:` both halves, which are cheap and settle any argument — `GET …/releasenotes/XWiki/<a
-bugfix version>/changes` returns an empty list for every bugfix release; and the improvements and
-new features shipped in recent bugfix releases (`issuetype in (Improvement, "New Feature") AND
-fixVersion in (…)`) mostly hold an entry URL, every one of them pointing at the feature release's
-note. **A field pointing at the bugfix note's `#HNewandNoteworthy…` anchor is not an entry** —
-it is a link into the JIRA list, and `okf/servers/jira.md` forbids anchors in the field regardless.
+Read `references/bugfix-releases.md` before triage **whenever the version is a bugfix release or
+an issue in scope has one among its Fix Versions**: it says where such an issue's entry goes instead.
 
 **The clones.** `xwiki-platform`, `xwiki-commons` and `xwiki-rendering` are needed to read diffs.
 Discover them as siblings of the working directory; ask once if any is absent. **Never hardcode a
@@ -154,35 +139,13 @@ These are the bar the developer set, and they are what makes the output worth tr
 
 ## 3. Phase 1 — evidence
 
-One **read-only subagent per issue** (or per proposed group), in parallel. Each is given the issue
-key, the repo, the ref and the commit range, and returns a structured verdict — never the diff
-itself, which must stay out of the main context:
+One **read-only subagent per issue** (or per proposed group), in parallel. Give each the absolute
+path of `references/evidence-brief.md` as its instructions, plus the issue key, the repo, the ref and
+the commit range. It returns the structured verdict that file defines — never the diff itself.
 
-```
-issue        : XWIKI-24710
-type         : Improvement          component(s): Live Data
-commits      : <sha> …
-user-visible : yes|no   — what a user or admin would notice, in one line
-api-visible  : yes|no   — public API added/changed/removed, with the signature and file:line
-config       : any new/changed configuration key, with file:line
-facts        : the claims a doc page or an entry would need, each with file:line
-images       : the before/after attachments already on the issue (okf/servers/jira.md requires them)
-existing     : the current values of customfield_10270 / customfield_10273
-verdict      : doc = yes|no  ·  rn = yes|no  ·  why, in one sentence each
-```
-
-Candidate target pages are looked up by **Solr search over the four wikis** (`www`, `extensions`,
-`dev`, `rendering`) via REST — see `xwiki-rest-api` — and the best candidate is carried into the
-triage table for approval.
-
-**Search the identifiers the diff touches, not only the subject.** Searching the subject answers
-"is there a page about this feature", which for a fix is usually "no" — and that "no" is not the
-documentation verdict. The verdict turns on the sharper question: **does any page make a claim this
-change makes wrong?** A page about something else entirely can carry one incidental sentence about
-the code being changed, and a subject search will never surface it. So search both: the subject, and
-the concrete strings in the diff — the class or property name, the configuration key, the SQL or
-command shown to readers, the event name, the macro name. Then **read the candidate and check the
-claim**, rather than judging from the search hit's title.
+Check each documentation verdict against the question it turns on: **does any page make a claim this
+change makes wrong?** A subject search alone cannot answer it; the brief has the evidence agent search
+the identifiers the diff touches too.
 
 ## 4. Triage
 
@@ -311,16 +274,8 @@ another author.
    An entry that already covers the change is reused, not duplicated (§5).
 
 2. **If the release note does not exist**, say so, show exactly what will be created, and create it
-   **only on confirmation**:
-
-   ```
-   POST /xwiki/rest/wikis/xwiki/releasenotes
-   {"product": "XWiki", "version": "<the JIRA version name>", "released": false}
-   ```
-
-   A `409` means somebody created it in between — re-read the list and carry on. The template
-   leaves several things for the **release manager** (the OKF lists them): report those in §7,
-   never invent them here.
+   **only on confirmation** — the call, a racing `409` and what is left to the release manager are in
+   `references/entry-writes.md`.
 
 3. **Post the entry**:
 
@@ -335,17 +290,10 @@ another author.
 
    - **Read the URL back out of the response**, never construct it from an assumed entry number:
      the response carries the stored value, and `reference` is the page actually allocated.
-   - **Screenshots take two more calls, in this order.** A `screenshots` name must name an
-     attachment that already exists on the entry page, and that page does not exist until the POST
-     allocates it. So: post the change *without* `screenshots`; **download the screenshot from the
-     documentation page and re-upload it** to the page named by `reference` (standard attachment
-     REST); then set `screenshots` — over the RN API's `PUT` on one change where the wiki runs a
-     version that has it, otherwise on the entry's `ChangeClass` object through generic object REST
-     (`xwiki-rest-api`). The OKF's endpoint list says how to tell the two apart, and that a `PUT`
-     replaces rather than merges. Copy the file —
-     never link the documentation page's attachment, or refreshing that page later rewrites what
-     old release notes show. Never pre-create the entry page to get around the ordering: a page
-     sitting at the next `Entry###` corrupts the allocation.
+   - **Screenshots come after the entry exists**: post it without `screenshots`, copy the image
+     file onto the page named by `reference`, then set `screenshots`. Never link the documentation
+     page's attachment, and never pre-create the entry page. Read `references/entry-writes.md` for
+     the calls before the first entry with a screenshot.
 
 ### 6.3 The JIRA fields
 
@@ -391,9 +339,7 @@ Release Notes Application on xwiki.org holds (`Cristal`, `ActivityPub Applicatio
 everything above works, **product and release-note location being parameters, not constants**.
 
 **An extension not bundled in XWiki Standard is out of scope, and owes no release-note entry at
-all.** Its release notes are the Repository application's per-version ones on extensions.xwiki.org,
-which are a `{{jira}}` macro over the fix version — so its fixed issues take `Documentation in
-Release Notes = N/A`, there is nothing to do until the version is released, and the release is
-announced by a blog post (`xwiki-contrib-release-blog-post`). The mechanism, and the `verify:` that
-reads it back, are in `okf/processes/release-notes.md`. The documentation half (§6.1) still applies
-to such a change, so a SINGLE run over one of its issues is a documentation-only run.
+all**: its fixed issues take `Documentation in Release Notes = N/A`, and nothing is owed until the
+version is released. Why, and the `verify:`, are in `okf/processes/release-notes.md` ("Extensions not
+bundled in XWiki Standard"). The documentation half (§6.1) still applies to such a change, so a
+SINGLE run over one of its issues is a documentation-only run.
