@@ -43,14 +43,15 @@ the unreleased dev version, you are in this case — the exception being a genui
 that the new work merely brought to light, which is its own issue with an Affects Version naming a
 *released* version.
 
-**A fix that turns out incomplete is finished under its own issue while none of its Fix Version/s
-is released** — the same symptom showing up again, or a case the fix doesn't cover. Reopen the issue
-and land the follow-up under its key, with the same backport labels as the first PR, so that every
-version carrying the first fix also gets the follow-up. Check the `released` flag of **every** Fix
-Version/s live (`GET /rest/api/2/issue/<KEY>?fields=fixVersions`), the stable-branch ones included:
-as soon as one of them is released, users may already run the partial fix, and the follow-up is a
-new issue linked to it as `Related`. The Affects Version tell above does not catch this case, since
-the defect usually predates the dev version.
+**A fix that turns out incomplete is finished under its own issue only while none of its Fix
+Version/s is released**: reopen it and land the follow-up under its key, with the same backport labels
+as the first PR. Once **any** of them is released (check each one's `released` flag live,
+`GET /rest/api/2/issue/<KEY>?fields=fixVersions`, stable branches included), never reopen it; file a
+new issue linked as `Related`. An issue's commits must never span released versions, or its Fix
+Version stops saying where it was fixed (upstream rule "Don't reopen issues closed for a released
+version"). The one exception is an issue closed without commits (Won't Fix, Duplicate, …), which may
+be reopened. The Affects Version tell above misses this case, since the defect usually predates the
+dev version.
 
 A change with no effect on users or extension developers (refactoring, build-only work) needs no
 issue; when one is filed anyway it takes the **`Development Issue Only`** component, which is excluded

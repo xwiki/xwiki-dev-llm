@@ -198,7 +198,8 @@ sends somebody to do a backport nobody needed:
   adaptation and the verification; never land it here. It is also the strongest thing a run can
   produce, because the change already exists and the other branches have been running it.
 - **an entry that does cover this branch** ⇒ the fix is here and the test fails anyway. The issue is
-  wrong, not missing: **comment on it, or propose reopening it**, and file nothing. An `earlier`
+  wrong, not missing: **comment on it** and file nothing; it is released, so it is never reopened
+  (`okf/servers/jira.md`, "Whether to file an issue at all"). An `earlier`
   list is the same signal repeated — a test filed three times is one that keeps coming back, and
   saying so is worth more than a fourth issue.
 
