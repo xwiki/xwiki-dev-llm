@@ -84,7 +84,7 @@ for whole types, `xwiki-commons-legacy-velocity` / `xwiki-commons-legacy-compone
   predates default methods and instead pairs an abstract `Compatibility*` interface with a per-class
   ITD aspect; prefer the default-method form in new code.)
 
-Two traps the legacy module's build rejects:
+Three traps the legacy module's build rejects:
 
 - A **compile-time constant** (`static final` primitive/`String`) cannot be an ITD field: AspectJ emits
   it non-`final`, set from `<clinit>` (`java.field.noLongerConstant`). Declare it in a
@@ -94,6 +94,11 @@ Two traps the legacy module's build rejects:
 - Any public member on a **`Serializable` class without an explicit `serialVersionUID`** fails AspectJ
   (`Xlint:needsSerialVersionUIDField`, an error in XWiki builds). Add
   `private static final long serialVersionUID = 1L;` to the *main* class, as elsewhere in the codebase.
+- An ITD on a **subclass** placed in its own aspect can fail with "must implement abstract inter-type
+  declaration" when the subclass inherits an ITD implementation from another aspect: `ajc` gets the
+  sources in file-system listing order, so it may check the subclass first. Green on CI, red on some
+  machines. Put the subclass ITDs in the aspect of the class that carries the inherited ITDs (see
+  `ListClassCompatibiityAspect` in `xwiki-platform-legacy-oldcore`).
 
 Give new legacy types/aspects `@since <next-version>RC1` (see xwiki-knowledge for the version
 string) and keep the original `@deprecated since …` line.
