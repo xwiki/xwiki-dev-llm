@@ -84,7 +84,7 @@ Walk both lists in order, your work first:
 
 | Step | How |
 |---|---|
-| Merge a PR | `gh pr merge <url> --squash` (xwiki-pull-request). In a stack, follow the listed order and re-check the next one is still mergeable. |
+| Merge a PR | `gh pr merge <url> --squash --delete-branch` (xwiki-pull-request). In a stack, follow the listed order and re-check the next one is still mergeable. |
 | Close a JIRA issue | Through xwiki-jira: resolution Fixed, the Fix Versions from §2. |
 | Missing backport | Hand over to xwiki-backport. |
 | Mark a forum post solved | `dc accept <topicId> <postNumber>` |
