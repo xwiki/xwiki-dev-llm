@@ -4,17 +4,14 @@ Read by `xwiki-ci-check` (SKILL.md §5) before filing a flicker issue or comment
 are those of SKILL.md.
 
 File one **only when the incident carries a `flickerGroup`** — which the tool sets for a `flicker`
-that is `proven` (failed in ≥ 2 distinct builds across ≥ 2 distinct days), has no `jira`, and has no
-`fixState`, that last one because filing an issue is a write and §3's rule is that an answered
-incident earns none. Everything else is listed in the paste under "Flickers not filed", with the
+that is `proven` (failed in ≥ 2 distinct builds across ≥ 2 distinct days), has no `jira`, is not
+answered whole by a `fixState` — filing an issue is a write, and §3's rule is that an answered
+incident earns none — and carries its cause (`primary` is not `false`): a peer under a primary that
+fails every build belongs to a test that is broken, not flaky, and the breakage is what gets
+reported and commented on. Everything else is listed in the paste under "Flickers not filed", with the
 reason on its line: a failure seen once is not a flicker, it is an event — and that is exactly the
 shape of a Docker or GitHub blip. The evidence threshold *is* the confirmation step, made
 structural, because a routine running at 06:00 has nobody to ask.
-
-**A group whose primary fails every build is not a flicker.** When the incidents of a `flickerGroup`
-are `primary: false` and their primary is a systematic breakage of the same test (on master, say),
-the test is broken, not flaky: file nothing, and list the group under "Flickers not filed" with the
-breakage as the reason. The breakage itself is the incident to report and comment on.
 
 **One issue per `flickerGroup`, never one per incident.** Several methods of one test class that
 started failing in the same build broke together, and the same test failing on three branches is one
@@ -37,8 +34,8 @@ one only after the developer has said yes to it by name (§0). Auto-filed issues
 system.
 
 If the flicker matches a **closed** issue — `jiraClosed` is set, and the tool has already withheld
-the `flickerGroup` for exactly this reason: **comment on it and leave it closed**, and flag it in
-the digest. Reopening overrides someone's triage decision; filing a duplicate is worse than both.
+the `flickerGroup` for exactly this reason: **comment on it and leave it closed** (not on the line
+`references/fix-signals.md` keeps out of public artifacts), and flag it in the digest. Reopening overrides someone's triage decision; filing a duplicate is worse than both.
 
 A locally-filed flicker issue **cannot duplicate tomorrow's routine**: the routine files only a
 `proven` flicker whose `jira` is null, and that field comes from a live JIRA lookup, so the issue

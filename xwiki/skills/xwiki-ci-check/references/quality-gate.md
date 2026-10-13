@@ -12,7 +12,8 @@ numbers are those of SKILL.md.
 run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
 cleared, which is why it outranks any flicker (§5). Hand the fixing itself to
 **`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
-"fix" there silently breaks things.
+"fix" there silently breaks things — but in a routine, open its PR with `pull-request.mjs` like
+every other (§5), never with the `gh` that skill names.
 
 **The report says who caused it, and the sweep has already found out.** The Jenkins log cannot —
 it says `QUALITY GATE STATUS: FAILED` and stops, which is why `blame` is `none` here — but

@@ -127,6 +127,9 @@ export const logUrlOf = node => (node?._links?.log?.href ? `${CI}${node._links.l
  * anchors — so a pattern holding `<`, `>` or `&` matches nothing until this has run.
  */
 const htmlToLines = html => html
+  // A script's or a stylesheet's *content* is not markup, so stripping the tags alone left it in:
+  // the console page's Cloudflare beacon (`window.__CF$cv$params=…`) was being quoted as evidence.
+  .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
   .replace(/<br\s*\/?>/gi, "\n")
   .replace(/<[^>]+>/g, "")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')

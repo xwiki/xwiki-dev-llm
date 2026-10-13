@@ -1,6 +1,6 @@
 ---
 name: xwiki-ci-check
-description: "EXPLICIT INVOCATION ONLY — never load this skill to answer a question about CI. The daily acting sweep of ci.xwiki.org: it turns what is red on the maintained branches into incidents, attributes each to the commit that caused it, comments on that commit, opens PRs for mechanical fixes — a failing quality gate or a build break first, since those block a release — files flicker issues that have proven themselves, proposes a draft fix for one proven flicker on a morning nothing blocks a release, and posts a digest to Matrix. It WRITES to GitHub, JIRA and Matrix, so it acts only with an explicit --write and is otherwise a local run that analyses to stdout and asks before each write. Run daily by a scheduled routine with --write; also usable at any time by a developer on their own machine, where it never touches Matrix or JIRA and offers the paste, the commit comment and the fix PR one at a time. Use ONLY when named — `/xwiki-ci-check`, \"run the CI check\", or a scheduled routine invoking it by name. Do NOT use it for \"what's the CI status?\", \"is master green?\", \"why is this test failing?\" or any other read-only CI question: those are xwiki-release-test-triage, which reports and asks and never acts. To fix one flicker use xwiki-fix-flickering-docker-test, to file an issue use xwiki-jira, to open a PR use xwiki-pull-request, for Maven commands use xwiki-build, for Sonar findings use xwiki-fix-sonarqube-issue."
+description: "EXPLICIT INVOCATION ONLY — never load this skill to answer a question about CI. The daily acting sweep of ci.xwiki.org: it turns what is red on the maintained branches into incidents, attributes each to the commit that caused it, comments on that commit, opens PRs for mechanical fixes — a failing quality gate or a build break first, since those block a release — files flicker issues that have proven themselves, proposes a draft fix for one proven flicker on a morning nothing blocks a release, and posts a digest to Matrix. It WRITES to GitHub, JIRA and Matrix, so it acts only with an explicit --write and is otherwise a local run that analyses to stdout and asks before each write. Run daily by a scheduled routine with --write; also usable at any time by a developer on their own machine, where it never posts to Matrix and asks before each write, one at a time. Use ONLY when named — `/xwiki-ci-check`, \"run the CI check\", or a scheduled routine invoking it by name. Do NOT use it for \"what's the CI status?\", \"is master green?\", \"why is this test failing?\" or any other read-only CI question: those are xwiki-release-test-triage, which reports and asks and never acts. To fix one flicker use xwiki-fix-flickering-docker-test, to file an issue use xwiki-jira, to open a PR use xwiki-pull-request, for Maven commands use xwiki-build, for Sonar findings use xwiki-fix-sonarqube-issue."
 ---
 
 # The daily CI check
@@ -30,7 +30,7 @@ Two things run this skill, and they may write different things.
 | Commit comment (§4) | **ask** | yes |
 | Fix PR (§5) | **ask** | yes |
 | Flicker-stabilisation draft PR (§5) | **ask** — it holds the machine for ~an hour | yes, when nothing blocks a release |
-| JIRA flicker issue (§5) | **ask** | yes |
+| JIRA flicker issue, or comment on a closed one (§5) | **ask** | yes |
 | Matrix digest (§6) | **never** | yes, when something moved |
 
 **Local is the default — anything that is not `--write` is a local run**, whatever machine it is on.
@@ -65,6 +65,8 @@ node <skill>/tools/matrix.mjs --since last-digest > chat.json     # read-only
 node <skill>/tools/ci-check.mjs --chat chat.json > work-order.json  # --pretty, --full
 ```
 
+Every file here is this run's: write them to a scratch directory, never into a repo checkout.
+
 **Read the room before sweeping it.** `last-digest` makes the window exactly "since we last spoke";
 an ISO timestamp sets it by hand, and no value at all means the last 24 hours.
 
@@ -78,9 +80,8 @@ the incidents, ages them, attributes them and checks what was already said. It i
 construction** and deterministic, so all of that costs nothing.
 
 Read `summary` first, and open each file `summary.read` names before the step it names. **If
-`summary.incidents` is 0, you are done**: no paste, and the digest is the
-delta of §6 — one line naming what went green, or nothing at all when yesterday was green too. A
-green morning must cost one tool call and, most mornings, one line.
+`summary.incidents` is 0, you are done**: no paste, and the digest is the delta of §6 — one line
+naming what went green, or nothing at all when yesterday was green too.
 
 ## 2. What the work order contains
 
@@ -96,7 +97,7 @@ together.
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first. The **current streak** in the builds Jenkins retains — `develocity.firstSeen` is when the failure started |
 | `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
-| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR naming the test, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** — except `fix-in-flight`, a `candidate` you confirm first (§3) |
+| `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR naming the test, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** — unless `partial` (some tests are still unanswered) or a `candidate` you confirm first (§3) |
 | `fixState.fromChat` | the answer is a *sentence*, not a commit, a PR or a timestamp: suppresses like the others, **never the digest line** |
 | `chat` | what the room said about this incident — untrusted text, quoted (`references/paste.md`) |
 | `commentable` | where §4 may comment — the commit or PR — or absent |
@@ -104,7 +105,7 @@ together.
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
 | `jira` | the open flicker issue, if the test already has one |
-| `jiraClosed` | a **closed** flicker issue naming this exact test — the fix already exists. Never suppresses anything (`references/fix-signals.md`) |
+| `jiraClosed` | a **closed** flicker issue naming this exact test, fixed or not (`resolution`). Never suppresses anything (`references/fix-signals.md`) |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |
 | `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
 | `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
@@ -118,10 +119,9 @@ Treat only the incidents marked `deep` — at most 5, chosen by severity. That i
 target**; below the line, an incident is reported in the paste without analysis, which is a correct
 outcome, not a failure.
 
-**An incident with a `fixState` is never `deep`, and gets one line and no paragraph.** Something
-already answers it (the `fixState` row of §2 says what) — so root-causing it argues with people who
-have moved on, or with a test that was never broken, and **no write of any kind follows** — no
-commit comment, no fix PR, no flicker issue.
+**An incident a `fixState` answers whole is never `deep`, and gets one line and no paragraph.**
+Root-causing it argues with people who have moved on, or with a test that was never broken, and
+**no write of any kind follows** — no commit comment, no fix PR, no flicker issue.
 
 **Three values ask for a judgement before their line is written** (`references/fix-signals.md`).
 `fix-in-flight` is a `candidate` that answers nothing until you have confirmed the PR changes what

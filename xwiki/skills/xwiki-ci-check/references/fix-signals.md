@@ -6,7 +6,7 @@ its *Next* cell. § numbers are those of SKILL.md.
 
 | Field | Meaning |
 |---|---|
-| `jiraClosed` | a **closed** flicker issue naming this exact test — the fix already exists. Carries `fixVersions` and `earlier`, the older issues filed for the same test. Never suppresses anything; see below |
+| `jiraClosed` | a **closed** flicker issue naming this exact test. Carries `resolution`, `fixVersions` and `earlier`, the older issues filed for the same test. Never suppresses anything; see below |
 
 **An open PR is a candidate, never an answer on its own.** `fix-in-flight` (`candidate: true`) is
 a class name found in a PR's title or body, so the incident stays live and you decide: read the PR's
@@ -34,6 +34,10 @@ comparing its `fixVersions` with the branch that is red, which is a judgement th
 does not make — encoding version-line arithmetic here would turn a guess into an assertion that
 sends somebody to do a backport nobody needed:
 
+- **closed without a fix** (a `resolution` other than `Fixed` — Cannot Reproduce, Won't Fix) ⇒
+  there is nothing to backport: the flicker is back. Comment on the issue
+  (`references/flicker-issues.md`), and never call it fixed or a backport candidate.
+
 - **no `fixVersions` entry on this branch's line** ⇒ the fix never shipped here. This is a
   **backport candidate**: name the issue and hand it to **`xwiki-backport`**, which owns the
   adaptation and the verification; never land it here. It is also the strongest thing a run can
@@ -50,4 +54,6 @@ raises the incident rather than quieting it, and it is the `Next` cell's busines
 **Not every branch is a backport target, and the report must not invent one.** Which lines are, and
 which one may never be named in a public artifact, is `okf/processes/release.md`. What follows from
 it here: a `jiraClosed` gap on an unsupported line is still reported in the paste and the terminal,
-which are internal, and is actionable only as a keyless `[Misc]` fix on the branch itself.
+which are internal, and is actionable only as a keyless `[Misc]` fix on the branch itself; and a
+`jiraClosed` issue failing on the line that may not be named gets no JIRA comment, which would name
+it.

@@ -43,8 +43,8 @@ decides and acts on them.** The wrapper finds a checkout or clones one, and pass
 key the plugin already has.
 
 **It costs real requests** — ~120 Develocity and ~19 Jenkins per test — which is why the sweep
-spends it on deep class 1 incidents only, never on class 2/3/4 and never on one carrying a
-`fixState`. It **fails soft**: the first refusal (no checkout, no `python3`, no key, no network)
+spends it on deep class 1 incidents only, never on class 2/3/4 and never on one a `fixState`
+answers whole. It **fails soft**: the first refusal (no checkout, no `python3`, no key, no network)
 switches the pass off for the whole run and `summary.develocity.unavailable` says which — no
 Develocity facts this morning, carry on with what Jenkins gave you. Do not go fetching them by hand
 to fill the gap.

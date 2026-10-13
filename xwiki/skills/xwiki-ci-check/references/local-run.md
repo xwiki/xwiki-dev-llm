@@ -4,7 +4,9 @@ Read by `xwiki-ci-check` (SKILL.md §0) at the start of every run without `--wri
 rule of SKILL.md §0 holds whatever this file says. § numbers are those of SKILL.md.
 
 The one question names the write: *post the detail to PrivateBin?*, *comment on `a1b2c3d` (jdoe)?*,
-*file the `NotificationsSettingsIT` flicker issue?*, *open the checkstyle fix PR?*
+*file the `NotificationsSettingsIT` flicker issue?*, *prepare and open the checkstyle fix PR?* — that
+last one asked **before preparing**: preparing it changes the developer's checkout and runs a
+`clean` build.
 
 Local mode needs **no bot credential** for the sweep, the analysis or the paste (PrivateBin is
 anonymous and carries no identity), so a developer with nothing configured gets a complete run. A
