@@ -5,7 +5,7 @@ summary: Line length, license headers, the component system, the javax→jakarta
   -legacy module rules for XWiki Java code.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle
-  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCopyrightheaderinsourcefiles
 ---
 
 # Code style and structural conventions
@@ -18,8 +18,10 @@ authoritative source of truth.
 
 - **Lines must not exceed 120 characters** in source files — enforced by Checkstyle in the `quality`
   profile. Prose outside source files is never hard-wrapped (`instructions/xwiki-org.md`).
-- **LGPL license headers** are required on **every** file, configuration files included (validated by
-  `license-maven-plugin`). Add missing headers with `mvn license:format -B -ntp`. The comment syntax
+- **LGPL license headers** are required on **every** file, configuration files and dotfiles (e.g.
+  `.editorconfig`) included, unless its format has no comment syntax (e.g. JSON). `license-maven-plugin`
+  only checks the files its includes match (POMs and some `src/**` types), so add a header by hand to
+  any other file; `mvn license:format -B -ntp` adds the missing ones it checks. The comment syntax
   depends on the file type: `/* … */` for Java & JavaScript, `<!-- … -->` for XML & Vue, `#` for shell
   scripts, `.properties` and YAML, `REM` for `.bat`, `##` for Velocity.
 

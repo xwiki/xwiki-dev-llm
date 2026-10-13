@@ -56,8 +56,8 @@ follows.
 
 - **Lines must not exceed 120 characters** — in source files only. Never hard-wrap prose elsewhere
   (commits, JIRA, xwiki.org, forum, Matrix, GitHub): a paragraph or list item is one line.
-- LGPL license headers are required on every source file — run `mvn license:format -B -ntp` to add
-  missing headers.
+- LGPL license headers are required on every file whose format allows comments, dotfiles included
+  (`mvn license:format -B -ntp` only fixes the files it checks).
 - In new code, prefer the `jakarta.*` namespaces over `javax.*` (the project is migrating
   `javax`→`jakarta`) — e.g. `jakarta.inject.*` for `@Inject`, `@Named`, `Provider`.
 - Use the XWiki **Component system** (`@Component`/`@Inject`/`@Role`) rather than passing context
