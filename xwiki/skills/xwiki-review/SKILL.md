@@ -91,7 +91,7 @@ Do not run all eleven on every change. Route from the changed-file profile:
 | **i18n & UX** | any user-facing string, `.properties`, `.vm`, `.xml` sheets | `xwiki-translations` |
 | **Documentation** | new/changed public API, or user-visible behaviour | `okf/conventions/documentation.md`, `xwiki-javadoc` |
 | **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code; an XClass definition, a generated page name or a wiki-page migration | `okf/architecture/solr-search.md`, `wiki-application-data.md` |
-| **Spec conformance** | a JIRA key was found | the JIRA issue itself |
+| **Spec conformance** | a JIRA key was found | the JIRA issue itself, `okf/servers/jira.md` |
 
 Announce the routing decision in one line before fanning out, so a human can see what was and was
 not looked at. **Never silently skip an angle** — if you drop one, say so.
@@ -251,6 +251,11 @@ requirements the issue asks for that the diff does not deliver; behaviour in the
 for (scope creep that should be its own issue); requirements implemented in a way that will not
 actually fix the reported symptom. Quote the issue text for each. If the commit subject is not the
 issue title verbatim, that is a finding here.
+
+A diff that only skips or ignores a check because of the problem the issue describes, with a code
+comment citing the external cause, is a workaround, not an undelivered requirement: do not report
+the missing fix. Report instead such a workaround whose issue is already closed as Fixed or carries
+a Fix Version/s, since that issue is meant to be closed Won't Fix with none (`okf/servers/jira.md`).
 
 ### 4b. Full security depth — delegate to `xwiki-security-review`
 

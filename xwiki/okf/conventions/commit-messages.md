@@ -43,6 +43,10 @@ The documented format is:
   in any way?"*; if yes, an issue is mandatory. A batch refactoring that changes runtime behaviour
   across many files therefore needs an issue, referenced from every commit of the campaign — not
   `[Misc]`.
+- **A workaround commit references the issue it works around**, not `[Misc]`, even when that issue
+  is going to be closed Won't Fix: a test skip or a check ignore made because of the problem an
+  issue describes carries that issue's key, and its body says it is a skip, not a fix. The
+  resolution side is in [[../servers/jira]].
 - **Dependency upgrades split on the same test:** a dependency that only ever reaches developers —
   a `devDependencies`/`peerDependencies` entry, a build or test-scoped Maven dependency — is
   `[Misc]`; one that ships to users (declared in `dependencies`, or a runtime Maven dependency)

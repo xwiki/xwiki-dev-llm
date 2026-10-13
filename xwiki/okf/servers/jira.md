@@ -136,7 +136,10 @@ Choose the **resolution** that matches reality and **assign the issue to yoursel
   `XDOCKER-83` ("Support for ARM architectures") was closed **Cannot Reproduce** once the image had
   become multi-arch as a side effect of other work, with no ARM-specific fix to point at.
 - **Won't Fix, Duplicate, Cannot Reproduce, Incomplete** → **no Fix Version/s**, or the issue shows
-  up in that version's release notes.
+  up in that version's release notes. These resolutions say the reported problem was not fixed, not
+  that no commit references the issue: a Won't Fix issue can carry a workaround commit, such as a
+  test skip or a check ignore citing a browser or upstream bug, and is closed once that commit is
+  merged.
 
 ### Fill the two documentation fields when closing
 
