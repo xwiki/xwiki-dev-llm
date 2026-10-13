@@ -314,16 +314,17 @@ assumed. When the user asks for that step:
   leaks the JIRA title into the commit log. Use the manual merge recipe in
   [[security-policy]] (`okf/processes/security-policy.md`) instead.
 - **Import the advisory into the Security Advisory Application on xwiki.org** — the step that is
-  easiest to forget and the one with a deadline attached, because it is what computes the embargo
-  duration and fires the disclosure reminders; skip it and nothing ever reminds anyone to disclose.
-  Import from https://www.xwiki.org/xwiki/bin/view/SecurityAdvisoryApplication/Code/SingleAdvisoryImportPage
-  once the GHSA content is final, then check the imported data, set the state to **completed**, and
-  then to **announced** — the latter notifies everyone subscribed to new advisories. Re-import the
-  same way whenever the advisory is edited afterwards. The app lives on xwiki.org and needs the
+  easiest to forget, because the app is what fires the disclosure reminders; skip it and nothing ever
+  reminds anyone to disclose. Import from https://www.xwiki.org/xwiki/bin/view/SecurityAdvisoryApplication/Code/SingleAdvisoryImportPage
+  as soon as the fix is merged — it **need not be released**, nor the CVE requested — then check the
+  imported data, set the state to **completed**, and then to **announced** — the latter notifies
+  everyone subscribed to new advisories. Re-import the same way whenever the advisory is edited
+  afterwards, e.g. once the release turns "will be fixed in" into the released versions. The embargo
+  dates are computed by the release process itself, once every fixed version is released. The app lives on xwiki.org and needs the
   `XWikiSecurityGroup` membership, so this is the user's action, not something to do for them:
   remind them of it, with the link, rather than treating the GHSA draft as the end of the job.
-- **Request the CVE early.** A CVE ID can take a while to arrive and publication is blocked without
-  one, so it is requested well before the embargo date is reached — not at disclosure time.
+- **Request the CVE early**, unreleased fix included: a CVE ID can take a while to arrive and
+  publication is blocked without one. Only the embargo and publication need the release.
 - Publishing/disclosing the advisory (making it public) happens only once the embargo date is
   reached **and** a CVE ID has been received — never publish opportunistically.
 
