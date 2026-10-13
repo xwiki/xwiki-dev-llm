@@ -14,7 +14,9 @@ the orchestrator filters on it:
 - **`certain`** — confirmed by direct evidence, will happen in practice.
 
 For a finding citing a rule, **open the cited file and confirm the rule actually
-says that**. A citation that does not check out is `false`.
+says that**. A citation that does not check out is `false`. Read the finding's angle section of
+`briefs.md`, next to this file: it names the sources that reviewer loaded, and a check it marks
+*(skill-owned)* is properly cited from there.
 
 Two ways that check goes wrong, both of which have happened, and both of which fail toward a silent
 0 rather than a visible mistake:

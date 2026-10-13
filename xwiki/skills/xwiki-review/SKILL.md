@@ -34,8 +34,8 @@ Also resolve, once, up front:
 - The list of changed files, with their extensions and modules.
 - The **security depth**, `quick` or `full`, decided before any work starts so the run never stalls
   on it later:
-  - **`quick`** — the defensive-conventions angle of §4, grounded in `okf/conventions/security.md`
-    alone. The only depth when a CI routine invokes this skill, or when the session has no
+  - **`quick`** — the defensive-conventions angle of §4, on the public secure-coding conventions its
+    brief loads. The only depth when a CI routine invokes this skill, or when the session has no
     `xwiki-security-review` skill (the private `xwiki-security` plugin) — then do not ask.
   - **`full`** — run `xwiki-security-review` on the same change set in place of that angle (§4b).
     Only offered when that skill is available and a developer is at the keyboard: ask whether they
@@ -65,7 +65,8 @@ Every item below comes from `git`, `gh`, the poms or the JIRA API, so assemble i
 rather than a model call. Every reviewer receives exactly this and nothing else, so that eleven
 agents do not each re-derive it:
 
-- The diff, and the commit subjects/bodies.
+- The diff, and the commit subjects/bodies from `git log` over the range — never from `gh pr view
+  --json commits`, whose `messageHeadline` is truncated.
 - The **paths** (not contents) of every `CLAUDE.md` that applies: repo root plus any in the
   directories touched.
 - The JIRA issue title and description for each key found (via the `xwiki-jira` skill) — the
@@ -75,23 +76,26 @@ agents do not each re-derive it:
   `-test-docker` module, or frontend (`.js`/`.vue`/`.less`/`.vm`).
 - The `xwiki.jacoco.instructionRatio` currently declared in each touched module's pom.
 
+Write the pack to one file in the work directory and hand every agent its absolute path; the
+contract has them read it in full.
+
 ## 3. Routing — pick the angles that apply
 
 Do not run all eleven on every change. Route from the changed-file profile:
 
-| Angle | Runs when | Grounded in |
-|---|---|---|
-| **Conventions** | any source file | `okf/conventions/code-style.md`, `code-comments.md`, `commit-messages.md`, `logging.md` |
-| **Architecture** | any `.java` | `okf/architecture/component-system.md`, `macro-refactoring.md` |
-| **Backward compatibility** | any `.java` outside test/legacy dirs | `okf/conventions/backward-compatibility.md`, `versioning.md` |
-| **Defensive conventions** | always — at `full` depth, replaced by §4b | `okf/conventions/security.md` |
-| **Performance** | always | `okf/conventions/performance.md` |
-| **Tests** | always (a change with no test is itself the finding) | `okf/testing/strategy.md`, `xwiki-test-guidelines` |
-| **Accessibility** | `.vm`, `.html`, `.vue`, `.js`, `.less`, `.css`, UI `.xml` | `okf/conventions/frontend.md` (it names the committed WCAG level) |
-| **i18n & UX** | any user-facing string, `.properties`, `.vm`, `.xml` sheets | `xwiki-translations` |
-| **Documentation** | new/changed public API, or user-visible behaviour | `okf/conventions/documentation.md`, `xwiki-javadoc` |
-| **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code; an XClass definition, a generated page name or a wiki-page migration | `okf/architecture/solr-search.md`, `wiki-application-data.md` |
-| **Spec conformance** | a JIRA key was found | the JIRA issue itself |
+| Angle | Runs when |
+|---|---|
+| **Conventions** | any source file |
+| **Architecture** | any `.java` |
+| **Backward compatibility** | any `.java` under `src/main/java` outside `-legacy` modules (page objects and test helpers included) |
+| **Defensive conventions** | always — at `full` depth, replaced by §4b |
+| **Performance** | always |
+| **Tests** | always (a change with no test is itself the finding) |
+| **Accessibility** | `.vm`, `.html`, `.vue`, `.js`, `.less`, `.css`, UI `.xml` |
+| **i18n & UX** | any user-facing string, `.properties`, `.vm`, any XAR `.xml` page |
+| **Documentation** | new/changed public API, or user-visible behaviour |
+| **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code; an XClass definition, a generated page name or a wiki-page migration |
+| **Spec conformance** | a JIRA key was found |
 
 Announce the routing decision in one line before fanning out, so a human can see what was and was
 not looked at. **Never silently skip an angle** — if you drop one, say so.
@@ -103,8 +107,9 @@ other's context. Give each agent the context pack, its angle's name, the resolve
 the absolute paths of two files next to this skill: `references/reviewer-contract.md` (the bar every
 reviewer meets, how to read its sources, what it must never write) and `references/briefs.md` (one
 section per angle: what to load and what to look at). It reads the contract and **only its own
-brief**. **Read the contract yourself before fanning out**: its "Never write the word" list binds
-your own narration, the comment and every log from here on.
+brief**. **Read the contract yourself before fanning out**, and load `okf/processes/security-policy.md`:
+the contract's "Never write the word" list binds your own narration, the comment and every log from
+here on (§6b says why).
 
 The rules an angle enforces live in the OKF and in the other skills, and are never restated here or
 in the briefs: the skeptic of §5 drops any finding whose cited file does not say what was claimed,
@@ -133,8 +138,8 @@ Collect every finding from every angle. Deduplicate: when two angles report the 
 one whose rule citation is more specific and merge the reasoning.
 
 Then, for each surviving finding **in parallel**, run an independent skeptic that is given the
-finding, the diff, the `CLAUDE.md` paths, the resolved OKF path and the absolute path of
-`references/skeptic.md`, which holds its instructions. It returns one verdict — `false`,
+finding and its angle, the diff, the `CLAUDE.md` paths, the resolved OKF path and the absolute
+paths of `references/skeptic.md`, which holds its instructions, and of `references/briefs.md`. It returns one verdict — `false`,
 `unverified`, `nitpick`, `confirmed` or `certain` — after opening the cited file to check the rule
 actually says what the finding claims.
 
@@ -159,7 +164,7 @@ Then:
 ```
 ### Automated review
 
-Reviewed <N> files across <angles run>. Found <M> issues.
+Reviewed <N> files across <angles run, comma-separated>. Found <M> issue(s).
 
 **Blockers**
 1. <one-sentence claim> — <rule cited, linked>
@@ -183,12 +188,15 @@ Rules for the comment body:
 - Every finding links to the code with a **full-SHA permalink** covering at least one line of
   context either side: `https://github.com/<repo>/blob/<full-40-char-sha>/<path>#L<start>-L<end>`.
   Compute the SHA up front (step 0); a `$(git rev-parse HEAD)` inside the URL will not render.
-- Every rule citation is a link too — to the OKF file, the skill, or the `CLAUDE.md` line.
+- Every rule citation is a link too — to the OKF file, the skill, or the `CLAUDE.md` line. A file
+  of this plugin links to `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>`,
+  `<version>` being the one in `xwiki/.claude-plugin/plugin.json`.
+- Leave out a severity heading with no finding under it; write `1 issue`, not `1 issues`.
 - Use `gh` for all GitHub interaction. Never push, never edit files, never re-run the build.
 
 ### 6b. Never write the word
 
-Load `okf/processes/security-policy.md`. Its non-disclosure rule is the constraint this section
+`okf/processes/security-policy.md`, loaded before step 4, holds the non-disclosure rule this section
 exists to satisfy; what follows is only its consequence for *review output*, which the policy does
 not itself cover. This repo is public, and so is more than the comment:
 
@@ -221,7 +229,7 @@ may the comment say, or hint, that a `full` review ran.
 ## 7. Feed what you learned back
 
 Whenever a reviewer wanted to flag something real but found **no rule in the OKF, a skill or a
-`CLAUDE.md` to cite**, record it as a *candidate convention*: one line, what the rule would say and
-the example that prompted it. These are not posted on the PR. They are batched and offered to a
+`CLAUDE.md` to cite**, it returns a *candidate convention* (the contract says how): one line, what
+the rule would say and the example that prompted it. These are not posted on the PR. They are batched and offered to a
 human through the `xwiki-knowledge` EXTEND flow — which is how the reviewer gets sharper over time
 instead of repeating the same unfounded opinions.
