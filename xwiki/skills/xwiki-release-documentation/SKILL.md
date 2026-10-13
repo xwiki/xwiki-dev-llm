@@ -49,7 +49,9 @@ identical. A sweep that turns out to hold one issue is still a sweep.
   Any *other* project key in the result is **reported, not processed**.
   The developer may widen the query (another assignee, `resolution in (Fixed, Done)`) if they say
   so; do not widen it on your own.
-- SINGLE: the issue key given. Read its Fix Version to get the version.
+- SINGLE: the issue key given. Of its Fix Versions, the version is the one that is not a bugfix
+  release, if any (bugfix ones are for `references/bugfix-releases.md`, below); if several remain, ask. An
+  issue not resolved `Fixed` is said so, and run only if the developer says to — SWEEP's widening.
 
 **The version.** Accept any spelling — `18.8.0`, `18.8.0RC1`, `18.8.0-rc-1` — and resolve it to the
 one JIRA version name:
@@ -105,6 +107,11 @@ commits(KEY) = git log --grep=<KEY> <previous-release-tag>..<ref>
 backports to every stable branch, the topic branch and the PR-merge duplicate — eight commits for
 one fix. The range above drops all of that.
 
+`<previous-release-tag>` is the release before the version on its line: the previous cycle's RC for
+a master cycle (`xwiki-platform-18.8.0-rc-1` for `18.9.0-rc-1`), the RC for a `.0` final, `X.Y.(Z-1)`
+for a bugfix. Release tags sit on `stable-X.Y.x`, so none is an ancestor of master; that is expected,
+since `A..B` excludes by reachability — do not substitute a merge-base.
+
 State the known limitation in the report: for a version that has not been released there is no tag,
 so the claims below are verified against a moving `origin/master` and can drift before release.
 
@@ -116,8 +123,9 @@ so the claims below are verified against a moving `origin/master` and can drift 
 
 (`<work>` is the work directory named in the org instructions.) It holds the resolved version, the
 clone paths, the ref per repo, and one section per issue with its verdicts, its evidence and its
-state. **The run is resumable from this file**: re-invoked, re-read it and continue rather than
-redoing what is marked done. Tell the developer the path once.
+state. It is one file per version, whatever the mode: a SINGLE run adds its issue's section to it.
+**The run is resumable from this file**: re-invoked, re-read the version's existing one (whatever
+its date) and continue rather than redoing what is marked done. Tell the developer the path once.
 
 ## 2. Ground rules
 
@@ -166,9 +174,10 @@ the documentation already describes, and the release note lists it among the iss
 "User-visible behaviour changed" is too weak a trigger: nearly every bug fix changes user-visible
 behaviour, that being what made it a bug.
 
-`verify:` the bar the project actually applies, before arguing a Bug over it — of the fixed issues
-of a cycle carrying a non-empty `Documentation in Release Notes`, count how few hold a URL rather
-than `N/A`, and how few of those are Bugs rather than Improvement / New Feature:
+`verify:` the bar the project actually applies, in the main session, once per run, before arguing a
+Bug over it — of the fixed issues of a cycle carrying a non-empty `Documentation in Release Notes`,
+count how few hold a URL rather than `N/A` (a value not starting `https://` counts as `N/A`, such
+as `N/A (internal class)`), and how few of those are Bugs rather than Improvement / New Feature:
 
 ```
 GET /rest/api/2/search?jql=project in (XWIKI,XCOMMONS,XRENDERING)
