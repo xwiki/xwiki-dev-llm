@@ -94,7 +94,10 @@ Inside `xwiki/`:
   Claude matches against. Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
   cross-reference each other (e.g. `xwiki-convert-tests` vs `xwiki-convert-tests-docker`,
   `xwiki-test-guidelines` building on the others), so when editing one, check the others' "use X
-  instead" pointers stay accurate.
+  instead" pointers stay accurate. What only one branch of a run needs — or only a sub-agent reads —
+  goes in the skill's `references/*.md`, one level deep, named in SKILL.md at the point where it must
+  be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
+  SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
   `xwiki-line-endings.js`, which ports the line-ending guard to opencode's `tool.execute.after` hook
   and reuses `scripts/check-line-endings.mjs` (that script exports a shared `checkLineEndings()`

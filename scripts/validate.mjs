@@ -17,9 +17,11 @@
 //      something that was never the change itself. Instead scripts/release.mjs sets them on master
 //      after the merge (automatically, via .github/workflows/release.yml), which is what makes
 //      installed plugins pull the update.
-//   7. Every `okf/...md` path a skill cites actually exists. Skills delegate their rules to the OKF
-//      rather than restating them, so a renamed or deleted topic would otherwise leave a skill
-//      pointing at nothing — and a reviewer that cannot read its rule source fails silently.
+//   7. Every `okf/...md` path a skill cites actually exists, and so does every `references/...md`
+//      file it names. Skills delegate their rules to the OKF rather than restating them, and keep
+//      what only one branch of a run needs in references/ files opened on demand, so a renamed or
+//      deleted file would otherwise leave a skill pointing at nothing — and a reviewer that cannot
+//      read its rule source fails silently. All of a skill's Markdown is checked, not only SKILL.md.
 //   8. The OKF index stays a map: each entry, and the file, within a size budget. An entry exists to
 //      pick a topic, so it says what the topic is and when to open it; a description long enough to
 //      restate the rules gets acted on in place of the file it points at, at a third of the detail.
@@ -48,7 +50,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, basename } from "node:path";
+import { dirname, join, basename, relative, sep } from "node:path";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -218,14 +220,25 @@ if (!baseSha) {
   }
 }
 
-// ---- Invariant 7: OKF paths cited by skills resolve ------------------------------------------
-// Matches `okf/<dir>/<topic>.md` wherever it appears in a SKILL.md, in backticks or bare.
+// ---- Invariant 7: OKF and references/ paths cited by skills resolve -------------------------
+// Matches `okf/<dir>/<topic>.md` (resolved against xwiki/) and `references/<file>.md` (resolved
+// against the skill's own directory) wherever they appear, in backticks or bare.
 const okfRefPattern = /okf\/[a-z0-9-]+\/[a-z0-9-]+\.md/g;
+const referencesPattern = /(?<![\w/.-])references\/[\w.-]+\.md/g;
 for (const skill of skills) {
-  const skillMd = read(`xwiki/skills/${skill}/SKILL.md`);
-  for (const ref of new Set(skillMd.match(okfRefPattern) ?? [])) {
-    if (!existsSync(join(repoRoot, "xwiki", ref))) {
-      errors.push(`xwiki/skills/${skill}/SKILL.md: cites '${ref}', which does not exist`);
+  const skillDir = `xwiki/skills/${skill}`;
+  const docs = walk(join(repoRoot, skillDir))
+    .filter((abs) => abs.endsWith(".md"))
+    .map((abs) => relative(repoRoot, abs).split(sep).join("/"));
+  for (const doc of docs) {
+    const text = read(doc);
+    for (const ref of new Set(text.match(okfRefPattern) ?? [])) {
+      if (!existsSync(join(repoRoot, "xwiki", ref))) errors.push(`${doc}: cites '${ref}', which does not exist`);
+    }
+    for (const ref of new Set(text.match(referencesPattern) ?? [])) {
+      if (!existsSync(join(repoRoot, skillDir, ref))) {
+        errors.push(`${doc}: names '${ref}', which does not exist in ${skillDir}/`);
+      }
     }
   }
 }
