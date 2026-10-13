@@ -52,8 +52,8 @@ Environment Tests run, a person, or a backport — never this one.
 the build could not have resolved, and only for a test failing in that job **alone**: the main job
 builds everything from source, so a test red there is red for real.
 
-`fixState` is set only when **every** test the incident covers is answered — a commit fixing one
-test of five leaves the incident live, and the paste says which part is answered. Deciding
+A `fixState` silences only when it answers **every** test the incident covers — one fixing one test
+of five is `partial`, leaves the incident live, and the paste says which part is answered. Deciding
 otherwise, in either direction, is not yours to make: the tool's threshold is deliberately
 conservative because a wrong silence hides a real breakage, while a wrong ping is a comment that
 asks.

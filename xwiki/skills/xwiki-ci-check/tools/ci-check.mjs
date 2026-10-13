@@ -905,10 +905,16 @@ async function inFlightFix(incident, args) {
 
 /** A production file: one the Environment Tests job takes from Nexus rather than building. */
 const PRODUCTION_FILE = /\/src\/main\//;
-/** …which its own test modules are not, page objects and fixtures included: those it builds. */
+/** …which its own test modules are not: those it builds. */
 const TEST_MODULE = /-test(?:-[a-z]+)?\//;
-const productionIn = commit =>
-  commit.files.filter(path => PRODUCTION_FILE.test(path) && !TEST_MODULE.test(path));
+/**
+ * …except the page objects, which it does not: LikeIT and PanelsAdministrationIT failed its
+ * `testCompile` with `cannot find symbol` on page-object methods the very commit that added the
+ * test had added — the page objects came from the snapshot.
+ */
+const PAGE_OBJECTS = /-pageobjects\/src\/main\//;
+const productionIn = commit => commit.files.filter(path => PRODUCTION_FILE.test(path)
+  && (!TEST_MODULE.test(path) || PAGE_OBJECTS.test(path)));
 
 /**
  * The newest revision the job's jars can possibly have held.
@@ -2302,19 +2308,32 @@ const jiraKey = incident => (typeof incident.jira === 'string' ? incident.jira :
  * How a closed flicker issue reads on a row. Without a Fix Version nobody can say which lines carry
  * the fix, so it is named as closed, never as a fix this branch is known to have or to miss.
  */
-const closedAs = closed => (closed.fixVersions?.length
-  ? `already fixed by ${closed.key} (${closed.fixVersions.join(', ')})`
-  : `${closed.key} closed as fixed, no Fix Version`);
+const closedAs = closed => (unfixed(closed)
+  ? `${closed.key} closed as ${closed.resolution}, not fixed`
+  : closed.fixVersions?.length
+    ? `already fixed by ${closed.key} (${closed.fixVersions.join(', ')})`
+    : `${closed.key} closed${closed.resolution ? ' as fixed' : ''}, no Fix Version`);
+
+/**
+ * Whether a closed issue was closed *without* a fix — Cannot Reproduce, Won't Fix, Duplicate. Such
+ * an issue is history, not a backport source: there is no commit to carry anywhere. `resolution` is
+ * absent from a work order written before it was read, which reads as unknown, never as unfixed.
+ */
+const unfixed = closed => !!closed.resolution && closed.resolution !== 'Fixed';
 
 /** Why nobody is asked to do anything — always a reason, never an empty cell. */
 function noOneOwes(incident, horizonDays) {
   if (incident.beyondHorizon) return `older than the ${horizonDays}-day horizon — counted, not written about`;
   if (incident.jira) return 'already tracked — the issue is where this gets settled';
   if (incident.jiraClosed) {
+    if (unfixed(incident.jiraClosed)) {
+      return `${incident.jiraClosed.key} was closed as ${incident.jiraClosed.resolution} — it flickers again,`
+        + ' and there is no fix to backport';
+    }
     return incident.jiraClosed.fixVersions?.length
       ? `${incident.jiraClosed.key} already fixed this test in ${incident.jiraClosed.fixVersions.join(', ')}`
         + ' — compare that with this branch before filing anything'
-      : `${incident.jiraClosed.key} was closed as fixed with no Fix Version — find its commit before`
+      : `${incident.jiraClosed.key} was closed${incident.jiraClosed.resolution ? ' as fixed' : ''} with no Fix Version — find its commit before`
         + ' assuming this branch has it or lacks it';
   }
   if (incident.kind === 'flicker' && !incident.proven) {
@@ -2781,7 +2800,10 @@ function whatOf(incident, moves = []) {
   }
   const dv = incident.develocity;
   if (dv) what += `, ${dv.failures}/${dv.runs} over ${dv.windowDays}d${dv.firstSeen ? `, first failed ${dv.firstSeen}` : ''}`;
-  if (incident.jiraClosed) what += `, ${linked(incident.jiraClosed.key, browse(incident.jiraClosed.key))} closed`;
+  if (incident.jiraClosed) {
+    what += `, ${linked(incident.jiraClosed.key, browse(incident.jiraClosed.key))} closed`
+      + `${unfixed(incident.jiraClosed) ? ` as ${incident.jiraClosed.resolution}` : ''}`;
+  }
   if (moves.length) what += ` — ${moves.join(', ')}`;
   return what;
 }
@@ -3031,6 +3053,10 @@ for (const incident of incidents) {
 // room pass makes an everyday case: a flicker is exactly what people claim in chat.
 for (const incident of incidents) {
   if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
+  // On the incident that carries the cause, never on its peers: they are its branch list, and a
+  // peer flickering under a primary that fails every build belongs to a test that is broken, not
+  // flaky — its issue is the breakage's comment, not a flicker issue (references/flicker-issues.md).
+  if (incident.primary === false) continue;
   // A *closed* issue for this exact test is still an issue. Filing a second one for a flicker the
   // team already tracked and fixed is the duplicate that discredits an auto-filer fastest, and the
   // answer §5 gives is to comment on that issue rather than open a new one.
@@ -3281,7 +3307,9 @@ if (blockers.length) {
   stabilise = {
     skipped: `${plural(blockers.length, 'release-blocking incident')} open, and what blocks a `
       + `release comes first — a flicker costs a re-run and blocks nobody`,
-    blockers: blockers.slice(0, 5).map(incident => incident.id)
+    // All of them: the count above and the paste's header count every one, and a list cut at five
+    // read as a contradiction of both.
+    blockers: blockers.map(incident => incident.id)
   };
 } else if (stabiliseCandidates.length) {
   const [pick] = stabiliseCandidates;
@@ -3294,9 +3322,12 @@ if (blockers.length) {
     if (facts.unavailable) develocityOff = facts.unavailable;
     else pick.develocity = facts;
   }
+  // The configuration the failure concentrates in *on this branch*: `develocity` counts the test
+  // everywhere it runs, and its worst configuration may be another branch's.
+  const configs = pick.develocity?.configs || [];
   stabilise = {
     id: pick.id, jira: pick.jira.key, failedIn: pick.failedIn,
-    configuration: pick.develocity?.configs?.[0] || pick.envs?.[0] || null,
+    configuration: configs.find(config => config.startsWith(`${pick.branch} /`)) || pick.envs?.[0] || configs[0] || null,
     others: stabiliseCandidates.length - 1
   };
 }
