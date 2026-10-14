@@ -95,8 +95,9 @@ not the repository one.
   test-scope dependencies also match), and list the repackaging module as its own **Affected
   product** with the same bands (like a legacy counterpart; mind its own module history). The same
   applies to webjars bundling JavaScript built by `xwiki-platform-node`. A repackaging artifact that
-  is a distribution (the Jetty/HSQLDB zip, the Debian packages) is no dependency of anyone's build:
-  name it in the Impact prose, and ask the user whether to list it as an **Affected product** too.
+  is a distribution (the Jetty/HSQLDB zip, the Debian packages) is no dependency of anyone's build,
+  so no scanner would ever match it: name it in the Impact prose only, never as an **Affected
+  product**.
 - **Variants the fix did not touch:** look beside each fixed file for the same logic in a sibling —
   another script for another OS, another template or skin, another module with the same code (e.g.
   `start_xwiki.bat` beside `start_xwiki.sh`, which XWIKI-23438's fix changed alone). Record for each

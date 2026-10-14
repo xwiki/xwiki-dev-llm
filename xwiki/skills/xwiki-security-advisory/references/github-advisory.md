@@ -45,4 +45,6 @@ assumed. When the user asks for that step:
   release: a CVE ID can take a while to arrive and publication is blocked without one. Only the
   embargo and publication need the release.
 - Publishing/disclosing the advisory (making it public) happens only once the embargo date is
-  reached **and** a CVE ID has been received — never publish opportunistically.
+  reached **and** a CVE ID has been received — never publish opportunistically. A vulnerability
+  that is already public (an issue filed public, a public report) follows this same process: no
+  shorter embargo, no earlier publication.
