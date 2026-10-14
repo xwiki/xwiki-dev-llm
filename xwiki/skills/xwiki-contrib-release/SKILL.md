@@ -10,7 +10,7 @@ extensions.xwiki.org* sections of https://contrib.xwiki.org/xwiki/bin/view/Main/
 Prefer it when this skill looks outdated; the skill adds the gotchas it does not spell out.
 
 A Nexus release can never be removed and the push lands on `master`. Being asked to release a named
-version is the go-ahead for steps 2–7; when a preflight check fails, stop and report.
+version is the go-ahead for steps 2–8; when a preflight check fails, stop and report.
 
 ## 1. Preflight
 
@@ -49,7 +49,7 @@ Expect two `[maven-release-plugin]` commits, with the tag on the first.
 ## 3. Push (with `-DpushChanges=false` only)
 
 `release:perform` checks the tag out of the remote. Re-check that `origin/master` hasn't moved, then
-`git push origin HEAD:master` and `git push origin <tag>`. If it moved, roll back (step 8) and restart.
+`git push origin HEAD:master` and `git push origin <tag>`. If it moved, roll back (step 9) and restart.
 
 ## 4. Perform
 
@@ -106,15 +106,23 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
 - **JIRA**: the import fills `notes` with a `{{jira}}` macro. Just check that it's there.
 - **OpenProject**: `notes` stays empty, so copy the version's work packages in, matching the
   previous versions' `notes`: Bugs, then Improvements, then New Features, each by id, one line each:
-  `* [[<Type> #<id>>>url:https://op.xwiki.org/work_packages/<id>]]<subject>`. Escape macro calls
-  in subjects (`{{image}}` → `~{~{image}}`). `PUT` it as `text/plain` on
+  `* [[<Type> <displayId>>>url:https://op.xwiki.org/work_packages/<displayId>]]<subject>`. Escape
+  macro calls in subjects (`{{image}}` → `~{~{image}}`). `PUT` it as `text/plain` on
   `…/objects/<class>/0/properties/notes`, read it back, and check that the Versions table renders it
   without errors.
   Then `PATCH` every work package of the version so its **Release Notes Documentation** custom field
   (find its `customFieldN` key in the work package schema) is the version page URL
   (`okf/processes/release-notes.md`), and read them back.
 
-## 8. Recovering from a failed release
+## 8. Reference documentation
+
+Every change of the version is documented before it's announced, and the users' and the
+administrators' sides both count: an admin UI gets admin pages. For each issue or work package,
+write or update the pages with **xwiki-doc-writing**, then fill its documentation field with their
+URL, or `N/A` when no page describes the change (JIRA `Documentation`; OpenProject **Reference
+Documentation**, `okf/processes/release-notes.md`). Read them back.
+
+## 9. Recovering from a failed release
 
 - Prepare failed: `mvn release:rollback`, then delete the tag (`git tag --delete <tag>`, and
   `git push origin :<tag>` if it was pushed): the rollback doesn't. Without `release.properties`,
@@ -122,10 +130,10 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
 - Perform failed after uploading: have someone with Nexus rights drop the staging repository. A
   version that reached the public repository can't be re-released: release `X.Y.1`.
 
-## 9. Hand off and report
+## 10. Hand off and report
 
 Draft the announcement from the release notes, show it to the developer, and create it with
 **xwiki-contrib-release-blog-post**. Report the tag, the Nexus check, the tracker changes, the
 extensions.xwiki.org state and release notes, and what the developer still owes. That covers saving
 the blog post, plus the extension-page documentation: "General Compatibility" if the parent was
-raised, "Tested On" (append only), and docs for new features (xwiki-doc-writing).
+raised, and "Tested On" (append only).

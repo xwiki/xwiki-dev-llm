@@ -62,7 +62,9 @@ So for a fixed issue of such an extension:
   the version gets its **Release Notes Documentation** custom field set to that page,
   `https://extensions.xwiki.org/xwiki/bin/view/Extension/<Space>/Versions/<version>/` (the Project's
   page for a multi-module project). Older work packages point at a `#H<version>` anchor of the
-  extension page; that anchor no longer exists, so don't copy that form.
+  extension page; that anchor no longer exists, so don't copy that form. Its **Reference
+  Documentation** field, the counterpart of the JIRA `Documentation` field, holds the URL of the page
+  documenting the work package, or `N/A` for a change no page describes.
 - **Nothing is owed until the version is released.** The version page is created by the Repository
   application from the Maven repository once the artifacts are deployed, and the release itself is
   announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
