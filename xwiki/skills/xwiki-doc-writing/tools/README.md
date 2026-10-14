@@ -109,7 +109,8 @@ procedure's entry step). A region already at the target width is saved unresampl
 
 **`lint`** — the traps that produce a *plausible-looking* page rather than an error: a scheme-like
 token followed by a colon (`image:` emits an empty image reference), an unmatched `--` striking
-through the rest of the block, a URL inside `##…##`, a single-brace `{macro}` (an f-string field
+through the rest of the block, a URL inside `##…##`, an inline `{{code}}` literal (the
+checker's missing-`language` violation), a single-brace `{macro}` (an f-string field
 halves every `{{`, and the halved macro renders as literal text), an absolute URL to a farm subwiki
 (renders external and is **never indexed as a backlink**), a `caption` carrying the capture version,
 a title repeating the page type or the audience, an image without `size`/`alt`, an attachment
@@ -130,9 +131,9 @@ is the defect rather than the cure. Its last two checks are
 pages — and are why the whole set is linted rather than one page.
 
 `lint` reads the fields with `{{code}}`/`{{plantuml}}` bodies blanked, and that blanking has to drop
-**complete inline pairs from a line before deciding whether the line opens a block**: the house style
-writes an inline `{{code}}man{{/code}}` in most paragraphs, and a scanner testing the opening pattern
-first treats one as an opener that never closes, blanking the rest of the field from every check.
+**complete inline pairs from a line before deciding whether the line opens a block**: legacy pages
+write an inline `{{code}}` in most paragraphs, and a scanner testing the opening pattern first treats
+one as an opener that never closes, blanking the rest of the field from every check.
 
 **`save`** — writes attachments *before* content, so no revision is ever saved with a dangling image;
 then reads every field back, because **a `202` does not mean the write landed** (a property write

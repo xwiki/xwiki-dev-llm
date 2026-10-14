@@ -389,6 +389,8 @@ Use the guide for the authoring rules, and that page for what each structure fie
   and each entry gets a Diataxis **Explanation** page, located in the place in the documentation
   hierarchy where that explanation makes sense. Same source page, "Glossary" section.
 - **Literals / computer terms** — use the `##monospace##` notation — e.g. `the ##age## xproperty`.
+  **Never an inline `{{code}}age{{/code}}`**: the checker reports each one as a code macro without
+  `language`. Inline code is only the workaround for `--` and URLs (see the rendering traps below).
 - **Linking** — do **not** hardcode xwiki.org URLs; use XWiki **link reference syntax** (copy the
   page reference from its Information tab). Use the relative reference for same-wiki links and the
   global reference for cross-wiki links. To link to a file on GitHub, use the `{{scm}}` macro so SCM

@@ -65,9 +65,9 @@ def strip_verbatim(text):
     """Blank the body of `{{plantuml}}` / `{{code}}` blocks: their content is not XWiki syntax and
     must not be linted as such (a PlantUML arrow is a legitimate `--`).
 
-    Complete inline pairs are dropped from a line *before* deciding whether it opens a block. The
-    house style writes `... {{code}}man{{/code}} ...` in nearly every paragraph, and a scanner that
-    tests the opening pattern first matches that as an opener and never clears the flag, blanking
+    Complete inline pairs are dropped from a line *before* deciding whether it opens a block. Legacy
+    pages carry an inline `{{code}}` in nearly every paragraph, and a scanner that tests the opening
+    pattern first matches one as an opener and never clears the flag, blanking
     every following line of the field: false "declared but not referenced" on images that are right
     there, and — worse — real defects on those lines hidden from every check."""
     out, inside = [], False
@@ -113,6 +113,11 @@ def lint(mod):
                                     f'`{{{{`, double them): {line[:80]}')
                 if re.search(r'\(% *style', line):
                     problems.append(f'{where} inline style: {line[:80]}')
+            # Raw field: `strip_verbatim` drops the inline pairs this looks for.
+            for i, line in enumerate(p[field].split('\n'), 1):
+                for m in re.finditer(r'\{\{code\}\}(.*?)\{\{/code\}\}', line):
+                    problems.append(f'{name}/{field}:{i} inline code macro for a literal, use '
+                                    f'##{m.group(1)}##: {line[:80]}')
                 if re.search(rf'https?://({farm})\.xwiki\.org', line):
                     problems.append(f'{where} absolute URL to a page of the same farm — use '
                                     f'doc:<wiki>:<ref>: {line[:80]}')
@@ -213,12 +218,12 @@ def lint(mod):
                                     f'a column, not a code example')
             # A `name: meaning` bullet list is a two-column table written as prose. This catches the
             # page that has tables elsewhere, which the rule above cannot see. It reads the raw
-            # content, not `body`: the inline `{{code}}` pairs this matches on are exactly what
-            # `strip_verbatim` drops from a line.
+            # content, not `body`: an inline `{{code}}` name is exactly what `strip_verbatim` drops
+            # from a line.
             runs, run = [0], 0
             for line in p['content'].split('\n'):
-                run = run + 1 if re.match(r'^\* \{\{code\}\}[^{]+\{\{/code\}\}[^:]{0,20}:',
-                                          line) else 0
+                run = run + 1 if re.match(r'^\* (##[^#]+##|\{\{code\}\}[^{]+\{\{/code\}\})'
+                                          r'[^:]{0,20}:', line) else 0
                 runs.append(run)
             if max(runs) >= 3:
                 problems.append(f'{name}: reference states {max(runs)} members as a '

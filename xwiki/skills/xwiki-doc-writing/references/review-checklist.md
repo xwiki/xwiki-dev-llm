@@ -58,7 +58,7 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       **Related holds no children** and never links to the page itself. On a leaf page, an obvious
       missing Related link is advisory only.
 - [ ] **Title case** — significant words capitalised ("Using", not "using").
-- [ ] **Style** — UI elements in `"quotes"`, terminology uppercased, literals in `##…##`, code macro
+- [ ] **Style** — UI elements in `"quotes"`, terminology uppercased, literals in `##…##` (not inline `{{code}}`), code macro
       uses a `language` parameter.
 - [ ] **Punctuation** — no em dash is doing the job of a comma, period, colon or parentheses. Dashes
       inside a **direct quote** are never a finding.
