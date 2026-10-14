@@ -20,8 +20,6 @@ identity. Three things keep that safe, and none of them may be skipped:
 
 ## 0. Mode
 
-Two things run this skill, and they may write different things.
-
 | | **Local** — a developer, any time | **Routine** — the daily 06:00 run |
 |---|---|---|
 | Invocation | `/xwiki-ci-check`, no flag | `--write` |
@@ -31,7 +29,8 @@ Two things run this skill, and they may write different things.
 | Fix PR (§5) | **ask** | yes |
 | Flicker-stabilisation draft PR (§5) | **ask** — it holds the machine for ~an hour | yes, when nothing blocks a release |
 | JIRA flicker issue, or comment on a closed one (§5) | **ask** | yes |
-| Matrix digest (§6) | **never** | yes, when something moved |
+| Matrix digest (§6) | **never**, even if asked (`references/digest.md`) | yes, when something moved |
+| Dry run (`routine-prompt.md`): nothing written, each write printed | the stabilisation rehearsal, by hand: `ci-check.mjs --rehearse-stabilise` — the comment and PR tools refuse `--write` from its work order | the soak: no `--write`, nobody asked |
 
 **Local is the default — anything that is not `--write` is a local run**, whatever machine it is on.
 Say which mode you are in as the first line of your output, every time, and in local mode name the
@@ -40,13 +39,10 @@ two channels that are closed, so nobody waits for a digest that was never going 
 **In local mode, ask once per write, and take silence for no.** One question naming exactly what
 would be written and where, never a blanket
 "shall I write things?". Ask only when there is a developer to answer: a non-interactive run without
-`--write` writes nothing at all, which is what makes the dry-run soak of the routine safe to
-schedule.
+`--write` writes nothing at all.
 
 In a local run, read `references/local-run.md` before sweeping: what it needs, how to scope it, and
 what it delivers.
-
-**The Matrix digest is never local, even if asked** — `references/digest.md` says why.
 
 In `--write` mode, confirm the bot identity before the first write: `GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`
 and the Matrix credential (`MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT`, or `MATRIX_TOKEN_BOT`) must
@@ -257,8 +253,7 @@ expiry on that instance.
 
 ### The digest — routine only
 
-Never posted locally (§0). Read `references/digest.md` before building it: every `--write` morning,
-0 incidents included, and in a dry run that prints it. Whatever else it says:
+Never posted locally (§0). Read `references/digest.md` before building it. Whatever else it says:
 
 - **The tool renders it** (`--render-digest`), without the security-only line; fill its markers.
   `matrix.mjs` refuses a digest still holding one, an email address, or that line.
