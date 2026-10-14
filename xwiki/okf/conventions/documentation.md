@@ -128,6 +128,9 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
 - Follow the title as closely as possible while respecting the rules above.
 - **No repetition between parent and child paths** — the same word **or a variation of it** — rely on
   the parent for context (`../wiki-editor-toolbar/support`, not `../wiki-editor-toolbar/wiki-editor-toolbar-support`).
+  This holds even when the parent names the object of the child's action: `tags/add-page`, not
+  `tags/add-tag-page`. The title, which may be more explicit than the page name, carries the full
+  wording ("Add a Tag to a Page"), so the page stays understandable out of context.
 
 ## Content rules per type
 
@@ -334,6 +337,8 @@ The fields:
 - **Related links** — links to pages with related content that are **NOT children** of this page. A
   child belongs in **Highlights**, never here. Further rules:
   - **A `related` field must never link to its own page.**
+  - **A leaf page has no Related requirement** (the guide is silent): a reviewer flags an obvious
+    missing link to a non-child page on the same subject, as advice, not as a violation.
   - **A top-level page** (directly under an audience page) **must link to its same-topic counterparts for
     the other audiences**, when they exist — the `topLevelRelatedLinks` check matches them by page name,
     within the same section.

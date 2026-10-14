@@ -55,7 +55,8 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       `alt`; **videos are `webm` embedded with `{{embed}}`, not links**; no animated GIFs.
 - [ ] **Structure fields** — Content filled (the FAQ is optional); a top-level page's Related links
       its same-topic counterparts for the other audiences; Technical ID set when an extension applies. **Highlights empty** unless the page has many children (and then only a subset of them);
-      **Related holds no children** and never links to the page itself.
+      **Related holds no children** and never links to the page itself. On a leaf page, an obvious
+      missing Related link is advisory only.
 - [ ] **Title case** — significant words capitalised ("Using", not "using").
 - [ ] **Style** — UI elements in `"quotes"`, terminology uppercased, literals in `##…##`, code macro
       uses a `language` parameter.

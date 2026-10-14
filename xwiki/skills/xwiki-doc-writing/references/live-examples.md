@@ -10,6 +10,7 @@ it is meant to illustrate, trust the rule and say so.
   - [Restrict the Wiki to Registered Users](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/rights/restrict-wiki-registered-users/) (Administrator)
 - **Tutorial** (verb-led, more specific / end-to-end than a How-to; text shown as code macros):
   - [Automate a Backup with a Shell Script](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/backup/automate-shell-script/) (Administrator)
+  - One example only until a developer Tutorial passes the checklist; add it then.
 - **Reference** (noun-phrase title, tables, concise, code for APIs):
   - [XAR Import Options](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/imports/import-xwiki-pages/options/) (Administrator)
   - [Like Java API](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/like/java-api/) (Developer: one member table plus usage code)

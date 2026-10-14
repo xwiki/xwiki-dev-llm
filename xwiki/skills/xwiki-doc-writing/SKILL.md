@@ -95,7 +95,8 @@ applies to everything a regex cannot decide.
    fits. A new topic is a page of its own, an **Explanation** (`okf/conventions/documentation.md`), so
    a How-to that opens one brings that topic page with it: put both in the placement proposal.
 4. **Write the title and page name** per the type's rules (verb-led for How-to/Tutorial; noun phrase
-   for Reference/Explanation; kebab-case page name, stop words removed, no parent/child repetition).
+   for Reference/Explanation; kebab-case page name, stop words removed, no parent/child repetition, even of
+   the action's object: `tags/add-page`, the title saying "Add a Tag to a Page").
 5. **Fill the page-structure fields** — Content (per type), FAQ (questions with 1–2 sentence
    answers), Related links (**non-child** pages only), Technical ID (`xwiki:<extension id>`, or empty).
    When the extension page's `id` is empty, completing it is a write to extensions.xwiki.org: propose
