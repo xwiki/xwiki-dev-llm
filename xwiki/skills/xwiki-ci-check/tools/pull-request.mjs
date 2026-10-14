@@ -122,6 +122,10 @@ export async function openPullRequest({ repo, head, base, title, body: text, ass
   return { url: pr.html_url, number: pr.number, steps, locked };
 }
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
   const options = { write: false, draft: false };
@@ -175,6 +179,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       + `  1. unsubscribe this session from it: unsubscribe_pr_activity, PR #${result.number};\n`
       + `  2. put "unlocked PR #${result.number}" first in the report;\n`
       + '  3. never lock it, comment on it or retry it with the session\'s own GitHub access (gh, the GitHub MCP server).');
-    process.exit(3);
+    await exitAfterOutput(3);
   }
 }

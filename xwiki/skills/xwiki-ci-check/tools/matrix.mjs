@@ -444,6 +444,10 @@ export async function send(text, { server = homeserver, token = null, roomId = r
 
 // ---- CLI -------------------------------------------------------------------------------------
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
   let file = null;
@@ -471,7 +475,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await credential()
       .then(({ userId, how }) => console.log(`${userId} on ${homeserver} (${how}), posting to ${room}`))
       .catch(fail);
-    process.exit(0);
+    await exitAfterOutput(0);
   }
   if (read === 'since') {
     const day = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
@@ -493,7 +497,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       .then(messages => console.log(JSON.stringify({ available: true, since: floor, messages }, null, 2)))
       .catch(error => console.log(JSON.stringify(
         { available: false, since: floor, reason: error.message, messages: [] }, null, 2)));
-    process.exit(0);
+    await exitAfterOutput(0);
   }
   if (read) {
     // Both reads exit 0 whatever happens, because both are consumed by a routine that must still
@@ -509,7 +513,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log(JSON.stringify(
         { available: true, at: last?.at || null, state: last?.state || {} }, null, 2));
     }
-    process.exit(0);
+    await exitAfterOutput(0);
   }
   const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
   if (!text.trim()) { console.error('Nothing to post'); process.exit(2); }

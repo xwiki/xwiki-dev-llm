@@ -129,6 +129,10 @@ export async function comment(repo, sha, incident, state, body, { write = false,
   return { posted: true, url: created.html_url, reason: 'posted' };
 }
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
   // Default-safe: writing is opt-in. `--dry-run` stays accepted, so that saying "do not post" out
@@ -160,7 +164,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // A normal outcome, like "already commented": the skip list said no, and saying so is the output.
   if (refused) {
     console.log(`not posted: ${refused}`);
-    process.exit(0);
+    await exitAfterOutput(0);
   }
   const { commentable } = report.incidents.find(entry => entry.id === options.incident);
   options.repo ??= commentable.repo;

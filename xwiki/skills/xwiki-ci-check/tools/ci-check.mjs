@@ -86,7 +86,7 @@ function parseArgs(argv) {
     else if (key === '--previous') out.previous = argv[++i];
     else if (key === '--chat') out.chat = argv[++i];
     else if (key === '--live') out.live = true;
-    else if (key === '--help' || key === '-h') { console.log(USAGE); process.exit(0); }
+    else if (key === '--help' || key === '-h') out.help = true;
     else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
   }
   return out;
@@ -2947,14 +2947,22 @@ function publicView(report) {
 
 // ---- Run -------------------------------------------------------------------------------------
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 const args = parseArgs(process.argv.slice(2));
+if (args.help) {
+  console.log(USAGE);
+  await exitAfterOutput(0);
+}
 
 // Rendering reads a work order and sweeps nothing, so the paste can be re-rendered — after a fix to
 // the wording, or on another machine — without a second pass over Jenkins.
 if (args.renderDetail) {
   const source = readFileSync(args.renderDetail === '-' ? 0 : args.renderDetail, 'utf8');
   console.log(renderDetail(JSON.parse(source), args));
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 // The delta reads two files and no server, so yesterday's comparison can be redone — after a fix
@@ -2963,7 +2971,7 @@ if (args.delta || args.renderDigest) {
   const report = publicView(JSON.parse(readFileSync((args.delta || args.renderDigest) === '-' ? 0 : args.delta || args.renderDigest, 'utf8')));
   const previous = args.previous ? JSON.parse(readFileSync(args.previous, 'utf8')) : { available: false };
   console.log(args.delta ? JSON.stringify(deltaOf(report, previous), null, 2) : renderDigest(report, previous, args));
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 const flickerFor = await knownFlickers();

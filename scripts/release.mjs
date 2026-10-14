@@ -41,6 +41,10 @@ const git = (args, { allowFailure = false } = {}) => {
   }
 };
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write("", () => process.exit(code)));
+
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
 const forced = ["major", "minor", "patch"].find(flag);
@@ -92,7 +96,7 @@ const changed = (git(["diff", "--name-only", base, "HEAD"]) || "").split("\n").f
 const shipping = changed.filter((f) => f.startsWith("xwiki/"));
 if (!shipping.length) {
   console.log(`release.mjs: nothing to release - no file under xwiki/ changed since ${baseLabel}.`);
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 // ---- Which segment moves ----------------------------------------------------------------------
@@ -164,7 +168,7 @@ console.log(`new version  : ${currentVersion} -> ${next}`);
 
 if (dryRun) {
   console.log("release.mjs: --dry-run, nothing written.");
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 // ---- Write, commit, tag -----------------------------------------------------------------------
@@ -175,7 +179,7 @@ for (const { path, pattern, count } of targets) {
   if (found !== count) {
     console.error(`release.mjs: ${path}: expected ${count} occurrence(s) of '${from}', found ${found} - aborting ` +
       "without writing anything (fix the manifest, or the version fields would drift apart)");
-    process.exit(1);
+    await exitAfterOutput(1);
   }
   writeFileSync(join(repoRoot, path), text.split(from).join(pattern(next)));
   console.log(`wrote ${path}`);

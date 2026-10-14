@@ -382,4 +382,4 @@ function main() {
 
 // Run only when this file *is* the command. `ci-check.mjs` imports `develocityFacts` from here, and
 // a module that exits the process on import would take the sweep with it.
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exit(main());
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main();

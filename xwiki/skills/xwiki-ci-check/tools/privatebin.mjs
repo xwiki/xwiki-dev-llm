@@ -142,6 +142,10 @@ export async function paste(text, { url = DEFAULT_URL, expire = '1week', format 
 
 // ---- CLI -------------------------------------------------------------------------------------
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2);
   const options = { expire: '1week', format: 'markdown', url: DEFAULT_URL };
@@ -167,7 +171,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const ok = round.text === sample && keyRoundTrips && body.v === 2;
     console.log(`self-test: ${ok ? 'OK' : 'FAILED'} — ciphertext ${body.ct.length} b64 chars for ` +
       `${sample.length} chars of Markdown, key round-trips: ${keyRoundTrips}`);
-    process.exit(ok ? 0 : 1);
+    await exitAfterOutput(ok ? 0 : 1);
   }
 
   const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
@@ -185,7 +189,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (!write) {
     console.log(`--- would paste ${text.length} characters of ${options.format} to ${options.url}, `
       + `expiring in ${options.expire} (pass --write to post) ---`);
-    process.exit(0);
+    await exitAfterOutput(0);
   }
   console.log(await paste(text, options));
 }

@@ -226,6 +226,10 @@ function warnAboutEmptyNetworks(resources) {
     + 'fully subnetted", or "networkMode was not specified"). To remove the leftovers:\n' + CLEANUP_COMMANDS);
 }
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 const { options, command } = parseArgs(process.argv.slice(2));
 const max = Math.max(1, options.max || Number(process.env.XWIKI_LLM_IT_SLOTS) || 2);
 
@@ -237,7 +241,7 @@ if (options.status) {
     console.log(`Testcontainers on the daemon: ${resources.containers.length} container(s), `
       + `${resources.networks.length} network(s) of which ${countEmptyNetworks(resources.networks)} without container`);
   }
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 if (command.length === 0) {

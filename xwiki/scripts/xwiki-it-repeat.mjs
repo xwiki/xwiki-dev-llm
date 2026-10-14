@@ -396,6 +396,10 @@ function renderMarkdown(report, baseline) {
   return lines.join('\n');
 }
 
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 const options = parseArgs(process.argv.slice(2));
 
 if (!fs.existsSync(path.join(options.module, 'pom.xml'))) {
@@ -457,7 +461,7 @@ if (options.dryRun) {
     console.log(`${options.runs - 1}×  ${repeatCommand.join(' ')}`);
     console.log(`then: touch ${path.join(options.module, STOP_FILE)}`);
   }
-  process.exit(0);
+  await exitAfterOutput(0);
 }
 
 /** Records one finished run: what it executed, why it produced nothing, and where its artifacts are. */
@@ -590,5 +594,4 @@ fs.writeFileSync(path.join(outputDirectory, 'summary.md'), `${renderMarkdown(rep
 
 console.log(`\n${renderSummary(report, baseline)}\n\nreport: ${outputDirectory}`);
 
-if (report.summary.executions === 0) process.exit(3);
-process.exit(report.summary.failed > 0 ? 1 : 0);
+await exitAfterOutput(report.summary.executions === 0 ? 3 : report.summary.failed > 0 ? 1 : 0);
