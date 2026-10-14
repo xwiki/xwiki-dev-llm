@@ -105,10 +105,10 @@ mvn clean install -B -ntp -Plegacy,quality -fae -pl <comma-separated module path
 list mechanically from the diff (`git show --name-only`, then walk up to the nearest `pom.xml`) —
 not from memory of what you edited.
 
-Two ways `-pl` rejects a path with *"Could not find the selected project in the reactor"* even when
-the path is correct: the module is only activated by a profile (`*-test-docker` modules need
-`-Pdocker,integration-tests`), or it is not in the root reactor at all (`xwiki-platform-distribution/**`
-builds from its own `pom.xml`). Add the profiles, or build that module from its own tree.
+`-pl` rejects a path with *"Could not find the selected project in the reactor"* even when the path
+is correct when the module is only activated by a profile: `*-test-docker` modules need
+`-Pdocker,integration-tests`, and `xwiki-platform-distribution/**` needs `-Pdistribution`. Add the
+profiles, or build that module from its own `pom.xml`.
 
 ## Checkstyle alone — `mvn checkstyle:check` is NOT the check CI runs
 
