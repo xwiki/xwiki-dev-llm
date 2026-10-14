@@ -8,9 +8,13 @@ the orchestrator filters on it:
 - **`false`** — false positive under light scrutiny, or a pre-existing issue on an untouched line.
 - **`unverified`** — might be real, could not be verified. Stylistic, and not explicitly called out
   by any cited rule.
-- **`nitpick`** — verified real, but rare in practice; unimportant relative to the change.
+- **`nitpick`** — verified real, but rare in practice; unimportant relative to the change. A breach
+  of an explicitly stated rule can still be a `nitpick` when a competent committer would not change
+  the code for it.
 - **`confirmed`** — verified, very likely to be hit in practice and the current approach is
-  insufficient, or it is a rule stated explicitly in a cited OKF file / `CLAUDE.md`.
+  insufficient, or a breach of a rule stated explicitly in a cited OKF file / `CLAUDE.md` that
+  matters to the change. An explicit rule proves the finding is real; it does not by itself rule out
+  `nitpick`.
 - **`certain`** — confirmed by direct evidence, will happen in practice.
 
 For a finding citing a rule, **open the cited file and confirm the rule actually

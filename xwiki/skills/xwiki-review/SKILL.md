@@ -49,9 +49,9 @@ immediately — post nothing — if any holds:
 
 - The PR is closed, merged or a draft (`gh pr view --json state,isDraft`).
 - A review comment from this routine already exists **for the current head SHA**.
-- The diff exceeds the sanity ceiling (default 3000 changed lines across more than 150 files, from
-  `git diff --shortstat`) — post a single line saying the change was too large to review
-  automatically, and stop.
+- The diff exceeds the sanity ceiling — more than 3000 changed lines **or** more than 150 files,
+  either one alone, from `git diff --shortstat` — post a single line saying the change was too large
+  to review automatically, and stop.
 - The author is Renovate or Dependabot and the diff is only version bumps.
 
 One judgement call is left, and it is the only model call in this step: decide from the diff alone
@@ -143,8 +143,9 @@ paths of `references/skeptic.md`, which holds its instructions, and of `referenc
 `unverified`, `nitpick`, `confirmed` or `certain` — after opening the cited file to check the rule
 actually says what the finding claims.
 
-**Keep `confirmed` and `certain`; drop the rest.** If nothing survives, say so — that is a good
-review, not a failed one.
+**Keep `confirmed` and `certain`; drop the rest.** If nothing survives, still post (§6) — that is a
+good review, not a failed one, and the comment is what lets step 1's head-SHA check stop a re-trigger
+from re-running the whole fan-out.
 
 ## 6. Post
 
@@ -191,7 +192,9 @@ Rules for the comment body:
 - Every rule citation is a link too — to the OKF file, the skill, or the `CLAUDE.md` line. A file
   of this plugin links to `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>`,
   `<version>` being the one in `xwiki/.claude-plugin/plugin.json`.
-- Leave out a severity heading with no finding under it; write `1 issue`, not `1 issues`.
+- Leave out a severity heading with no finding under it; write `1 issue`, not `1 issues`. With no
+  surviving finding the comment is the disclaimer, the `Reviewed … Found 0 issues.` line, the skipped
+  angles and the reactions line — nothing else.
 - Use `gh` for all GitHub interaction. Never push, never edit files, never re-run the build.
 
 ### 6b. Never write the word
