@@ -61,8 +61,9 @@ Tell the developer the `$CAPTURE_DIR` path once, so they know where the screensh
 
 ## Cheapest first: is the "before" already released?
 
-When the bug is in a release — the issue's Affects Version says so — shoot the "before" on that
-release's official Docker image: no module build, no jar swap, no distribution to copy, about three
+When the bug is in a release — the issue's Affects Version says so — shoot the "before" on the
+official Docker image of the latest release whose tag does not contain the fix (highest of `git tag
+--no-contains <fix-commit>` on the fix's line, never below the Affects Version): no module build, no jar swap, no distribution to copy, about three
 minutes once the image is pulled. Steps 0-4 are for the rest: a bug that exists only in unreleased
 code (a regression on the branch the fix targets), or a released UI that differs from the branch's
 around the fixture enough that the two shots stop being comparable. The "after" is shot on your
@@ -249,7 +250,7 @@ Then **restore** — do not skip it: put back what the instance had before the f
 instance you leave behind is the one you found. The jar and file-copy paths backed up every file
 they overwrote, so restoring is one copy, no build — plus step 0's restart when a jar was swapped:
 `cp -R "$CAPTURE_DIR/original/." "$INSTANCE_DIR/"`. A file the fix *added* has no backup: delete
-it. The xar route has no restore: tell the user which version of the extension the instance keeps.
+it. On the xar route, reinstall the "after" (`WORKTREE`) xar last, leaving the branch's pages.
 On the released-image route, remove its containers (the last line of
 `references/released-image.md`).
 
@@ -293,7 +294,8 @@ leaving the reader to arrange two tabs.
 Build it as `references/composite-image.md` says, and attach it in place of the pair.
 
 Either way, add one line of prose saying what to look at, and name the fixture so a reader can
-reproduce it. Do not publish an Artifact unless asked.
+reproduce it. Do not publish an Artifact unless asked. For an already-merged PR, follow
+`xwiki-pull-request`.
 
 ## Further reading
 

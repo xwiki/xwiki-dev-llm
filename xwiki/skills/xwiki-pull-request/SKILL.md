@@ -58,6 +58,8 @@ complete every section meaningfully:
   - When the branch can **no longer produce** that "before" (the fix is already in the working
     tree), **propose** the `xwiki-capture-ui-change` skill and run it only on the user's explicit
     yes. If they decline, ship the "after" alone and say in the PR what the before looked like.
+  - When the PR is **already merged**, attach the images to the JIRA issue and edit the merged PR
+    body's Screenshots & Video section rather than commenting: an edit notifies nobody.
 - **Executed Tests** — how the change was validated: the `mvn` commands running its automated test
   (`okf/testing/strategy.md` says when one is needed), plus any manual check. Especially important
   for regression fixes.

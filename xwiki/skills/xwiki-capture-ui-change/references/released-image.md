@@ -5,7 +5,7 @@ official Docker image for the "before", before the first `docker run`. Step numb
 that skill's `SKILL.md`; `$CAPTURE_DIR` and the browser session come from its environment block.
 
 ```bash
-V=18.7.0   # the latest release the bug affects
+V=18.7.0   # the latest release whose tag does not contain the fix
 docker network create xwiki-before
 docker run -d --name xwiki-before-db --net xwiki-before -e MYSQL_ROOT_PASSWORD=xwiki \
   -e MYSQL_DATABASE=xwiki mysql:8.4 --character-set-server=utf8mb4 \
