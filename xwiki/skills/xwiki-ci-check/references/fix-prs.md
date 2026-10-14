@@ -60,11 +60,15 @@ Follow `xwiki-pull-request` for the commit message and the description.
   this tool and nothing else:
 
   ```bash
-  node <skill>/tools/pull-request.mjs --repo xwiki-platform --head claude/<slug> --base master \
-    --title "<subject>" --file pr-body.md --assignee <culprit login> [--draft] [--write]
+  node <skill>/tools/pull-request.mjs --work-order work-order.json --kind fix --repo xwiki-platform \
+    --head claude/<slug> --base master --title "<subject>" --file pr-body.md \
+    --assignee <culprit login> [--draft] [--write]
   ```
 
-  It labels the PR **`llm-agent`**, assigns `--assignee`, and locks it to collaborators; like
+  It labels the PR **`llm-agent`**, assigns `--assignee`, and locks it to collaborators. It also
+  holds §5's brake: the PR's body carries the run (the work order's `generatedAt`), and a third
+  `--kind fix` PR of one run — a quality-gate fix counts like any other — is refused with exit 4;
+  put that pushed branch in the paste instead. Like
   every writer here it prints instead of posting without `--write`, and a re-run completes a
   half-done PR instead of opening a second one. **Never open a routine's PR with `gh` or the GitHub
   MCP server**: they act as the session's account — the developer who owns the routine — so the PR

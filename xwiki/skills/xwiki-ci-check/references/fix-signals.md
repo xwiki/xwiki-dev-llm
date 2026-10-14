@@ -6,14 +6,16 @@ its *Next* cell. § numbers are those of SKILL.md.
 
 | Field | Meaning |
 |---|---|
-| `jiraClosed` | a **closed** flicker issue naming this exact test. Carries `resolution`, `fixVersions` and `earlier`, the older issues filed for the same test. Never suppresses anything; see below |
+| `jiraClosed` | a **closed** flicker issue naming this exact test. Carries `resolution`, `fixVersions`, `unreleased` (those of them not yet released) and `earlier`, the older issues filed for the same test. Never suppresses anything; see below |
 
 **An open PR is a candidate, never an answer on its own.** `fix-in-flight` (`candidate: true`) is
 a class name found in a PR's title or body, so the incident stays live and you decide: read the PR's
 title, changed files and, if needed, its diff. It answers the incident only if it changes what
 makes *this* failure fail — the code under test, the page object, the broken line; then treat the
-incident as answered (one line, no write). A PR that adds or extends tests does not: drop the
-candidate line from the paste.
+incident as answered (one line, no write). A PR that adds or extends tests does not. The paste holds
+`<!-- CANDIDATE: <id> -->` where that line goes, because either default would be false half the
+time: replace it with *a fix may be in flight* and the linked PR when you confirmed it, or delete
+it when you did not (`references/paste.md`).
 
 **`fixed-elsewhere` is a backport candidate, and that is all it is.** The same signature was red on
 another maintained branch and is green there now, and the tool names the commit that did it — the
@@ -43,8 +45,10 @@ sends somebody to do a backport nobody needed:
   adaptation and the verification; never land it here. It is also the strongest thing a run can
   produce, because the change already exists and the other branches have been running it.
 - **an entry that does cover this branch** ⇒ the fix is here and the test fails anyway. The issue is
-  wrong, not missing: **comment on it** and file nothing; it is released, so it is never reopened
-  (`okf/servers/jira.md`, "Whether to file an issue at all"). An `earlier`
+  wrong, not missing: **comment on it** and file nothing. Released, it is never reopened
+  (`okf/servers/jira.md`, "Whether to file an issue at all"); with its Fix Version still `unreleased`, a human may reopen it and
+  finish the fix under its key — the routine never does: it comments, and says so in the comment
+  and on the row. An `earlier`
   list is the same signal repeated — a test filed three times is one that keeps coming back, and
   saying so is worth more than a fourth issue.
 
@@ -56,4 +60,5 @@ which one may never be named in a public artifact, is `okf/processes/release.md`
 it here: a `jiraClosed` gap on an unsupported line is still reported in the paste and the terminal,
 which are internal, and is actionable only as a keyless `[Misc]` fix on the branch itself; and a
 `jiraClosed` issue failing on the line that may not be named gets no JIRA comment, which would name
-it.
+it. The digest, which is public, leaves that line out altogether: `--render-digest` drops its
+column, rows and state, and `matrix.mjs` refuses a digest naming it.

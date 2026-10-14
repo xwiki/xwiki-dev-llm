@@ -27,6 +27,10 @@ flaky test: filing an issue each is how an auto-filer is switched off in its fir
 - the **"Flickering Test" field holds one test** — the first of the group — and the description
   lists every affected test id verbatim, plus every branch.
 
+Before invoking `xwiki-jira`, export the bot credential into the variable that skill reads —
+`JIRA_API_TOKEN="$JIRA_TOKEN_BOT" JIRA_AUTH_TYPE=bearer` — so the issue (or the comment) is the
+bot's even on a machine where the developer's own JIRA token is configured.
+
 Use `xwiki-jira`, with the flicker fields from `okf/servers/jira.md` (the `flickering` label **and**
 the "Flickering Test" custom field, holding the test exactly as CI reports it). In a local run, file
 one only after the developer has said yes to it by name (§0). Auto-filed issues are
@@ -36,6 +40,8 @@ system.
 If the flicker matches a **closed** issue — `jiraClosed` is set, and the tool has already withheld
 the `flickerGroup` for exactly this reason: **comment on it and leave it closed** (not on the line
 `references/fix-signals.md` keeps out of public artifacts), and flag it in the digest. Reopening overrides someone's triage decision; filing a duplicate is worse than both.
+That holds even when a Fix Version is still unreleased (`jiraClosed.unreleased`), the one case
+`okf/servers/jira.md` lets the issue be reopened: the comment says so, and a human decides.
 
 A locally-filed flicker issue **cannot duplicate tomorrow's routine**: the routine files only a
 `proven` flicker whose `jira` is null, and that field comes from a live JIRA lookup, so the issue

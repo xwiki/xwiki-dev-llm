@@ -22,6 +22,17 @@ cannot reach:
 
 A cell you leave unfilled renders **empty**, which is how the document says you skipped it.
 
+Two more markers stand where only this run's own decision makes the line true, so neither may be
+left — `privatebin.mjs` refuses a paste still holding one:
+
+| Marker | Where | What replaces it |
+|---|---|---|
+| `<!-- COMMENT: <id> -->` | the *Next — who* cell of a `commentable` incident | what §4 did: `bot → [commented](<comment URL>) on [<sha>](<url>) (<login>)`; a rehearsal or a local no, said as such; or `nobody → no owner found — <why the candidate was dropped>` |
+| `<!-- CANDIDATE: <id> -->` | the block of an unconfirmed `fix-in-flight` | **A fix may be in flight** — the linked PR, its author and title — when you confirmed it changes what makes this failure fail; otherwise nothing (`references/fix-signals.md`) |
+
+A `commentedWith` incident's cell names the row whose comment answers it too: one comment per
+commit per run (§4).
+
 Three wordings are deliberate and must not be "improved" back: a window with no green build reads
 *failing in every build examined, back to #N — start not established* rather than "since #N",
 because that number is how far the sweep looked and not when the break began; a flicker carries both

@@ -10,6 +10,13 @@ reviewer are both still subscribed to it, and that review is where the gate woul
 so `commentable` names the PR when the commit had one and the commit when it did not. Pass it with
 `--pr <number>` instead of `--sha` (same tool, same marker, same "already said" check).
 
+**At most one comment per commit per run.** When two incidents blame one commit — typically a gate
+whose PR squashed into the commit a build break blames — the sweep gives `commentable` to one of
+them, lists the others in its `covers`, and marks each of them `commentedWith` it; the target is
+then the commit, which every incident's "already said" check reads. Write **one** body that names
+every failure it answers, each with its own tier's wording, and post it once, on the carrier: the
+tool adds one marker per incident it covers, and refuses a comment for a `commentedWith` one.
+
 **The tier is the tool's candidate; the causal link is yours to establish.** `certain` and `likely`
 come from mechanical matches (a file touched, a library named), and a match is not a cause. Read the
 culprit's diff against what the failing test does and where it fails, and write **one sentence

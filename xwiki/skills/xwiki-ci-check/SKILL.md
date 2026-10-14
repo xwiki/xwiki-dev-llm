@@ -54,10 +54,6 @@ all be set, and they are the **bot's**, never a developer's. If one is missing, 
 rehearsal and say so — never fall back to a personal account. `commit-comment.mjs` and
 `pull-request.mjs` enforce this themselves: they read `GH_TOKEN_BOT` and no other variable.
 
-Before invoking `xwiki-jira` to file a flicker issue, export the bot credential into the variable
-that skill reads — `JIRA_API_TOKEN="$JIRA_TOKEN_BOT" JIRA_AUTH_TYPE=bearer` — so the issue is filed
-by the bot even on a machine where the developer's own JIRA token is configured.
-
 ## 1. Sweep (one command, zero tokens)
 
 ```bash
@@ -71,8 +67,7 @@ Every file here is this run's: write them to a scratch directory, never into a r
 an ISO timestamp sets it by hand, and no value at all means the last 24 hours.
 
 **Both are optional and both fail open.** No Matrix credential, an unreadable room, an empty file:
-the sweep runs exactly as it would have, and `--chat` is simply dropped. A local run without the
-bot's password loses nothing but the room.
+the sweep runs exactly as it would have, and `--chat` is simply dropped.
 
 It discovers the jobs from Jenkins (`master` + every `stable-*` of Commons, Rendering and Platform,
 plus Platform's Environment Tests matrix; `feature-*` excluded), classifies every red build, builds
@@ -181,8 +176,10 @@ For each one:
 
 **Comment only where the incident carries `commentable`**, on the target it names: the tool has
 applied the skip list — an answer, a cause analysed on another branch, already said, beyond the
-horizon, no `certain`/`likely` culprit — and `commit-comment.mjs` refuses any other. The rest are
-listed in the paste; a deep one is *no owner found*. Never guess an author.
+horizon, no `certain`/`likely` culprit — and `commit-comment.mjs` refuses any other. **One comment
+per commit per run**: it also answers the incidents in `commentable.covers`, and a `commentedWith`
+incident gets none of its own. The rest are listed in the paste; a deep one is *no owner found*.
+Never guess an author.
 
 The body and the command are in `references/commit-comment.md`. These hold whatever it says:
 
@@ -202,6 +199,7 @@ The body and the command are in `references/commit-comment.md`. These hold whate
 Whatever `references/fix-prs.md` says, these hold:
 
 - **What blocks a release comes first** (`summary.stabilise.blockers`); a flicker blocks nobody.
+  A gate fix PR takes one of the two slots: `pull-request.mjs --kind fix` refuses a third (exit 4).
 - **Tier C, never a PR:** no change to an assertion, an expected value, a timeout or any production
   logic — the one narrow exception, a unit test following its culprit's own diff, is in the
   reference. An expectation that seems wrong goes to a human as a comment.
@@ -219,7 +217,7 @@ Whatever `references/fix-prs.md` says, these hold:
 
 Only the incident marked `stabilise` (`references/stabilise.md`); else `summary.stabilise.skipped`
 says why. The pick is the tool's — never stabilise a flake while a break is open, never promote a
-second candidate. The draft is unassigned (`pull-request.mjs --draft`, no `--assignee`), outside
+second candidate. The draft is unassigned (`pull-request.mjs --kind stabilise`), outside
 the two fix-PR slots, and on a laptop asked about **before starting**: it holds port 8080 and Docker
 for up to an hour.
 
@@ -241,8 +239,8 @@ from filing it again.
 node <skill>/tools/ci-check.mjs --render-detail work-order.json > detail.md   # add --live when writing
 ```
 
-**Fill the markers, and change nothing else.** If a fix failed verification (§5), add that under
-the incident it belongs to, inside its block.
+**Fill the markers, and change nothing else.** `COMMENT` and `CANDIDATE` take this run's decision
+(comment sent or dropped, PR confirmed or not); `privatebin.mjs` refuses a paste still holding one. If a fix failed verification (§5), add that inside its incident's block.
 
 **Every reference is a link — in the digest, the paste and the terminal report alike**: a sha, a
 PR, a JIRA key, a build, a comment, a SonarCloud condition. Take the URL from the work order
@@ -262,8 +260,8 @@ expiry on that instance.
 Never posted locally (§0). Read `references/digest.md` before building it: every `--write` morning,
 0 incidents included, and in a dry run that prints it. Whatever else it says:
 
-- **The tool renders it** (`--render-digest`); fill its markers. `matrix.mjs` refuses a digest
-  still holding one, or holding an email address.
+- **The tool renders it** (`--render-digest`), without the security-only line; fill its markers.
+  `matrix.mjs` refuses a digest still holding one, an email address, or that line.
 - **`SILENT` means post nothing at all** — unless this run opened a stabilisation PR, which is news.
   The paste and the commit comments still run.
 - **`matrix.mjs` always gets `--state delta.json`**: without it tomorrow's run has nothing to
@@ -277,7 +275,7 @@ horizon`), what was written where (linked, per §6), and what was deliberately *
 one that tells a reader whether the brakes are working.
 
 What a mode withholds by design (`references/local-run.md`, `references/digest.md` say what) is not
-a failure and must not be reported as a warning — it is the mode working.
+a failure and must not be reported as a warning.
 
 ## Related
 

@@ -12,8 +12,9 @@ numbers are those of SKILL.md.
 run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
 cleared, which is why it outranks any flicker (§5). Hand the fixing itself to
 **`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
-"fix" there silently breaks things — but in a routine, open its PR with `pull-request.mjs` like
-every other (§5), never with the `gh` that skill names.
+"fix" there silently breaks things — but in a routine, open its PR with `pull-request.mjs --kind
+fix` like every other (§5), never with the `gh` that skill names. It is a fix PR, so it takes one of
+the run's two slots: the brake is the reviewers' load, whatever the PR fixes.
 
 **The report says who caused it, and the sweep has already found out.** The Jenkins log cannot —
 it says `QUALITY GATE STATUS: FAILED` and stops, which is why `blame` is `none` here — but
@@ -28,7 +29,8 @@ keeps only its local part, so an address never reaches the room (and `matrix.mjs
 **One name or none.** `sonar.unequivocal` is true only when every commit that touched any of the
 gate-causing files in the two days before the analysis is by the *same* author and SonarCloud
 attributes the lines to at most one person; then `blame` is `likely`, and §4 comments — on
-`sonar.target`, which is the pull request when the commit had one. Two names anywhere — two
+`commentable`, which is the pull request when the commit had one, unless another incident blames
+that commit too: then it is the commit, and one comment answers both (§4). Two names anywhere — two
 people's changes both under the gate, or a line author who is not the committer — and
 `sonar.equivocalBecause` says which, the blame stays `none`, and the room hears about it instead.
 A file with **no** commit in that window took no part in the decision: the issue is a new rule run

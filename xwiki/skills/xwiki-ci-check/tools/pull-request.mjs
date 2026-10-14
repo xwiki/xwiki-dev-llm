@@ -13,11 +13,16 @@
  *
  * Nothing is written without an explicit `--write`: the default prints the PR it would have opened.
  *
- * Usage:
- *   node pull-request.mjs --repo xwiki-platform --head claude/<slug> --base master \
- *     --title "[Misc] …" --file body.md [--assignee <login>] [--draft] [--write]
+ * It also holds §5's brakes on how many PRs one run opens: at most 2 `--kind fix` — a quality-gate
+ * fix included, since the brake is the reviewers' load — and 1 `--kind stabilise`, a draft that is
+ * unassigned. The run is the work order's `generatedAt`, which each PR carries in a marker in its
+ * body; a PR past the cap is refused with exit 4 (a reused PR is not a new one, and is never refused).
  *
- * `--assignee` is the culprit author for a fix PR, and absent for a flicker-stabilisation draft,
+ * Usage:
+ *   node pull-request.mjs --work-order work-order.json --kind fix|stabilise --repo xwiki-platform \
+ *     --head claude/<slug> --base master --title "[Misc] …" --file body.md [--assignee <login>] [--draft] [--write]
+ *
+ * `--assignee` is the culprit author for a fix PR, and refused for a flicker-stabilisation draft,
  * which is unassigned (§5).
  *
  * Environment: GH_TOKEN_BOT — the bot account's token, and deliberately nothing else.
@@ -32,6 +37,21 @@ const token = process.env.GH_TOKEN_BOT;
 // The label every machine-generated PR carries, so that reviewers, filters and the other routines
 // (xwiki-fix-sonarqube-issue checks it for work in flight) can tell it from a human's.
 export const LABEL = 'llm-agent';
+
+/** PRs one run may open, per kind (SKILL.md §5). */
+export const LIMITS = { fix: 2, stabilise: 1 };
+const REPOS = ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'];
+const runMarker = (kind, run) => `<!-- xwiki-ci-check: pr kind=${kind} run=${run} -->`;
+
+/** How many PRs of this kind this run has already opened, from the marker in their bodies. */
+async function openedThisRun(kind, run, repo) {
+  let count = 0;
+  for (const name of new Set([...REPOS, repo])) {
+    const pulls = await github(`/repos/xwiki/${name}/pulls?state=all&sort=created&direction=desc&per_page=50`);
+    count += pulls.filter(pull => (pull.body || '').includes(runMarker(kind, run))).length;
+  }
+  return count;
+}
 
 async function github(path, init = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
@@ -51,10 +71,12 @@ async function github(path, init = {}) {
  * @returns {Promise<{url: string|null, steps: string[]}>} `steps` says what was done (or, in a
  *   rehearsal, what would have been), one entry per write.
  */
-export async function openPullRequest({ repo, head, base, title, body, assignee = null, draft = false,
-  write = false }) {
+export async function openPullRequest({ repo, head, base, title, body: text, assignee = null, draft = false,
+  write = false, kind, run }) {
   const steps = [];
+  const body = `${text.trimEnd()}\n\n${runMarker(kind, run)}\n`;
   if (!write) {
+    steps.push(`check this run has opened fewer than ${LIMITS[kind]} ${kind} PR(s)`);
     console.log(`--- would open on xwiki/${repo}: ${head} → ${base}${draft ? ' (draft)' : ''} ---\n${title}\n\n${body}`);
     steps.push(`label ${LABEL}`, assignee ? `assign ${assignee}` : 'leave unassigned', 'lock to collaborators');
     return { url: null, steps: steps.map(step => `would ${step}`) };
@@ -64,6 +86,11 @@ export async function openPullRequest({ repo, head, base, title, body, assignee 
   if (pr) {
     steps.push(`reused open PR #${pr.number}`);
   } else {
+    const opened = await openedThisRun(kind, run, repo);
+    if (opened >= LIMITS[kind]) {
+      return { url: null, steps, refused: `this run has already opened ${opened} ${kind} PR(s), the most §5 allows`
+        + ` (${LIMITS[kind]}) — open none, and put the pushed branch ${head} in the paste` };
+    }
     pr = await github(`/repos/xwiki/${repo}/pulls`, {
       method: 'POST',
       body: JSON.stringify({ title, head, base, body, draft, maintainer_can_modify: true })
@@ -100,6 +127,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const options = { write: false, draft: false };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--repo') options.repo = argv[++i];
+    else if (argv[i] === '--work-order') options.workOrder = argv[++i];
+    else if (argv[i] === '--kind') options.kind = argv[++i];
     else if (argv[i] === '--head') options.head = argv[++i];
     else if (argv[i] === '--base') options.base = argv[++i];
     else if (argv[i] === '--title') options.title = argv[++i];
@@ -110,15 +139,33 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--dry-run') options.write = false;
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
-  for (const required of ['repo', 'head', 'base', 'title', 'file']) {
-    if (!options[required]) { console.error(`--${required} is required`); process.exit(2); }
+  for (const required of ['workOrder', 'kind', 'repo', 'head', 'base', 'title', 'file']) {
+    if (!options[required]) { console.error(`--${required.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)} is required`); process.exit(2); }
   }
+  if (!(options.kind in LIMITS)) { console.error(`--kind is one of ${Object.keys(LIMITS).join(', ')}`); process.exit(2); }
+  if (options.kind === 'stabilise') {
+    // §5: a flicker usually has no culprit, and a wrong auto-assignment discredits the whole system.
+    if (options.assignee) { console.error('a stabilisation PR is unassigned (SKILL.md §5): drop --assignee'); process.exit(2); }
+    options.draft = true;
+  }
+  const workOrder = JSON.parse(readFileSync(options.workOrder, 'utf8'));
+  if (workOrder.rehearsal && options.write) {
+    console.error(`${options.workOrder} is a ${workOrder.rehearsal} rehearsal (ci-check.mjs --rehearse-stabilise):`
+      + ' nothing is opened from it — drop --write');
+    process.exit(2);
+  }
+  options.run = workOrder.generatedAt;
+  if (!options.run) { console.error(`${options.workOrder} has no generatedAt: pass the work order ci-check.mjs wrote`); process.exit(2); }
   if (!token && options.write) {
     console.error('GH_TOKEN_BOT is not set. This tool opens the PR as the CI bot and will not fall back to '
       + 'a personal token — set the bot token, or drop --write.');
     process.exit(2);
   }
   const result = await openPullRequest({ ...options, body: readFileSync(options.file, 'utf8') });
+  if (result.refused) {
+    console.error(`not opened: ${result.refused}`);
+    process.exit(4);
+  }
   console.log(`${result.url ?? 'not opened (rehearsal — pass --write to open)'}\n${result.steps.map(s => `  - ${s}`).join('\n')}`);
   if (result.url && !result.locked) {
     // Printed here, where the failure is, rather than left to a rule the session may have skimmed:

@@ -529,6 +529,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // The delta report can be handed over as it is: what the next run needs from it is its `state`.
   const carried = stateFile ? (JSON.parse(readFileSync(stateFile, 'utf8')) ?? {}) : null;
   const state = carried && (carried.state ?? carried);
+  // The security-only lines `ci-check.mjs --delta` withheld (okf/processes/release.md: never named
+  // in a public artifact). The rendered digest already leaves them out; a hand edit must not undo it.
+  const named = (carried?.withheld || []).flatMap(branch => [branch, branch.replace(/^stable-/, '')])
+    .filter(name => text.includes(name));
+  if (named.length) {
+    console.error(`matrix.mjs: not posting — the digest names a security-only line (${[...new Set(named)].join(', ')}).`
+      + ' The room is public: leave that line to the paste (references/digest.md).');
+    process.exit(2);
+  }
   if (write) {
     await send(text, { state }).then(eventId => console.log(eventId)).catch(fail);
   } else {

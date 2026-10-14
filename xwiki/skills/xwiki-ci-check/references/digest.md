@@ -45,7 +45,7 @@ that as it is, and fill or delete the markers:
 | Marker | What replaces it |
 |---|---|
 | `<!-- PASTE -->` | the paste URL, if `--paste` was not given; on a silent morning it lives in the run log alone |
-| `<!-- DONE: <id> -->` | what this run did: `[commented](<comment URL>) on [<sha>](<url>) (<login>)`, `no owner found`, `[issue filed](<url>)`, `[commented on <KEY>](<url>)`, `fix in flight` once a candidate PR is confirmed — one clause |
+| `<!-- DONE: <id> -->` | what this run did: `[commented](<comment URL>) on [<sha>](<url>) (<login>)`, `no owner found`, `[issue filed](<url>)`, `[commented on <KEY>](<url>)`, `fix in flight` once a candidate PR is confirmed — one clause; on a `commentedWith` row, the same comment as its carrier's |
 | `<!-- STABILISE: … -->` | the row of the stabilisation PR §5 opened, or nothing |
 | `<!-- SILENT: … -->` | see below |
 
@@ -56,6 +56,11 @@ that as it is, and fill or delete the markers:
   dashboard could never print is a fix, so it gets its row — *"→ draft fix for `ImageIT#editImage`:
   forced race red 4/4 → green 4/4 on Chrome, XWIKI-24749"* — and nothing else about that flicker is
   repeated.
+- **The security-only line is never in the digest.** `okf/processes/release.md` forbids naming it
+  in a public artifact, and the room is one: `--render-digest` and `--delta` leave it out — its grid
+  column, its rows, its `alsoOn` entries and its state — and name it in `delta.json`'s `withheld`,
+  which is how `matrix.mjs --state` refuses a digest that names it after all. The paste and the
+  terminal report are internal and keep it.
 - **A name is a GitHub login, never an address**: a quality-gate row names *whose code* is under the
   failing condition from `sonar.culprits`, never *who broke it*, and `matrix.mjs` refuses a digest
   holding an email address.

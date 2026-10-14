@@ -172,6 +172,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
   if (!text.trim()) { console.error('Nothing to paste'); process.exit(2); }
+  // `ci-check.mjs --render-detail` leaves these where only the run's own decision — a comment sent
+  // or dropped, a candidate PR confirmed or not — makes the line true; either default would be false
+  // half the time. WHY / NEXT / ANALYSIS may stay: an unfilled cell renders empty, and says so.
+  // Refused in a rehearsal too, so that a dry run shows the paste a live run would not post.
+  const decision = text.match(/<!--\s*(COMMENT|CANDIDATE):[^>]{0,100}/);
+  if (decision) {
+    console.error(`privatebin.mjs: not pasting — the paste still holds a decision marker: ${decision[0]}…`
+      + ' Fill it with what this run decided (references/paste.md).');
+    process.exit(2);
+  }
   if (!write) {
     console.log(`--- would paste ${text.length} characters of ${options.format} to ${options.url}, `
       + `expiring in ${options.expire} (pass --write to post) ---`);

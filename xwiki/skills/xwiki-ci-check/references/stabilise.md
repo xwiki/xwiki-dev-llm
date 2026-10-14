@@ -17,7 +17,8 @@ is the tool's, and it is not yours to override: never stabilise a flake while a 
 never promote a second candidate because the first looked hard.
 
 The candidate is a flicker that is `proven`, already **filed** (it has a `jira`), answered by
-nothing (`fixState` null), inside the horizon, and not `systematic` — and, among those, the one that
+nothing (`fixState` null), inside the horizon, not `systematic`, and not on the security-only line,
+which takes no ordinary fix (`okf/processes/release.md`) — and, among those, the one that
 fails most often: it costs the most re-runs, and its recent failures are the ones whose screenshot,
 video and logs Jenkins still holds.
 
@@ -48,8 +49,8 @@ fix. Whether to also measure an unforced local rate is that skill's call, not a 
    most likely, why, and what would confirm it.
 
 The PR is **draft**, **unassigned** (a flicker usually has no culprit, and a wrong auto-assignment
-discredits the whole system), opened by the bot like any other — `pull-request.mjs --draft` with no
-`--assignee` — and its subject is the issue's key and its title verbatim, per
+discredits the whole system), opened by the bot like any other — `pull-request.mjs --kind stabilise`,
+which makes it a draft, refuses `--assignee` and a second one in the same run — and its subject is the issue's key and its title verbatim, per
 `xwiki-pull-request`. Its body carries, and a reviewer should not have to ask for any of it:
 
 - the **mechanism** in two or three sentences — what races with what, and why it fails on the

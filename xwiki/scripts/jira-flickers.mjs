@@ -44,7 +44,7 @@ const search = async (jql, fields) => {
  *
  * @param jql {string} defaults to the open flickers; pass the closed ones to spot a resurrection.
  * @returns {Promise<(id: string) => {key: string, summary: string, status: string,
- *   resolution: string|null, fixVersions: string[]}|null>} given a `class#method` test id, the issue tracking it, or null.
+ *   resolution: string|null, fixVersions: string[], unreleased: string[]}|null>} given a `class#method` test id, the issue tracking it, or null.
  *   `fixVersions` is what makes a closed hit actionable: compare it with the branch that is red to
  *   tell "the fix never shipped on this line" from "it shipped here and did not hold".
  */
@@ -65,7 +65,12 @@ export async function knownFlickers(jql = FLICKER_JQL) {
       key: issue.key, summary: issue.fields.summary, status: issue.fields.status?.name || "",
       // A closed issue is not a fixed one: "Cannot Reproduce" closes a flicker nobody fixed.
       resolution: issue.fields.resolution?.name || null,
-      fixVersions: (issue.fields.fixVersions || []).map(version => version.name), earlier: []
+      fixVersions: (issue.fields.fixVersions || []).map(version => version.name),
+      // A Fix Version not yet released is one whose fix may still be finished under this key — the
+      // one case a human may reopen it (okf/servers/jira.md). Kept apart so nobody has to ask JIRA.
+      unreleased: (issue.fields.fixVersions || []).filter(version => version.released === false)
+        .map(version => version.name),
+      earlier: []
     };
     all.push(entry);
     const ref = issue.fields[FLICKER_FIELD];

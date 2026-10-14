@@ -35,6 +35,9 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --max-console <n>   Consecutive broken builds whose log is read, per job (default 4)
   --no-github         Skip blame attribution and the "already commented?" check
   --no-develocity     Skip the Develocity history of deep class-1 incidents (one call each)
+  --rehearse-stabilise Pick the stabilisation candidate even past an open release blocker, so the
+                      dry run can exercise references/stabilise.md. Marks the work order a
+                      rehearsal: commit-comment.mjs and pull-request.mjs refuse --write from it.
   --full              Emit every field of every incident (debugging; the default is digested)
   --pretty            Human-readable summary instead of the JSON work order
   --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
@@ -58,7 +61,7 @@ function parseArgs(argv) {
   const out = {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
     budget: 5, history: 8, blameHistory: 25, absence: 3, maxConsole: 4, github: true, develocity: true,
-    full: false, pretty: false,
+    full: false, pretty: false, rehearseStabilise: false,
     renderDetail: null, live: false, delta: null, previous: null, chat: null, renderDigest: null, paste: null
   };
   for (let i = 0; i < argv.length; i++) {
@@ -73,6 +76,7 @@ function parseArgs(argv) {
     else if (key === '--max-console') out.maxConsole = Number(argv[++i]);
     else if (key === '--no-github') out.github = false;
     else if (key === '--no-develocity') out.develocity = false;
+    else if (key === '--rehearse-stabilise') out.rehearseStabilise = true;
     else if (key === '--full') out.full = true;
     else if (key === '--pretty') out.pretty = true;
     else if (key === '--render-detail') out.renderDetail = argv[++i];
@@ -505,9 +509,9 @@ async function priorPrComment(repo, number, incidentId) {
 
 function markerIn(comments, incidentId) {
   for (const comment of comments || []) {
-    const marker = (comment.body || '').match(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/);
-    if (marker && marker[1] === incidentId) {
-      return { state: marker[2], url: comment.html_url, at: comment.created_at };
+    // One comment may carry several markers: one per incident it answered (§4, one per commit).
+    for (const marker of (comment.body || '').matchAll(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/g)) {
+      if (marker[1] === incidentId) return { state: marker[2], url: comment.html_url, at: comment.created_at };
     }
   }
   return null;
@@ -2101,9 +2105,12 @@ function sonarBlock(incident) {
           ' line, newly reported'}`);
   }
   if (sonar.unequivocal && sonar.target) {
-    out.push(`_One person put all of this here — ${sonar.target.kind === 'pr'
+    // Where §4 actually comments: the commit, rather than the PR, when another incident shares it.
+    const onPr = sonar.target.kind === 'pr' && !incident.commentedWith && (!incident.commentable || !!incident.commentable.pr);
+    out.push(`_One person put all of this here — ${onPr
       ? `comment on **PR #${sonar.target.number}** (${sonar.target.url})`
-      : `comment on **\`${sonar.target.short}\`** (${sonar.target.url})`}, per §4._`);
+      : `comment on **\`${sonar.target.short}\`**${incident.commentedWith ? ', one comment with the other incident it broke' : ''}`
+        + ` (${incident.commentable?.url || sonar.target.url})`}, per §4._`);
   } else if (sonar.culprits?.length) {
     out.push(`_Whose code: ${sonar.culprits.map(entry => `**${entry.who}** (${plural(entry.issues, 'issue')}` +
       `${entry.commits.length ? `, ${entry.commits.join(', ')}` : ''})`).join(', ')}._` +
@@ -2184,10 +2191,9 @@ function fixBlock(incident) {
   if (!fix) return [];
   const head = `${fixRef(fix)} **${fix.author || '(unknown)'}** — ${fix.title}`;
   const where = fix.where[0].toUpperCase() + fix.where.slice(1);
-  if (fix.candidate) {
-    return ['', `**Candidate fix, unconfirmed** — ${head}`,
-      `${where}; ${fix.reason}. A name match only: this incident stands unless the PR fixes this failure.`];
-  }
+  // A name match only, and whether it answers this failure is the run's to decide (§3): either
+  // wording would be false half the time, so the run writes the line once it has read the PR.
+  if (fix.candidate) return ['', `<!-- CANDIDATE: ${incident.id} -->`];
   if (fix.partial) {
     const rest = fix.of - fix.covers.length;
     return ['', `**${FIX_HEAD[fix.kind].part}** — ${head}`,
@@ -2311,8 +2317,15 @@ const jiraKey = incident => (typeof incident.jira === 'string' ? incident.jira :
 const closedAs = closed => (unfixed(closed)
   ? `${closed.key} closed as ${closed.resolution}, not fixed`
   : closed.fixVersions?.length
-    ? `already fixed by ${closed.key} (${closed.fixVersions.join(', ')})`
+    ? `already fixed by ${closed.key} (${closed.fixVersions.join(', ')})${unshipped(closed)}`
     : `${closed.key} closed${closed.resolution ? ' as fixed' : ''}, no Fix Version`);
+
+/**
+ * The Fix Versions of a closed issue not yet released, as a clause. Such an issue is the one a
+ * *human* may reopen (okf/servers/jira.md); the routine only comments on it (references/fix-signals.md).
+ */
+const unshipped = closed => (closed.unreleased?.length
+  ? `, ${closed.unreleased.join(', ')} unreleased — comment; reopening is a human's call` : '');
 
 /**
  * Whether a closed issue was closed *without* a fix — Cannot Reproduce, Won't Fix, Duplicate. Such
@@ -2332,7 +2345,7 @@ function noOneOwes(incident, horizonDays) {
     }
     return incident.jiraClosed.fixVersions?.length
       ? `${incident.jiraClosed.key} already fixed this test in ${incident.jiraClosed.fixVersions.join(', ')}`
-        + ' — compare that with this branch before filing anything'
+        + (unshipped(incident.jiraClosed) || ' — compare that with this branch before filing anything')
       : `${incident.jiraClosed.key} was closed${incident.jiraClosed.resolution ? ' as fixed' : ''} with no Fix Version — find its commit before`
         + ' assuming this branch has it or lacks it';
   }
@@ -2352,7 +2365,7 @@ function noOneOwes(incident, horizonDays) {
  * written here; what a *person* should do is the conclusion of the analysis, so a deep incident
  * leaves a marker for the pass that writes its root cause (SKILL.md §6).
  */
-function nextOf(incident, { horizonDays, filing, stabilising, cause }) {
+function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) {
   const lines = [];
   const fix = incident.fixState;
   if (settled(incident)) {
@@ -2367,12 +2380,12 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause }) {
   } else if (!incident.beyondHorizon) {
     if (incident.silent) {
       lines.push('done → already commented, in this same state');
-    } else if (incident.sonar?.unequivocal && incident.sonar.target) {
-      lines.push(`bot → comment on ${incident.sonar.target.kind === 'pr'
-        ? `PR #${incident.sonar.target.number}` : `\`${incident.sonar.target.short}\``}`);
-    } else if (incident.blame?.culprit) {
-      lines.push(`bot → comment on \`${incident.blame.culprit.short}\` ` +
-        `(${incident.blame.culprit.author || 'unknown'})`);
+    } else if (incident.commentable) {
+      // Whether the comment goes is the run's decision (§4 may drop the culprit), so a line saying
+      // it went would be false the moment it does not: the run fills this in once it has decided.
+      lines.push(`<!-- COMMENT: ${incident.id} -->`);
+    } else if (incident.commentedWith) {
+      lines.push(`bot → one comment for this and #${sharing ?? '?'}: the same commit`);
     }
     if (filing) lines.push(`bot → file **one** issue for \`${filing.className}\` (${filing.scope})`);
     if (stabilising) lines.push('bot → find the cause, force the race, fix, draft PR on proof');
@@ -2534,7 +2547,7 @@ function renderDetail(report, { live }) {
       out.push(`| **${numbers.get(incident.id)}.** ${cell(name)}<br>_${cell(meta)}_ ` +
         `| ${cell(why)} ` +
         `| ${cell(nextOf(incident, { horizonDays: report.horizonDays, filing, cause,
-          stabilising: incident.stabilise }))} |`);
+          stabilising: incident.stabilise, sharing: numbers.get(incident.commentedWith) }))} |`);
     }
     for (const incident of section.list) {
       const body = evidenceFor(incident);
@@ -2688,6 +2701,7 @@ function deltaOf(report, previous) {
   const envelope = previous != null && ('available' in previous || 'state' in previous);
   const available = !envelope || previous.available !== false;
   const before = new Map(Object.entries((envelope ? previous.state : previous) || {})
+    .filter(([id]) => !(report.withheld || []).includes(id.split('/')[1]))
     .map(([id, line]) => [id, { line: String(line ?? ''), ...parseLine(line) }]));
   const state = {};
   const appeared = [];
@@ -2730,7 +2744,8 @@ function deltaOf(report, previous) {
       unknown: Object.keys(state).length,
       longStanding,
       status: statusOf(report),
-      state
+      state,
+      withheld: report.withheld
     };
   }
   return {
@@ -2744,7 +2759,9 @@ function deltaOf(report, previous) {
     same,
     longStanding,
     status: statusOf(report),
-    state
+    state,
+    // The lines the digest may not name (`publicView`): `matrix.mjs --state` refuses a digest that does.
+    withheld: report.withheld
   };
 }
 
@@ -2762,20 +2779,23 @@ const linked = (text, url) => (url ? `[${text}](${url})` : text);
 const browse = key => `${JIRA}/browse/${key}`;
 
 /** The *Done* cell: what is already known, or a marker for what this run did about it. */
-function doneOf(incident) {
+function doneOf(incident, report) {
   const fix = incident.fixState;
   if (settled(incident)) {
     const sha = linked(`\`${fix.sha}\``, fix.url);
     if (fix.kind === 'fix-unbuilt') return `likely fixed, unbuilt: ${sha}`;
     if (fix.kind === 'fix-in-flight') return `fix in flight: ${linked(`PR #${fix.number}`, fix.url)}`;
     if (fix.kind === 'stale-snapshot') return `stale snapshot, not a break: ${sha}`;
-    if (fix.kind === 'fixed-elsewhere') return `fixed on ${shortBranch(fix.branch || 'another branch')} by ${sha}, backport candidate`;
+    if (fix.kind === 'fixed-elsewhere') {
+      const where = fix.branch && !report.withheld?.includes(fix.branch) ? shortBranch(fix.branch) : 'another branch';
+      return `fixed on ${where} by ${sha}, backport candidate`;
+    }
     if (fix.kind === 'announced') return `quiet: ${linked('announced', fix.url)} by ${roomName(fix.author)} before it broke`;
     if (fix.kind === 'being-handled') return `quiet: ${roomName(fix.author)} ${linked('is on it', fix.url)}`;
   }
   // What the run itself may have done — commented, filed, commented on a closed issue, confirmed a
   // candidate PR — is known only once it has done it.
-  if (incident.commentable || incident.flickerGroup || incident.jiraClosed || fix?.candidate) {
+  if (incident.commentable || incident.commentedWith || incident.flickerGroup || incident.jiraClosed || fix?.candidate) {
     return `<!-- DONE: ${incident.id} -->`;
   }
   if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
@@ -2841,7 +2861,7 @@ function renderDigest(report, previous, { paste = null } = {}) {
   } else {
     for (const incident of incidents) put(incident, '');
   }
-  const owned = incident => !!incident.commentable;
+  const owned = incident => !!(incident.commentable || incident.commentedWith);
   const rank = ({ incident }) => (unreleasable(incident) ? (owned(incident) ? 0 : 1) : 2);
   const moved = [...rows.values()].sort((a, b) => rank(a) - rank(b) || rowRank(a.incident) - rowRank(b.incident));
 
@@ -2860,7 +2880,7 @@ function renderDigest(report, previous, { paste = null } = {}) {
   const line = (mark, incident, moves) => `| ${mark}${incident ? DOTS[unreleasable(incident) ? 'red' : 'orange'] : ''} `
     + `| ${shortRepo(incident.repo)}/${[incident.branch, ...(incident.alsoOn || [])].map(shortBranch).join('+')} `
     + `| ${cell(whatOf(incident, moves))} | ${incident.ageDays == null ? '—' : agedAs(incident)} `
-    + `| ${cell(doneOf(incident) + citeRoom(incident))} |`;
+    + `| ${cell(doneOf(incident, report) + citeRoom(incident))} |`;
   // What went green is the line no dashboard shows, so it is never cut: one row per repo.
   const greenRows = [...new Set([...fixed.values()].map(entry => entry.repo))].map(repo => {
     const entries = [...fixed.values()].filter(entry => entry.repo === repo);
@@ -2900,6 +2920,31 @@ function renderDigest(report, previous, { paste = null } = {}) {
   ].join('\n');
 }
 
+/**
+ * The LTS lines older than the two maintained ones: they take security fixes only, and
+ * okf/processes/release.md forbids naming them in a public artifact — which the digest is.
+ */
+export function securityOnly(branches) {
+  return [...new Set(branches)].filter(branch => classifyBranch(branch).class === 'lts').sort(branchOrder).slice(2);
+}
+
+/**
+ * The work order as the public room may see it: without the security-only lines — no grid column,
+ * no row, no `alsoOn` entry, no state carried forward — and naming them in `withheld`. The paste and
+ * the terminal are internal and keep them.
+ */
+function publicView(report) {
+  const withheld = securityOnly((report.jobs || []).map(job => job.branch));
+  const hidden = branch => withheld.includes(branch);
+  return {
+    ...report,
+    withheld,
+    jobs: (report.jobs || []).filter(job => !hidden(job.branch)),
+    incidents: (report.incidents || []).filter(incident => !hidden(incident.branch))
+      .map(incident => (incident.alsoOn?.some(hidden) ? { ...incident, alsoOn: incident.alsoOn.filter(b => !hidden(b)) } : incident))
+  };
+}
+
 // ---- Run -------------------------------------------------------------------------------------
 
 const args = parseArgs(process.argv.slice(2));
@@ -2915,7 +2960,7 @@ if (args.renderDetail) {
 // The delta reads two files and no server, so yesterday's comparison can be redone — after a fix
 // to the classification, or on another machine — without a second pass over Jenkins either.
 if (args.delta || args.renderDigest) {
-  const report = JSON.parse(readFileSync((args.delta || args.renderDigest) === '-' ? 0 : args.delta || args.renderDigest, 'utf8'));
+  const report = publicView(JSON.parse(readFileSync((args.delta || args.renderDigest) === '-' ? 0 : args.delta || args.renderDigest, 'utf8')));
   const previous = args.previous ? JSON.parse(readFileSync(args.previous, 'utf8')) : { available: false };
   console.log(args.delta ? JSON.stringify(deltaOf(report, previous), null, 2) : renderDigest(report, previous, args));
   process.exit(0);
@@ -3265,9 +3310,10 @@ async function gateCulprit(incident, issues, args) {
     culprit: { ...culprit, files: issues.map(issue => issue.file) },
     suspects: []
   };
-  incident.notified = target.kind === 'pr'
-    ? await priorPrComment(incident.repo, target.number, incident.id)
-    : await priorComment(incident.repo, culprit.sha, incident.id);
+  // The commit too, for a PR: the gate's comment lands there when it shares that commit with
+  // another incident (one comment per commit, see `oneCommentPerCommit`).
+  incident.notified = (target.kind === 'pr' ? await priorPrComment(incident.repo, target.number, incident.id) : null)
+    ?? await priorComment(incident.repo, culprit.sha, incident.id);
   incident.silent = !!incident.notified && incident.notified.state === incident.state;
 }
 
@@ -3293,9 +3339,12 @@ const blocksRelease = incident => incident.alerting && incident.primary !== fals
 // (two builds, two days), that nothing already answers, and that is inside the horizon — the same
 // four brakes every other write here has. `systematic` is excluded twice over: it is a blocker
 // above, and §4 says a "flicker" failing every time is a regression or a stale triage, not a flake.
+// Never on a security-only line: it takes no ordinary fix, and a PR there would name it in public
+// (okf/processes/release.md).
+const securityOnlyLines = securityOnly(targets.map(target => target.branch));
 const stabilisable = incident => incident.class === 1 && incident.kind === 'flicker' && incident.proven
   && incident.jira && !incident.fixState && incident.alerting && !incident.beyondHorizon
-  && incident.primary !== false && incident.state !== 'systematic';
+  && incident.primary !== false && incident.state !== 'systematic' && !securityOnlyLines.includes(incident.branch);
 
 const blockers = incidents.filter(blocksRelease);
 // Highest failure rate first: it costs the most re-runs, and its recent failures are the ones whose
@@ -3303,7 +3352,7 @@ const blockers = incidents.filter(blocksRelease);
 const stabiliseCandidates = incidents.filter(stabilisable)
   .sort((a, b) => (b.failRatio || 0) - (a.failRatio || 0));
 let stabilise = { skipped: 'no proven, filed, unanswered flicker inside the horizon' };
-if (blockers.length) {
+if (blockers.length && !args.rehearseStabilise) {
   stabilise = {
     skipped: `${plural(blockers.length, 'release-blocking incident')} open, and what blocks a `
       + `release comes first — a flicker costs a re-run and blocks nobody`,
@@ -3328,7 +3377,10 @@ if (blockers.length) {
   stabilise = {
     id: pick.id, jira: pick.jira.key, failedIn: pick.failedIn,
     configuration: configs.find(config => config.startsWith(`${pick.branch} /`)) || pick.envs?.[0] || configs[0] || null,
-    others: stabiliseCandidates.length - 1
+    others: stabiliseCandidates.length - 1,
+    // A rehearsal ignores the blockers so that stabilise.md can be exercised at all; it still names
+    // them, and the work order it is in can never be written from.
+    ...(args.rehearseStabilise ? { rehearsal: true, blockers: blockers.map(incident => incident.id) } : {})
   };
 }
 
@@ -3338,6 +3390,37 @@ for (const incident of incidents) {
   delete incident.window?.firstBad;
   delete incident.window?.lastGood;
   incident.commentable = commentTarget(incident);
+}
+oneCommentPerCommit(incidents);
+
+/**
+ * At most one comment per commit per run (§4): a gate whose PR squashed into the commit a build
+ * break blames is one change, and two comments on it from one morning are one too many. The first
+ * incident in severity order carries the comment, with every other one in `covers` — its marker
+ * goes on that comment too, so tomorrow's run finds each of them already said — and the others
+ * lose `commentable` and point at it with `commentedWith`. The commit is preferred over the PR as
+ * the carrier's target, because every incident's "already said" lookup reads the commit.
+ */
+function oneCommentPerCommit(all) {
+  const byCommit = new Map();
+  for (const incident of all.filter(entry => entry.commentable?.sha)) {
+    const key = `${incident.repo}\u0000${incident.commentable.sha}`;
+    byCommit.set(key, [...(byCommit.get(key) || []), incident]);
+  }
+  for (const group of byCommit.values()) {
+    if (group.length < 2) continue;
+    const [carrier, ...rest] = group;
+    const { pr, ...onCommit } = carrier.commentable;
+    const commit = group.find(entry => !entry.commentable.pr)?.commentable;
+    carrier.commentable = {
+      ...(pr && commit ? { ...onCommit, url: commit.url } : carrier.commentable),
+      covers: rest.map(entry => ({ id: entry.id, state: entry.state }))
+    };
+    for (const entry of rest) {
+      entry.commentable = null;
+      entry.commentedWith = carrier.id;
+    }
+  }
 }
 
 /**
@@ -3357,7 +3440,8 @@ function commentTarget(incident) {
   if (isGate(incident)) {
     const target = incident.sonar?.unequivocal && incident.sonar.target;
     if (!target) return null;
-    return target.kind === 'pr' ? { ...at, pr: target.number, url: target.url } : { ...at, sha: target.sha, url: target.url };
+    return target.kind === 'pr' ? { ...at, pr: target.number, sha: target.sha, url: target.url }
+      : { ...at, sha: target.sha, url: target.url };
   }
   const { culprit, tier } = incident.blame || {};
   if (!culprit || !['certain', 'likely'].includes(tier)) return null;
@@ -3423,6 +3507,8 @@ function digest(incident, keys) {
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
     // §4's skip list, already applied: where a comment may go, or nothing.
     commentable: incident.commentable || undefined,
+    // The incident whose comment also answers this one: the same commit, one comment per run.
+    commentedWith: incident.commentedWith,
     jiraClosed: incident.jiraClosed || undefined,
     // The run's single stabilisation candidate (§5). It is rarely `deep` — a filed flicker is
     // deliberately low in the analysis budget — so it is flagged here and given the full shape
@@ -3503,6 +3589,8 @@ function digest(incident, keys) {
 
 const report = {
   generatedAt: new Date().toISOString(),
+  // `commit-comment.mjs` and `pull-request.mjs` refuse --write against a work order carrying this.
+  ...(args.rehearseStabilise ? { rehearsal: 'stabilise' } : {}),
   horizonDays: args.horizon,
   budget: args.budget,
   githubAuthenticated: !!token && args.github,

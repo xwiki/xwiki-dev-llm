@@ -29,6 +29,21 @@ prompt is visible to whoever edits the routine next.
 Read the run logs for a few days. You are looking for: is the blame right? is the wording of a
 `likely` comment actually asking rather than accusing? would any of those PRs have been wrong?
 
+### Stabilisation rehearsal (opt-in, by hand)
+
+The dry run never starts a stabilisation, so `references/stabilise.md` is rehearsed apart, on a
+machine that can hold Docker and port 8080 for an hour:
+
+```
+Run the xwiki-ci-check skill. Stabilisation rehearsal: sweep with ci-check.mjs --rehearse-stabilise,
+write nothing anywhere and treat every write as declined, except starting the stabilisation of the
+summary.stabilise incident. Follow references/stabilise.md through xwiki-fix-flickering-docker-test,
+stop before the PR, and print in full the draft PR or flicker-issue comment you would have posted.
+```
+
+`--rehearse-stabilise` picks the candidate even past a release blocker, and the comment and PR
+tools refuse to write from it.
+
 ## Live
 
 ```
