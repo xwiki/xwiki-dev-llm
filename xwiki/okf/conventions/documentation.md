@@ -597,7 +597,9 @@ page splits edits in two, and the split decides whether a Change Request is the 
   typing errors, broken links, small rephrasings for clarity, and other low-impact fixes that change
   neither structure nor meaning. Tick **"minor"** so the page's followers are not notified, write a
   short version summary ("fixed typo", "fix broken link"), and use **Preview** before saving. Opening
-  a Change Request for a typo is the noise this rule exists to prevent.
+  a Change Request for a typo is the noise this rule exists to prevent. Over REST, "minor" is
+  `?minorRevision=true` on **every** write, an xobject property (FAQ, Related) included
+  (`xwikidoc.py`: `minor=True`); an xobject write cannot carry the summary (XWIKI-25300).
 - **Major changes — save via a Change Request.** New documentation, refactoring a page to the guide,
   restructuring navigation, moving content between locations, and bulk edits across many pages. When
   a page already has an open Change Request covering related work, add to **that** one rather than

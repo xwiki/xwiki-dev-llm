@@ -132,37 +132,45 @@ def farm_wikis():
     return [w['id'] for w in (d or {}).get('wikis', [])]
 
 
-def put_page(base, ref, title=None, content=None, syntax=None, hidden=None):
+def minor_query(minor):
+    """The query string of a write that may be minor. Every page and object write takes it (since
+    XWiki 10.2); the object writes take no version comment, and an object DELETE is always major
+    (XWIKI-25300: Allow setting the version comment when modifying xobjects through the REST API,
+    and support minorRevision when deleting one)."""
+    return '?minorRevision=true' if minor else ''
+
+
+def put_page(base, ref, title=None, content=None, syntax=None, hidden=None, minor=False):
     pairs = [(k, v) for k, v in (('title', title), ('content', content), ('syntax', syntax))
              if v is not None]
     if hidden is not None:
         pairs.append(('hidden', 'true' if hidden else 'false'))
-    st, _, b = write(pageurl(base, ref), 'PUT', form(pairs),
+    st, _, b = write(pageurl(base, ref) + minor_query(minor), 'PUT', form(pairs),
                      'application/x-www-form-urlencoded', base)
     return st, b[:200]
 
 
-def post_object(base, ref, classname, props):
+def post_object(base, ref, classname, props, minor=False):
     pairs = [('className', classname)] + [(f'property#{k}', v) for k, v in props.items()]
-    st, h, b = write(pageurl(base, ref) + '/objects', 'POST', form(pairs),
+    st, h, b = write(pageurl(base, ref) + '/objects' + minor_query(minor), 'POST', form(pairs),
                      'application/x-www-form-urlencoded', base)
     return st, h.get('Location'), b[:200]
 
 
-def put_property(base, ref, classname, number, prop, value):
+def put_property(base, ref, classname, number, prop, value, minor=False):
     """Write one property with a `text/plain` body — no field name to get wrong.
 
     On the form-encoded route the field must be `property#<name>`; a `#`-less name is accepted,
     reports success and leaves the property **empty**, which is why every write here is read back.
     """
-    url = f'{pageurl(base, ref)}/objects/{classname}/{number}/properties/{prop}'
+    url = f'{pageurl(base, ref)}/objects/{classname}/{number}/properties/{prop}{minor_query(minor)}'
     st, _, b = write(url, 'PUT', value.encode('utf-8'), 'text/plain', base)
     return st, b[:200]
 
 
-def put_object(base, ref, classname, number, props):
+def put_object(base, ref, classname, number, props, minor=False):
     """Write several properties of an existing object (the route that can also blank one)."""
-    url = f'{pageurl(base, ref)}/objects/{classname}/{number}'
+    url = f'{pageurl(base, ref)}/objects/{classname}/{number}{minor_query(minor)}'
     st, _, b = write(url, 'PUT', form([(f'property#{k}', v) for k, v in props.items()]),
                      'application/x-www-form-urlencoded', base)
     return st, b[:200]
