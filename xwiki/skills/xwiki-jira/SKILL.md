@@ -80,9 +80,11 @@ per `okf/servers/jira.md`. Pass `--no-input` only when every required field is s
 2. Read `okf/servers/jira.md` and resolve the fields: issue type, **Component/s**, **Affects
    Version/s** (oldest affected, else last LTS — verify the version values, don't cache them),
    **Fix Version/s**. Write the description in JIRA wiki markup, explaining the *user-visible* problem,
+   following "Wiki-markup gotchas" in that file, preview it with the render endpoint described there,
    and send it over REST (see the gotcha above).
 3. Show the user the drafted summary + description + fields, then create.
-4. Link the related issues (see `okf/servers/jira.md`), then report the created key and URL.
+4. Read the description back rendered, link the related issues (see `okf/servers/jira.md`), then
+   report the created key and URL.
 
 **Starting work on an issue:** assign it as "Starting work on an issue" in `okf/servers/jira.md`
 says — `jira issue assign KEY $(jira me)`, or REST `PUT /issue/KEY/assignee` with the `name` from

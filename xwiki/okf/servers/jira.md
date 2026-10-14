@@ -224,13 +224,21 @@ container, escape only *active* markup — never over-escape, and never escape i
   out italic, `{{[x]}}` as a broken link), so backslash-escape it there (`{{\_foo\_}}`). Angle brackets
   survive (`{{<version>/solr/}}`). It must not be glued to a word character: `{{curl}}s` renders
   literally (add a space or reword).
+- **A `{name}` placeholder is a macro call**, the classic case being a REST path template
+  (`/wikis/{wiki}/spaces/{space}/…`): it breaks the `{{…}}` span *and* the list around it. Write
+  `<wiki>`, which always survives; `\{wiki\}` works mid-span but not right before the closing `}}`.
 - **A literal spanning lines or containing `{{`/`}}` goes in a `{code}`/`{noformat}` block** (raw),
   even a one-line XWiki macro: no escaping keeps `{{velocity}}` intact inside `{{…}}`.
 
+**Preview before writing, verify after** — reading back the source you sent proves nothing. Before
+any description or comment write, `POST /rest/api/1.0/render` with
+`{"rendererType": "atlassian-wiki-renderer", "unrenderedMarkup": "…"}` returns the HTML and writes
+nothing; afterwards, read it back rendered (`GET /rest/api/2/issue/{KEY}?expand=renderedFields`, or
+`…/comment/{ID}?expand=renderedBody`): no stray backslashes in `<pre>`, no literal `{{`/`}}`, every
+list item an `<li>`, and the intended monospace/links present.
+
 **Editing a comment** (e.g. to fix a mis-rendered one) is REST-only — `jira-cli` cannot edit
-comments: `PUT /rest/api/2/issue/{KEY}/comment/{ID}` with JSON `{"body": "…"}`. **Verify** afterwards
-via `GET …/comment/{ID}?expand=renderedBody`: no stray backslashes in `<pre>`, no literal `{{…}}`, and
-the intended monospace/links present — don't trust the source you sent.
+comments: `PUT /rest/api/2/issue/{KEY}/comment/{ID}` with JSON `{"body": "…"}`.
 
 ## Identifying the current LTS (for the Affects-Version fallback)
 
