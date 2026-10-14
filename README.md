@@ -206,6 +206,9 @@ node scripts/validate.mjs        # repo consistency (skill inventory, version un
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
+A weekly Claude routine ([`scripts/consolidation-routine.md`](scripts/consolidation-routine.md))
+then looks for what the validator cannot judge — near-duplicate rules, wordiness, files to split — and
+opens at most one `[Misc] Weekly consolidation:` PR for a committer to review; it never merges.
 
 ## Versioning and releases
 

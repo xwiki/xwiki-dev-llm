@@ -24,6 +24,11 @@ Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI 
 every push and pull request. There is no build step, no test runner, and no lint — JSON manifests and
 Markdown/`.mjs` files are the entire artifact.
 
+Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
+and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,
+its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
+logic with `validate.mjs` through `scripts/md-blocks.mjs`).
+
 ## Release
 
 ```

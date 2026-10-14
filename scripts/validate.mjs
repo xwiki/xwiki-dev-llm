@@ -51,6 +51,11 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename, relative, sep } from "node:path";
+import {
+  COPY_RATIO, OKF_ENTRY_MAX_BYTES, OKF_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
+  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, okfIndexEntries, orgMapBlock,
+  sharedWithOtherFiles, skillPointers,
+} from "./md-blocks.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -142,23 +147,20 @@ for (const abs of walk(okfRoot)) {
 // xwiki-org.md is injected at the start of every session in every xwiki/* repo, so each line is
 // paid for by every task, including the ones that never needed it. The map is routing only —
 // topic names; okf/index.md is where a topic gets described. Raise a budget only with a reason.
-const ORG_MAX_BYTES = 8000;
-const ORG_MAP_MAX_BYTES = 1800;
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
       `for the always-on file — move the detail into an okf/ topic (described in okf/index.md) or a skill`
   );
 }
-const mapStart = orgMd.indexOf("OKF map");
-const mapEnd = orgMd.indexOf("**Capturing learnings:**");
-if (mapStart === -1 || mapEnd === -1 || mapEnd < mapStart) {
+const mapBlock = orgMapBlock(orgMd);
+if (mapBlock === null) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: cannot locate the OKF map block ` +
       `(expected "OKF map" … "**Capturing learnings:**")`
   );
 } else {
-  const mapBytes = Buffer.byteLength(orgMd.slice(mapStart, mapEnd));
+  const mapBytes = Buffer.byteLength(mapBlock);
   if (mapBytes > ORG_MAP_MAX_BYTES) {
     errors.push(
       `xwiki/instructions/xwiki-org.md: the OKF map block is ${mapBytes} bytes, over the ${ORG_MAP_MAX_BYTES}-byte ` +
@@ -309,38 +311,20 @@ for (const skill of skills) {
 // okf/index.md is read whenever the OKF is consulted, and every topic is already described by its
 // own `summary:` frontmatter, so a long entry is the same text a third time. Budgets, not good
 // intentions, are what stop it growing back: extending the OKF always appends here and never cuts.
-const OKF_INDEX_MAX_BYTES = 11000;
-const OKF_ENTRY_MAX_BYTES = 240;
 if (Buffer.byteLength(okfIndex) > OKF_INDEX_MAX_BYTES) {
   errors.push(
     `xwiki/okf/index.md: ${Buffer.byteLength(okfIndex)} bytes exceeds the ${OKF_INDEX_MAX_BYTES}-byte budget — ` +
       `an entry picks a topic, it does not summarise it; the rules belong in the topic file`
   );
 }
-{
-  let entry = null;
-  const flush = () => {
-    if (entry && Buffer.byteLength(entry.text) > OKF_ENTRY_MAX_BYTES) {
-      errors.push(
-        `xwiki/okf/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
-          `${OKF_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
-          `and leave the rules to xwiki/okf/**/${entry.name}.md`
-      );
-    }
-    entry = null;
-  };
-  for (const line of okfIndex.split("\n")) {
-    const head = line.match(/^- \*\*([a-z0-9-]+)\*\* —/);
-    if (head) {
-      flush();
-      entry = { name: head[1], text: line };
-    } else if (entry && /^ {2}\S/.test(line)) {
-      entry.text += "\n" + line;                         // a wrapped continuation of the same entry
-    } else {
-      flush();
-    }
+for (const entry of okfIndexEntries(okfIndex)) {
+  if (Buffer.byteLength(entry.text) > OKF_ENTRY_MAX_BYTES) {
+    errors.push(
+      `xwiki/okf/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
+        `${OKF_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
+        `and leave the rules to xwiki/okf/**/${entry.name}.md`
+    );
   }
-  flush();
 }
 
 // ---- Invariants 10-12 read every tracked Markdown file ---------------------------------------
@@ -351,17 +335,10 @@ const trackedMd = (git(["ls-files", "-z", "--", "*.md"]) ?? "")
 
 // ---- Invariant 10: skill pointers resolve ----------------------------------------------------
 // Only a name in a pointer phrase is checked: a bare `xwiki-…` is usually a Maven module or a repo.
-// Skills that live in another plugin are named here, since this repo cannot see them.
-const EXTERNAL_SKILLS = new Set(["xwiki-security-review", "xwiki-security-pass"]);
-const skillName = "(xwiki-[a-z0-9]+(?:-[a-z0-9]+)*)";
-const pointerPattern = new RegExp(
-  `\`?\\b${skillName}\\b\`?(?=\\*{0,2}\\s+(?:skill|instead))` +
-    `|(?:skills?|[Uu]se|via|run|load|invoke)\\s+\\*{0,2}\`?${skillName}\\b`,
-  "g"
-);
+// Skills that live in another plugin are listed in md-blocks.mjs, since this repo cannot see them.
 for (const p of trackedMd) {
   const text = read(p);
-  for (const name of new Set([...text.matchAll(pointerPattern)].map((m) => m[1] ?? m[2]))) {
+  for (const name of skillPointers(text)) {
     if (!skills.includes(name) && !EXTERNAL_SKILLS.has(name)) {
       errors.push(`${p}: points to the skill '${name}', which does not exist under xwiki/skills/`);
     }
@@ -374,39 +351,12 @@ for (const p of trackedMd) {
 // phrase, not a rule. This catches copy-paste only; a paraphrase is a reviewer's job.
 // A block naming a host's path variable is exempt: each skill has to say for itself where the shared
 // okf/ and scripts/ are on each host, as a skill cannot include another file.
-const SHINGLE_WORDS = 8;
-const MIN_BLOCK_WORDS = 20;
-const COPY_RATIO = 0.5;
-const dupScope = trackedMd.filter(
-  (p) => /^(xwiki\/|docs\/|README\.md$|CLAUDE\.md$)/.test(p) && !/\/tools\//.test(p)
-);
-const blocks = [];
-const owners = new Map(); // shingle -> indexes of the blocks holding it
-for (const p of dupScope) {
-  const body = read(p)
-    .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
-    .replace(/^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1/gm, ""); // fences, indented ones in list items too
-  for (const block of body.split(/\r?\n\s*\r?\n|\r?\n(?=\s*(?:[-*]|\d+\.)\s)/)) {
-    if (/CLAUDE_PLUGIN_ROOT|KIMI_SKILL_DIR|XWIKI_LLM_HOME/.test(block)) continue;
-    const words = block.toLowerCase().replace(/[`*_>#|[\]()]/g, " ").match(/[a-z0-9][a-z0-9'./-]*/g) ?? [];
-    if (words.length < MIN_BLOCK_WORDS) continue;
-    const shingles = new Set();
-    for (let i = 0; i + SHINGLE_WORDS <= words.length; i++) {
-      shingles.add(words.slice(i, i + SHINGLE_WORDS).join(" "));
-    }
-    const index = blocks.push({ path: p, text: block.trim(), shingles }) - 1;
-    for (const s of shingles) (owners.get(s) ?? owners.set(s, []).get(s)).push(index);
-  }
-}
+// The splitting, words and thresholds are in md-blocks.mjs, shared with consolidation-candidates.mjs.
+const dupIndex = indexBlocks(trackedMd.filter(inDupScope), read);
+const { blocks } = dupIndex;
 const reported = new Set();
 blocks.forEach((block, i) => {
-  const shared = new Map(); // other block index -> shingles in common
-  for (const s of block.shingles) {
-    for (const j of owners.get(s)) {
-      if (blocks[j].path !== block.path) shared.set(j, (shared.get(j) ?? 0) + 1);
-    }
-  }
-  for (const [j, count] of shared) {
+  for (const [j, count] of sharedWithOtherFiles(dupIndex, i)) {
     const pair = `${Math.min(i, j)}-${Math.max(i, j)}`; // report a copy once, not from both sides
     if (count / block.shingles.size < COPY_RATIO || reported.has(pair)) continue;
     reported.add(pair);
@@ -425,13 +375,11 @@ blocks.forEach((block, i) => {
 // A SKILL.md is read whole once the skill fires, so its ceiling is the published guideline for a skill
 // body (https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices): under 500 lines,
 // about 5,000 tokens. OKF topics and reference files are opened on demand and have no such ceiling.
-const SKILL_MAX_BYTES = 20000;
-const DEFAULT_MAX_BYTES = 12000;
 const budgets = JSON.parse(read("scripts/size-budgets.json"));
 for (const p of trackedMd) {
-  if (!/^xwiki\/(skills|okf)\//.test(p) || /\/tools\//.test(p) || p === "xwiki/okf/index.md") continue;
+  if (!isBudgeted(p)) continue;
   const size = Buffer.byteLength(read(p));
-  const max = budgets[p] ?? (p.endsWith("/SKILL.md") ? SKILL_MAX_BYTES : DEFAULT_MAX_BYTES);
+  const max = budgetOf(p, budgets);
   if (size > max) {
     errors.push(
       `${p}: ${size} bytes exceeds its ${max}-byte budget. Raise its entry in scripts/size-budgets.json ` +
