@@ -70,9 +70,11 @@ around the fixture enough that the two shots stop being comparable. The "after" 
 branch's instance either way: one already running the fix (step 3's assertion shows it), else
 steps 0-3 deploy `WORKTREE` into step 0's instance.
 
-When that is the route, open `references/released-image.md` before the first `docker run`: it
-sets up the "before" instance at `$BEFORE_URL`, bound to `127.0.0.1` only since it runs with a
-well-known `superadmin` password, and step 4 removes its containers.
+When that is the route, start the "before" instance with
+`"$XWIKI_CAPTURE_SKILL/tools/before-instance.sh" <version> <port>` on a free port (`--help` says
+why each step exists). Its last line is `BEFORE_URL=http://localhost:<port>`, with no `/xwiki`:
+keep it apart from `XWIKI_BASE_URL`. A page or object the fixture needs is the same `Admin:admin`
+REST write on both instances, only the base URL changing.
 
 ## 0. An instance to reuse
 
@@ -179,8 +181,8 @@ Run this once per state, with the deploy route the table in step 1 picked.
 
 **The jar route:** open `references/jar-route.md` before the first build, and follow it for each
 state. Two of its rules guard what outlives the capture: build with `package`, never `install`,
-which would publish the pre-fix jar into the shared `~/.m2` as the current SNAPSHOT; and back up
-each deployed jar under `$CAPTURE_DIR/original/` before its first swap, since step 4 restores it.
+which would publish the pre-fix jar into the shared `~/.m2` as the current SNAPSHOT; and swap with
+`tools/swap-jar.sh`, whose backups under `$CAPTURE_DIR/original/` step 4 restores.
 
 **Reopen the browser between the two states** (`agent-browser --session capture close`, then the
 environment block's `set viewport` and `set headers`): XWiki serves a webjar's files with a
@@ -251,8 +253,8 @@ instance you leave behind is the one you found. The jar and file-copy paths back
 they overwrote, so restoring is one copy, no build — plus step 0's restart when a jar was swapped:
 `cp -R "$CAPTURE_DIR/original/." "$INSTANCE_DIR/"`. A file the fix *added* has no backup: delete
 it. On the xar route, reinstall the "after" (`WORKTREE`) xar last, leaving the branch's pages.
-On the released-image route, remove its containers (the last line of
-`references/released-image.md`).
+On the released-image route, remove its containers:
+`"$XWIKI_CAPTURE_SKILL/tools/before-instance.sh" --remove <port>`.
 
 **The assertion log lines are the authority**, and they need nothing installed. If they are
 identical, stop: the cause is a deploy that did not land or a selector on the wrong node, not a
