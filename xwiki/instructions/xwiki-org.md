@@ -9,8 +9,9 @@ follows.
 
 - **Issue tracker:** https://jira.xwiki.org (NOT GitHub Issues). Each repo has its own JIRA project
   key — `XWIKI` (Platform), `XCOMMONS` (Commons), `XRENDERING` (Rendering), a per-extension key for
-  contrib. Reference issues by their key (e.g. `XWIKI-12345`). To view/create/update issues use the
-  **`xwiki-jira`** skill, which owns the backend choice and its traps; issue-field conventions are in
+  contrib. Reference issues by key (`XWIKI-12345`). To view/create/update issues use the
+  **`xwiki-jira`** skill, which owns the backend choice and its traps; issue-field conventions, and
+  **assigning an issue to the developer once work on it starts** (OpenProject too), in
   `okf/servers/jira.md`.
 - XWiki Commons, XWiki Rendering and XWiki Platform are **released together with the same version**.
 - The **Java version depends on the XWiki version** (defined in the `pom.xml`) — build with that JDK,
@@ -31,9 +32,9 @@ follows.
 
 ## Commits, issues & PRs
 
-- When there is an issue, the summary line is the key followed by **the issue's title, verbatim** —
-  not a summary you write: `XWIKI-12345: <the JIRA issue title>` (use the repo's own key —
-  `XCOMMONS-…`, `XRENDERING-…`, etc.). What *this* commit does goes in the body as `*` bullets.
+- When there is an issue, the summary line is the key followed by **the issue's title, verbatim**:
+  `XWIKI-12345: <the JIRA issue title>` (the repo's own key). What *this* commit does goes in the
+  body as `*` bullets.
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
   developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
 - **A visible change carries images, plus a "before" for a UI fix** — on its JIRA issue, and in

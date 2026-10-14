@@ -56,6 +56,10 @@ and `##DA-103` renders a summary card instead.
 5. On approval, POST the real endpoint. Report the returned `displayId` and
    `https://op.xwiki.org/work_packages/{displayId}`.
 
+**Starting work on a work package:** assign it as "Starting work on an issue" in
+`okf/servers/jira.md` says — `assignee` set to the `/api/v3/users/me` user, through the update form
+below with `notify=false`.
+
 **Updating a work package:**
 1. **GET it first** — never assume the current subject, status, assignee or type. Keep its
    `lockVersion`; the update needs it.

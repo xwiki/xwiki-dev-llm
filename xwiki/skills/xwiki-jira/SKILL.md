@@ -84,6 +84,10 @@ per `okf/servers/jira.md`. Pass `--no-input` only when every required field is s
 3. Show the user the drafted summary + description + fields, then create.
 4. Link the related issues (see `okf/servers/jira.md`), then report the created key and URL.
 
+**Starting work on an issue:** assign it as "Starting work on an issue" in `okf/servers/jira.md`
+says — `jira issue assign KEY $(jira me)`, or REST `PUT /issue/KEY/assignee` with the `name` from
+`/myself`.
+
 **Updating an issue:**
 1. **Fetch the issue first** — never assume its current status, assignee or field values.
 2. Show current vs. proposed values.

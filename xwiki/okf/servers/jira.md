@@ -2,8 +2,8 @@
 title: JIRA (jira.xwiki.org) — access and issue-field conventions
 stability: durable
 summary: How to reach the self-hosted XWiki JIRA (jira-cli or REST), when an issue should be filed at
-  all, and the durable conventions for an issue's Component, Affects Version/s and Fix Version/s.
-  Version values themselves are volatile.
+  all, the durable conventions for an issue's Component, Affects Version/s and Fix Version/s, and
+  when to assign it. Version values themselves are volatile.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
@@ -128,6 +128,13 @@ A security issue's GitHub security advisory is **not** documentation: it goes in
 titled `Security Advisory` (`POST /rest/api/2/issue/<KEY>/remotelink` with
 `{"object": {"url": "<GHSA URL>", "title": "Security Advisory"}}`) — not in `Documentation`, a
 comment, or a label such as "draft security advisory", which goes stale once the advisory is published.
+
+## Starting work on an issue
+
+**Assign the issue to the developer as soon as work on it starts** — before the fix is written, an
+issue just filed included, on JIRA and OpenProject alike — so the team sees it is taken. One already
+assigned to someone else is theirs: ask the developer instead of reassigning it. Asking you to work
+on an issue is the developer's approval to assign it.
 
 ## Resolving / closing an issue
 

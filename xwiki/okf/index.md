@@ -118,8 +118,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 ### servers/
 - **index** (`servers/index.md`) — the xwiki.org servers, how to reach each, the traps of reading
   and writing over REST, and attributing posts an LLM co-wrote.
-- **jira** — working with jira.xwiki.org: whether to file at all, the issue fields, resolving,
-  attachments, wiki markup.
+- **jira** — working with jira.xwiki.org: whether to file at all, the issue fields, assigning,
+  resolving, attachments, wiki markup.
 - **develocity** — a test's failure history across CI builds with `dv-test-history`: what it
   reports, keeping its report out of context, finding candidates, and why `flaky` means failed.
 - **jenkins** — querying ci.xwiki.org over its REST API, and how to read a result without drawing the
