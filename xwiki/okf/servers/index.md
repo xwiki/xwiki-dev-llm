@@ -79,8 +79,11 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   quotes the offending line, password and all, into the output: sourcing is the one method that leaks
   the secret precisely when the secret is strong. Read the two `KEY=VALUE` lines in the language doing
   the request instead, splitting on the first `=` only, and keep the value in a variable you never
-  print — in Python, `dict(l.split('=', 1) for l in open(...) if '=' in l)` feeding an
-  `Authorization: Basic` header. If a password does leak into the conversation, say so plainly and
+  print — in Python, `dict(l.strip().split('=', 1) for l in open(...) if '=' in l)` feeding an
+  `Authorization: Basic` header. For `curl`, print that header from Python and pipe it in with
+  `-H @-`, which also keeps it off the process list:
+  `python3 -c "import base64,os; d=dict(l.strip().split('=',1) for l in open(os.path.expanduser('~/.xwiki-credentials')) if '=' in l); print('Authorization: Basic '+base64.b64encode((d['XWIKI_USER']+':'+d['XWIKI_PASSWORD']).encode()).decode())" | curl -H @- …`
+  (stdin then carries the header, so send a body with `-d @file`, not `@-`). If a password does leak into the conversation, say so plainly and
   tell the developer to rotate it — a transcript cannot be un-sent. Same rule for any other secret
   store the developer points at (`~/.netrc`, an env file, a password-manager export).
 

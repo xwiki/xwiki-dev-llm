@@ -69,7 +69,6 @@ directory rather than hand-rolling REST calls (only a minor fix, per step 13, is
 the pages as a `pages.py` data module, then
 
 ```bash
-set -a; . ~/.xwiki-credentials; set +a
 python3 tools/docpages.py lint      # offline; the mechanical rules of documentation.md
 python3 tools/docpages.py save      # idempotent publish, every field read back
 python3 tools/docpages.py pin       # child order, verified via the tree service

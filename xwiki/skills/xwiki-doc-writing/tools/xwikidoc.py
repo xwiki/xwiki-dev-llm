@@ -6,14 +6,13 @@ token scraped by one request is rejected by the next unless the session cookie t
 cookie-less client gets intermittent `403 Invalid or missing form token.` on object writes — passing
 for a while, then failing, depending on which node answered. That single fact is most of this file.
 
-Credentials come from the environment. Source the credentials file inside the command that runs a
-tool, never print it:
-
-    set -a; . ~/.xwiki-credentials; set +a; python3 docpages.py save
+Credentials come from the environment, else from `~/.xwiki-credentials`, which is parsed here, never
+sourced (okf/servers/index.md says why) and never printed.
 
 Environment:
-    XWIKI_USER, XWIKI_PASSWORD   required to write; a read without them goes out as Guest, which is
-                                 enough for the public documentation (`xwiki-doc-export` reads that way)
+    XWIKI_USER, XWIKI_PASSWORD   required to write, unless the credentials file holds them; a read
+                                 without any goes out as Guest, which is enough for the public
+                                 documentation (`xwiki-doc-export` reads that way)
     XWIKI_BASE                   REST root of the main wiki (default www.xwiki.org's `xwiki`)
 """
 import base64
@@ -31,6 +30,8 @@ VIEW = 'https://www.xwiki.org/xwiki/bin/view/'
 # xwiki.org REST sits behind Cloudflare: it answers 403 both to a request with no User-Agent and to
 # one with a browser-like UA. A curl-style UA passes.
 _UA = 'curl/8.0'
+# Parsed when XWIKI_PASSWORD is not in the environment; None keeps every request anonymous.
+CREDENTIALS = os.path.expanduser('~/.xwiki-credentials')
 _JAR = http.cookiejar.CookieJar()
 _OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_JAR))
 _token = None
@@ -39,13 +40,17 @@ _token = None
 def _auth(required=True):
     """The Basic header, or None for an anonymous read. A write always needs credentials: sent as
     Guest it would fail on the rights check, after the form-token dance, with a less clear error."""
+    creds = dict(os.environ)
+    if 'XWIKI_PASSWORD' not in creds and CREDENTIALS and os.path.isfile(CREDENTIALS):
+        with open(CREDENTIALS, encoding='utf-8') as f:
+            creds = dict(l.strip().split('=', 1) for l in f if '=' in l)
     try:
-        user, password = os.environ['XWIKI_USER'], os.environ['XWIKI_PASSWORD']
+        user, password = creds['XWIKI_USER'], creds['XWIKI_PASSWORD']
     except KeyError:
         if not required:
             return None
-        raise SystemExit('XWIKI_USER / XWIKI_PASSWORD are not set — source your credentials file '
-                         'inside the command, e.g. `set -a; . ~/.xwiki-credentials; set +a; …`')
+        raise SystemExit('No credentials: set XWIKI_USER / XWIKI_PASSWORD or create '
+                         '~/.xwiki-credentials (format in okf/servers/index.md)')
     return 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
 
 

@@ -13,8 +13,8 @@ Interact with a running XWiki over its REST API using `curl`.
 - **Auth:** HTTP Basic — `curl -u Admin:admin ...`. With no credentials you act as `XWiki.Guest`
   (read-only on public pages; writes get `401`). Always authenticate for write operations.
   For a **remote** instance (xwiki.org…), look for the `~/.xwiki-credentials` file before asking the
-  developer for credentials — **never print that file**, source it inside each command; its format and
-  the full rule are in `okf/servers/index.md`.
+  developer for credentials — **never print that file** and **parse it, never `source` it**; its
+  format, the rule and the `curl` recipe are in `okf/servers/index.md`.
 - **xwiki.org is behind Cloudflare:** `www.xwiki.org` and `extensions.xwiki.org` answer `403` to a
   `/xwiki/rest/…` request carrying a browser-like `User-Agent` (or none at all) — send the default
   `curl/8.x` UA and do not dress the request up as a browser (see [[servers/index]]).

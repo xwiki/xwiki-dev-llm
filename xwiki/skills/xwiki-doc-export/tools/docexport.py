@@ -43,6 +43,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'xwiki-doc-writing', 'tools'))
 import xwikidoc as x  # noqa: E402  (the shared farm client: Cloudflare UA, cookie session)
 
+x.CREDENTIALS = None  # stay anonymous even when ~/.xwiki-credentials exists
+
 SITE = 'https://www.xwiki.org'
 REST = x.WWW
 DOCPLAN = os.path.normpath(os.path.join(HERE, '..', '..', 'xwiki-doc-writing', 'tools', 'docplan.py'))

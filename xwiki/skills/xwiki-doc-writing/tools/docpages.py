@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Lint, publish and audit a set of xwiki.org documentation pages held in a Python module.
 
-    set -a; . ~/.xwiki-credentials; set +a
     python3 docpages.py lint                    # offline; run until it prints 0 problems
     python3 docpages.py save [ref …]            # idempotent publish (page, attachments, xobjects)
     python3 docpages.py pin                     # pin child order, verified via the tree service

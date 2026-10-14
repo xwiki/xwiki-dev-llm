@@ -37,12 +37,8 @@ set. Two habits matter as much as the scripts:
 
 Requirements: Python 3 (standard library only), `agent-browser` for the screenshot pair — plus macOS
 `sips` whenever a shot is resampled, i.e. unless it is an `x,y,w,h` region at the target width — and
-`~/.xwiki-credentials` (see `okf/servers/index.md`). Source the credentials **inside** the
-command so they are never printed:
-
-```bash
-set -a; . ~/.xwiki-credentials; set +a
-```
+`~/.xwiki-credentials` (see `okf/servers/index.md`), which `xwikidoc.py` parses itself when
+`XWIKI_USER`/`XWIKI_PASSWORD` are not in the environment — never `source` it.
 
 ## The page set
 
