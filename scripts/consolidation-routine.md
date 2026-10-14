@@ -18,8 +18,10 @@ the repo states today is still stated after your change, with the same meaning.
 
 ### 1. Decide whether to run at all
 
-- List the open PRs: `gh pr list --repo xwiki/xwiki-dev-llm --state open --json number,title,author,files`
-  (or the session's GitHub tools if `gh` is unavailable).
+- GitHub is reached over REST only: `gh api …`. Every `gh pr …` command goes through GraphQL, which
+  the cloud session refuses (HTTP 403).
+- List the open PRs: `gh api 'repos/xwiki/xwiki-dev-llm/pulls?state=open&per_page=100'`, and each one's
+  files with `gh api --paginate 'repos/xwiki/xwiki-dev-llm/pulls/<n>/files?per_page=100' --jq '.[].filename'`.
 - **A consolidation PR is still open** (title starting `[Misc] Weekly consolidation:`): stop. Open
   nothing, comment nothing, push nothing. One unreviewed batch is the limit — a second one would only
   queue, conflict with the first, and spend a committer's attention twice; updating it would move a
@@ -27,8 +29,8 @@ the repo states today is still stated after your change, with the same meaning.
   from the repo, so nothing is lost by waiting.
 - Note every file any open PR changes: you never edit those files (the PR would conflict), and you
   pass them to the finder with `--exclude`.
-- Read the bodies of the consolidation PRs closed in the last 8 weeks (`gh pr list --repo
-  xwiki/xwiki-dev-llm --state closed --search "Weekly consolidation in:title"`). A fix from one
+- Read the bodies of the consolidation PRs closed in the last 8 weeks (`gh api -X GET search/issues
+  -f q='repo:xwiki/xwiki-dev-llm is:pr is:closed in:title "Weekly consolidation"'`). A fix from one
   closed unmerged was declined: do not retry it. A split proposal from any of them is not repeated
   unless its file has since grown by more than 10%.
 
@@ -127,8 +129,9 @@ elsewhere) and both validators, then one trial run of each affected skill, old v
   ```
 
   One `*` bullet per fix, each on one line, never hard-wrapped. Push the branch to `xwiki/xwiki-dev-llm`
-  itself (the Claude GitHub App pushes; there is no fork) and open the PR with the same title. The
-  body, short and stating current facts:
+  itself (the Claude GitHub App pushes; there is no fork) and open the PR with the same title over
+  REST: `gh api repos/xwiki/xwiki-dev-llm/pulls -f title=… -f head=<branch> -f base=master -F body=@<file>`.
+  The body, short and stating current facts:
 
   - a table: fix | files | why it changes no behaviour (where the rule's one home is now, and that
     `--lossless` finds every removed sentence);
