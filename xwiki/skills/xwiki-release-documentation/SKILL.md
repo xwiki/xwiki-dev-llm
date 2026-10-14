@@ -115,6 +115,10 @@ since `A..B` excludes by reachability — do not substitute a merge-base.
 State the known limitation in the report: for a version that has not been released there is no tag,
 so the claims below are verified against a moving `origin/master` and can drift before release.
 
+**A bugfix Fix Version with no commit yet** on its line (`git log --grep=<KEY> origin/stable-X.Y.x`
+is empty) is flagged: a page or note naming that version is wrong until the backport lands. Do not
+search JIRA for related open issues.
+
 **The plan file**, created now and updated as work completes:
 
 ```
