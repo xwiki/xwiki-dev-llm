@@ -78,9 +78,11 @@ See also [[backward-compatibility]] for the `@Unstable` lifecycle that pairs wit
 Whatever the tracker — JIRA's **Affects Version/s**, OpenProject's **Observed in versions** — always set
 it, whatever the issue type or component (even `Development Issues only`). For a bug, set the **oldest
 released version that has the problem**, never just the latest release: that understates the range and
-defeats backport triage. It is the first release containing the faulty code (`git tag --contains
-<commit>`); if that predates the versions the tracker defines, use its oldest one; if pinning it is
-impractical, fall back to the last LTS that has the problem. When no released version is really affected
+defeats backport triage. It is the first release containing the faulty code, on every maintained line:
+that code reaches stable branches as cherry-picks with other SHAs, which `git tag --contains <commit>`
+and `git merge-base --is-ancestor` miss — take the causing issue's Fix Versions, or `git grep` the code
+on each `origin/stable-*` branch; if that predates the versions the tracker defines, use its oldest
+one; if pinning it is impractical, fall back to the last LTS that has the problem. When no released version is really affected
 (a new feature, a new check, an improvement), use the latest release or the current LTS — usually the
 LTS's `.0`, e.g. `17.10.0` while dev is on `18.x` — not the first release of the code it touches (the
 LTS: [[jira]]).

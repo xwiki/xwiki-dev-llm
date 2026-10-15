@@ -24,7 +24,9 @@ the mechanics here), **xwiki-build** (Maven), **xwiki-pull-request** (PR/commit 
   needs the change (e.g. from an issue's JIRA `fixVersions`): it needs branch **B** only if the change
   landed **after** B was cut **and** is **not** already released on B's line. (Do not hardcode which
   branches are supported — that changes every release; ask or infer from the last patch release of
-  each active line.)
+  each active line.) For a bug fix, B also needs it only if B has the faulty code — which may have
+  reached B as a cherry-pick, so check per "Affected version of an issue" in `okf/conventions/versioning.md`,
+  never by commit ancestry.
 - **The target branch's version**, read from its root `pom.xml` `<version>` on `origin/<branch>`
   after a fetch (e.g. `17.10.10-SNAPSHOT`) — never derived from local tags, which go stale; see
   `okf/conventions/versioning.md`. Needed for the pom-version check (§3.A) and the `@since` adjustment
