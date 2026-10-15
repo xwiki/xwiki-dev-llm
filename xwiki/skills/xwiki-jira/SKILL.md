@@ -103,7 +103,7 @@ Each of these guards an operation that cannot be undone or that reaches other pe
 - **List the available transitions before moving an issue** — transition and status names vary
   between projects and are not universal, and a workflow may require an intermediate state, so a
   blind move can fail or misfire.
-- **Get explicit approval before a bulk modification** — each change notifies watchers.
+- **Get explicit approval before a bulk modification** — see "Bulk edits" in `okf/servers/jira.md`.
 - **Component is never left empty, and Affects Version is not merely the latest release** — follow
   `okf/servers/jira.md`.
 - **Never print the token value.** `JIRA_API_TOKEN` is a secret; reference it by name only, never

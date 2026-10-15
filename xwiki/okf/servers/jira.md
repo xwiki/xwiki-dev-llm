@@ -178,6 +178,12 @@ Set the transition + resolution with `jira-cli` (`jira issue move {KEY} "Close I
 available transitions first** (`GET …/transitions`) — transition names/ids vary per project and
 workflow state, and a close may be gated behind an intermediate state.
 
+## Bulk edits
+
+Each edit emails the issue's watchers; `PUT /rest/api/2/issue/{KEY}?notifyUsers=false` skips that,
+Closed issues included. **Ask the developer before making a bulk edit silent** — watchers may need
+to see the change.
+
 ## Attachments (screenshots)
 
 **A change with a visible result carries images of that result on the issue** — a new feature, an
