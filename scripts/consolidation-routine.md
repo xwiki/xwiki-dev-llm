@@ -14,7 +14,8 @@ those thresholds and decides, one small batch a week.
 
 You are in a checkout of `xwiki/xwiki-dev-llm` on `master`. Read `CLAUDE.md` first: its conventions
 bind every change. Make **no change to intended behaviour** — every rule, fact, trigger and pointer
-the repo states today is still stated after your change, with the same meaning.
+the repo states today is still stated after your change, with the same meaning. The steps of a
+procedure cut to its goal (step 3) are method, not rule: the goal and the fact behind it stay.
 
 ### 1. Decide whether to run at all
 
