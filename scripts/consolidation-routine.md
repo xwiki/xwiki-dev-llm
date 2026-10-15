@@ -128,7 +128,20 @@ elsewhere) and both validators, then one trial run of each affected skill, old v
   - `claude plugin validate ./xwiki`
 - Re-read each diff hunk against the rule it touched: same trigger, same scope, same strength.
 
-### 6. Open the PR — or not
+### 6. Have a critic review the batch
+
+Give one fresh sub-agent the diff, the finder output and this file — not your reasoning — and ask it,
+read-only, for what is wrong: a fix that changes a trigger, scope or strength; a fix that leaves out
+a sibling (the other side of the same boundary, another file stating the same rule); a higher-value
+candidate passed over; a split proposal on text most runs read, or moving little once what must stay
+is kept; a PR body longer than it needs to be. Apply or drop each finding, then rerun step 5's
+checks. One round: the critic does not review its own findings.
+
+What it finds in the routine itself — something this file or the finder let through — goes in the PR
+body as `## Routine notes`, each written as the exact edit (file, old text → new text) so a committer
+can apply it without a session. Never apply one in this PR.
+
+### 7. Open the PR — or not
 
 - **No fix survived:** open nothing. Split proposals alone do not justify a PR: a PR must carry a
   change; a proposal file in the repo would be planning, which the repo does not keep; GitHub issues
@@ -150,6 +163,7 @@ elsewhere) and both validators, then one trial run of each affected skill, old v
   - a table: fix | files | why it changes no behaviour (where the rule's one home is now, and that
     `--lossless` finds every removed sentence);
   - `## Split proposals`, when there are any (step 4);
+  - `## Routine notes`, when the critic left any (step 6);
   - the validator results in one line.
 
 Never merge, approve or close a PR, and never push to `master`.
