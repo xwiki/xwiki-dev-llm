@@ -3,8 +3,8 @@
 A conversion never fits in one session: extracting the legacy source, drafting several pages,
 re-capturing every screenshot, finishing the original page and auditing the result each cost a
 sizeable share of a context window. This file defines the on-disk plan that lets a conversion run as
-a sequence of **one-task-per-session** steps, where each session starts cold and still knows exactly
-what to do.
+a sequence of tasks that a session chains until a gate or the hand-off point, and that any fresh
+session can resume cold.
 
 ## Layout
 
@@ -20,7 +20,7 @@ repo: none of this is publishable and none of it belongs in a commit.
   conversion/
     PLAN.md                     scope, setup answers, target map, status table   <- read it through `docplan.py status`
     tasks/
-      01-extract-antispam.md    one file per task, self-contained
+      01-extract.md             one file per task, self-contained
       02-target-map.md
       03-page-install.md
       ...
@@ -137,17 +137,19 @@ One or two sentences. What exists at the end that does not exist now.
 ```
 
 The task file is written for **a session that has read only `SKILL.md`, `PLAN.md` and this one task
-file**. It has not seen the legacy page, the survey, or any other task. A step that says "as decided
+file** — which is exactly what a session resuming after a hand-off has. It has not seen the legacy page, the survey, or any other task. A step that says "as decided
 above" or "the same way as the previous page" is broken — inline it, or point at the exact file and
 section that holds it.
 
 ## The standard task set
 
-Sized so each is one session's work. Adjust the set to the conversion; keep the ordering.
+Adjust the set to the conversion; keep the ordering. A session chains them, so size a task by its
+work, not by a session: a small task is merged, never given a session of its own.
 
-1. **`extract-<legacy page>`** — one per legacy source page. Read it in source mode (for an e.x.o
-   extension page: every xproperty of every xobject) and write it verbatim to
-   `conversion/source/<slug>.txt`. Then write `<slug>.inventory.md`: one bullet per atomic piece of
+1. **`extract`** — every legacy source page, in one task; give a page its own `extract-<slug>` only
+   when it is large (an e.x.o page with many xobjects, a long multi-section page). Read each in
+   source mode (for an e.x.o extension page: every xproperty of every xobject) and write it verbatim
+   to `conversion/source/<slug>.txt`. Then write `<slug>.inventory.md`: one bullet per atomic piece of
    material — concept, prerequisite, procedure, warning, limitation, config detail, example,
    troubleshooting note, image/video — each tagged with its Diataxis type and audience, and with the
    source section it came from. **The inventory is what every later task reads instead of the raw
@@ -159,18 +161,18 @@ Sized so each is one session's work. Adjust the set to the conversion; keep the 
    task file.
 3. **`page-<slug>`** — one per target page: draft it into `pages.py`, capture its screenshots, and
    run `docpages.py lint` until it is clean. **It does not save anything to xwiki.org** — it is a
-   preparation task. One page per session; if a page turns out to need more, split the task.
+   preparation task. One page per task; if a page turns out to need more, split the task.
 4. **`dedup`** — the cross-page de-duplication and trimming pass, hub prose included. Cannot be done
    page by page, which is why it is its own task.
-5. **`original-<legacy page>`** — strip the prose, set the "Documentation" button, delete the
-   leftover attachments, triage and repoint the backlinks.
-6. **`deletions`** — the backlink handling for every page the conversion removes, including
-   intermediate pages this conversion itself created and then dropped.
-7. **`publish`** — the one task that writes to xwiki.org. Save the whole set in a single pass,
-   **parents before children**, run `docpages.py verify`, fix what the live doc checker reports
-   (page-name violations especially — the offline lint cannot see them all) and re-save, then
-   `docpages.py pin` the hub orders. Budget a session for the fix round, not just the save.
-8. **`verify`** — the full "Verify the conversion" checklist in `SKILL.md`, run against
+5. **`originals`** — for every legacy page: strip the prose, set the "Documentation" button, delete
+   the leftover attachments, triage and repoint the backlinks. Then the backlink handling for every
+   page the conversion removes, including intermediate pages this conversion itself created and then
+   dropped.
+6. **`publish`** — the one task that writes to xwiki.org. Save the
+   whole set in a single pass, **parents before children**, run `docpages.py verify`, fix what the
+   live doc checker reports (page-name violations especially — the offline lint cannot see them all)
+   and re-save, then `docpages.py pin` the hub orders. Budget for the fix round, not just the save.
+7. **`verify`** — the full "Verify the conversion" checklist in `SKILL.md`, run against
    `conversion/source/`.
 
 ## Nothing is published until the end
@@ -193,39 +195,29 @@ keeps the visible state of the wiki either "not converted yet" or "converted", n
 
 ## Resume protocol
 
-Every invocation of this skill, in a fresh session, does this **before anything else**:
+The steps are in `SKILL.md`; what they rely on:
 
-1. **`python3 docplan.py status`**, from the working directory. It locates `conversion/PLAN.md`
-   (searching upwards, so it also works from inside `conversion/`) and prints the whole orientation
-   in one call: the current task — the first whose status is not `done` — with its **full brief**,
-   plus the Setup answers, the recent Decisions, the Open questions, and the two tasks after this
-   one. Ask the developer only when it finds no plan and several conversions are in flight.
+- `docplan.py status` finds `conversion/PLAN.md` by searching upwards, and its current task is the
+  first whose status is not `done`. **Read `PLAN.md` by hand only when the digest says something is
+  missing** — past 70 KB, reading it in `sed` chunks costs a dozen turns at full context.
+- `start` marks the task `doing`, so an interrupted session is visible; `done` writes the status and
+  the outcome into **both** PLAN.md's row and the task file, the pair that otherwise drifts. Record a
+  new decision in PLAN.md's Decisions yourself — that is prose, not bookkeeping.
 
-   **Read `PLAN.md` by hand only when the digest says something is missing from it.** The plan grows
-   past 70 KB, so reading it in `sed` chunks costs a dozen turns at full context *per session*, and
-   a conversion has dozens of sessions. `docplan.py` exists because that was measurably the largest
-   single cost in this workflow.
-2. **No plan** → this is the planning session. Run the survey and write PLAN.md and the first tasks.
-   Do not start converting anything; stop after the plan and show the developer the task list.
-3. **A plan exists** → `python3 docplan.py start <NN>`, so an interrupted session is visible, then
-   execute the task from the brief the digest already printed. Do not read the other task files, the
-   raw legacy source, or the pages of other tasks; that is exactly the context the split exists to
-   avoid spending.
-4. When it is finished: `python3 docplan.py done <NN> "<outcome>"`. It sets the status to `done` and
-   writes the outcome into **both** PLAN.md's row and the task file's `## Outcome`, which is the pair
-   that otherwise drifts. Record any new decision in PLAN.md's Decisions yourself — that is prose,
-   not bookkeeping.
-5. **Stop.** Report what landed and what the next task is (`done` prints it). Do not roll into the
-   next task — a fresh context is the point.
+**Why chained, and why ~200k.** Every turn re-reads the whole context, so a session costs roughly
+*turns × context*. A fresh session's warm-up (system prompt, skill, digest, inventory, `pages.py`,
+browser login) is ~100k of context over 20–40 turns: run one task per session, the LaTeX conversion
+spent 55–82% of most sessions on it, and the developer approved every step. Replaying the LaTeX and
+Markdown runs turn by turn, priced, at hand-off thresholds from 125k to never put the cheapest at
+150–200k; 250k cost 5–12 points more, 300k 10–25, never handing off 75–170%. A sub-agent per task,
+replayed on the Markdown run, cut raw context by ~20% but writes its fresh context to the cache at
+1.25× where the main session reads its own at 0.1×: equal or up to 12% dearer.
 
 ## Checkpoint rules
 
-- **Checkpoint before you run out**, not after. When roughly a quarter of the context window is
-  left, stop where you are: write what is done into the task's Outcome, leave its status `doing`
-  with a `Resumed at:` note naming the exact next step, and tell the developer to start a fresh
-  session. A task that dies mid-way with nothing written costs the whole session.
-- **A task that turns out too big is a planning bug, not something to push through.** Split it into
-  two tasks in PLAN.md, do the first, and leave the second for the next session.
+- **A mid-task checkpoint** (the ~300k case in `SKILL.md`): write what is done into the task's
+  Outcome and leave its status `doing` with a `Resumed at:` note naming the exact next step. A task
+  that dies mid-way with nothing written costs the whole session.
 - **Blocked** means it needs the developer (a question, a missing credential, a Change Request
   conflict). `python3 docplan.py block <NN>`, write the question in PLAN.md's Open questions, and
   move on to the next unblocked task only if it does not depend on the blocked one.

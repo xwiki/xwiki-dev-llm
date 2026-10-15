@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """docplan.py -- read and update a conversion's PLAN.md (used by `xwiki-doc-convert`).
 
-A conversion runs one task per session, so every session begins by re-deriving "where am I": which
+A conversion spans many sessions, so every fresh session begins by re-deriving "where am I": which
 task is current, what the developer already decided, what the setup answers were. Done by hand that
 is five to thirteen reads of PLAN.md plus the task file, each one a turn at full context.
 
 `status` is that whole orientation in a single call, and `start` / `done` are the two writes back,
-so a session's plan bookkeeping costs three tool calls instead of a dozen.
+so a session's plan bookkeeping costs three tool calls instead of a dozen. A session that chains on
+to the next task already holds the setup and decisions, so `brief` prints only that task.
 
     python3 docplan.py status          # the whole orientation: current task + setup + decisions
+    python3 docplan.py brief           # the current task's brief alone, to chain on to it
     python3 docplan.py next            # just the next task's number and file (one line)
     python3 docplan.py start 07        # mark task 07 `doing`, in PLAN.md and in the task file
     python3 docplan.py done 07 "source/latex.txt + inventory, 41 items"
@@ -161,6 +163,18 @@ def cmd_status(plan_path, text, sections, tasks):
         return 0
 
     nxt = [t for t in tasks if t['status'] != DONE and t is not cur][:2]
+    print_task(plan_path, cur)
+
+    for block in carried(sections):
+        print('\n' + block)
+
+    if nxt:
+        print('\n--- AFTER THIS: ' + '; '.join(f'{t["num"]} {t["name"]}' for t in nxt))
+    print('\nMark it started with:  python3 docplan.py start ' + cur['num'])
+    return 0
+
+
+def print_task(plan_path, cur):
     print(f'\n=== CURRENT TASK {cur["num"]} -- {cur["name"]}  [{cur["status"]}]  {cur["file"]}')
     if cur['status'] == 'doing':
         print('    (left `doing` by an earlier session -- look for a `Resumed at:` note below)')
@@ -176,12 +190,13 @@ def cmd_status(plan_path, text, sections, tasks):
             print(f'    !! task file says Status: {fs}, PLAN.md says {cur["status"]} -- PLAN.md wins, fix the file')
         print('\n' + body.strip())
 
-    for block in carried(sections):
-        print('\n' + block)
 
-    if nxt:
-        print('\n--- AFTER THIS: ' + '; '.join(f'{t["num"]} {t["name"]}' for t in nxt))
-    print('\nMark it started with:  python3 docplan.py start ' + cur['num'])
+def cmd_brief(plan_path, tasks):
+    cur = current(tasks)
+    if cur is None:
+        print('all tasks done')
+        return 0
+    print_task(plan_path, cur)
     return 0
 
 
@@ -262,6 +277,8 @@ def main():
 
     if command == 'status':
         return cmd_status(plan_path, text, sections, tasks)
+    if command == 'brief':
+        return cmd_brief(plan_path, tasks)
     if command == 'next':
         return cmd_next(tasks)
     if command in ('start', 'done', 'block'):
@@ -278,7 +295,7 @@ def main():
         if command == DONE:
             print(f'next: {nxt["num"]} {nxt["name"]} ({nxt["file"]})' if nxt else 'next: nothing, the plan is complete')
         return 0
-    raise SystemExit(f'unknown command {command!r} (status | next | start | done | block)')
+    raise SystemExit(f'unknown command {command!r} (status | brief | next | start | done | block)')
 
 
 if __name__ == '__main__':

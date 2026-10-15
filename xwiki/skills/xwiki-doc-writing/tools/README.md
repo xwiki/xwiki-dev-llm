@@ -14,7 +14,7 @@ was added the first time it produced a defect on a live page.
 | `docpages.py` | `lint` \| `save` \| `pin` \| `verify` over a page set held as a Python module. |
 | `docshot.sh` | Capture a screenshot at a `size` width with the mandatory red box, and check it. |
 | `checkredbox.py` | Prove each screenshot's red box is a closed rectangle. |
-| `docplan.py` | `status` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Also the plan bookkeeping of `xwiki-doc-export`. |
+| `docplan.py` | `status` \| `brief` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Also the plan bookkeeping of `xwiki-doc-export`. |
 
 `xwiki-doc-export/tools/docexport.py` imports `xwikidoc.py` (it reads anonymously: without
 `XWIKI_USER`/`XWIKI_PASSWORD` a read goes out as Guest, a write still refuses) and drives `docplan.py`
@@ -81,6 +81,7 @@ A conversion adds a fifth step around them — the plan that carries it across s
 python3 docplan.py status         # FIRST call of a conversion session: the whole orientation
 python3 docplan.py start 07       # before working on task 07
 python3 docplan.py done 07 "source/latex.txt + inventory, 41 items"
+python3 docplan.py brief          # chaining on in the same session: the next task's brief alone
 ```
 
 `save` takes page references to limit it to those pages. Add `--pages <module>` before the command to
@@ -155,15 +156,16 @@ diagram needs a third pass: the macro renders **asynchronously**, so the first H
 until the macro output is inlined and then fetches the image itself, which is the only way a page
 published with a diagram that renders nothing does not pass every check.
 
-**`docplan.py`** — a conversion runs one task per session, so every session opens by re-deriving
+**`docplan.py`** — a conversion spans many sessions, so every fresh session opens by re-deriving
 where it is. Done by hand that is `PLAN.md` read in five or six `sed` chunks plus the task file,
 then two more reads to update a status cell — a dozen turns before any documentation is written,
-repeated for every task in the plan. `status` prints the current task's full brief, the setup
+repeated for every session of the plan. `status` prints the current task's full brief, the setup
 answers, the recent decisions and what comes next, in one call; `start` / `done` write the status
 back to `PLAN.md` **and** the task file, which is also the pair that otherwise drifts apart.
 `Decisions` and `Open questions` are trimmed to their most recent entries — a conversion accumulates
 tens of thousands of characters of them, and the recent ones are the ones a session would otherwise
-re-litigate.
+re-litigate. A session that chains on to the next task already holds all that, so `brief` prints the
+next task's brief alone.
 
 **`docshot.sh` / `checkredbox.py`** — the red box is drawn as an overlay appended to `<body>`, never
 as a CSS `outline`, which any ancestor with `overflow: hidden` clips into a three-sided box; the
