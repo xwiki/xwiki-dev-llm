@@ -2,8 +2,8 @@
 title: XWiki testing strategy (overview)
 stability: durable
 summary: The kinds of tests XWiki uses, their naming, that every change comes with a test failing
-  without it, the no-stdout rule, the prefer-the-lightest-base
-  rule, the assertion rule (JUnit 5 where it fits, Hamcrest assertThat where it reports better), the
+  without it (the fix set aside by stash hash, not stash pop), the no-stdout rule, the
+  prefer-the-lightest-base rule, the assertion rule (JUnit 5 where it fits, Hamcrest assertThat where it reports better), the
   scenario rule (no two @Test methods build the same fixture, a distinct fixture is what justifies a
   distinct method, and @Order is how methods share one), @Order on every @UITest method, the
   page-object boundary (a test holds no HTML/JS knowledge: no getDriver(), selector or WebElement),
@@ -44,7 +44,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   committed must have associated automated tests" (Testing page), by PR or direct commit alike, and
   for templates, wiki pages and JavaScript too, where a manual check wrongly feels enough: a page
   test or a functional test covers them. Prove a fix's test by running it with the fix reverted —
-  asking first for a functional test, as `xwiki-test-guidelines` says. Screenshots, a screen reader
+  asking first for a functional test, as `xwiki-test-guidelines` says. Set the fix aside by hash
+  (`git stash create`, then `git checkout <hash> -- <paths>` to restore), never `git stash pop` or
+  `stash@{N}`: the stash list is shared by every worktree, so a concurrent session's entry can be
+  the one taken. Screenshots, a screen reader
   or the rendered page come on top of the test, never instead. A change already covered by existing
   tests (refactoring, dependency upgrade, Sonar cleanup, a backport carrying its test) needs no new
   one — name the covering tests in the commit or PR. A security fix's test follows
