@@ -9,6 +9,8 @@ Use this skill when converting existing **unit tests** that use JUnit4 (`@Before
 
 **For converting functional IT tests** (browser-based tests using `getUtil()`, `AbstractAuthenticatedTest`, page objects) to the JUnit5 Docker framework (`@UITest`), use the **`xwiki-convert-tests-docker`** skill instead.
 
+Load **`xwiki-test-guidelines`** too: its rules for writing a test still apply to the converted one.
+
 ## Code style rules to apply during conversion
 
 These apply to every file touched:

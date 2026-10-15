@@ -62,6 +62,7 @@ Skip it (rarely) with `-Dxar.verify.skip=true`.
 - **xwiki-translations** — editing `Translations` pages and i18n string content inside XAR pages
   (those pages are XAR pages, so this `xar:format` / `xar:verify` workflow applies to them too).
 - **xwiki-deploy-extension** — deploy the built XAR/JAR to a running XWiki instance.
+- **xwiki-rest-api** — read or change pages on a running XWiki instance, not the XAR source files.
 
 ## References
 

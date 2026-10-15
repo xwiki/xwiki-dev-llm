@@ -3,6 +3,8 @@ name: xwiki-deploy-extension
 description: Deploy an XWiki extension (XAR or JAR) to a running XWiki instance via the REST job API. Use when the user wants to install, deploy, or hot-reload a built extension into a local XWiki.
 ---
 
+To read or change individual pages or objects on a running XWiki, use `xwiki-rest-api` instead; to edit the XAR's pages before building it, use `xwiki-xar-pages`.
+
 To deploy an XWiki extension (XAR, JAR), to a running XWiki install, do the following:
 0) If the extension is a core extension (i.e. located in webapps/xwiki/WEB-INF/lib) then simply replace the jar with the new one and don't go over the next steps and ask the dev to restart XWiki.
 1) Find the id of the extension to deploy: it's the maven groupId followed by ":", followed by the maven artifactId of the extension, which you can find in the pom.xml

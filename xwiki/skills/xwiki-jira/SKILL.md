@@ -8,7 +8,8 @@ description: Interact with XWiki's self-hosted JIRA (jira.xwiki.org) — view, s
 Natural-language interaction with **`https://jira.xwiki.org`** — XWiki's issue tracker (NOT GitHub
 Issues), a **self-hosted Atlassian JIRA** (Server/Data Center). Per-repo project keys: `XWIKI`
 (Platform), `XCOMMONS` (Commons), `XRENDERING` (Rendering), a per-extension key for each
-xwiki-contrib extension. Issue keys match `[A-Z]+-[0-9]+`.
+xwiki-contrib extension. Issue keys match `[A-Z]+-[0-9]+`. A work package on op.xwiki.org
+(OpenProject) is not a JIRA issue: use `xwiki-openproject` for those.
 
 There is **no Atlassian MCP** for this instance. Pick a backend:
 
