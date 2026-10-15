@@ -47,9 +47,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   asking first for a functional test, as `xwiki-test-guidelines` says. Make sure that run really
   lacks the fix and that what you restore is your own fix: other sessions' worktrees share the stash
   list. Screenshots, a screen reader or the rendered page come on top of the test, never instead. A
-  change already covered by existing tests (refactoring, dependency upgrade, Sonar cleanup, a backport carrying its test) needs no new
-  one — name the covering tests in the commit or PR. A security fix's test follows
-  [[security-policy]]: nothing in it may describe the vulnerability before disclosure.
+  change already covered by existing tests (refactoring, dependency upgrade, Sonar cleanup, a
+  backport carrying its test) needs no new one — name the covering tests in the commit or PR. A
+  security fix's test follows [[security-policy]]: nothing in it may describe the vulnerability
+  before disclosure.
 - **No stdout/stderr in tests** — enforced by Surefire's `CaptureConsole` listener. Skip per-module
   with `-Dxwiki.surefire.captureconsole.skip=true` only when justified. A functional test's console
   is validated too: output it provokes on purpose is declared with `registerExpected(...)` on an
