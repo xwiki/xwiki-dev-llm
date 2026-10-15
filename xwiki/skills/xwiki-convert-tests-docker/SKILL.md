@@ -9,6 +9,8 @@ Use this skill when converting existing tests that use the JUnit4 legacy functio
 
 For converting unit tests (JUnit4/JMock → JUnit5/Mockito), use the `xwiki-convert-tests` skill instead.
 
+Load **`xwiki-test-guidelines`** too: its rules for writing a test still apply to the converted one.
+
 ## Module structure
 
 Lay out the new modules as the "Functional-test module layout" section of `okf/testing/strategy.md`

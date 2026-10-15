@@ -44,13 +44,11 @@ once — treat both as wider-blast-radius than their size suggests.
 
 ## New code goes in a feature module, never in oldcore
 
-`oldcore` is what XWiki was before the split into domain modules, and the strategy is to keep
-*extracting* code out of it — so a new class goes in the domain module that owns the concern, or in
-a new module. The full rule, including which way the dependency may point and what happens when
-oldcore turns out to need the new module, is in `component-system.md` under "Never grow
-`xwiki-platform-oldcore`".
+A new class goes in the domain module that owns the concern, or in a new module. Why, which way the
+dependency may point, and what happens when oldcore turns out to need the new module are in
+`component-system.md` under "Never grow `xwiki-platform-oldcore`".
 
-`XWikiContext` belongs to that legacy: it is a request-scoped object threaded through much of
+`XWikiContext` is oldcore legacy: it is a request-scoped object threaded through much of
 oldcore, and new code reaches the same things through components instead of being handed a context.
 
 ## Every JAR is an OSGi bundle, and advertises what it provides
