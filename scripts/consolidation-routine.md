@@ -57,8 +57,9 @@ These overlaps are intended and stay:
 
 ### 3. Pick this week's batch
 
-At most **5 fixes**, one coherent theme where possible, highest value first: a rule stated twice
-with drifting wording beats a rule stated twice identically, which beats wording that is merely long.
+At most **5 fixes**, highest value first: a rule stated twice with drifting wording beats a rule
+stated twice identically, which beats wording that is merely long, which beats a missing pointer. A
+common theme only breaks ties: it never displaces a higher-value fix the finder listed.
 A fix is one of:
 
 - **Move a rule to its one home and point to it.** The home is the narrowest file every reader of
@@ -98,6 +99,15 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   `okf/index.md` entry (≤240 bytes each); the topic name in the OKF map of
   `xwiki/instructions/xwiki-org.md`, whose remaining byte headroom you state (the finder's
   `budget-pressure` shows it); the skill pointers; the README row; and any open PR on those files.
+- **How much would really move?** `conditionalSections` is a keyword match on titles and openings
+  ("Mode", "Phase", "only when"): open each section and check that most runs skip it — one that most
+  runs read is the main path, whatever its title. Subtract what must stay in `SKILL.md` (the
+  decision flow, a rule needed at a write, the call that rule guards). Under about 10% of the file
+  left is not a split.
+- **Is it a duplicate instead?** A file near its cap often restates its own `references/` or an OKF
+  topic. Removing that is a fix for step 3: cheaper than a split, and done this week.
+
+Follow the finder's ranking; for each higher-ranked candidate you pass over, say why in the run log.
 
 For each, write in the PR body: the file and why; each target file and which sections move there;
 which skills or sub-agents read each part; and the check a committer runs — move the text by script,

@@ -110,9 +110,16 @@ export const okfIndexEntries = (okfIndex) => {
 // cannot see, are listed so that a pointer to one is not reported as dangling.
 export const EXTERNAL_SKILLS = new Set(["xwiki-security-review", "xwiki-security-pass"]);
 const skillName = "(xwiki-[a-z0-9]+(?:-[a-z0-9]+)*)";
+// The third branch takes the later names of a list after a pointer verb: "use `xwiki-a` (unit) or
+// `xwiki-b` (functional)" points to both, as does "use `xwiki-a`, `xwiki-b`".
+const listedSkill = "\\*{0,2}`?xwiki-[a-z0-9-]+`?\\*{0,2}(?:\\s+\\([^)]*\\))?";
 const pointerPattern = new RegExp(
   `\`?\\b${skillName}\\b\`?(?=\\*{0,2}\\s+(?:skill|instead))` +
-    `|(?:skills?|[Uu]se|via|run|load|invoke)\\s+\\*{0,2}\`?${skillName}\\b`,
+    `|(?:skills?|[Uu]se|via|run|load|invoke)\\s+\\*{0,2}\`?${skillName}\\b` +
+    `|(?<=(?:skills?|[Uu]se|via|run|load|invoke)\\s+${listedSkill}` +
+    `(?:,\\s*${listedSkill})*(?:,\\s*|,?\\s+(?:or|and)\\s+))` +
+    `\\*{0,2}\`?${skillName}\\b`,
   "g"
 );
-export const skillPointers = (text) => new Set([...text.matchAll(pointerPattern)].map((m) => m[1] ?? m[2]));
+export const skillPointers = (text) =>
+  new Set([...text.matchAll(pointerPattern)].map((m) => m[1] ?? m[2] ?? m[3]));
