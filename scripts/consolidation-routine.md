@@ -65,6 +65,9 @@ A fix is one of:
   `xwiki-org.md` only for what must be obeyed without opening anything. The other place keeps a
   pointer naming the file (and the section, when the file is long) — never a summary of the rule.
 - **Tighten wording** — same facts, fewer words. No new facts, no softened or hardened "must".
+- **Cut a procedure to its goal** — replace steps the model would get right unaided (ordinary git,
+  shell or Maven mechanics) with what must hold and the non-obvious fact behind it. Keep the steps of
+  a fragile or irreversible operation and any convention the model cannot infer.
 - **Complete a one-way pointer** between two skills a model could confuse, restating from the other
   side the boundary the existing pointer already draws.
 - **Lower a size budget** in `scripts/size-budgets.json` to the new size plus about 10%, when that

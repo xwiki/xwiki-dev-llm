@@ -134,6 +134,10 @@ Inside `xwiki/`:
   3. **It is as short as it can be**, the text around it included.
 
   Then set the entry to the new size plus about 10%, and say in the commit message why the three hold.
+- **State the goal, a constraint or a non-obvious fact — not the steps.** The model picks the method
+  once it knows what must hold and what it cannot guess (a shared stash, a mangling CLI). Give steps
+  only where it would otherwise get them wrong: a fragile or irreversible operation, or a convention
+  it cannot infer. A spelled-out recipe takes away its judgment, goes stale, and can be wrong.
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
   instead) — that text is the only thing Claude sees when deciding to invoke it.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the
