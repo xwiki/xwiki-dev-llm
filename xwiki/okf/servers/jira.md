@@ -136,6 +136,11 @@ issue just filed included, on JIRA and OpenProject alike — so the team sees it
 assigned to someone else is theirs: ask the developer instead of reassigning it. Asking you to work
 on an issue is the developer's approval to assign it.
 
+## Linking the pull request
+
+OpenProject does not list a work package's GitHub PRs yet (its **GitHub** tab stays empty): comment
+the PR's URL on the work package once the PR is opened (`notify=false`).
+
 ## Resolving / closing an issue
 
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
