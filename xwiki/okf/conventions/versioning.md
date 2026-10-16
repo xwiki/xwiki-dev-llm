@@ -49,8 +49,9 @@ line whose backport does not happen.
 `@since` — including `internal` classes and methods, and the *tools* tests are written with: page
 objects (`*-test-pageobjects`), test frameworks and test helpers (`*-test-*` modules — for example
 the `@UITest` annotation and its `TestConfiguration`, or `TestUtils`). A caller needs to know when
-the thing it calls appeared, whatever the module and whatever the visibility. Annotate a new
-**class** *and* any new **member** added to an existing one.
+what it calls appeared, whatever its module or visibility. Annotate a new **class** *and* any new
+**member** added to an existing one. On a `private` member it is optional: never flag it, present or
+absent.
 
 **Tests themselves carry no `@since`.** A test class or test method (`src/test/**`, `*IT.java`,
 `*Test.java`) is not reusable — nothing calls it — so there is nothing to version. And when
