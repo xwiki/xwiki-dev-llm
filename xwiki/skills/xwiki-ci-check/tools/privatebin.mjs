@@ -120,6 +120,18 @@ export function decrypt(body, key) {
   return { text: JSON.parse(inflateRawSync(plain).toString('utf8')).paste, format };
 }
 
+/** The text of a paste this tool posted, from its full URL — the key is the fragment. */
+export async function read(pasteUrl) {
+  const url = new URL(pasteUrl);
+  const res = await fetch(`${url.origin}${url.pathname}${url.search}`, {
+    headers: { 'X-Requested-With': 'JSONHttpRequest' }
+  });
+  if (!res.ok) throw new Error(`${url.origin}: HTTP ${res.status}`);
+  const body = await res.json();
+  if (body.status !== 0) throw new Error(`${url.origin}: ${body.message || `status ${body.status}`}`);
+  return decrypt(body, unbase58(url.hash.slice(1))).text;
+}
+
 /** @returns {Promise<string>} the full paste URL, key fragment included — it is the only copy. */
 export async function paste(text, { url = DEFAULT_URL, expire = '1week', format = 'markdown' } = {}) {
   if (!EXPIRIES.includes(expire)) {

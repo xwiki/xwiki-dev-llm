@@ -22,6 +22,12 @@ cannot reach:
 
 A cell you leave unfilled renders **empty**, which is how the document says you skipped it.
 
+**What you fill is also tomorrow's memory.** The paste ends with a folded *Run memory* block mapping
+its rows to incidents; the next run reads your *Why*, *Next* and root cause back through it, and
+reuses them for an incident that has not changed instead of analysing it again (`recalled`). So
+write each as a conclusion that still reads true tomorrow, escape a `|` inside a cell as `\|`, and
+leave that block as rendered.
+
 Two more markers stand where only this run's own decision makes the line true, so neither may be
 left — `privatebin.mjs` refuses a paste still holding one:
 

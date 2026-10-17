@@ -52,15 +52,14 @@ rehearsal and say so — never fall back to a personal account. `commit-comment.
 
 ```bash
 node <skill>/tools/matrix.mjs --since last-digest > chat.json     # read-only
-node <skill>/tools/ci-check.mjs --chat chat.json > work-order.json  # --pretty, --full
+node <skill>/tools/matrix.mjs --last-memory > memory.json         # what earlier runs concluded
+node <skill>/tools/ci-check.mjs --chat chat.json --memory memory.json > work-order.json
 ```
 
-Every file here is this run's: write them to a scratch directory, never into a checkout.
+Write these files to a scratch directory, never into a checkout.
 
-**Read the room before sweeping it.** `last-digest` makes the window exactly "since we last spoke";
-an ISO timestamp sets it by hand, and no value at all means the last 24 hours.
-
-**Both are optional and fail open**: without a credential or a readable room, `--chat` is dropped.
+**Read the room and the memory before sweeping** — `last-digest` is "since we last spoke". Both
+reads fail open: without them the sweep runs as it would have.
 
 It discovers the jobs from Jenkins (`master` + every `stable-*` of Commons, Rendering and Platform,
 plus Platform's Environment Tests matrix; `feature-*` and the security-only LTS line excluded),
@@ -91,6 +90,7 @@ together.
 | `commentable` | where §4 may comment — the commit or PR — or absent |
 | `provable` | a deep `ambiguous` incident's suspects: §4 comments on the one a proof singles out |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
+| `recalled` | concluded on an earlier morning and unchanged: the paste reuses it, so do not redo it |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
 | `jira` | the open flicker issue, if the test already has one |
@@ -104,9 +104,8 @@ together.
 
 ## 3. Deep treatment (the budget)
 
-Treat only the incidents marked `deep` — at most 5, chosen by severity. That is a **ceiling, not a
-target**; below the line, an incident is reported in the paste without analysis, which is a correct
-outcome, not a failure.
+Treat only the incidents marked `deep` — at most 5, by severity: a **ceiling, not a target**. Below
+the line an incident is reported without analysis, which is a correct outcome.
 
 **An incident a `fixState` answers whole is never `deep`, and gets one line and no paragraph.**
 Root-causing it argues with people who have moved on, or with a test that was never broken, and

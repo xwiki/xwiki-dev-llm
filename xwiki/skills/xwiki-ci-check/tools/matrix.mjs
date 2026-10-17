@@ -34,6 +34,7 @@
  *   node matrix.mjs --whoami            # which account the credentials in the environment are
  *   node matrix.mjs --last-digest       # the bot's most recent message in the room (read-only)
  *   node matrix.mjs --last-state        # the state that message carries, for --previous
+ *   node matrix.mjs --last-memory       # what its paste concluded, for ci-check.mjs --memory
  *   node matrix.mjs --since <iso>       # what the room said since then, filtered, as JSON
  *   node matrix.mjs --since last-digest # …since the bot last posted, resolved in the same session
  *
@@ -51,6 +52,8 @@
 
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { memoryOf } from './memory.mjs';
+import { read as readPaste } from './privatebin.mjs';
 
 // The homeserver is where the bot's *account* lives; the room lives on matrix.xwiki.com whatever
 // that is, which is why the default alias is fully qualified. A bare `#xwiki` would be completed
@@ -475,6 +478,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--whoami') identify = true;
     else if (argv[i] === '--last-digest') read = 'digest';
     else if (argv[i] === '--last-state') read = 'state';
+    else if (argv[i] === '--last-memory') read = 'memory';
     else if (argv[i] === '--since') { read = 'since'; since = argv[++i] || null; }
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
   }
@@ -517,6 +521,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (read === 'digest') {
       if (last instanceof Error) console.error(`matrix.mjs: ${last.message}`);
       else console.log(last ? last.body : '');
+    } else if (read === 'memory') {
+      // The digest links its paste, and the paste holds the conclusions (memory.mjs). Any failure
+      // on the way — no digest, an expired paste, a paste from before the memory existed — is an
+      // empty memory: the sweep then analyses as it always did.
+      const url = last instanceof Error ? null : last?.body.match(/https?:\/\/\S+\?[0-9a-f]+#\w+/)?.[0];
+      const memory = url ? await readPaste(url).then(memoryOf).catch(error => error) : null;
+      console.log(JSON.stringify(memory instanceof Error || !memory
+        ? { available: false, reason: memory?.message || (last instanceof Error ? last.message : 'no paste linked') }
+        : { available: true, at: last.at, memory }, null, 2));
     } else if (last instanceof Error) {
       console.log(JSON.stringify({ available: false, reason: last.message }, null, 2));
     } else {

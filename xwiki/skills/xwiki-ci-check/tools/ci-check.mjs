@@ -21,6 +21,7 @@ import { JIRA, knownFlickers, closedFlickers } from '../../../scripts/jira-flick
 import { develocityFacts } from './dv-test-history.mjs';
 import { gateFacts, nameAuthors } from './sonar-gate.mjs';
 import { namesIn } from './matrix.mjs';
+import { memoryBlock, recallable } from './memory.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -53,6 +54,9 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --previous <f>      What matrix.mjs --last-state printed (default: an unknown yesterday).
   --chat <f>          What matrix.mjs --since printed ('-' for stdin): the room's messages since
                       the last digest. They can only ever buy an incident silence, never raise one.
+  --memory <f>        What matrix.mjs --last-memory printed: what the last runs concluded. An
+                      incident analysed in the last two days and unchanged since is recalled, not
+                      re-analysed, and its deep slot goes to the next one.
 
 Reads GitHub through GH_TOKEN_BOT (or GITHUB_TOKEN / GH_TOKEN — reads are identity-neutral).
 Without one, blame and comment-dedupe are unavailable and every incident comes back tier "unknown".
@@ -63,7 +67,8 @@ function parseArgs(argv) {
     repos: ['xwiki-commons', 'xwiki-rendering', 'xwiki-platform'], branch: null, horizon: 7,
     budget: 5, history: 8, blameHistory: 25, absence: 3, maxConsole: 4, github: true, develocity: true,
     full: false, pretty: false, rehearseStabilise: false,
-    renderDetail: null, live: false, delta: null, previous: null, chat: null, renderDigest: null, paste: null
+    renderDetail: null, live: false, delta: null, previous: null, chat: null, memory: null, renderDigest: null,
+    paste: null
   };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
@@ -86,6 +91,7 @@ function parseArgs(argv) {
     else if (key === '--paste') out.paste = argv[++i];
     else if (key === '--previous') out.previous = argv[++i];
     else if (key === '--chat') out.chat = argv[++i];
+    else if (key === '--memory') out.memory = argv[++i];
     else if (key === '--live') out.live = true;
     else if (key === '--help' || key === '-h') out.help = true;
     else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
@@ -1152,6 +1158,16 @@ function claimedPart(body) {
   const whole = namesIn(body);
   return clauses.length && whole && whole.tests.filter(name => !name.includes('#')).length <= 1
     && whole.jira.length <= 1 ? { names: whole } : null;
+}
+
+/** What the last runs concluded, as `matrix.mjs --last-memory` printed it, or nothing: it fails open. */
+function memoryOfArgs(args) {
+  if (!args.memory) return {};
+  try {
+    return JSON.parse(readFileSync(args.memory, 'utf8'))?.memory || {};
+  } catch {
+    return {};
+  }
 }
 
 /** The room's messages, as `matrix.mjs --since` printed them, or none when it was not read. */
@@ -2547,12 +2563,20 @@ const cell = text => String(text ?? '')
  * — and because PrivateBin renders the markdown inside `<details>` exactly as it does outside it,
  * so nothing is lost by folding it away.
  */
+/** The root cause an earlier morning wrote, quoted as that morning's. */
+function recalledBlock(incident) {
+  const { recalled } = incident;
+  if (!recalled) return [];
+  return ['', `**As concluded on ${recalled.analysedOn}**, and unchanged since — not re-analysed today:`,
+    ...(recalled.analysis ? ['', recalled.analysis] : [])];
+}
+
 function evidenceFor(incident) {
   const head = [windowOf(incident), incident.stage ? `stage _${incident.stage}_` : null].filter(Boolean);
   const body = incident.deep
     ? [...evidenceBlock(incident), ...sonarBlock(incident), ...develocityBlock(incident),
       ...blameBlock(incident), ...chatBlock(incident), ...analysis(incident)]
-    : [...fixBlock(incident), ...sonarBlock(incident), ...chatBlock(incident)];
+    : [...fixBlock(incident), ...sonarBlock(incident), ...chatBlock(incident), ...recalledBlock(incident)];
   const out = [...(head.length ? ['', head.join(' · ')] : []), ...body];
   return out.some(line => line.trim()) ? out : null;
 }
@@ -2672,12 +2696,14 @@ function renderDetail(report, { live }) {
       // restating two nouns. For everything else that won a slot, *why* is the conclusion of that
       // analysis: the numbers a renderer can reach say how often a test fails, never why it does.
       const why = cause ? `the same failure as #${cause.number} on ${cause.branch}`
+        : incident.recalled ? incident.recalled.why
         : incident.deep && !incident.sonar?.conditions?.length ? `<!-- WHY: ${incident.id} -->`
           : whyOf(incident);
       out.push(`| **${numbers.get(incident.id)}.** ${cell(name)}<br>_${cell(meta)}_ ` +
         `| ${cell(why)} ` +
-        `| ${cell(nextOf(incident, { horizonDays: report.horizonDays, filing, cause,
-          stabilising: incident.stabilise, sharing: numbers.get(incident.commentedWith) }))} |`);
+        `| ${cell(incident.recalled ? `${incident.recalled.next}<br>_as concluded on ${incident.recalled.analysedOn}_`
+          : nextOf(incident, { horizonDays: report.horizonDays, filing, cause,
+            stabilising: incident.stabilise, sharing: numbers.get(incident.commentedWith) }))} |`);
     }
     for (const incident of section.list) {
       const body = evidenceFor(incident);
@@ -2709,15 +2735,25 @@ function renderDetail(report, { live }) {
       `${named.length ? ` (${named.join(', ')})` : ''}.`);
   }
   const deep = incidents.filter(incident => incident.deep);
+  const recalled = incidents.filter(incident => incident.recalled);
   // Only what the tool knows: whether a comment then goes is the run's decision, in each COMMENT cell.
   const noOwner = deep.filter(incident => !incident.commentable && !incident.provable && !incident.commentedWith);
   notes.push(`**No culprit candidate for ${noOwner.length} of the ${deep.length} analysed** — no commit` +
     ` to attribute them to. **${summary.alreadyCommented}** already carried a comment in the same state,` +
-    ` **${summary.beyondHorizon}** are older than the ${report.horizonDays}-day horizon, and` +
-    ` **${Math.max(0, summary.incidents - deep.length - incidents.filter(settled).length -
+    ` **${summary.beyondHorizon}** are older than the ${report.horizonDays}-day horizon,` +
+    ` **${recalled.length}** were concluded on an earlier morning and have not changed, and` +
+    ` **${Math.max(0, summary.incidents - deep.length - recalled.length - incidents.filter(settled).length -
       incidents.filter(incident => incident.primary === false).length)}** were below the deep budget` +
     ` of ${report.budget} — reported without analysis, by design.`);
   out.push('', '---', '', ...notes.map(note => `_${note}_`));
+  // What tomorrow's run reads back: the analysed rows keep today's date, the recalled ones the date
+  // they were concluded on, so a conclusion ages out however many mornings it is carried.
+  out.push(...memoryBlock(date, numbers, [
+    ...deep.map(incident => ({ id: incident.id, state: incident.memoryState, analysedOn: date })),
+    ...recalled.map(incident => ({
+      id: incident.id, state: incident.memoryState, analysedOn: incident.recalled.analysedOn
+    }))
+  ]));
   return out.join('\n');
 }
 
@@ -2930,6 +2966,7 @@ function doneOf(incident, report) {
     || incident.jiraClosed || fix?.candidate) {
     return `<!-- DONE: ${incident.id} -->`;
   }
+  if (incident.recalled) return `as concluded on ${incident.recalled.analysedOn} — in the paste`;
   if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
   return incident.deep ? 'no owner found' : 'in the paste, not analysed';
 }
@@ -3256,8 +3293,20 @@ incidents.sort((a, b) => severity(a) - severity(b) || (b.testCount || 1) - (a.te
 // A failing quality gate takes the first slot: it is the run's first fix (§5), costs no log
 // reading, and only a deep incident carries the blame its commit comment needs.
 const gateFirst = incident => (/sonar-gate:failed$/.test(incident.signature || '') ? 0 : 1);
+// What an earlier morning concluded about an incident that has not changed since is reused, not
+// re-derived — and its slot goes to the next incident, which otherwise starved below the budget
+// every morning, behind the same five (PDFExportIT#pageRevision, 2026-10-11..14). A conclusion
+// older than two days is re-examined: facts move, and a recalled answer must not outlive them.
+const memory = memoryOfArgs(args);
+const today = new Date().toISOString().slice(0, 10);
+for (const incident of incidents) {
+  const entry = memory[incident.id];
+  if (incident.primary !== false && !settled(incident) && recallable(entry, stateLine(incident), today)) {
+    incident.recalled = { analysedOn: entry.analysedOn, why: entry.why, next: entry.next, analysis: entry.analysis };
+  }
+}
 const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon
-  && !settled(incident) && incident.primary !== false)
+  && !settled(incident) && incident.primary !== false && !incident.recalled)
   .sort((a, b) => gateFirst(a) - gateFirst(b)).slice(0, args.budget);
 for (const incident of deep) {
   incident.deep = true;
@@ -3669,6 +3718,10 @@ function digest(incident, keys) {
     commentable: incident.commentable || undefined,
     // The suspects a proven culprit may be picked from, when the tool could pick none (§4).
     provable: incident.provable || undefined,
+    // An earlier morning's conclusion, reused because nothing has changed since (§3).
+    recalled: incident.recalled || undefined,
+    // The state the memory compares against tomorrow — `stateLine`, which the renderer cannot recompute.
+    memoryState: incident.deep || incident.recalled ? stateLine(incident) : undefined,
     // The incident whose comment also answers this one: the same commit, one comment per run.
     commentedWith: incident.commentedWith,
     jiraClosed: incident.jiraClosed || undefined,
