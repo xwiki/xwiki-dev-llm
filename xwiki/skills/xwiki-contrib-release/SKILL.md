@@ -139,3 +139,7 @@ Draft the announcement from the release notes, show it to the developer, and cre
 extensions.xwiki.org state and release notes, and what the developer still owes. That covers saving
 the blog post, plus the extension page's "General Compatibility" if the parent was raised, and
 "Tested On" (append only).
+
+End with one table (`What | Change | URL`) of every page touched, one row each: the doc pages
+written or updated, the blog post to publish, the extensions.xwiki.org pages, and any other
+place (tracker versions and work packages, pull requests).
