@@ -15,8 +15,8 @@ https://contrib.xwiki.org/xwiki/bin/view/Main/WebHome#HDocumentation — when a 
 unclear or looks outdated, consult that page and prefer it. The templates below already incorporate
 one fix the live guide was missing (the per-version page link, see step 3).
 
-Browser mechanics (open/snapshot/fill/click) are handled by the **agent-browser** skill — load it
-for the how-to of driving Chrome; this skill covers only the XWiki-specific content and the gotchas.
+The post is created over the **xwiki.org REST API**, never by driving the editor in a browser, and
+saved **unpublished**: the developer verifies it, then edits or publishes it (step 6).
 
 ## 1. Gather the release facts
 
@@ -55,16 +55,10 @@ From the extension page on the Extensions wiki (e.g.
   **kept as is, dots included** — the contrib guide's own example is `blog-extension-1.5-released`,
   so `documentation-extension-1.15-released`, never `…-1-15-released`. The Blog quick-add form turns
   spaces **and dots** into dashes and keeps the original case, so it produces a capitalized name like
-  `Wiki-Link-URL-Normalizer-Extension-1-10-0-Released` — **not** what we want.
-  Instead create the page with a controlled name by opening the edit URL directly (nested page,
-  matching recent posts such as `guided-tour-extension-0-1-released`):
-
-  ```
-  https://www.xwiki.org/xwiki/bin/edit/Blog/<page-name>/WebHome?template=Blog.BlogPostTemplate&parent=Blog.WebHome&title=<URL-encoded title>&Blog.BlogPostClass_0_title=<URL-encoded title>
-  ```
-
-  with `<page-name>` = `wiki-link-url-normalizer-extension-1.10.0-released` (lowercase, dots kept). In
-  the URL the dots stay plain; in a wiki *reference* to the page they are escaped
+  `Wiki-Link-URL-Normalizer-Extension-1-10-0-Released` — **not** what we want. Creating the page
+  over REST (step 5) controls the name: the nested page `Blog.<page-name>.WebHome`, e.g.
+  `wiki-link-url-normalizer-extension-1.10.0-released` (lowercase, dots kept). In a URL the dots
+  stay plain; in a wiki *reference* to the page they are escaped
   (`Blog.wiki-link-url-normalizer-extension-1\.10\.0-released.WebHome`).
 
 ## 3. Content and summary templates (XWiki 2.1 syntax)
@@ -124,53 +118,36 @@ Tick **all six** (these also push the announcement to the "What's New" feed of e
 - `What's New for XWiki: Admin User`
 - `What's New for XWiki: Extension`
 
-## 5. Publish and date
+## 5. Save it unpublished over REST
 
-- Check the **Publish** checkbox (so it publishes when saved).
-- Set **Publish date** to the actual release date (form format `dd/mm/yyyy hh:mm:ss`), unless the
-  user wants the posting date.
+Write as the developer's xwiki.org account (`okf/servers/index.md`; the `xwiki-doc-writing`
+`tools/xwikidoc.py` client handles the auth and the form token), on
+`https://www.xwiki.org/xwiki/rest/wikis/xwiki/spaces/Blog/spaces/<page-name>/pages/WebHome`. Build
+that URL yourself: a helper splitting a reference on `.` cuts the dotted page name in two.
 
-## 6. Create it in the browser
+1. Check it answers `404`, so no existing post is overwritten.
+2. `PUT` the page, form-encoded: `title`, `parent=Blog.WebHome`, `syntax=xwiki/2.1`, an empty
+   `content` (the post lives in its object, as in published posts) and `hidden=true`.
+3. `POST …/objects` with `className=Blog.BlogPostClass` and `property#title`, `property#content`,
+   `property#extract`, `property#published=0`, `property#hidden=1` and `property#publishDate` set to
+   the release date as `dd/MM/yyyy HH:mm:ss`. Read the wiki syntax from files, never inline in the
+   shell, which mangles quotes.
+4. `PUT …/objects/Blog.BlogPostClass/0/properties/category` as `text/plain`, the six
+   `Blog.Categories.<name>` values joined by `|`: repeating `property#category` in the POST keeps
+   only the first.
+5. Read every property back and compare it with what was sent.
 
-Use the **agent-browser** skill. Key gotchas learned the hard way:
+Never write a macro name with its braces in the text: a literal `{{image}}` is *executed* and
+renders an error box. Refer to macros in prose ("the image macro").
 
-- **Login required.** Creating a blog post needs an authenticated xwiki.org account with blog-post
-  permissions. If not logged in, have the user log in in the visible window.
-- **agent-browser launches headless (invisible) by default.** If the user needs to see the page /
-  click Save themselves, launch a **visible** window: `agent-browser --headed --session <name>
-  open …`. A pre-existing headless daemon for the default session will ignore `--headed`, so use a
-  fresh `--session` (and `close --all` / kill stragglers if needed). Transfer an existing login into
-  the new session with `state save <file>` from the logged-in session then `--state <file>` on the
-  headed launch.
-- **Enter wiki syntax via Source mode.** The content and summary fields are CKEditor; click each
-  field's **"Source"** button, then `fill` the resulting textarea with the wiki-syntax template.
-  Driving it with JavaScript instead (e.g. claude-in-chrome, in the developer's logged-in browser):
-  the switch to Source is **asynchronous** (a server-side conversion), and it wipes any data set
-  before it completes, even from `setMode('source', callback)`. Switch first, wait until
-  `CKEDITOR.instances[…].mode === 'source'`, then set the value of the editor's `textarea.cke_source`
-  and dispatch an `input` event. Check `getData()` and look at the field: it must show the text.
-- **Never write a macro name with its braces in the text.** A literal `{{image}}` (or any
-  `{{macro}}`) in the content is *executed* by the renderer at Preview — e.g. `{{image}}` fails with
-  `Failed to execute the [image] macro. Cause: [Parameter [reference] is mandatory]` and shows as a
-  `.xwikirenderingerror`. Refer to macros in prose ("the image macro"), not as `{{image}}`.
-- **Fill from a file to avoid shell quote-mangling.** Content with double quotes (e.g. a `"How-to"`
-  label) gets mangled if passed inline through the shell. Write the wiki syntax to a temp file and
-  fill with `agent-browser … fill @ref "$(cat file.txt)"` — command substitution keeps quotes literal.
-- **Re-fill the Source textarea after any Preview round-trip.** Clicking **"Back To Edit"** re-renders
-  the fields as WYSIWYG; if the content had macro-like text the WYSIWYG round-trip can corrupt it. On
-  returning to edit, re-click "Source" and re-`fill` both fields from the files before re-previewing.
-  Category/Publish/date state does survive the round-trip; only the CKEditor content needs re-filling.
-- Check the 6 category checkboxes, the Publish checkbox, and set the publish date.
+## 6. Verify, then hand off
 
-## 7. Verify, then hand off
-
-- Use the editor's **Preview** to confirm the links resolve and there are **no rendering errors**
-  (`.xwikirenderingerror`). Click **"Back To Edit"** to return.
-  - Verify the version link `href` points to `…/Extension/<ExtensionSpace>/Versions/<version>/`.
-  - Also confirm the changes render as a proper bullet list and the summary as a single sentence.
-- **Do not Save unless asked.** The default is to leave the form fully filled and let the user
-  review and press **Save** / **Save & View** themselves. Save automatically only when the user
-  explicitly tells you to.
+- Fetch `https://www.xwiki.org/xwiki/bin/view/Blog/<page-name>/` as the developer: it shows
+  "This blog post is not published yet.", no `.xwikirenderingerror`, the changes as a bullet list,
+  and every link resolving (no `wikicreatelink`), the version link on
+  `…/Extension/<ExtensionSpace>/Versions/<version>/`.
+- **Never publish it.** Give the developer that URL and ask them to verify the post, then edit it
+  or publish it themselves ("Edit", tick "Publish", "Save & View").
 
 ## Worked example (Wiki Link URL Normalizer 1.10.0)
 
@@ -185,6 +162,6 @@ Use the **agent-browser** skill. Key gotchas learned the hard way:
   * Adds support for normalizing local URLs that contain anchors (URL fragments)
   * Raises the minimal supported XWiki version to 15.10
   ```
-- Categories: the six in step 4. Publish: on. Date: `11/06/2026 12:00:00`.
+- Categories: the six in step 4. Published: no (the developer publishes it). Date: `11/06/2026 12:00:00`.
 - A **Project** type works the same way: the Documentation project 1.15 announcement links
   `[[1.15>>doc:extensions:Extension.Documentation.Versions.1\.15.WebHome]]`.
