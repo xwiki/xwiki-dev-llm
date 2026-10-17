@@ -4,8 +4,9 @@ stability: durable
 summary: How the browser container reaches XWiki under each servlet engine and why that makes the two
   configurations exercise different networking, which engine to pick for the local loop and when the
   containerised one is mandatory, the setup-failure symptom table (a beforeAll failure is never
-  evidence about your change), why runs leak containers and networks when ryuk cannot reach the
-  daemon, and what several agents sharing one machine contend for.
+  evidence about your change), a run silently testing other code than yours, why runs leak
+  containers and networks when ryuk cannot reach the daemon, and what several agents sharing one
+  machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
 ---
@@ -62,9 +63,12 @@ below. Repair the machine and re-run; do not start debugging the change.
 | `SocketException: Connection reset` while provisioning extensions | the servlet container was still booting when provisioning started; daemon starved |
 | `NullPointerException: networkMode was not specified` starting `standalone-firefox`, or `all predefined address pools have been fully subnetted` | the daemon has no address pool left for a new network: earlier runs leaked their testcontainers networks (see below) |
 | `Can't find descriptor for the component …` or `Failed to initialize mandatory document` at startup, then a `500` while provisioning | the WAR mixes SNAPSHOT jars built before and after a recent commit of the branch (see below) |
+| `Dependency [X-<v>] is not compatible with core extension feature [X/<older v>]` | a stale `target/`; or, on a branch older than master, extension SNAPSHOTs came from Nexus (built from master): `-Dxwiki.test.ui.offline=true`, which `-o` does not set |
+| `Extension [X] is already installed on namespace [wiki:xwiki]` | several classes in one `-Dit.test`: run one per invocation |
+| `WARBuilder` cannot resolve X while CI is green | an old locally installed SNAPSHOT pom shadows the branch's: `mvn install -N` it from the checkout |
 
-`JETTY_STANDALONE` needs the right JDK **on `PATH`**, not only in `JAVA_HOME`, because the wiki's JVM
-is spawned by a shell script.
+A date assertion failing only locally (`ExtensionIT`, `AttachmentIT`) is the time zone: prefix the
+command with `TZ=UTC`.
 
 ### Mixed SNAPSHOT jars after the branch moved
 
@@ -74,6 +78,19 @@ deploy changed several modules together, the WAR can mix jars from before and af
 fails at startup. `install` from the branch the modules touched by the commits since the jars' date
 (`git log origin/<branch> --since=<date>`), plus `xwiki-platform-web-war` when templates changed; the
 profiles the test framework modules need are in `xwiki-build`.
+
+### The run does not test the code you just built
+
+A run proves a fix only once the WAR is shown to carry it (`javap -p` the class from
+`target/<combo>/…/WEB-INF/lib/<artifact>-SNAPSHOT.jar`). It silently does not when:
+
+- `target/<combo>/` holds the WAR an earlier run extracted, which is reused: remove it between A/B
+  runs;
+- a remote timestamped SNAPSHOT in `~/.m2` beats your `install`: delete `<artifact>/<version>-SNAPSHOT/`
+  there and install again;
+- the jar was installed without `clean` (`xwiki-build`);
+- the run was restored from the Develocity cache: no `Tests run:` line. Add
+  `-Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false`.
 
 ## Leftover containers and networks: ryuk has to reach the daemon
 

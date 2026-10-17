@@ -13,7 +13,8 @@ keep it on the commands below and on any new `mvn` command you run.
 
 **Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
 per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
-hard-to-diagnose failures.
+hard-to-diagnose failures — including a jar from the Develocity build cache that lacks your edit,
+installed under `BUILD SUCCESS`.
 
 ## Build with the JDK the branch targets — `xmvn`
 
@@ -164,6 +165,9 @@ mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass#myMethod
 
 # Integration tests
 mvn verify -B -ntp -pl <module-path> -Pintegration-tests
+
+# Methods of a Docker test nested in AllIT (quote the $; + joins methods)
+mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests -Dit.test='AllIT$NestedXxxIT#m1+m2'
 ```
 
 ### Docker ITs
