@@ -22,10 +22,9 @@ https://ci.xwiki.org/api/ (append `/api/` to *any* Jenkins URL for that object's
 
 ## The Cloudflare User-Agent trap
 
-ci.xwiki.org is fronted by Cloudflare like the rest of the farm, so the **User-Agent rule in
-[[index]] applies to `/api/` too** — issue the request as plain `curl`. Generic HTML-fetching tooling
-that sends a browser UA (or a headless browser) gets the `Just a moment...` challenge page instead of
-the JSON; that is a Cloudflare block, not an auth problem, so credentials do not help.
+The farm-wide **User-Agent rule in [[index]] applies to `/api/` too**. Here a browser UA (or a
+headless browser) gets the `Just a moment...` challenge page instead of the JSON: a Cloudflare block,
+not an auth problem, so credentials do not help.
 
 ## URL shape
 

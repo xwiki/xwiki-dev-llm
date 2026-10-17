@@ -50,13 +50,13 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 
 ## Accessing / writing to the XWiki-run sites via REST
 
-xwiki.org, extensions, test, dev and design all run XWiki; program against the REST API (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
+xwiki.org, extensions, test, dev and design all run XWiki; program against the REST API
+(`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
 - **The sites sit behind Cloudflare, which blocks a browser-like `User-Agent`.** A `Mozilla/5.0 …
   Chrome/…` UA — or no UA at all — gets `403` on `/xwiki/rest/…`; the default `curl/8.x` UA gets
-  through, so **never dress the request up as a browser**. The same block fronts ci.xwiki.org
-  ([[jenkins]]): it is a farm-wide rule, not a doc-site one.
+  through, so **never dress the request up as a browser**. It fronts ci.xwiki.org too ([[jenkins]]).
 - **Only `/rest` honors HTTP Basic auth.** The `/bin/` (view/edit/save) endpoints resolve Basic-auth
   requests to `XWiki.Guest`, so a `form_token` scraped from a `/bin/edit` page is the *guest* token
   and gets rejected — authenticate and read/write through `/rest`.

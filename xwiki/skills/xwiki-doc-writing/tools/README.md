@@ -182,8 +182,7 @@ you never have to open the PNG to find out.
 
 - The **form token is session-bound**. `xwikidoc.py` keeps a cookie jar for that reason; without one,
   object writes fail intermittently with `403 Invalid or missing form token.`
-- xwiki.org REST is behind Cloudflare: it answers `403` both to a request with **no** `User-Agent`
-  and to one carrying a **browser-like** UA. The tools send `curl/8.0`; see `okf/servers/index.md`.
+- The tools send `curl/8.0` as User-Agent, the one Cloudflare lets through (`okf/servers/index.md`).
 - Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
   the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
 - A conversion also has to finish the **original** page — strip its prose, wire its "Documentation"
