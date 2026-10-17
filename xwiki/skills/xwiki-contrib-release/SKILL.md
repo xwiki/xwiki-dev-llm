@@ -141,7 +141,7 @@ the blog post, plus the extension page's "General Compatibility" if the parent w
 "Tested On" (append only).
 
 End with one table (`# | Change | URL`) of every page touched, one row per item, never grouped,
-no prose around it, each Change under 40 characters: a terminal renders a wider table as a list.
+no prose around it, short cells, URLs as `[short label](url)`: a terminal shows a wide table as a list.
 It covers the doc pages
 written or updated, the blog post to publish, the extensions.xwiki.org pages, and any other
 place (tracker versions and work packages, pull requests).
