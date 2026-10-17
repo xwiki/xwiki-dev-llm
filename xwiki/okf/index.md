@@ -38,8 +38,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   Velocity rules the topics below hold.
 - **code-comments** — what a comment must say, in every language: history, and referencing an issue.
 - **naming** — what to call a Maven artifact, an npm package, a property, a UIX id, a skin, an icon.
-- **frontend** — client-side code: JavaScript modules and WebJars, CSS as a skin extension, JS
-  backward compatibility, accessibility.
+- **frontend** — client-side code: JavaScript modules and WebJars, custom vs native events, CSS as a
+  skin extension, JS backward compatibility, accessibility.
 - **server-side-rendering** — what a wiki page, sheet or template emits: space gobbling and
   `$doc.display` eat the blank lines between generated blocks (*"cannot be used inline"*), and which
   Velocity lines need a closing `##`.
