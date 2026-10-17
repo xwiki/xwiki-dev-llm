@@ -65,9 +65,10 @@ So for a fixed issue of such an extension:
   extension page; that anchor no longer exists, so don't copy that form. Its **Reference
   Documentation** field, the counterpart of the JIRA `Documentation` field, holds the URL of the page
   documenting the work package, or `N/A` for a change no page describes.
-- **Nothing is owed until the version is released.** The version page is created by the Repository
-  application from the Maven repository once the artifacts are deployed, and the release itself is
-  announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
+- **The release-notes side is owed only once the version is released** (the reference
+  documentation is done before, in the `xwiki-contrib-release` preflight). The version page is
+  created by the Repository application from the Maven repository once the artifacts are deployed,
+  and the release itself is announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
 
 `verify:` read a version page's `notes` — under
 `/xwiki/rest/wikis/extensions/spaces/Extension/spaces/<Name>/spaces/Versions/spaces/<version>`,

@@ -10,7 +10,8 @@ extensions.xwiki.org* sections of https://contrib.xwiki.org/xwiki/bin/view/Main/
 Prefer it when this skill looks outdated; the skill adds the gotchas it does not spell out.
 
 A Nexus release can never be removed and the push lands on `master`. Being asked to release a named
-version is the go-ahead for steps 2–8; when a preflight check fails, stop and report.
+version is the go-ahead for steps 2–7 and for writing the documentation check 3 finds missing; when
+another preflight check fails, stop and report.
 
 ## 1. Preflight
 
@@ -23,9 +24,18 @@ tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or 
    `origin/master`, with `-DpushChanges=false`, and push by hand (step 3).
 2. **Every issue of the version is closed** (JIRA Fix Version / OpenProject version). Otherwise list
    the open ones and ask whether to move them.
-3. **The build is green**: CI on the `HEAD` commit, or while it's pending a local
+3. **Every change of the version is documented**, the users' and the administrators' sides both (an
+   admin UI gets admin pages): each issue or work package has its documentation field (JIRA
+   `Documentation`; OpenProject **Reference Documentation**, `okf/processes/release-notes.md`) set
+   to the page URL(s), or `N/A` when no page describes the change. Otherwise write or update the
+   pages with **xwiki-doc-writing** first, badging what is new
+   `{{version product="<extension>" since="X.Y"}}` (documenting before the release is accepted,
+   `okf/conventions/documentation.md`), fill the fields, read them back, then release. Left for
+   after the release, this step (which may need a local instance for screenshots) stalls the
+   hand-off while the version is already public and unannounced.
+4. **The build is green**: CI on the `HEAD` commit, or while it's pending a local
    `mvn clean verify -Pquality -B -ntp` (`release:prepare` skips tests).
-4. **`~/.m2/settings.xml` has the `xwiki-staging` server and a GPG setup** (`gpg.keyname`,
+5. **`~/.m2/settings.xml` has the `xwiki-staging` server and a GPG setup** (`gpg.keyname`,
    `gpg.passphrase`). Check with `grep -c`, **never print the secrets**. Missing: point the developer
    at the contrib guide (Nexus account, GPG key) and stop. With the automatic JIRA release
    (`xwiki.release.jira.skip` false), the JIRA credentials of
@@ -49,7 +59,7 @@ Expect two `[maven-release-plugin]` commits, with the tag on the first.
 ## 3. Push (with `-DpushChanges=false` only)
 
 `release:perform` checks the tag out of the remote. Re-check that `origin/master` hasn't moved, then
-`git push origin HEAD:master` and `git push origin <tag>`. If it moved, roll back (step 9) and restart.
+`git push origin HEAD:master` and `git push origin <tag>`. If it moved, roll back (step 8) and restart.
 
 ## 4. Perform
 
@@ -114,15 +124,7 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
   (find its `customFieldN` key in the work package schema) is the version page URL
   (`okf/processes/release-notes.md`), and read them back.
 
-## 8. Reference documentation
-
-Every change of the version is documented before it's announced, and the users' and the
-administrators' sides both count: an admin UI gets admin pages. For each issue or work package,
-write or update the pages with **xwiki-doc-writing**, then fill its documentation field with their
-URL, or `N/A` when no page describes the change (JIRA `Documentation`; OpenProject **Reference
-Documentation**, `okf/processes/release-notes.md`). Read them back.
-
-## 9. Recovering from a failed release
+## 8. Recovering from a failed release
 
 - Prepare failed: `mvn release:rollback`, then delete the tag (`git tag --delete <tag>`, and
   `git push origin :<tag>` if it was pushed): the rollback doesn't. Without `release.properties`,
@@ -130,10 +132,10 @@ Documentation**, `okf/processes/release-notes.md`). Read them back.
 - Perform failed after uploading: have someone with Nexus rights drop the staging repository. A
   version that reached the public repository can't be re-released: release `X.Y.1`.
 
-## 10. Hand off and report
+## 9. Hand off and report
 
 Draft the announcement from the release notes, show it to the developer, and create it with
 **xwiki-contrib-release-blog-post**. Report the tag, the Nexus check, the tracker changes, the
 extensions.xwiki.org state and release notes, and what the developer still owes. That covers saving
-the blog post, plus the extension-page documentation: "General Compatibility" if the parent was
-raised, and "Tested On" (append only).
+the blog post, plus the extension page's "General Compatibility" if the parent was raised, and
+"Tested On" (append only).
