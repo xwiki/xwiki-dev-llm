@@ -27,7 +27,7 @@ idiom. An empty body merely trades S1118 for a fresh S1186 (empty method), and a
 A private constructor does not strictly need Javadoc.
 
 **`FinalClass` follow-on — not optional, it is a build-breaker.** A class whose only constructor is now
-`private` trips Checkstyle `FinalClass` ("Class X should be declared as final") and `-Pquality` fails.
+`private` trips Checkstyle `FinalClass` ("Class X should be declared as final") and the build fails.
 Add `final` to the class **in the same edit**, after confirming it has no subclasses. This applies to
 inner holder classes too (`static class Holder` → `static final class Holder`, the init-on-demand
 idiom).

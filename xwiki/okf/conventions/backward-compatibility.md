@@ -12,7 +12,7 @@ sources:
 # Backward compatibility policy
 
 XWiki pays close attention to backward compatibility. The **Revapi** Maven plugin (run in the
-`quality` profile) fails the build when a public API change breaks compatibility. It checks:
+default build) fails the build when a public API change breaks compatibility. It checks:
 
 - **Binary** incompatibilities, and
 - **Semantic** incompatibilities.

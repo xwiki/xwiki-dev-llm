@@ -261,7 +261,7 @@ definitions.
 | `legacy`            | Includes backward-compatibility (`-legacy`) modules; almost always needed |
 | `integration-tests` | Activates integration-test (`*IT.java`) execution via Failsafe       |
 | `docker`            | Runs the Docker-based integration tests (requires Docker installed); used together with `integration-tests` |
-| `quality`           | Checkstyle + Revapi + Enforcer checks, **plus the JaCoCo coverage check** (see Notes) |
+| `quality`           | **The JaCoCo coverage check** and Javadoc generation (see Notes); Checkstyle, Revapi and the Enforcer already run without it |
 
 ## Notes
 

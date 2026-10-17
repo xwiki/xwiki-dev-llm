@@ -13,8 +13,8 @@ sources:
 ## Context
 
 XWiki has many downstream applications and extensions built on its public Java APIs, so breaking
-those APIs is costly for the ecosystem. The project uses the Revapi Maven plugin (in the `quality`
-profile) to detect incompatible public-API changes and fail the build. Revapi can check binary,
+those APIs is costly for the ecosystem. The project uses the Revapi Maven plugin (in the default
+build) to detect incompatible public-API changes and fail the build. Revapi can check binary,
 semantic, and source compatibility.
 
 ## Decision

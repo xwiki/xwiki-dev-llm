@@ -169,7 +169,8 @@ mvn clean install -B -ntp -Pquality,legacy \
   -pl <main-module-path>,<legacy-module-path>
 ```
 
-`-Pquality` is mandatory: it runs Revapi **and** the JaCoCo check (confirms the lowered ratio). Then
+`-Pquality` is mandatory: it adds the JaCoCo check (confirms the lowered ratio) to Revapi, which
+runs in any build. Then
 sanity-check the outcome with `javap` on the woven legacy classes: the main jar must no longer expose
 the API, and the legacy jar must re-add it.
 

@@ -31,12 +31,11 @@ skip tests to go green.
 ## `-Plegacy,quality` is mandatory
 
 Build every affected module in one reactor with **both** profiles: `-Plegacy` to include the
-`-legacy-*` modules, and `-Pquality` because that is where the gates live. See the `xwiki-build`
-skill for the command and the profile table.
+`-legacy-*` modules, and `-Pquality` for the coverage gate (Checkstyle, Revapi and the Enforcer run
+in the default build). See the `xwiki-build` skill for the command and the profile table.
 
 **`-Pquality` is not optional for a Sonar fix specifically**, because the `jacoco:check` goal that
-enforces each module's pinned `xwiki.jacoco.instructionRatio` runs only there — as do Revapi and the
-Enforcer. A fix that removes code can drop a module below its ratio and **fail in CI even though the
+enforces each module's pinned `xwiki.jacoco.instructionRatio` runs only there. A fix that removes code can drop a module below its ratio and **fail in CI even though the
 local `install` was green**. That failure is invisible without `-Pquality`.
 
 ## Removing covered instructions always lowers the ratio
@@ -110,4 +109,4 @@ the gate fails on years-old findings.
 - [[index]] — rule map, denylist, universal drop conditions.
 - [[strategy]] — XWiki's testing conventions and the coverage policy.
 - [[backward-compatibility]] — what Revapi treats as breaking.
-- [[code-style]] — the 120-column rule Checkstyle enforces in `quality`.
+- [[code-style]] — the 120-column rule Checkstyle enforces.

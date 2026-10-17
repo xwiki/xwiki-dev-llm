@@ -6,6 +6,7 @@ summary: Line length, license headers, the component system, the javax→jakarta
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCopyrightheaderinsourcefiles
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFileencoding
 ---
 
 # Code style and structural conventions
@@ -16,8 +17,8 @@ authoritative source of truth.
 
 ## Formatting
 
-- **Lines must not exceed 120 characters** in source files — enforced by Checkstyle in the `quality`
-  profile. Prose outside source files is never hard-wrapped (`instructions/xwiki-org.md`).
+- **Lines must not exceed 120 characters** in source files — enforced by Checkstyle, which runs in the
+  default build. Prose outside source files is never hard-wrapped (`instructions/xwiki-org.md`).
 - **LGPL license headers** are required on **every** file, configuration files and dotfiles (e.g.
   `.editorconfig`) included, unless its format has no comment syntax (e.g. JSON). `license-maven-plugin`
   only checks the files its includes match (POMs and some `src/**` types), so add a header by hand to
@@ -43,9 +44,12 @@ authoritative source of truth.
 
 ## File encoding
 
-- **Java sources: ASCII characters only** — use Unicode escapes inside strings and XML entities in
-  Javadoc (there are no `@author` tags, so this is rarely a constraint).
-- **Translation files: ASCII only with Unicode escapes** (stricter than the `.properties` spec).
+- **Java sources (main, test, AspectJ): UTF-8, non-ASCII allowed** — except invisible or ambiguous
+  characters (controls other than tab/LF/CR, U+00A0, U+00AD, zero-width, bidi controls, BOM), which
+  must be written `\uXXXX`: they hide bugs or malicious code from review. Checkstyle enforces it.
+- **`.properties` files, translation bundles included: ISO-8859-1**, the encoding they are loaded
+  with; anything outside it is written `\uXXXX`. Checkstyle fails the build on a UTF-8 one. The
+  repos' `.editorconfig` declares both rules, but agents do not honor it.
 - **Wiki document sources: UTF-8.**
 - Other XML files declare their encoding in the `<?xml?>` header, UTF-8 whenever possible; all other
   textual resources are UTF-8 with as few non-ASCII characters as possible.
@@ -77,8 +81,8 @@ The project is **migrating away from `javax.*` in favour of `jakarta.*`**. In ne
 
 ## Backward compatibility
 
-Public API changes are checked for binary/semantic compatibility by **Revapi** (in the `quality`
-profile). See [[backward-compatibility]] for the policy, the `@Unstable` lifecycle, the
+Public API changes are checked for binary/semantic compatibility by **Revapi**, which runs in the
+default build. See [[backward-compatibility]] for the policy, the `@Unstable` lifecycle, the
 default-method pattern for evolving interfaces, and who may use `internal` packages.
 
 ## Suppressing a static-analysis warning
