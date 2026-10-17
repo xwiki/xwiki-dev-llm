@@ -82,7 +82,7 @@ together.
 | `class` / `kind` | 1 `test-breakage`/`flicker`, 2 `build-break`/`unclassified`, 3 `infra`, 4 `timeout`, 5 `absence` |
 | `state` | `systematic`, `intermittent`, `single env`, `first seen`, the infra pattern, `absent` |
 | `ageDays`, `ageIsLowerBound` | days since the first bad build; `≥` when the history ran out first. The **current streak** in the builds Jenkins retains — `develocity.firstSeen` is when the failure started |
-| `beyondHorizon` | older than 7 days ⇒ **no write of any kind**, digest only |
+| `beyondHorizon` | older than 7 days ⇒ **no write of any kind**; a breakage can be `deep` |
 | `blame.tier` | `certain` \| `likely` \| `ambiguous` \| `none` \| `unknown` |
 | `fixState` | something already answers this incident — `fix-unbuilt` a commit CI has not built yet, `fix-in-flight` an open PR naming the test, `stale-snapshot` the job ran new test code against older jars, `announced` the room was told this failure was coming, `being-handled` somebody has said they are on it, `fixed-elsewhere` the same failure is green again on another branch ⇒ **one line, no analysis, no write** — unless `partial` (some tests are still unanswered) or a `candidate` you confirm first (§3) |
 | `fixState.fromChat` | the answer is a *sentence*, not a commit, a PR or a timestamp: suppresses like the others, **never the digest line** |

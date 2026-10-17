@@ -31,6 +31,35 @@ and stop as soon as the answers hold; every step is cheaper than the one after i
 
 A *Next* cell that sends a person to do one of these reads is a step this run skipped.
 
+### A long-standing breakage: date it from Develocity
+
+A `deep` incident `beyondHorizon` is a breakage older than anything Jenkins still holds, so its
+window is not in the work order. Nothing is written about it (SKILL.md, the horizon), but its cause,
+its culprit and what to do are still the paste's — it stays in the digest every morning until it is
+fixed. Every CI build scan carries its Jenkins job, build number and commit, so the window is two
+queries away:
+
+1. The first failing execution **on this branch**: the earliest occurrence whose `config` names the
+   branch, in the `develocity.report` failure group of this incident — its scan id and day.
+2. That build's job and number, and the commit of the job's previous build — through the
+   `develocity` MCP server:
+
+   ```sql
+   SELECT MAX(CASE WHEN cv.name = 'CI job' THEN cv.value END) AS job,
+          CAST(MAX(CASE WHEN cv.name = 'CI build number' THEN cv.value END) AS INTEGER) AS number,
+          MAX(CASE WHEN cv.name = 'Git commit id' THEN cv.value END) AS sha
+   FROM build_summary CROSS JOIN UNNEST(custom_values) AS t(cv)
+   WHERE build_start_date >= DATE '<day - 3>' AND build_start_date < DATE '<day + 1>'
+     AND cv.name IN ('CI job', 'CI build number', 'Git commit id')
+   GROUP BY build_id
+   HAVING MAX(CASE WHEN cv.name = 'CI job' THEN cv.value END) = '<job>'
+   ORDER BY number DESC
+   ```
+
+   `<job>` reads like `XWiki Environment Tests/xwiki-platform/stable-18.4.x`.
+3. `git log <previous sha>..<first failing sha>` in the checkout is the suspects' list; prove one
+   the way §4 says. The paste names it with the proof; no comment is posted.
+
 ## The Develocity history and the build scan
 
 | Field | Meaning |

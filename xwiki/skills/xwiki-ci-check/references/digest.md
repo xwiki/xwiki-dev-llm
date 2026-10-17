@@ -36,11 +36,12 @@ node <skill>/tools/ci-check.mjs --render-digest work-order.json --previous previ
 The tool writes the shape, because a digest re-invented every morning drifts from the dashboard it
 summarises: the grid pasted from `status.grid` (🔴 cannot be released as it stands, 🟠 red of any
 other kind, 🟢, ⚪ no build), `new`, `changed` and `fixed` one row each with its age and its links,
-one row per cause whatever its branch count, rows chosen as a break with an owner first, then a break
-without one, then what moved, then what went green — **the line the dashboard can never show** —
-with `same` and `beyondHorizon` collapsed to counts, the row of every `fixState.fromChat` incident
-kept whatever else is cut, and the full-snapshot line when the room could not be read. Leave all of
-that as it is, and fill or delete the markers:
+one row per cause whatever its branch count, rows chosen as a break with an owner first, then a
+break without one, then what moved, then what went green — **the line the dashboard can never show**
+— with `same` and `beyondHorizon` collapsed to counts, except a release blocker that has not moved,
+which keeps a ⏳ row every morning until it is fixed (`stuck`), however old; the row of every
+`fixState.fromChat` incident kept whatever else is cut, and the full-snapshot line when the room
+could not be read. Leave all of that as it is, and fill or delete the markers:
 
 | Marker | What replaces it |
 |---|---|
@@ -49,9 +50,10 @@ that as it is, and fill or delete the markers:
 | `<!-- STABILISE: … -->` | the row of the stabilisation PR §5 opened, or nothing |
 | `<!-- SILENT: … -->` | see below |
 
-- **`SILENT` means post nothing at all** — no digest, no green line, no "still 3 red". A morning that
-  moved nothing is a morning the room does not need to hear from: the correct outcome, not a missed
-  run, and the terminal report says so. The paste and the commit comments still run.
+- **`SILENT` means post nothing at all** — no digest, no green line, no "still 3 red". A morning
+  that moved nothing, with nothing blocking a release, is a morning the room does not need to hear
+  from: the correct outcome, not a missed run, and the terminal report says so. The paste and the
+  commit comments still run.
 - **A stabilisation PR is news, and it makes the morning non-silent.** The one thing here a
   dashboard could never print is a fix, so it gets its row — *"→ draft fix for `ImageIT#editImage`:
   forced race red 4/4 → green 4/4 on Chrome, XWIKI-24749"* — and nothing else about that flicker is

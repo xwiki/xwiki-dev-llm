@@ -1974,7 +1974,11 @@ async function investigate(incident, job, args) {
     return;
   }
   if (incident.beyondHorizon) {
-    incident.blame = { tier: 'none', reason: `older than the ${args.horizon}-day horizon`, suspects: [] };
+    incident.blame = {
+      tier: 'none', suspects: [],
+      reason: `older than the ${args.horizon}-day horizon: nothing is written, and its start is older than `
+        + 'what Jenkins retains — references/deep-analysis.md dates it from Develocity'
+    };
     return;
   }
   if (!args.github || !token) {
@@ -2539,7 +2543,7 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
       lines.push(`someone → re-triage ${jiraKey(incident)}: filed as a flicker, failing every run`);
     }
   }
-  if (incident.deep && !settled(incident) && !incident.beyondHorizon) {
+  if (incident.deep && !settled(incident)) {
     lines.push(`<!-- NEXT: ${incident.id} -->`);
   } else if (!lines.length) {
     lines.push(`nobody → ${noOneOwes(incident, horizonDays)}`);
@@ -2876,10 +2880,18 @@ function deltaOf(report, previous) {
   const fixed = [];
   let same = 0;
   let longStanding = 0;
+  // What blocks a release and has not moved: the delta alone would make it go quiet after its first
+  // morning, and a break nobody fixes must keep being said until it is (Vincent, 2026-10-17).
+  const stuck = [];
+  const blocking = incident => unreleasable(incident) && incident.primary !== false && !settled(incident);
   for (const incident of report.incidents || []) {
     state[incident.id] = stateLine(incident);
     const now = parseLine(state[incident.id]);
-    if (now.beyondHorizon) { longStanding++; continue; }
+    if (now.beyondHorizon) {
+      longStanding++;
+      if (blocking(incident)) stuck.push(incident.id);
+      continue;
+    }
     const was = before.get(incident.id);
     if (!was) {
       appeared.push({ id: incident.id, kind: now.kind, state: now.state, answer: now.answer || null,
@@ -2893,8 +2905,10 @@ function deltaOf(report, previous) {
     if (moves.length) {
       changed.push({ id: incident.id, from: was.line, to: state[incident.id], moved: moves,
         dot: DOTS[unreleasable(incident) ? 'red' : 'orange'] });
+    } else {
+      same++;
+      if (blocking(incident)) stuck.push(incident.id);
     }
-    else same++;
   }
   for (const [id, was] of before) {
     if (was.beyondHorizon || state[id]) continue;
@@ -2907,7 +2921,7 @@ function deltaOf(report, previous) {
     return {
       previous: { available: false, at: null, known: 0, reason: previous?.reason ?? null },
       silent: false,
-      new: [], changed: [], fixed: [], same: 0,
+      new: [], changed: [], fixed: [], same: 0, stuck: [],
       unknown: Object.keys(state).length,
       longStanding,
       status: statusOf(report),
@@ -2919,11 +2933,12 @@ function deltaOf(report, previous) {
     previous: { available, at: previous?.at ?? null, known: before.size },
     // Nothing to say is the correct outcome, and the one the whole change exists to produce. It is
     // never reached on an unknown yesterday, whatever today looks like.
-    silent: available && !appeared.length && !changed.length && !fixed.length,
+    silent: available && !appeared.length && !changed.length && !fixed.length && !stuck.length,
     new: appeared,
     changed,
     fixed,
     same,
+    stuck,
     longStanding,
     status: statusOf(report),
     state,
@@ -2967,6 +2982,9 @@ function doneOf(incident, report) {
     return `<!-- DONE: ${incident.id} -->`;
   }
   if (incident.recalled) return `as concluded on ${incident.recalled.analysedOn} — in the paste`;
+  if (incident.silent) return linked('already commented', incident.notified?.url);
+  // Beyond the horizon the analysis is the paste's alone: nothing was posted, whoever it names.
+  if (incident.beyondHorizon && incident.deep) return 'long-standing: cause and owner in the paste';
   if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
   return incident.deep ? 'no owner found' : 'in the paste, not analysed';
 }
@@ -3064,13 +3082,20 @@ function renderDigest(report, previous, { paste = null } = {}) {
   const chatRows = incidents.filter(incident => settled(incident) && incident.fixState.fromChat
     && incident.primary !== false && !incident.beyondHorizon && !shown.some(row => row.incident === incident))
     .map(incident => line('', incident));
-  const kept = [...shown.map(({ incident, mark, moves }) => line(mark, incident, moves)), ...greenRows];
+  // Still blocking a release, unchanged: one ⏳ row each, its age saying how long it has been.
+  const stuckRows = (delta.stuck || []).map(id => byId.get(id)).filter(Boolean)
+    .filter(incident => !rows.has(incident.id)).slice(0, 3).map(incident => line('⏳', incident));
+  const kept = [...shown.map(({ incident, mark, moves }) => line(mark, incident, moves)), ...stuckRows, ...greenRows];
   const more = moved.length - shown.length;
   const counts = delta.previous.available
     ? `${delta.new.length} new, ${delta.changed.length} changed, ${delta.fixed.length} fixed`
+      + (delta.stuck?.length ? `, ${delta.stuck.length} still blocking` : '')
     : `${delta.unknown} red`;
-  const tail = [more ? `${more} more in the paste` : null, delta.same ? `${delta.same} unchanged` : null,
-    delta.longStanding ? `+${delta.longStanding} long-standing` : null].filter(Boolean);
+  const stuckLong = (delta.stuck || []).filter(id => byId.get(id)?.beyondHorizon).length;
+  const sameLeft = delta.same - ((delta.stuck || []).length - stuckLong);
+  const longLeft = delta.longStanding - stuckLong;
+  const tail = [more ? `${more} more in the paste` : null, sameLeft ? `${sameLeft} unchanged` : null,
+    longLeft ? `+${longLeft} long-standing` : null].filter(Boolean);
   return [
     ...(delta.silent ? ['<!-- SILENT: nothing moved since the last digest. Post nothing, unless §5 opened a '
       + 'stabilisation PR: then fill STABILISE, delete this line, and post. -->', ''] : []),
@@ -3305,9 +3330,15 @@ for (const incident of incidents) {
     incident.recalled = { analysedOn: entry.analysedOn, why: entry.why, next: entry.next, analysis: entry.analysis };
   }
 }
-const deep = incidents.filter(incident => incident.alerting && !incident.beyondHorizon
+// Beyond the horizon nothing is *written*, but a break that is still there is still worth knowing
+// the cause of: 16.10.x's ObjectEditorIT failed every Firefox run for four weeks and every morning
+// said "counted, not written about". So a long-standing breakage — not a flicker, which is the
+// stabilisation slot's — competes for what slots the recent incidents leave.
+const longStanding = incident => incident.beyondHorizon && unreleasable(incident);
+const deep = incidents.filter(incident => incident.alerting && (!incident.beyondHorizon || longStanding(incident))
   && !settled(incident) && incident.primary !== false && !incident.recalled)
-  .sort((a, b) => gateFirst(a) - gateFirst(b)).slice(0, args.budget);
+  .sort((a, b) => Number(!!a.beyondHorizon) - Number(!!b.beyondHorizon) || gateFirst(a) - gateFirst(b))
+  .slice(0, args.budget);
 for (const incident of deep) {
   incident.deep = true;
   await investigate(incident, jobsById.get(incident.id), args);
