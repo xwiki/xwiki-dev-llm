@@ -30,7 +30,13 @@
  *   node commit-comment.mjs --work-order work-order.json --incident <id> --sha <sha> --file body.md [--write]
  *   node commit-comment.mjs --work-order work-order.json --incident <id> --pr 5928 --file body.md
  *
+ *   node commit-comment.mjs … --sha <suspect> --proof reproduced|in-diff|diff-link --why "<one sentence>"
+ *
  * `--repo` and `--state` default to the incident's; given, they must match it.
+ *
+ * `--proof` is for an incident carrying `provable` rather than `commentable`: the tool could not
+ * pick a culprit, and the run proved one among its suspects. The sha must be one of them, and the
+ * comment carries the proof's kind and `--why` under the body.
  *
  * `--pr` posts the same comment, with the same marker and the same idempotency, on a pull request
  * instead of a commit. It exists for the quality gate: the issues that fail it were introduced in a
@@ -60,19 +66,48 @@ const FOOTER = '_Posted by the automated `xwiki-ci-check` sweep. If the attribut
 const MARKER_RE = /<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/g;
 
 /**
+ * What a proof may claim. `reproduced` and `in-diff` are observations a reader can repeat, so the
+ * comment may state the cause, as for a `certain` tier; `diff-link` is a reading of the diff, so it
+ * may only ask, as for `likely` (references/commit-comment.md).
+ */
+export const PROOFS = { reproduced: 'certain', 'in-diff': 'certain', 'diff-link': 'likely' };
+const PROOF_LABELS = {
+  reproduced: 'reproduced: fails with this commit, passes without it',
+  'in-diff': 'the failure is on lines this commit changed',
+  'diff-link': 'read from the diff, not reproduced'
+};
+
+/**
+ * The target of a comment on a culprit the model proved among the tool's suspects, an explanation
+ * of why there is none, or null when the incident is not `provable` at all.
+ */
+function provenTarget(found, { sha, pr, proof, why }) {
+  if (!found.provable) return null;
+  if (pr) return 'a proven culprit is a commit: pass --sha';
+  if (!PROOFS[proof]) return `a culprit the tool did not pick needs --proof ${Object.keys(PROOFS).join('|')}`;
+  if (!why || why.trim().length < 20) return '--why must say, in one sentence, what links the commit to the failure';
+  const suspect = found.provable.suspects.find(entry => sha && sha.length >= 7 && entry.sha.startsWith(sha));
+  if (!suspect) {
+    return `${sha} is not one of the incident's suspects — a proof picks among them, never outside the window`;
+  }
+  return { repo: found.provable.repo, state: found.provable.state, sha: suspect.sha, tier: PROOFS[proof], proof, why };
+}
+
+/**
  * Why the work order does not allow this comment, or null when it does.
  *
  * @param {object} report the work order `ci-check.mjs` printed
  * @param {{incident: string, repo?: string, state?: string, sha?: string, pr?: string}} options
  */
-export function refusal(report, { incident, repo, state, sha, pr }) {
+export function refusal(report, { incident, repo, state, sha, pr, proof, why }) {
   const found = (report?.incidents || []).find(entry => entry.id === incident);
   if (!found) return `incident ${incident} is not in the work order`;
   if (found.commentedWith) {
     return `one comment per commit per run (SKILL.md §4): this incident goes in the comment of ${found.commentedWith}`
       + ' — write both into that one body';
   }
-  const target = found.commentable;
+  const target = found.commentable || provenTarget(found, { sha, pr, proof, why });
+  if (typeof target === 'string') return target;
   if (!target) return 'the work order does not make this incident commentable (SKILL.md §4)';
   if (repo && repo !== target.repo) return `the incident is in ${target.repo}, not ${repo}`;
   if (state && state !== target.state) return `the incident's state is ${target.state}, not ${state}`;
@@ -100,7 +135,8 @@ async function github(path, init = {}) {
  * @returns {Promise<{posted: boolean, url: string|null, reason: string}>} `posted: false` with a
  *   reason is a normal outcome, not an error: staying silent is the point of the marker.
  */
-export async function comment(repo, sha, incident, state, body, { write = false, pr = null, covers = [] } = {}) {
+export async function comment(repo, sha, incident, state, body,
+  { write = false, pr = null, covers = [], proven = null } = {}) {
   // One target, two URLs. A PR's comments are issue comments; a commit's are its own — everything
   // else about this function, the marker included, is identical, because "have we said this
   // already" must not depend on where we said it.
@@ -117,7 +153,10 @@ export async function comment(repo, sha, incident, state, body, { write = false,
     }
   }
   const markers = [marker(incident, state), ...covers.map(other => marker(other.id, other.state))].join('\n');
-  const full = `${body.trimEnd()}\n\n${FOOTER}\n\n${markers}\n`;
+  // A culprit the tool did not pick is named on the strength of a proof, so the proof is printed
+  // where the person it names reads it — by the tool, not left to the wording of the day.
+  const proof = proven ? `\n\n**Why this commit** (${PROOF_LABELS[proven.proof]}): ${proven.why.trim()}` : '';
+  const full = `${body.trimEnd()}${proof}\n\n${FOOTER}\n\n${markers}\n`;
   if (!write) {
     console.log(`--- would comment on ${human} ---\n${full}`);
     return { posted: false, url: null, reason: 'rehearsal — pass --write to post' };
@@ -146,6 +185,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--incident') options.incident = argv[++i];
     else if (argv[i] === '--state') options.state = argv[++i];
     else if (argv[i] === '--file') options.file = argv[++i];
+    else if (argv[i] === '--proof') options.proof = argv[++i];
+    else if (argv[i] === '--why') options.why = argv[++i];
     else if (argv[i] === '--write') options.write = true;
     else if (argv[i] === '--dry-run') options.write = false;
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
@@ -166,10 +207,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`not posted: ${refused}`);
     await exitAfterOutput(0);
   }
-  const { commentable } = report.incidents.find(entry => entry.id === options.incident);
-  options.repo ??= commentable.repo;
-  options.state ??= commentable.state;
-  options.covers = commentable.covers || [];
+  const found = report.incidents.find(entry => entry.id === options.incident);
+  const target = found.commentable || provenTarget(found, options);
+  options.repo ??= target.repo;
+  options.state ??= target.state;
+  options.covers = target.covers || [];
+  options.proven = target.proof ? target : null;
   if (!token && options.write) {
     console.error('GH_TOKEN_BOT is not set. This tool posts as the CI bot and will not fall back to a '
       + 'personal token — set the bot token, or drop --write.');

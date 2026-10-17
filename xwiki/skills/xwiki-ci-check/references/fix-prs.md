@@ -42,8 +42,15 @@ xmvn clean install -B -ntp -pl <module-path> -Plegacy,quality
 ```
 
 Always `clean`, always `-Pquality` (`xwiki-build` owns these commands; `xmvn` picks the branch's
-JDK). **The functional tests are not run** — they take hours. So the PR must **assign the culprit
-author** and say plainly, in its body, that the ITs were not run and the author should verify before
+JDK). **The failing module is not the whole break when the culprit changed something shared** — a
+lint rule, a Checkstyle setting, a parent pom: a build stops at its first failure, so the modules
+after it were never checked. Build every module that consumes what the culprit changed, and fix
+them in the same PR; on 2026-10-17 a fix verified on `xwiki-platform-node` alone merged, and the next
+build failed on the same rule in `xwiki-platform-localization-webjar`.
+
+**The functional tests are not run** — they take hours. So the PR must **assign the culprit
+author** — the `commentable` culprit or the one a proof singled out (§4), and nobody when there is
+neither — and say plainly, in its body, that the ITs were not run and the author should verify before
 merging. Jenkins does not build PRs, so there is no free oracle: this verification is the only one.
 Follow `xwiki-pull-request` for the commit message and the description.
 

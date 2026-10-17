@@ -1,7 +1,7 @@
 # Writing and posting the commit comment
 
 Read by `xwiki-ci-check` (SKILL.md §4) before writing any commit comment, in either mode — on an
-incident carrying `commentable`. The rules SKILL.md §4 states inline hold whatever this file says.
+incident carrying `commentable` or `provable`. The rules SKILL.md §4 states inline hold whatever this file says.
 § numbers are those of SKILL.md.
 
 The target is **the commit on GitHub**, never the PR (merged and irrelevant) and never JIRA — with
@@ -22,7 +22,31 @@ come from mechanical matches (a file touched, a library named), and a match is n
 culprit's diff against what the failing test does and where it fails, and write **one sentence
 naming the concrete link** — *"this commit changed `X`, which the failing step calls at `Y`"* —
 which goes in the comment. If you cannot, there is no comment: the incident is *no owner found*, and
-the paste says why the candidate was dropped. You may downgrade a tier this way, never upgrade one.
+the paste says why the candidate was dropped. You may downgrade a tier this way.
+
+## Proving a culprit the tool could not pick (`provable`)
+
+File overlap is conservative: two commits touching one module is `ambiguous`, even when the failure
+names lines only one of them wrote. A deep incident in that state carries `provable.suspects`, and
+**finding which one did it is your job**, not a reason to stop. Pick among those suspects only —
+never anyone outside the window, never on who pushed that day — and with one of three proofs, which
+set the wording as a tier would:
+
+| `--proof` | What you established | Wording |
+|---|---|---|
+| `reproduced` | the failure reproduces with the commit and not at its parent (or a bisect over the suspects lands on it) — cheap for a build break: one module's build | **state it**, as `certain` |
+| `in-diff` | the file *and* line or symbol the evidence names are in this commit's diff, and in no other suspect's | **state it**, as `certain` |
+| `diff-link` | a reading of the diff: what it changed is what the failing step uses | **ask**, as `likely` |
+
+```bash
+node <skill>/tools/commit-comment.mjs --work-order work-order.json --incident "<incident.id>" \
+  --sha <suspect sha> --proof in-diff --why "<the one sentence linking the diff to the failure>" \
+  --file body.md [--write]
+```
+
+The tool refuses a sha that is not a suspect and a comment without `--proof` and `--why`, and prints
+the proof under the body — the person it names sees what it rests on. When no proof holds, the
+incident is *no owner found* and the paste says which suspects you ruled out and how.
 
 The tool attributes nothing to a test with an open or closed flicker issue (`jira`, `jiraClosed`),
 or to a `single env` failure that passes in some builds — unless it is now `systematic`: then treat
@@ -40,7 +64,7 @@ asks**, and never says the commit broke anything. It is still worth sending: a d
 the one break whose author can confirm or dismiss it in a minute.
 
 A system that asserts wrongly is switched off after one mistake; a system that asks is forgiven. The
-tier is the whole of that difference, so never upgrade the wording.
+tier — or the proof — is the whole of that difference, so never word a comment beyond it.
 
 Keep the comment short and self-contained: what is failing (the test count, not forty names) and on
 which branches (`alsoOn`), since when, the evidence line, the build URL, and what you are asking

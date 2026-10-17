@@ -144,6 +144,16 @@ const INFRA_PATTERNS = [
   { id: 'disk-full', re: /No space left on device/ }
 ];
 
+const ESLINT_PROBLEM_RE = /\[INFO\]\s+\d+:\d+\s+error\s{2,}\S.*\s{2,}\S+\s*$/;
+const ESLINT_FILE_RE = /\[INFO\]\s+(\S+\.(?:vue|[cm]?[jt]sx?))\s*$/;
+
+/** The file an ESLint problem line belongs to: the path line above its run of problem lines. */
+function eslintFile(lines, index) {
+  let above = index - 1;
+  while (above >= 0 && ESLINT_PROBLEM_RE.test(lines[above])) above--;
+  return lines[above]?.match(ESLINT_FILE_RE)?.[1] ?? null;
+}
+
 // Ordered: the first matcher that hits names the break. Each one's `locate` turns the matched line
 // into a signature stable across builds — the tool plus *where*, never the message, which often
 // carries a count or a timestamp.
@@ -206,6 +216,26 @@ const BREAK_MATCHERS = [
     re: /\[ERROR\].*(?:There are test failures|Execution default-test of goal|surefire).*(?:forked VM|crashed)/,
     locate: () => 'surefire:vm-crash',
     file: () => null
+  },
+  {
+    // A type error in a node module, in either of TypeScript's formats: `file.ts(12,5): error TS…`
+    // and, pretty-printed, `file.ts:12:5 - error TS…`. Like ESLint's, it reaches the Maven log at
+    // `[INFO]` and would otherwise be signed by the reactor's resume line.
+    tool: 'tsc',
+    re: /(\S+\.(?:[cm]?tsx?|vue))(?:\((\d+),\d+\)|:(\d+):\d+)\s*[:-]\s*error\s+TS\d+/,
+    locate: m => `tsc:${basename(m[1])}:${m[2] || m[3]}`,
+    file: m => m[1]
+  },
+  {
+    // A lint failure of a node module (`pnpm run lint`), as ESLint's default formatter prints it:
+    // the file on a line of its own, then one `line:col  error  message  rule` line per problem —
+    // all at `[INFO]`, since it is the frontend plugin's output. Without it the break fell through
+    // to `maven-reactor`, whose module (`xwiki-platform-node`) every front-end commit touches, so
+    // a break naming its file and its line came back `ambiguous` and nobody was pinged.
+    tool: 'eslint',
+    re: ESLINT_PROBLEM_RE,
+    locate: (m, lines, index) => `eslint:${basename(eslintFile(lines, index) || 'unknown')}`,
+    file: (m, lines, index) => eslintFile(lines, index)
   },
   {
     // Names the module but not the cause, which every matcher above does better — so it is `weak`:
@@ -358,6 +388,9 @@ const keep = lines => {
   lines.forEach((line, index) => {
     if (!LOG_PATTERNS.some(pattern => pattern.test(line))) return;
     wanted.add(index);
+    // The file an ESLint problem is about is the line above it, which no pattern can match alone:
+    // a bare `[INFO] <path>.js` is printed by plenty of plugins that are not reporting anything.
+    if (ESLINT_PROBLEM_RE.test(line) && ESLINT_FILE_RE.test(lines[index - 1] || '')) wanted.add(index - 1);
     if (!NAMED_PATTERNS.some(pattern => pattern.test(line))) return;
     for (let next = index + 1; next < lines.length && next <= index + CONTINUATION_LINES; next++) {
       if (endsContinuation(lines[next])) break;
@@ -385,8 +418,10 @@ function classify(lines, nodeError, at, stage, { weak = false } = {}) {
       const match = candidates[index].match(matcher.re);
       if (match) {
         return {
-          kind: 'build-break', signature: at(matcher.locate(match)), file: matcher.file(match), stage,
-          evidence: evidenceFrom(candidates, index, matcher)
+          kind: 'build-break', signature: at(matcher.locate(match, candidates, index)),
+          file: matcher.file(match, candidates, index), stage,
+          // An ESLint problem is quoted with the file line above it, which says what it is about.
+          evidence: evidenceFrom(candidates, matcher.tool === 'eslint' && index > 0 ? index - 1 : index, matcher)
         };
       }
     }
@@ -477,6 +512,8 @@ const detailOf = (repo, sha) => {
  * populated its `author.fullName` is frequently `noreply`, GitHub's merge-commit author. One
  * mechanism that works everywhere beats two that each work somewhere.
  */
+const BOT_LOGIN = /\[bot\]$|^xwikiorg-llm-bot$/i;
+
 async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) {
   const data = await github(`/repos/xwiki/${repo}/compare/${baseSha}...${headSha}`);
   if (!data?.commits) return [];
@@ -487,8 +524,10 @@ async function commitsBetween(repo, baseSha, headSha, { maxCommits = 20 } = {}) 
       sha: commit.sha,
       short: commit.sha.slice(0, 10),
       // `author` is the GitHub account; `commit.author` is the git identity, which for a merged PR
-      // is often GitHub's `noreply` robot. Prefer the account, and never ping a `noreply`.
-      author: commit.author?.login || null,
+      // is often GitHub's `noreply` robot. Prefer the account, and never ping a `noreply`. Nor a bot:
+      // a merged fix PR of this very routine is authored by `xwikiorg-llm-bot`, and was once the only
+      // suspect of the break it had uncovered (2026-10-17).
+      author: BOT_LOGIN.test(commit.author?.login || '') ? null : commit.author?.login || null,
       gitAuthor: commit.commit?.author?.name || null,
       title: (commit.commit?.message || '').split('\n')[0].slice(0, 120),
       url: commit.html_url,
@@ -577,7 +616,11 @@ const GENERIC = new Set(['xwiki', 'maven', 'java', 'core', 'test', 'tests', 'api
  * revapi and reactor break came back `ambiguous` with the commit that caused it in the list.
  */
 function blameKeys(incident) {
-  if (incident.file) return { paths: [basename(incident.file)], words: [] };
+  // A lint error also names its rule, and a commit that enables a rule says so in its subject —
+  // while the file it fails on may not have changed in months (`l10n.ts`, 2026-10-17).
+  const rules = (incident.evidence || []).map(line => line.match(ESLINT_PROBLEM_RE) && line.trim().split(/\s+/).pop())
+    .filter(rule => rule && rule.includes('/') && !rule.startsWith('prettier/'));
+  if (incident.file) return { paths: [basename(incident.file)], words: [...new Set(rules)] };
   // A test's own file, and the package directory it lives in — which is where its page objects and
   // fixtures sit too, and those break a test as readily as the test itself.
   const paths = (incident.tests || []).slice(0, 20).flatMap(id => {
@@ -1548,6 +1591,11 @@ async function discover(repos, only) {
       if (targets.has(`xwiki-platform/${branch}`)) add('xwiki-platform', branch, 'env-tests', ENV_TESTS_FOLDER);
     }
   }
+  // The security-only LTS line is not swept at all, unless named: it takes security fixes only, so a
+  // red test there is nobody's daily work, and it filled the paste with the same long-standing rows
+  // every morning (16.10.x, October 2026). The digest already withholds it (`publicView`).
+  const retired = securityOnly([...targets.values()].map(target => target.branch)).filter(branch => branch !== only);
+  for (const key of [...targets.keys()]) if (retired.includes(targets.get(key).branch)) targets.delete(key);
   const policy = new Map(withPolicy([...new Set([...targets.values()].map(t => t.branch))])
     .map(entry => [entry.branch, entry]));
   return [...targets.values()].map(target => ({ ...target, ...policy.get(target.branch) }));
@@ -1676,11 +1724,25 @@ async function breakWindow(job, latest, signature, maxConsole) {
     if (read >= maxConsole) return at(firstBad, null, true);
     read++;
     const { signature: older } = await diagnose(`${job.url}/${build.number}`);
-    // A different cause: the current break starts at the build after this one.
-    if (older !== signature) return at(firstBad, build, false);
+    // A different cause is not where this one starts: a broken build stops at its first failure, so
+    // everything after it went unbuilt and this break may have been there, hidden. On 2026-10-17 the
+    // run fixed a lint error in `xwiki-platform-node`; the next build reached
+    // `xwiki-platform-localization-webjar` and failed on the very ESLint rule the same commit had
+    // enabled — and a window cut at the masking build held only the bot's own fix. So the window
+    // reaches back to the last build that got past every module, and says what masked it.
+    if (older !== signature) {
+      return { ...maskedWindow(job, build, firstBad, at), masked: { by: older, build: build.number } };
+    }
     firstBad = build;
   }
   return at(firstBad, null, true);
+}
+
+/** The window of a break hidden by an older, different one: back to the last build that completed. */
+function maskedWindow(job, masking, firstBad, at) {
+  const older = job.builds.slice(job.builds.indexOf(masking) + 1);
+  const completed = older.find(build => build.result === 'SUCCESS' || build.result === 'UNSTABLE');
+  return completed ? at(firstBad, completed, false) : at(firstBad, null, true);
 }
 
 // ---- Incident assembly -----------------------------------------------------------------------
@@ -1863,7 +1925,8 @@ const ageOf = window => ({
   buildUrl: window.jobUrl && window.firstBad ? `${window.jobUrl}/${window.firstBad.number}` : null,
   lastGoodBuild: window.lastGood?.number ?? null,
   ageDays: window.firstBad ? daysSince(window.firstBad.timestamp) : null,
-  ageIsLowerBound: window.atLeast
+  ageIsLowerBound: window.atLeast,
+  maskedBy: window.masked
 });
 
 // ---- Blame + dedupe pass ---------------------------------------------------------------------
@@ -2057,7 +2120,9 @@ function windowOf(incident) {
   if (incident.firstBadBuild == null) return null;
   return incident.lastGoodBuild == null
     ? `failing in every build examined, back to #${incident.firstBadBuild} — start not established`
-    : `since #${incident.firstBadBuild}, last good #${incident.lastGoodBuild}`;
+    : `since #${incident.firstBadBuild}, last good #${incident.lastGoodBuild}`
+      + (incident.maskedBy ? ` — #${incident.maskedBy.build} stopped earlier, on \`${incident.maskedBy.by}\`,`
+        + ' so this may have been there, hidden: the window reaches back past it' : '');
 }
 
 const testName = id => {
@@ -2432,7 +2497,7 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
   } else if (!incident.beyondHorizon) {
     if (incident.silent) {
       lines.push('done → already commented, in this same state');
-    } else if (incident.commentable) {
+    } else if (incident.commentable || incident.provable) {
       // Whether the comment goes is the run's decision (§4 may drop the culprit), so a line saying
       // it went would be false the moment it does not: the run fills this in once it has decided.
       lines.push(`<!-- COMMENT: ${incident.id} -->`);
@@ -2631,9 +2696,10 @@ function renderDetail(report, { live }) {
       `${named.length ? ` (${named.join(', ')})` : ''}.`);
   }
   const deep = incidents.filter(incident => incident.deep);
-  const noOwner = deep.filter(incident => ['ambiguous', 'none', 'unknown'].includes(incident.blame?.tier));
-  notes.push(`**Nobody was pinged for ${noOwner.length} of the ${deep.length} analysed** — no attributable` +
-    ` author. **${summary.alreadyCommented}** already carried a comment in the same state,` +
+  // Only what the tool knows: whether a comment then goes is the run's decision, in each COMMENT cell.
+  const noOwner = deep.filter(incident => !incident.commentable && !incident.provable && !incident.commentedWith);
+  notes.push(`**No culprit candidate for ${noOwner.length} of the ${deep.length} analysed** — no commit` +
+    ` to attribute them to. **${summary.alreadyCommented}** already carried a comment in the same state,` +
     ` **${summary.beyondHorizon}** are older than the ${report.horizonDays}-day horizon, and` +
     ` **${Math.max(0, summary.incidents - deep.length - incidents.filter(settled).length -
       incidents.filter(incident => incident.primary === false).length)}** were below the deep budget` +
@@ -2847,7 +2913,8 @@ function doneOf(incident, report) {
   }
   // What the run itself may have done — commented, filed, commented on a closed issue, confirmed a
   // candidate PR — is known only once it has done it.
-  if (incident.commentable || incident.commentedWith || incident.flickerGroup || incident.jiraClosed || fix?.candidate) {
+  if (incident.commentable || incident.provable || incident.commentedWith || incident.flickerGroup
+    || incident.jiraClosed || fix?.candidate) {
     return `<!-- DONE: ${incident.id} -->`;
   }
   if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
@@ -2913,7 +2980,7 @@ function renderDigest(report, previous, { paste = null } = {}) {
   } else {
     for (const incident of incidents) put(incident, '');
   }
-  const owned = incident => !!(incident.commentable || incident.commentedWith);
+  const owned = incident => !!(incident.commentable || incident.provable || incident.commentedWith);
   const rank = ({ incident }) => (unreleasable(incident) ? (owned(incident) ? 0 : 1) : 2);
   const moved = [...rows.values()].sort((a, b) => rank(a) - rank(b) || rowRank(a.incident) - rowRank(b.incident));
 
@@ -3452,6 +3519,7 @@ for (const incident of incidents) {
   incident.commentable = commentTarget(incident);
 }
 oneCommentPerCommit(incidents);
+for (const incident of incidents) incident.provable = provableTarget(incident);
 
 /**
  * At most one comment per commit per run (§4): a gate whose PR squashed into the commit a build
@@ -3508,6 +3576,25 @@ function commentTarget(incident) {
   return { ...at, sha: culprit.sha, author: culprit.author || null, url: culprit.url };
 }
 
+/**
+ * Where a comment may go once the model has *proven* a culprit the tool could not pick.
+ *
+ * File overlap is conservative by construction: two commits touching one module is `ambiguous`,
+ * even when the failure names the very lines one of them wrote (2026-10-17, `xwiki-platform-node`:
+ * the run reproduced the lint error on b565ea607d's lines, assigned its fix PR to its author, and
+ * the digest still said "no owner found"). So a deep, unanswered, `ambiguous` incident lists the
+ * suspects a proof may pick from — never anyone outside the window — and `commit-comment.mjs`
+ * refuses a comment that does not name the proof it rests on (references/commit-comment.md).
+ */
+function provableTarget(incident) {
+  if (!incident.deep || incident.commentable || incident.commentedWith || settled(incident)
+    || incident.primary === false || incident.silent || incident.beyondHorizon || isGate(incident)) return null;
+  if (incident.blame?.tier !== 'ambiguous') return null;
+  const suspects = (incident.blame.suspects || []).filter(commit => commit.author).slice(0, 20)
+    .map(commit => ({ sha: commit.sha, short: commit.short, author: commit.author, url: commit.url }));
+  return suspects.length ? { repo: incident.repo, state: incident.state, suspects } : null;
+}
+
 const jobStatus = [];
 for (const target of targets) {
   for (const job of await Promise.all(target.jobs.map(j => jobHistory(j, args.history)))) {
@@ -3540,7 +3627,8 @@ function toRead(incidents, stabilise) {
   when(live.some(incident => incident.fixState?.candidate || incident.fixState?.kind === 'fixed-elsewhere'
     || incident.jiraClosed), 'fix-signals.md',
   'before the line or Next cell of a candidate fix-in-flight, a fixed-elsewhere or a jiraClosed incident (§3)');
-  when(live.some(incident => incident.commentable), 'commit-comment.md', 'before writing a commit comment (§4)');
+  when(live.some(incident => incident.commentable || incident.provable), 'commit-comment.md',
+    'before writing a commit comment, or proving a culprit the tool could not pick (§4)');
   when(live.some(incident => incident.deep && !settled(incident)), 'fix-prs.md', 'before preparing a fix PR (§5)');
   when(live.some(incident => incident.flickerGroup || incident.jiraClosed), 'flicker-issues.md',
     'before filing a flicker issue, or commenting on a closed one (§5)');
@@ -3567,6 +3655,8 @@ function digest(incident, keys) {
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
     // §4's skip list, already applied: where a comment may go, or nothing.
     commentable: incident.commentable || undefined,
+    // The suspects a proven culprit may be picked from, when the tool could pick none (§4).
+    provable: incident.provable || undefined,
     // The incident whose comment also answers this one: the same commit, one comment per run.
     commentedWith: incident.commentedWith,
     jiraClosed: incident.jiraClosed || undefined,
@@ -3609,6 +3699,8 @@ function digest(incident, keys) {
     stage: incident.stage,
     firstBadBuild: incident.firstBadBuild,
     lastGoodBuild: incident.lastGoodBuild,
+    // A break revealed by fixing the one that stopped the build before it: its window spans both.
+    maskedBy: incident.maskedBy,
     buildUrl: incident.buildUrl,
     failedIn: incident.failedIn,
     // Enough tests to see the shape of the breakage; the count above is what matters, and the full

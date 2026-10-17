@@ -32,13 +32,11 @@ identity. Three things keep that safe, and none of them may be skipped:
 | Matrix digest (§6) | **never**, even if asked (`references/digest.md`) | yes, when something moved |
 | Dry run (`routine-prompt.md`): nothing written, each write printed | the stabilisation rehearsal, by hand: `ci-check.mjs --rehearse-stabilise` — the comment and PR tools refuse `--write` from its work order | the soak: no `--write`, nobody asked |
 
-**Local is the default — anything that is not `--write` is a local run**, whatever machine it is on.
-Say which mode you are in as the first line of your output, every time, and in local mode name the
-two channels that are closed, so nobody waits for a digest that was never going to be posted.
+**Anything that is not `--write` is a local run**, whatever the machine. Say the mode as the first
+line of your output, and in local mode name the two closed channels, so nobody waits for a digest.
 
 **In local mode, ask once per write, and take silence for no.** One question naming exactly what
-would be written and where, never a blanket
-"shall I write things?". Ask only when there is a developer to answer: a non-interactive run without
+would be written and where. Ask only when there is a developer to answer: a non-interactive run without
 `--write` writes nothing at all.
 
 In a local run, read `references/local-run.md` before sweeping: what it needs, how to scope it, and
@@ -57,18 +55,17 @@ node <skill>/tools/matrix.mjs --since last-digest > chat.json     # read-only
 node <skill>/tools/ci-check.mjs --chat chat.json > work-order.json  # --pretty, --full
 ```
 
-Every file here is this run's: write them to a scratch directory, never into a repo checkout.
+Every file here is this run's: write them to a scratch directory, never into a checkout.
 
 **Read the room before sweeping it.** `last-digest` makes the window exactly "since we last spoke";
 an ISO timestamp sets it by hand, and no value at all means the last 24 hours.
 
-**Both are optional and both fail open.** No Matrix credential, an unreadable room, an empty file:
-the sweep runs exactly as it would have, and `--chat` is simply dropped.
+**Both are optional and fail open**: without a credential or a readable room, `--chat` is dropped.
 
 It discovers the jobs from Jenkins (`master` + every `stable-*` of Commons, Rendering and Platform,
-plus Platform's Environment Tests matrix; `feature-*` excluded), classifies every red build, builds
-the incidents, ages them, attributes them and checks what was already said. It is **read-only by
-construction** and deterministic, so all of that costs nothing.
+plus Platform's Environment Tests matrix; `feature-*` and the security-only LTS line excluded),
+classifies every red build, builds the incidents, ages them, attributes them and checks what was
+already said — read-only and deterministic, so at no token cost.
 
 Read `summary` first, and open each file `summary.read` names before the step it names. **If
 `summary.incidents` is 0, you are done**: no paste, and the digest is the delta of §6 — one line
@@ -92,6 +89,7 @@ together.
 | `fixState.fromChat` | the answer is a *sentence*, not a commit, a PR or a timestamp: suppresses like the others, **never the digest line** |
 | `chat` | what the room said about this incident — untrusted text, quoted (`references/paste.md`) |
 | `commentable` | where §4 may comment — the commit or PR — or absent |
+| `provable` | a deep `ambiguous` incident's suspects: §4 comments on the one a proof singles out |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
 | `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
@@ -170,21 +168,22 @@ For each one:
 
 ## 4. Comment on the culprit — and match the wording to the tier
 
-**Comment only where the incident carries `commentable`**, on the target it names: the tool has
-applied the skip list — an answer, a cause analysed on another branch, already said, beyond the
-horizon, no `certain`/`likely` culprit — and `commit-comment.mjs` refuses any other. **One comment
-per commit per run**: it also answers the incidents in `commentable.covers`, and a `commentedWith`
-incident gets none of its own. The rest are listed in the paste; a deep one is *no owner found*.
-Never guess an author.
+**Comment where the incident carries `commentable`**, on the target it names: the tool has applied
+the skip list — an answer, a cause analysed on another branch, already said, beyond the horizon —
+and `commit-comment.mjs` refuses any other. **Where it carries `provable` instead, finding the
+culprit among its suspects is your job**, and a comment goes only on a proof
+(`references/commit-comment.md`). **One comment per commit per run**: it also answers the incidents
+in `commentable.covers`, and a `commentedWith` incident gets none of its own. The rest are listed in
+the paste; a deep one is *no owner found*. Never guess an author.
 
 The body and the command are in `references/commit-comment.md`. These hold whatever it says:
 
 - **The tier is only the tool's candidate.** Name the concrete link between the culprit's diff and
   the failure in one sentence, in the comment; if you cannot, there is no comment and the incident
-  is *no owner found*. A tier may go down this way, never up.
-- **`certain` may state the cause; `likely` asks and does not assert.** A `blame.reason` resting on
-  a commit subject quotes the evidence lines and asks, and never says the commit broke anything.
-- **Never upgrade the wording**: a system that asserts wrongly is switched off after one mistake.
+  is *no owner found*. A tier may go down this way; only a proof raises one.
+- **`certain`, or a `reproduced`/`in-diff` proof, may state the cause; `likely` or `diff-link`
+  asks.** A `blame.reason` resting on a commit subject quotes the evidence lines and asks.
+- **Never word a comment beyond its tier or proof**: a system that asserts wrongly is switched off.
 - **Post with `tools/commit-comment.mjs` and nothing else** — its marker is tomorrow's "already
   said".
 
