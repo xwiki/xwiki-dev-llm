@@ -30,15 +30,15 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 | [sonar.xwiki.org](https://sonar.xwiki.org) → [sonarcloud.io (org `xwiki`)](https://sonarcloud.io/organizations/xwiki/projects/) | Code-quality analysis + quality gate (fails CI on gate failure). `sonar.xwiki.org` redirects to the SonarCloud `xwiki` organization, where analysis now runs. | **MCP: `sonarqube`** (this plugin) — SonarSource's hosted server, nothing runs locally; needs `SONARQUBE_TOKEN`. It has no local code analysis (see [[verification]]). The skills also call the REST API (`https://sonarcloud.io/api/…`) with per-repo `SONARQUBE_PROJECT_KEY`; its read endpoints answer **without a token** for the public `xwiki` org. See the `xwiki-fix-sonarqube-issue` skill. |
 | [nexus.xwiki.org](https://nexus.xwiki.org) | Maven artifacts: CI snapshots + official releases. Used by the Extension Manager. | No MCP. Snapshot/release jar names also resolvable under `~/.m2`. Good source to *verify* the current dev version. |
 | [forum.xwiki.org](https://forum.xwiki.org) | Community + dev discussion (replaced most mailing-list usage). | **MCP: `discourse`** (this plugin) — search/read topics and posts with no credential. Posting (reply, new topic) needs `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the `DISCOURSE_USER_API_KEY` pair) in the environment: without them the write tools are not registered at all, so a missing post tool means "no credential set", not "posting unavailable". Drafting and posting — category, tag, title, the confirmation: the `xwiki-forum` skill. |
-| [lists.xwiki.org](https://lists.xwiki.org) | Mailing lists kept for server notifications and committer-private / infra / security discussions. | No MCP. Web archive (Hyperkitty): take a message or thread id from `/hyperkitty/search?mlist=<list>&q=…`; one derived from the mbox Message-ID 404s. |
+| [lists.xwiki.org](https://lists.xwiki.org) | Mailing lists kept for server notifications and committer-private / infra / security discussions. | No MCP. Web archive. |
 | [extensions.xwiki.org](https://extensions.xwiki.org) | Catalog + docs of all free extensions; the source used by in-product Extension Manager. Every extension, a **Project** included, has a per-version page at `Extension/<Space>/Versions/<version>/WebHome` (it carries the release notes). | No MCP. WebFetch an extension page (e.g. to find an extension id/version). |
 | [xwiki.org](https://xwiki.org) | The product/documentation web site (itself a running XWiki instance). New docs live under `/documentation` (see the `xwiki-doc-writing` and `xwiki-doc-convert` skills). | No MCP. WebFetch to read a rendered page. To read/write page content or xobjects programmatically, use its REST API via the `xwiki-rest-api` skill. |
 | [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. WebFetch; index with context-mode for repeated lookups. |
 | [l10n.xwiki.org](https://l10n.xwiki.org) | Weblate — contribute translations. | No MCP. See the `xwiki-translations` skill for the dev side of i18n. |
 | [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. WebFetch. |
-| [test.xwiki.org](https://test.xwiki.org) | Manual tests and their runs. | REST, wiki id `test`, Cloudflare UA trap as [[jenkins]]. A run is a `QA.ExecutionClass` object; a release's: Solr `property.QA.ExecutionClass.product_string:"QA.XWiki 18\\.4\\.4"`; a page can hold several. The `automated` flag of `QA.TestClass` is unreliable. |
+| [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST (wiki id `test`). Data model and automation status: [[manual-tests]]. |
 | [elk.xwiki.org](https://elk.xwiki.org) | Anonymous usage stats / market-share metrics. | Rarely relevant to coding. |
-| `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API via the account's homeserver (none can register on matrix.xwiki.com; `xwiki-ci-check` posts via matrix.org). A `* ` body is an edit fallback. |
+| `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. |
 
 ## What has MCP today vs. WebFetch-only
 
@@ -48,9 +48,9 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   extensions page within a session, index it once with context-mode (if installed) and search,
   rather than re-fetching.
 
-## Accessing / writing to xwiki.org & extensions.xwiki.org via REST
+## Accessing / writing to the XWiki-run sites via REST
 
-Both sites run XWiki; program against the REST API (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
+xwiki.org, extensions, test, dev and design all run XWiki; program against the REST API (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
 - **The sites sit behind Cloudflare, which blocks a browser-like `User-Agent`.** A `Mozilla/5.0 …

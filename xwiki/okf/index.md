@@ -99,6 +99,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   passed", and the in-session watch (state file per PR × branch, recurring check).
 - **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
   mechanics most flickers turn out to be, forcing a race to prove a fix, the realtime debug dump.
+- **manual-tests** — the manual tests on test.xwiki.org: where a test's steps, runs and automation
+  status are stored, finding a release's runs, and which automation flag to trust.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
