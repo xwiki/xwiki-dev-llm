@@ -93,8 +93,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   rules a test must satisfy, and the layout of a feature's functional-test modules.
   Procedures live in the test skills.
 - **running-docker-its** — running the Docker functional tests on a developer machine: container
-  networking, setup failures, leftover containers and networks (ryuk), what parallel runs contend
-  for. Commands in `xwiki-build`.
+  networking, setup and local-only failures, a WAR missing your build, leftover containers (ryuk),
+  parallel runs. Commands: `xwiki-build`.
 - **ci-watch** — proving a merged or backported functional test on CI: what counts as "it ran and
   passed", and the in-session watch (state file per PR × branch, recurring check).
 - **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
@@ -113,7 +113,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 - **dead-code-rules** — removing unused code: the family with the most false positives.
 - **constant-and-resource-rules** — constants, resources and exceptions.
 - **test-code-rules** — the rules that fire only in test code.
-- **verification** — what makes a Sonar fix verified rather than merely compiled.
+- **verification** — what makes a Sonar fix verified rather than merely compiled, and which modules
+  SonarCloud analyzes.
 
 ### servers/
 - **index** (`servers/index.md`) — the xwiki.org servers, how to reach each, the traps of reading

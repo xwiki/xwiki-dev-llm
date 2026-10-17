@@ -46,6 +46,13 @@ saves a request per container), and ready-to-run commands for the most interesti
 baseline column covers the preceding days, `fails`/`flaky`/`runs` only the window — only the two
 percentages are comparable.
 
+## Its test output is truncated
+
+A test's captured output and stack trace in Develocity can be a few lines (two frames, no
+`Caused by:`) where the Jenkins test-case page of the same execution holds the full stdout and the
+server log. A Selenium `TimeoutException` only says the UI never changed; its cause is usually a
+server exception in that log, so read the Jenkins page ([[jenkins]]) before calling it a flicker.
+
 ## A `flaky` outcome is a failure
 
 Develocity documents `flaky` as "failed, then passed on retry within the same build", but XWiki

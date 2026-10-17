@@ -3,7 +3,8 @@ title: Verifying a SonarQube fix
 stability: durable
 summary: What makes a SonarCloud fix verified rather than merely compiling — the tests must run, the
   quality profile is mandatory, why removing covered instructions always lowers a JaCoCo ratio, and
-  how to tell your failure from a pre-existing one.
+  how to tell your failure from a pre-existing one, a PR analysis on a subset of modules, and which
+  modules SonarCloud analyzes.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Building/
 ---
@@ -104,6 +105,19 @@ the plugin has no local Sonar analysis, and a local build runs Checkstyle, not t
 **Run a PR analysis from the repository root, never from inside a module.** Run from a module, it
 records `src/main/java/...` paths that match nothing on the branch, so every line counts as new code and
 the gate fails on years-old findings.
+
+On xwiki-platform a PR analysis can skip installing the whole reactor by naming modules: `clean verify
+sonar:sonar -DskipTests -Plegacy -pl .,<every intermediate parent>,<modules>`. Without `.` Maven has no
+top-level project, without a parent its module is "orphan", and without `clean` a legacy weaver
+re-appends `components.txt` and Spoon fails with "registered several times".
+
+## What SonarCloud analyzes
+
+Master is analyzed by the ci.xwiki.org Quality build with `-Plegacy`, so the `-legacy` modules are in
+SonarCloud; the `integration-tests`, `docker`, `distribution` and `standalone` profiles are not
+active, so the `*-test*` modules and the distributions are not, and never get an issue there. A PR
+analysis must build at least the same modules, or the ones it leaves out become a blind spot.
+**verify:** the profiles of `builds['Quality']` in the repo's `Jenkinsfile`.
 
 ## Related
 

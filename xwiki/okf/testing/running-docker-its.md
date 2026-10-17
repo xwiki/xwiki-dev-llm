@@ -4,8 +4,9 @@ stability: durable
 summary: How the browser container reaches XWiki under each servlet engine and why that makes the two
   configurations exercise different networking, which engine to pick for the local loop and when the
   containerised one is mandatory, the setup-failure symptom table (a beforeAll failure is never
-  evidence about your change), why runs leak containers and networks when ryuk cannot reach the
-  daemon, and what several agents sharing one machine contend for.
+  evidence about your change), how a run silently tests other code than yours, local-only
+  failures, why runs leak containers and networks when
+  ryuk cannot reach the daemon, and what several agents sharing one machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
 ---
@@ -62,6 +63,10 @@ below. Repair the machine and re-run; do not start debugging the change.
 | `SocketException: Connection reset` while provisioning extensions | the servlet container was still booting when provisioning started; daemon starved |
 | `NullPointerException: networkMode was not specified` starting `standalone-firefox`, or `all predefined address pools have been fully subnetted` | the daemon has no address pool left for a new network: earlier runs leaked their testcontainers networks (see below) |
 | `Can't find descriptor for the component …` or `Failed to initialize mandatory document` at startup, then a `500` while provisioning | the WAR mixes SNAPSHOT jars built before and after a recent commit of the branch (see below) |
+| `Dependency [X-<v>] is not compatible with core extension feature [X/<older v>]` | all of `WEB-INF/lib` at one old version: a stale `target/`. Otherwise the branch predates a dependency bump, and the wiki takes extension SNAPSHOTs from Nexus, built from master: `-Dxwiki.test.ui.offline=true` (Maven's `-o` does not set it) |
+| offline: `… has not been downloaded from it before` for a file that *is* in `~/.m2` | its `_remote.repositories` names a repository other than `central`, the only one the framework knows: append `<file>>central=` to it. With Nexus down, Maven also needs `-o` |
+| `Extension [X] is already installed on namespace [wiki:xwiki]` | several classes in one `-Dit.test`: run one per invocation |
+| `WARBuilder` cannot resolve X while CI is green | an old locally installed SNAPSHOT pom shadows the branch's: `mvn install -N` it from the checkout |
 
 `JETTY_STANDALONE` needs the right JDK **on `PATH`**, not only in `JAVA_HOME`, because the wiki's JVM
 is spawned by a shell script.
@@ -74,6 +79,29 @@ deploy changed several modules together, the WAR can mix jars from before and af
 fails at startup. `install` from the branch the modules touched by the commits since the jars' date
 (`git log origin/<branch> --since=<date>`), plus `xwiki-platform-web-war` when templates changed; the
 profiles the test framework modules need are in `xwiki-build`.
+
+### The WAR does not run the code you just built
+
+A run proves a main-code fix only once the WAR is shown to carry it (`unzip -p` the class from
+`target/<combo>/…/WEB-INF/lib/<artifact>-SNAPSHOT.jar`, then `javap -p`; a checksum proves nothing).
+It silently does not when:
+
+- `target/<combo>/` holds a WAR extracted by an earlier run, which is reused: an A/B loop compares
+  the jar with itself unless that directory is removed between the runs;
+- a remote timestamped SNAPSHOT already in `~/.m2` beats your `install`: delete
+  `<artifact>/<version>-SNAPSHOT/` there and install again, or run offline;
+- the jar was installed without `clean` (`xwiki-build`);
+- no test ran at all: an identical re-run restored from the Develocity cache has no `Tests run:`
+  line. Add `-Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false`.
+
+## Local-only failures
+
+- **Time zone**: the wiki runs in UTC, so a test comparing a displayed date in the test JVM's zone
+  fails elsewhere (`ExtensionIT`, `AttachmentIT`): prefix the command with `TZ=UTC`.
+- **Apple Silicon**: without XWIKI-21990, `@UITest(office = true)` builds its LibreOffice image from
+  x86-64 debs (`apt-get … code: 100`); build it from the aarch64 debs under the logged image name and
+  `LABEL image-version=LO-<version>`, which the framework reuses. The PDF export Chrome image is
+  amd64-only: its server-side exports time out, only the FOP and client-side tests run locally.
 
 ## Leftover containers and networks: ryuk has to reach the daemon
 

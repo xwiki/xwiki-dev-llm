@@ -13,7 +13,8 @@ keep it on the commands below and on any new `mvn` command you run.
 
 **Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
 per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
-hard-to-diagnose failures.
+hard-to-diagnose failures. Without it, the Develocity build cache can also install a cached jar that
+lacks your edit, under `BUILD SUCCESS`.
 
 ## Build with the JDK the branch targets — `xmvn`
 
@@ -129,6 +130,10 @@ mvn -B -ntp checkstyle:check@default checkstyle:check@test -pl <module-path>
 > `You have 0 Checkstyle violations` / `BUILD SUCCESS` on code that fails CI: a green run of it is
 > evidence of nothing, and reporting it as "Checkstyle passes" is wrong.
 
+For a report that does not fail the build, `-Dcheckstyle.failOnViolation=false` is ignored (the POM
+sets it); use `-Dcheckstyle.maxAllowedViolations=999999`. The executions all write
+`target/checkstyle-result.xml` unless each gets its own `-Dcheckstyle.output.file`.
+
 ## Also rebuild any legacy module that weaves the changed module
 
 Some modules are wrapped by a `-legacy` module that re-adds deprecated/removed APIs by weaving the
@@ -164,6 +169,9 @@ mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass#myMethod
 
 # Integration tests
 mvn verify -B -ntp -pl <module-path> -Pintegration-tests
+
+# Methods of a Docker test nested in AllIT (quote the $; + joins methods)
+mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests -Dit.test='AllIT$NestedXxxIT#m1+m2'
 ```
 
 ### Docker ITs

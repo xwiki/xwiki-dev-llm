@@ -66,9 +66,10 @@ curl -s -w '\n%{http_code}\n' -X POST \
   --data @payload.json https://jira.xwiki.org/rest/api/2/issue
 ```
 
-**Fix Version/s and Assignee cannot be set at creation**: the create screen does not carry them (400
-`Field 'fixVersions' cannot be set. It is not on the appropriate screen`). Set them right after, with the
-`update` block below and with `PUT /issue/KEY/assignee` and `{"name":"<username>"}` (204).
+**Fix Version/s, Assignee and the Flickering Test field (`customfield_10870`) cannot be set at
+creation**: the create screen does not carry them (400 `Field 'fixVersions' cannot be set. It is not
+on the appropriate screen`). Set them right after, with the `update` block below (`set` for the
+field) and with `PUT /issue/KEY/assignee` and `{"name":"<username>"}` (204).
 
 ## Update fields (add/remove without clobbering others)
 

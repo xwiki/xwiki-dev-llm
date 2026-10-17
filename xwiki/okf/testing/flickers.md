@@ -86,7 +86,10 @@ A failed docker test archives a `.png` and an `.flv` recording of the whole test
   `https://hub.docker.com/v2/repositories/selenium/standalone-<browser>/tags/latest`, resolve the
   digest to a version through the tags sharing it, and A/B locally by pinning the previous tag with
   `-Dxwiki.test.ui.browserTag=<tag>`. Exonerate a suspect commit with the revision Jenkins really
-  built ([[jenkins]]), not with the branches that exist.
+  built ([[jenkins]]), not with the branches that exist. Locally, a failure that spreads across a
+  module and also breaks a committed test that passes on CI is the browser as well; on CI, before
+  blaming it, show that the `browserVersion` in the testReport `errorStackTrace` differs between the
+  passing and failing builds.
 
 ## Forcing the race
 

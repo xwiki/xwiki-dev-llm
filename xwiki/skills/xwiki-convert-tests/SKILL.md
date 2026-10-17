@@ -20,7 +20,7 @@ These apply to every file touched:
 * Remove `throws Exception` from method signatures unless it is actually necessary (see "checked exceptions" section below).
 * Remove the `test` prefix from test method names (`testFoo` → `foo`).
 * Normalize method names to proper camelCase (e.g. `handlecustomContentType` → `handleCustomContentType`, `getURLerror` → `getURLError`).
-* Replace `Arrays.asList(...)` with `List.of(...)`, `Collections.emptyList()` with `List.of()`, `Collections.emptySet()` with `Set.of()`, `Collections.singleton(x)` with `Set.of(x)`.
+* Replace `Arrays.asList(...)` with `List.of(...)`, `Collections.emptyList()` with `List.of()`, `Collections.emptySet()` with `Set.of()`, `Collections.singleton(x)` with `Set.of(x)`. Except a single `Object[]` element: `List.of(new Object[] {…})` takes the array as its varargs, so keep `Collections.singletonList(…)`.
 * Replace `new ArrayList<>(); list.add(...)` patterns with `List.of(...)` where the list is not mutated.
 * Replace `list.get(0)` with `list.getFirst()` and `list.get(list.size() - 1)` with `list.getLast()` (Java 21+).
 * Use static imports for all assertions (`assertEquals`, `assertTrue`, etc.) from `org.junit.jupiter.api.Assertions`.
