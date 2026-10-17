@@ -56,15 +56,12 @@ work packages are copied in by hand (format in the `xwiki-contrib-release` skill
 
 So for a fixed issue of such an extension:
 
-- **`Documentation in Release Notes` is `N/A`**, and that is not an oversight: there is no per-issue
-  entry to point at, the issue being in the release note by virtue of its Fix Version.
-- **An OpenProject-tracked extension differs**: once the version page exists, every work package of
-  the version gets its **Release Notes Documentation** custom field set to that page,
-  `https://extensions.xwiki.org/xwiki/bin/view/Extension/<Space>/Versions/<version>/` (the Project's
-  page for a multi-module project). Older work packages point at a `#H<version>` anchor of the
-  extension page; that anchor no longer exists, so don't copy that form. Its **Reference
-  Documentation** field, the counterpart of the JIRA `Documentation` field, holds the URL of the page
-  documenting the work package, or `N/A` for a change no page describes.
+- **Its release-notes field is the version page**, never `N/A`: once that page exists, every issue
+  of the version gets `https://extensions.xwiki.org/xwiki/bin/view/Extension/<Space>/Versions/<version>/`
+  (the Project's page for a multi-module project) in JIRA's `Documentation in Release Notes`, or in
+  OpenProject's **Release Notes Documentation** custom field. Some older ones point at a
+  `#H<version>` anchor of the extension page, which no longer exists: don't copy that form.
+  OpenProject's **Reference Documentation** is the counterpart of the JIRA `Documentation` field.
 - **The release-notes side is owed only once the version is released** (the reference
   documentation is done before, in the `xwiki-contrib-release` preflight). The version page is
   created by the Repository application from the Maven repository once the artifacts are deployed,

@@ -113,16 +113,19 @@ They live in the `notes` property of the version object (`okf/processes/release-
 Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherwise the
 `ExtensionCode.ExtensionVersionClass`.
 
-- **JIRA**: the import fills `notes` with a `{{jira}}` macro. Just check that it's there.
+- **JIRA**: `notes` holds a `{{jira}}` macro over the Fix Version. The import may leave it empty: then
+  `PUT` the previous version's `notes` with its `fixVersion` changed, as below.
 - **OpenProject**: `notes` stays empty, so copy the version's work packages in, matching the
   previous versions' `notes`: Bugs, then Improvements, then New Features, each by id, one line each:
   `* [[<Type> <displayId>>>url:https://op.xwiki.org/work_packages/<displayId>]]<subject>`. Escape
   macro calls in subjects (`{{image}}` → `~{~{image}}`). `PUT` it as `text/plain` on
   `…/objects/<class>/0/properties/notes`, read it back, and check that the Versions table renders it
   without errors.
-  Then `PATCH` every work package of the version so its **Release Notes Documentation** custom field
-  (find its `customFieldN` key in the work package schema) is the version page URL
-  (`okf/processes/release-notes.md`), and read them back.
+
+Then set the release-notes field of every issue or work package of the version to the version page
+URL (`okf/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
+(`?notifyUsers=false` spares the watchers an email per issue), OpenProject **Release Notes
+Documentation** (find its `customFieldN` key in the work package schema).
 
 ## 8. Recovering from a failed release
 

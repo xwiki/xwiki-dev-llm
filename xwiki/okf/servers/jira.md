@@ -111,9 +111,9 @@ Two custom fields record where a fixed issue ended up documented, and they are i
 other:
 
 - **"Documentation"** (`customfield_10270`) — the URL of the page documenting the change.
-- **"Documentation in Release Notes"** (`customfield_10273`) — the URL of the release-note entry, or
-  `N/A` for an extension that is not bundled in XWiki Standard, which has no per-issue entry to point
-  at ([[../processes/release-notes]]).
+- **"Documentation in Release Notes"** (`customfield_10273`) — the URL of the release-note entry,
+  or, for an extension not bundled in XWiki Standard, of its version page on extensions.xwiki.org
+  ([[../processes/release-notes]]).
 
 Both take an absolute URL (several are space-separated), or exactly **`N/A`** — no parenthetical,
 no sentence, because `= "N/A"` is what makes "find every fixed issue nobody documented" a query.
