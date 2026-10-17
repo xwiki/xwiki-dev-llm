@@ -343,10 +343,19 @@ export function namesIn(body) {
   return [names.tests, names.jira, names.prs, names.builds].some(list => list.length) ? names : null;
 }
 
-/** Where a reader of the digest can go to read the sentence for themselves, in context. */
-const permalink = (server, roomId, eventId) =>
-  `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(eventId)}`
-  + `?via=${new URL(server).hostname}`;
+/**
+ * Where a reader of the digest can go to read the sentence for themselves, in context.
+ *
+ * Built on the room's alias whenever there is one, not its ID: `#xwiki:matrix.xwiki.com` is a
+ * version 12 room, whose ID has no server part (`!zdPf…`), and a client that does not parse those
+ * opens nothing — reported from Element on 2026-10-17. An alias resolves everywhere and needs no
+ * `via`; an ID gets the server it names, else the one we read it from.
+ */
+export const permalink = (server, room, eventId) => {
+  const link = `https://matrix.to/#/${encodeURIComponent(room)}/${encodeURIComponent(eventId)}`;
+  if (room.startsWith('#')) return link;
+  return `${link}?via=${room.includes(':') ? room.split(':').slice(1).join(':') : new URL(server).hostname}`;
+};
 
 /**
  * What the room has said since `since`, filtered to the messages that name something a CI incident
@@ -392,7 +401,8 @@ export async function roomSince({ server = homeserver, roomId = room, since, pag
         sender: String(event.sender).replace(/^@/, '').split(':')[0],
         body: event.content.body,
         names,
-        permalink: permalink(server, id, event.event_id)
+        permalink: permalink(server, roomId.startsWith('#') && !roomId.includes(':')
+          ? `${roomId}:${new URL(server).hostname}` : roomId, event.event_id)
       });
     }
     if (reached || !body.end || body.end === from) break;

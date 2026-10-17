@@ -20,6 +20,7 @@ import {
 import { JIRA, knownFlickers, closedFlickers } from '../../../scripts/jira-flickers.mjs';
 import { develocityFacts } from './dv-test-history.mjs';
 import { gateFacts, nameAuthors } from './sonar-gate.mjs';
+import { namesIn } from './matrix.mjs';
 import { readFileSync } from 'node:fs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -1045,9 +1046,30 @@ const ANNOUNCES =
   /\b(?:will|going to|expected to|it'll)\b[^.!?\n]{0,60}?\b(?:fail|fails|break|breaks|be red|go red|turn red|not pass)\b/i;
 /** …unless it says the opposite, which the same words do. */
 const ANNOUNCES_NOT = /\b(?:not|never|shouldn't|should not|won't|will not|no longer)\s+(?:\w+\s+){0,3}?(?:fail|break)\b/i;
-/** Somebody has taken it. */
+/**
+ * Somebody has taken it — the sender, in the first person, because the sender is who the claim is
+ * credited to. "I know you're working on it" is a claim about someone else, and a bare
+ * `working on it` once named its writer as the owner of two failures they had never touched
+ * (2026-10-17).
+ */
 const HANDLING =
-  /\b(?:I(?:'m| am) (?:on it|on this|looking (?:at|into)|currently on|investigating|working on|debugging)|I(?:'ve| have) (?:reported|filed|opened|pushed a fix)|I(?:'ll| will) (?:fix|look at|push|handle)|working on (?:it|this)|taking (?:a look|this one))\b/i;
+  /\bI(?:['’]m| am) (?:on it|on this|looking (?:at|into)|currently on|investigating|working on|debugging|taking care|taking (?:a look|this one))\b|\bI(?:['’]ve| have) (?:reported|filed|opened|pushed a fix)\b|\bI(?:['’]ll| will) (?:fix|look at|push|handle|take care)\b/i;
+
+/**
+ * The part of a message a claim is about: its sentences or lines that make one. A message that
+ * claims one test and mentions another in passing ("…I'm on it. There's also CollaborationIT, but
+ * it's a known flicker") claims only the first.
+ */
+function claimedPart(body) {
+  const clauses = String(body).split(/(?<=[.!?])\s+|\n+/).filter(clause => HANDLING.test(clause));
+  const names = clauses.length ? namesIn(clauses.join('\n')) : null;
+  if (names) return { names };
+  // "XWIKI-123 fails again. I'm on it." — the claim names nothing itself, so it is about the
+  // message's subject, but only when the message has exactly one.
+  const whole = namesIn(body);
+  return clauses.length && whole && whole.tests.filter(name => !name.includes('#')).length <= 1
+    && whole.jira.length <= 1 ? { names: whole } : null;
+}
 
 /** The room's messages, as `matrix.mjs --since` printed them, or none when it was not read. */
 function chatOf(args) {
@@ -1150,8 +1172,11 @@ function chatClaim(incident, chat, want) {
       ? at < brokeAt && ANNOUNCES.test(message.body) && !ANNOUNCES_NOT.test(message.body)
       : at >= brokeAt && at >= fresh && HANDLING.test(message.body);
   };
+  // A claim covers what its own sentence names, not everything else the message mentions.
+  const about = message => (want === 'announced' ? message : claimedPart(message.body));
   const matched = chat.messages
-    .map(message => ({ message, covers: wanted(message) ? namesIncident(message, keys) : null }))
+    .map(message => ({ message, part: wanted(message) ? about(message) : null }))
+    .map(({ message, part }) => ({ message, covers: part ? namesIncident(part, keys) : null }))
     .filter(entry => entry.covers);
   if (!matched.length) return null;
   // The most explanatory message wins, and the most recent of those — the same rule `inFlightFix`
