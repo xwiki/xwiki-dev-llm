@@ -1046,14 +1046,41 @@ const ANNOUNCES =
   /\b(?:will|going to|expected to|it'll)\b[^.!?\n]{0,60}?\b(?:fail|fails|break|breaks|be red|go red|turn red|not pass)\b/i;
 /** …unless it says the opposite, which the same words do. */
 const ANNOUNCES_NOT = /\b(?:not|never|shouldn't|should not|won't|will not|no longer)\s+(?:\w+\s+){0,3}?(?:fail|break)\b/i;
-/**
- * Somebody has taken it — the sender, in the first person, because the sender is who the claim is
- * credited to. "I know you're working on it" is a claim about someone else, and a bare
- * `working on it` once named its writer as the owner of two failures they had never touched
- * (2026-10-17).
- */
-const HANDLING =
-  /\bI(?:['’]m| am) (?:on it|on this|looking (?:at|into)|currently on|investigating|working on|debugging|taking care|taking (?:a look|this one))\b|\bI(?:['’]ve| have) (?:reported|filed|opened|pushed a fix)\b|\bI(?:['’]ll| will) (?:fix|look at|push|handle|take care)\b/i;
+// Somebody has taken it. A claim is credited to whoever wrote it, so it must be the writer saying
+// *they* own *this failure* — and the room says much else in the first person. Each of these was
+// read as a claim before (2026-10-17): "I know you're working on it" (about someone else), "let me
+// know and I'll handle the backport" (an offer, about a backport), "I've opened <PR> for the
+// leftovers" (a report — and filed issues, PRs and pushed fixes are read from JIRA, GitHub and the
+// commits, not from what anyone says about them).
+
+/** "I'm on it", "I'll take care": a claim with nothing more to say. */
+const CLAIM_WHOLE =
+  /\bI(?:['’]m| am) (?:on it|on this|on that|taking care(?! of))\b|\bI(?:['’]ll| will) take care(?! of)\b/i;
+/** A verb of ownership, which only claims something when its object is the failure. */
+const CLAIM_VERB =
+  /\bI(?:['’]m| am) (?:currently )?(?:working on|investigating|debugging|fixing|handling|looking (?:at|into)|taking care of|having a look at|taking a look at)\s+|\bI(?:['’]ll| will) (?:fix|handle|investigate|debug|look (?:at|into)|take care of|have a look at|take a look at)\s+/gi;
+/** …and the objects that are the failure: a pronoun for it, or its test or issue named. */
+const CLAIM_OBJECT =
+  /^(?:(?:it|this|that|them|this one|that one)\b|(?:the |this |that )(?:failure|flicker|test|issue)s?\b|`?[A-Z]\w*(?:IT|Test)\b|`?[A-Z][A-Z0-9]{1,9}-\d+)/;
+const CLAIM_OBJECT_WORD = /^(?:it|this|that|them|this one|that one|(?:the|this|that) (?:failure|flicker|test|issue)s?)\b/i;
+/** A question, a condition or an offer claims nothing: "should I look at it?", "if nobody is, I'll fix it". */
+const NOT_A_CLAIM = /\?|\b(?:if|unless|let me know|want me to|should I|shall I|can I|could I)\b/i;
+
+/** Whether one sentence is its writer taking the failure it names (or that "it" refers to). */
+function isClaim(clause) {
+  if (NOT_A_CLAIM.test(clause)) return false;
+  if (CLAIM_WHOLE.test(clause)) return true;
+  return [...clause.matchAll(CLAIM_VERB)].some(match => {
+    const rest = clause.slice(match.index + match[0].length);
+    return CLAIM_OBJECT.test(rest) || CLAIM_OBJECT_WORD.test(rest);
+  });
+}
+
+/** The sentences (or lines) of a message or comment. */
+const clausesOf = body => String(body).split(/(?<=[.!?])\s+|\n+/);
+
+/** Whether any sentence of `body` is a claim. */
+const claims = body => clausesOf(body).some(isClaim);
 
 /**
  * The part of a message a claim is about: its sentences or lines that make one. A message that
@@ -1061,7 +1088,7 @@ const HANDLING =
  * it's a known flicker") claims only the first.
  */
 function claimedPart(body) {
-  const clauses = String(body).split(/(?<=[.!?])\s+|\n+/).filter(clause => HANDLING.test(clause));
+  const clauses = clausesOf(body).filter(isClaim);
   const names = clauses.length ? namesIn(clauses.join('\n')) : null;
   if (names) return { names };
   // "XWIKI-123 fails again. I'm on it." — the claim names nothing itself, so it is about the
@@ -1170,7 +1197,7 @@ function chatClaim(incident, chat, want) {
     const at = Date.parse(message.at);
     return want === 'announced'
       ? at < brokeAt && ANNOUNCES.test(message.body) && !ANNOUNCES_NOT.test(message.body)
-      : at >= brokeAt && at >= fresh && HANDLING.test(message.body);
+      : at >= brokeAt && at >= fresh && claims(message.body);
   };
   // A claim covers what its own sentence names, not everything else the message mentions.
   const about = message => (want === 'announced' ? message : claimedPart(message.body));
@@ -1281,7 +1308,7 @@ async function issueClaim(incident) {
   const fresh = Date.now() - CLAIM_HOURS * 3600 * 1000;
   const [comment] = (await commentsOn(key)).filter(entry => {
     const at = Date.parse(entry.at);
-    return at >= brokeAt && at >= fresh && HANDLING.test(entry.body);
+    return at >= brokeAt && at >= fresh && claims(entry.body);
   }).slice(-1);
   if (!comment) return null;
   return {
