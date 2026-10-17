@@ -18,11 +18,13 @@ required directory layout. Keep new content that way.
 ```
 claude plugin validate ./xwiki   # manifest schema
 node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, size budgets, copied paragraphs)
+node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
-Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI (GitHub Actions) on
-every push and pull request. There is no build step, no test runner, and no lint — JSON manifests and
-Markdown/`.mjs` files are the entire artifact.
+Run all three after any change to the plugin; CI (GitHub Actions) runs the last two on every push and
+pull request. There is no build step and no lint — JSON manifests and Markdown/`.mjs` files are the
+entire artifact. A tool whose logic is worth pinning (today `xwiki-ci-check`'s) keeps that logic in
+importable modules, tested from `tests/<skill>/` with real inputs: CI logs, pastes, room messages.
 
 Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
 and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,

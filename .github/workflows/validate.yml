@@ -20,3 +20,5 @@ jobs:
           node-version: 20
       - name: Consistency checks
         run: node scripts/validate.mjs
+      - name: Unit tests
+        run: node --test
