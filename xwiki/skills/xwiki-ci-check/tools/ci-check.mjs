@@ -974,11 +974,21 @@ const productionIn = commit => commit.files.filter(path => PRODUCTION_FILE.test(
  * in. (Not the SUCCESS builds only: platform's main job has been `FAILURE` on every build for days
  * — the quality gate, after the deploy — and waiting for a green one would date the snapshot to
  * last week.)
+ *
+ * But a `FAILURE` whose *Build for Main* stage failed stopped before deploying: on 2026-10-17 a
+ * lint break failed it in #9032 and #9033, the jars stayed at #9031, and taking #9032's revision
+ * made the snapshot look current — so four `ObjectsResourceIT` tests, whose commit carried both the
+ * test and the REST change, were blamed on that commit instead of read as the trap.
  */
 async function deployedRevision(main, startedAt, repo) {
-  const prior = main.builds.find(build => build.timestamp <= startedAt);
-  if (!prior) return null;
-  return { number: prior.number, sha: await buildRevision(`${main.url}/${prior.number}`, repo) };
+  for (const prior of main.builds.filter(build => build.timestamp <= startedAt).slice(0, 5)) {
+    if (prior.result === 'FAILURE') {
+      const stage = (await stagesOf(`${main.url}/${prior.number}`)).find(entry => entry.name === 'Build for Main');
+      if (stage && stage.status !== 'SUCCESS') continue;
+    }
+    return { number: prior.number, sha: await buildRevision(`${main.url}/${prior.number}`, repo) };
+  }
+  return null;
 }
 
 /** `14 minutes`, `3 hours` — how long before the build the commit landed. */
@@ -1008,14 +1018,17 @@ async function staleSnapshot(incident, jobs, args) {
   const env = jobs.find(job => job.label === 'env-tests');
   const main = jobs.find(job => job.label === 'main');
   const latest = env?.builds?.[0];
-  // Only a failure that *started* in this build can be explained by what this build resolved. One
-  // that survived the next run ran against jars that had caught up, and is a breakage.
-  if (!latest || !main || incident.firstBadBuild !== latest.number) return null;
+  // Whether the jars have caught up is what `deployedRevision` answers: a commit after it is absent
+  // from this build's jars however many runs the failure has lasted — and while the main job cannot
+  // deploy, every run is stale.
+  if (!latest || !main) return null;
   try {
     const built = await buildRevision(`${env.url}/${latest.number}`, incident.repo);
     const deployed = await deployedRevision(main, latest.timestamp, incident.repo);
     if (!built || !deployed?.sha || built === deployed.sha) return null;
-    const commits = await commitsBetween(incident.repo, deployed.sha, built, { maxCommits: 10 });
+    // The default 20, not fewer: a main job stuck before its deploy widens the gap, and on 2026-10-17
+    // the commit doing both halves was the 11th newest of 14.
+    const commits = await commitsBetween(incident.repo, deployed.sha, built);
     const { groups } = forwardKeys(incident);
     const trap = commits.filter(commit => productionIn(commit).length);
     const covered = groups.filter(keys => trap.some(commit => keys.some(key => touches(commit, key))));
@@ -3622,8 +3635,7 @@ function toRead(incidents, stabilise) {
   const when = (test, file, why) => { if (test) read[`references/${file}`] = why; };
   when(incidents.some(incident => isGate(incident) && incident.primary !== false), 'quality-gate.md',
     'before the quality-gate row\'s cells, its comment or handing it to xwiki-fix-sonarqube-issue (§3)');
-  when(live.some(incident => incident.deep && (incident.class === 1 || incident.kind === 'unclassified')),
-    'deep-analysis.md', 'before root-causing a deep class 1 incident, or retrying an unclassified break (§3)');
+  when(live.some(incident => incident.deep), 'deep-analysis.md', 'before root-causing a deep incident (§3)');
   when(live.some(incident => incident.fixState?.candidate || incident.fixState?.kind === 'fixed-elsewhere'
     || incident.jiraClosed), 'fix-signals.md',
   'before the line or Next cell of a candidate fix-in-flight, a fixed-elsewhere or a jiraClosed incident (§3)');

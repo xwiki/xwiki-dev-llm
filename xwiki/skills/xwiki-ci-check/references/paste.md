@@ -17,7 +17,7 @@ cannot reach:
 | Marker | Where | What replaces it |
 |---|---|---|
 | `<!-- WHY: <id> -->` | the *Why* cell | **One clause, ≤15 words**, naming the mechanism — *"modal re-renders after a suggestion is picked; the page object grabs a stale submit"*. Not the symptom, which column one already carries, and not a sentence with a verb phrase for every fact you found. |
-| `<!-- NEXT: <id> -->` | the *Next — who* cell | **`<who> → <what>`**, one line per person, the actor first: *"tmortagne → drop the dead `null` return, or take the default"*. `<who>` is a name where the analysis found one, `someone` where the work is real but unowned. Never a name the work order does not support. |
+| `<!-- NEXT: <id> -->` | the *Next — who* cell | **`<who> → <what>`**, one line per person, the actor first: *"tmortagne → drop the dead `null` return, or take the default"*. `<who>` is a name where the analysis found one, `someone` where the work is real but unowned. Never a name the work order does not support, and never a read the run could have done (*"someone → read the server log"*): `references/deep-analysis.md` says how to do it. |
 | `<!-- ANALYSIS: <id> -->` | inside the `<details>` | Your root-cause paragraph, as before. This is where the reasoning goes — the two cells above are its conclusion, not a summary of it. |
 
 A cell you leave unfilled renders **empty**, which is how the document says you skipped it.

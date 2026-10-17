@@ -145,16 +145,12 @@ and the tool did not attach it, say so in the paste and treat the incident as un
 
 For each one:
 
-- **Read only what the script gives you.** `evidence` holds the matched error lines *and the lines
-  that continue them* — a Maven failure puts its headline on one line and the module, the dependency
-  and the two versions on the next few, so read the whole block before concluding anything.
-  `blame.suspects` is one line per candidate commit, each marked with why the script thought it
-  relevant (`relevant: <file>`, `names <library>`). **Never fetch a build's `consoleText`** — a
-  platform build's log is **~80 MB**, and the script has already read the failing *stage's* own log,
-  which is the cheap way in. If you genuinely need more, take the narrowest thing there is: for a
-  failing *test*, the `develocity` field, which knows more than any one build's log; for a build
-  break, that build's `testReport` for one test, or an archived screenshot
-  (`okf/servers/jenkins.md`).
+- **Investigate until you can say what broke, who caused it and what to do — and never leave a
+  person a read you could have done.** Start from `evidence` (the matched lines *and* the lines
+  continuing them) and `blame.suspects` (why each commit looked relevant); go on with
+  `tools/evidence.mjs` (a test's stack, server log and screenshot; a pattern in the failing stage's
+  log), the suspects' diffs, and a build break reproduced in the checkout —
+  `references/deep-analysis.md` has the order. **Never fetch a build's `consoleText`** (~80 MB).
 - **A `deep` class 1 incident carries its Develocity history in `develocity`**: reason from it, not
   the stage log, and quote its numbers.
 - **The `develocity` MCP server is only for a class 2 break whose stage log came back
@@ -195,9 +191,9 @@ Whatever `references/fix-prs.md` says, these hold:
 
 - **What blocks a release comes first** (`summary.stabilise.blockers`); a flicker blocks nobody.
   A gate fix PR takes one of the two slots: `pull-request.mjs --kind fix` refuses a third (exit 4).
-- **Tier C, never a PR:** no change to an assertion, an expected value, a timeout or any production
-  logic — the one narrow exception, a unit test following its culprit's own diff, is in the
-  reference. An expectation that seems wrong goes to a human as a comment.
+- **Never make a test pass by weakening it:** no change to an assertion, an expected value or a
+  timeout (the one exception is in the reference). Production code may change when it is the fix
+  for this failure: the PR states any behaviour change, and its culprit reviews it.
 - **Verify, and fail closed:** without a passing `clean` `-Pquality` build of the module there is no
   PR, and the attempted fix goes into the paste.
 - **Only `tools/pull-request.mjs` opens a routine's PR** — never `gh` or the GitHub MCP server,

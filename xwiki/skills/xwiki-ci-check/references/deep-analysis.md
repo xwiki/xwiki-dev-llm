@@ -1,8 +1,37 @@
-# Deep analysis: the Develocity history and the build scan
+# Deep analysis: investigating an incident
 
-Read by `xwiki-ci-check` (SKILL.md §3) before root-causing a `deep` class 1 incident, which
-carries `develocity`, and before a second attempt on a class 2 build break whose stage log came
-back `unclassified`. Nothing here writes; § numbers are those of SKILL.md.
+Read by `xwiki-ci-check` (SKILL.md §3) before root-causing any `deep` incident. Nothing here
+writes; § numbers are those of SKILL.md.
+
+## What the investigation must produce, and in what order to look
+
+Three answers: **what broke**, **which commit** — or that none did (a flicker, the environment, a
+stale snapshot) — and **what to do next**, done by this run wherever it can be. Go down this list
+and stop as soon as the answers hold; every step is cheaper than the one after it.
+
+1. **The work order**: `evidence`, `blame`, `develocity`, `fixState`, `maskedBy`.
+2. **`tools/evidence.mjs`** — one bounded read of what the work order does not carry. For a test:
+   its stack cut to XWiki's frames, the server's own errors during that test (the Docker tests
+   capture the server log per test), and the screenshot and video archived for it — download the
+   `.png` and look at it: it shows what the page really was. For a build break: a pattern in the
+   failing stage's own log.
+
+   ```bash
+   node <skill>/tools/evidence.mjs --build <buildUrl> --test '<Class#method>'
+   node <skill>/tools/evidence.mjs --build <buildUrl> --grep '<regex>'
+   ```
+3. **The suspects' diffs**, in the checkout, against the failing file and line: a line of the
+   failure that one suspect wrote, and no other, is an `in-diff` proof (§4).
+4. **Reproduce a build break** in the checkout: the failing module at the first bad revision, then
+   at the suspect's parent; with several suspects, bisect over them (`git bisect run` on the module
+   build). A lint, compile or enforcer failure reproduces in minutes, and so does a unit test. A
+   functional test is not rerun here — that hour belongs to the stabilisation slot (§5).
+5. **The Environment Tests trap, by hand**, when only that job fails and the trace's line numbers
+   match the file at the commit's parent (`okf/servers/jenkins.md`).
+
+A *Next* cell that sends a person to do one of these reads is a step this run skipped.
+
+## The Develocity history and the build scan
 
 | Field | Meaning |
 |---|---|

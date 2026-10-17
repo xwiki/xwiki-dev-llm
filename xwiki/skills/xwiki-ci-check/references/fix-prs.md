@@ -17,11 +17,13 @@ when none of that is open, never instead of it. `summary.stabilise.blockers` is 
 | **A — additive** | A failing coverage check whose `blame.tier` is `certain` or `likely`: add the missing unit tests (`xwiki-increase-test-coverage`). **Never lower the ratio or edit an existing test** | **draft** — new tests are code the culprit, who is usually already writing them, has to judge |
 | **B — inferred** | A UI change renamed a selector and the page object still queries the old one; renamed or moved test resources | **draft** |
 | **B — follows the culprit** | A *unit* test still expecting a value the culprit commit's own diff changed — see below | **draft** |
-| **C — never** | Changing an assertion, an expected value, a timeout, or any production logic — except the row above | — |
+| **B — the fix itself** | The failure is the product (or the build) being wrong, and the fix is production code: code a new lint rule rejects, a null the culprit's diff lets through. The body states any behaviour change — `.then()` → `await` changes how a rejection propagates — and the culprit, assigned, is the one who judges it | **draft** if it changes behaviour, ready for review otherwise |
+| **C — never** | Changing an assertion, an expected value or a timeout — except "follows the culprit" | — |
 
 **Tier C is a safety rule, not a limit on capability.** A failing assertion is the hypothesis that
 the product is wrong; "fixing" it by editing the expectation launders a real regression into a green
-build. If a fix seems to need an assertion change, that is a comment to a human, not a PR.
+build. If the product is wrong, fix the product; if a fix seems to need an assertion change, that is
+a comment to a human, not a PR.
 
 **"Follows the culprit" is that comment, made answerable in one click.** A commit changes what a
 method returns (an empty array instead of `null`, say) and a unit test still stubs or expects the
