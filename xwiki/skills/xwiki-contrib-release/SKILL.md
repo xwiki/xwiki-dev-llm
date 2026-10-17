@@ -134,9 +134,9 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
 
 ## 9. Hand off and report
 
-Draft the announcement from the release notes, show it to the developer, and create it with
+Draft the announcement from the release notes, show it to the developer, and save it unpublished with
 **xwiki-contrib-release-blog-post**. Report the tag, the Nexus check, the tracker changes, the
-extensions.xwiki.org state and release notes, and what the developer still owes. That covers saving
+extensions.xwiki.org state and release notes, and what the developer still owes. That covers verifying and publishing
 the blog post, plus the extension page's "General Compatibility" if the parent was raised, and
 "Tested On" (append only).
 
