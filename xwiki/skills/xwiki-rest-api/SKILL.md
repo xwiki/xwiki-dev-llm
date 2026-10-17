@@ -15,8 +15,8 @@ Interact with a running XWiki over its REST API using `curl`.
   For a **remote** instance (xwiki.org…), look for the `~/.xwiki-credentials` file before asking the
   developer for credentials — **never print that file** and **parse it, never `source` it**; its
   format, the rule and the `curl` recipe are in `okf/servers/index.md`.
-- **Send the default `curl` User-Agent** to the xwiki.org sites — Cloudflare answers `403` to the
-  rest ([[servers/index]]).
+- **Send the default `curl` User-Agent** to the xwiki.org sites — Cloudflare answers `403` to a
+  browser-like one or none ([[servers/index]]).
 - **Format:** responses are XML by default. Ask for JSON with `?media=json` on the URL **or** an
   `Accept: application/json` header. Send bodies with `-H "Content-Type: application/xml"` (or
   `application/x-www-form-urlencoded`).

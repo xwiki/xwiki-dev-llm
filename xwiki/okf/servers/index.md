@@ -36,7 +36,7 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 | [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. WebFetch; index with context-mode for repeated lookups. |
 | [l10n.xwiki.org](https://l10n.xwiki.org) | Weblate — contribute translations. | No MCP. See the `xwiki-translations` skill for the dev side of i18n. |
 | [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. WebFetch. |
-| [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST (wiki id `test`). Data model and automation status: [[manual-tests]]. |
+| [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST: [[manual-tests]]. |
 | [elk.xwiki.org](https://elk.xwiki.org) | Anonymous usage stats / market-share metrics. | Rarely relevant to coding. |
 | `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. |
 

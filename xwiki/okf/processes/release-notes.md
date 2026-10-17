@@ -250,5 +250,5 @@ done | python3 -c "import json,sys; [print(c['category']) for l in sys.stdin for
 ## Access
 
 xwiki.org REST access — the `/xwiki/rest/…` path, the User-Agent, Basic auth from
-`~/.xwiki-credentials` for writes — is in [[../servers/index]]. JIRA over REST with `JIRA_API_TOKEN` as a bearer token is
-in [[../servers/jira]].
+`~/.xwiki-credentials` for writes — is in [[../servers/index]]. JIRA over REST with `JIRA_API_TOKEN`
+as a bearer token is in [[../servers/jira]].
