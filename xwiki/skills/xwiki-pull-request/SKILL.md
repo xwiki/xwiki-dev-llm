@@ -79,7 +79,8 @@ complete every section meaningfully:
 - Reserved branch names: `master`/`main`, `stable-xxx`. Cross-repo changes use a shared
   `feature-deploy-xxx` branch in each repo — keep it until every repo's PR is merged.
 - Merge with `gh pr merge <url> --squash --delete-branch`: backports cherry-pick the merge commit,
-  and GitHub retargets the PRs stacked on the deleted branch.
+  and GitHub retargets the PRs stacked on the deleted branch. A 422 on the branch deletion means the
+  repo already deleted it.
 
 ## Before opening
 
@@ -100,9 +101,11 @@ mvn -B -ntp sonar:sonar -Dsonar.token=$SONARQUBE_TOKEN -Dsonar.pullrequest.key=<
   -Dsonar.pullrequest.branch=<branch> -Dsonar.pullrequest.base=master
 ```
 
-Then read the verdict — `qualitygates/project_status?projectKey=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`
-— and the findings — `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>` — and fix
-what it reports before asking for review. Two facts that make this safe and cheap: a PR analysis is
-stored separately from the branch's, so it never affects `master`'s measures or issues, and on
+Then read the verdict —
+`qualitygates/project_status?projectKey=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`, which says `OK`
+even for a PR no analysis reached, so first find it in `ce/activity` — and the findings —
+`issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>` — and fix what it reports
+before asking for review. Two facts that make this safe and cheap: a PR analysis is stored
+separately from the branch's, so it never affects `master`'s measures or issues, and on
 xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
 Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.

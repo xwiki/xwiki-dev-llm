@@ -186,6 +186,13 @@ you never have to open the PNG to find out.
   and to one carrying a **browser-like** UA. The tools send `curl/8.0`; see `okf/servers/index.md`.
 - Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
   the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
+- **A Change Request is created over HTTP, not REST**, and these tools do not do it. Log in with a
+  cookie session (POST `j_username`, `j_password` and the login page's `form_token` to
+  `/bin/loginsubmit/XWiki/XWikiLogin`; under Basic auth the token is the guest's), read the hidden
+  fields of the `/bin/edit/<Space>/<Page>?editor=wiki` form, then POST them with the new `content`
+  plus `docReference=<wiki>:<Space>.<Page>`, `crTitle`, `crDescription` and `crDraft=` to
+  `/xwiki/changerequest/<wiki>/create`: the 302's `Location` is the Change Request. The same form
+  POSTed to `/bin/preview/…` renders the content without saving it.
 - A conversion also has to finish the **original** page — strip its prose, wire its "Documentation"
   button, delete its attachments, triage its backlinks. That is `okf/conventions/documentation-migration.md`
   and the `xwiki-doc-convert` skill; these tools do not do it for you.
