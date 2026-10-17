@@ -46,6 +46,13 @@ saves a request per container), and ready-to-run commands for the most interesti
 baseline column covers the preceding days, `fails`/`flaky`/`runs` only the window — only the two
 percentages are comparable.
 
+## A test's output has no server log
+
+The output Develocity attaches to a docker test leaves out the XWiki server log lines
+(`ServletContainerExecutor - STDOUT:`) that the Jenkins test-case page attaches to it ([[jenkins]]);
+they are only in the build's console log (MCP `console-log`, with `contains`). The MCP's
+`includeFailure` also cuts the stack trace to the test's own package.
+
 ## A `flaky` outcome is a failure
 
 Develocity documents `flaky` as "failed, then passed on retry within the same build", but XWiki

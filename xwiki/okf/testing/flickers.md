@@ -86,7 +86,9 @@ A failed docker test archives a `.png` and an `.flv` recording of the whole test
   `https://hub.docker.com/v2/repositories/selenium/standalone-<browser>/tags/latest`, resolve the
   digest to a version through the tags sharing it, and A/B locally by pinning the previous tag with
   `-Dxwiki.test.ui.browserTag=<tag>`. Exonerate a suspect commit with the revision Jenkins really
-  built ([[jenkins]]), not with the branches that exist.
+  built ([[jenkins]]), not with the branches that exist. Prove the change from the `browserVersion`
+  that a Selenium exception's testReport `errorStackTrace` carries, one from before the onset (any
+  test) and one after.
 
 ## Forcing the race
 

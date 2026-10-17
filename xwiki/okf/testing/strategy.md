@@ -99,7 +99,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   the user sees) and a DOM identifier passed as a plain string (a category's `data-*` value rather
   than its label or an enum). Visible text, keyboard input and the wiki syntax of the source
   (including a macro parameter name) are what the user sees, so they stay in the test; a page-object
-  getter of text decides whether screen-reader-only labels (`sr-only`) are part of it and says so.
+  getter of text decides whether screen-reader-only labels (`sr-only`) are part of it and says so —
+  a message macro's box (`{{success}}`, `{{error}}`…) starts with one naming its type, though not in
+  a `PageTest`, where its icon is an image.
   Which page object gets the new API follows from what a page object *is*: **a page object represents
   a real XWiki page and the actions that can be performed on that page** — a component shown on many
   pages (a message box, a suggest input) gets a reusable `*Element` returned by those pages. So widen
@@ -153,6 +155,12 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   one test with `@UseWikiDescriptorTarget` (the closest declaration wins), or to any value with
   `TestUtils.setMainWikiDescriptorTarget()`, which needs no restoring.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HWikiDescriptorTarget)
+- **A URL built by `TestUtils.getURL()` is not the one REST returns** — the first uses the host the
+  browser reaches, the second the host the test JVM called. Compare them without scheme and host.
+- **A configuration value known only at runtime** (a random port) can be neither a static
+  `@UITest(properties = …)` nor set in `@BeforeAll`, which runs with XWiki already up: a
+  `BeforeAllCallback` registered before `@UITest` puts a `TestConfiguration` in the root `GLOBAL`
+  store. (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDynamicConfiguration)
 - **A `PRChecker` log line reports a probe, not a requirement** — functional tests run with
   `ProgrammingRightCheckerAuthorizationManager` (`xwiki-platform-test-checker`), which overrides the
   authorization manager so that wiki content never obtains Programming Right, and logs
@@ -164,7 +172,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   denied branch is harmful. Each secure document is logged only once per instance, so one line can hide
   further probes from the same page. Conversely, when content **your own test creates** needs the right
   — a `{{groovy}}` macro rendering `You need Programming Rights to execute the script macro [groovy]`,
-  a sheet silently taking its unprivileged branch — allowlist its page on the test class, which really
+  a sheet silently taking its unprivileged branch, an HQL query failing with `The query requires
+  programming right` — allowlist its page on the test class (re-saving it as an admin changes
+  nothing), which really
   grants the right (and logs `PRChecker: Skipping check for [X] since it's excluded`):
   `@UITest(properties = {"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MySpace\\.MyPage"})`.
   The regex must match the **whole** serialized reference, wiki included (`xwiki:Space.Page`); the
@@ -251,7 +261,8 @@ xwiki-platform-<feature>/
   `true`, test-scoped dependencies on `xwiki-platform-test-docker` and the feature's
   `-test-pageobjects`, the modules under test as ordinary runtime dependencies (the framework
   installs them as extensions; `extraJARs` is a last resort), and the `clover` profile copied from a
-  sibling module.
+  sibling module. A macro the minimal WAR lacks (`{{display}}`) is a dependency of the `-ui` module
+  using it, which real installs need too, not an `extraJARs` of the test.
 - **Test-only code for the wiki under test** — a component override, an event listener, a script
   service or a macro the test needs goes in the `-test-docker` module's `src/main/java`: whatever
   lands in `target/classes` is copied to the test WAR's `WEB-INF/classes`, so it needs no separate
