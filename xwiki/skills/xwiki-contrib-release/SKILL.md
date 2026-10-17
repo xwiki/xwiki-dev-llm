@@ -140,7 +140,8 @@ extensions.xwiki.org state and release notes, and what the developer still owes.
 the blog post, plus the extension page's "General Compatibility" if the parent was raised, and
 "Tested On" (append only).
 
-End with one table (`What | Change | URL`) of every page touched, one row per item, never grouped,
-no prose around it: the doc pages
+End with one table (`# | Change | URL`) of every page touched, one row per item, never grouped,
+no prose around it, each Change under 40 characters: a terminal renders a wider table as a list.
+It covers the doc pages
 written or updated, the blog post to publish, the extensions.xwiki.org pages, and any other
 place (tracker versions and work packages, pull requests).
