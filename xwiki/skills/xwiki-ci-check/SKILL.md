@@ -33,7 +33,7 @@ identity. Three things keep that safe, and none of them may be skipped:
 | Dry run (`routine-prompt.md`): nothing written, each write printed | the stabilisation rehearsal, by hand: `ci-check.mjs --rehearse-stabilise` — the comment and PR tools refuse `--write` from its work order | the soak: no `--write`, nobody asked |
 
 **Anything that is not `--write` is a local run**, whatever the machine. Say the mode as the first
-line of your output, and in local mode name the two closed channels, so nobody waits for a digest.
+line of your output, and in local mode name the two closed channels.
 
 **In local mode, ask once per write, and take silence for no.** One question naming exactly what
 would be written and where. Ask only when there is a developer to answer: a non-interactive run without
@@ -72,10 +72,10 @@ naming what went green, or nothing at all when yesterday was green too.
 
 ## 2. What the work order contains
 
-An **incident** is a `(repo, branch, signature)` — one distinct *cause*, spanning days and spanning
-the N tests it breaks. One commit that breaks forty tests is **one** incident and gets **one**
-comment; the script groups tests that started failing in the same build, because those broke
-together.
+An **incident** is a `(repo, branch, signature)` — one *cause*, across days and tests: one
+commit breaking forty tests is **one** incident with **one** comment. Tests that started failing in
+the same build, or of one class flickering in exactly the same builds (`cofailing`, its issues in
+`jiras`), are grouped.
 
 | Field | Meaning |
 |---|---|

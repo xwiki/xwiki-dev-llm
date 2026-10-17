@@ -31,6 +31,11 @@ and stop as soon as the answers hold; every step is cheaper than the one after i
 
 A *Next* cell that sends a person to do one of these reads is a step this run skipped.
 
+**A `cofailing` group is one cause, whatever its issues say.** Tests of one class that fail in
+exactly the same builds share what broke them — the class's fixture or setup, an earlier test's
+leftovers, the environment of those builds — so look there, not at each test, and read one test's
+evidence per distinct stack. Its *Next* names the one fix, and the issues in `jiras` it would close.
+
 ### A long-standing breakage: date it from Develocity
 
 A `deep` incident `beyondHorizon` is a breakage older than anything Jenkins still holds, so its

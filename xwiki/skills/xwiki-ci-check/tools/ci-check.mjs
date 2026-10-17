@@ -1778,6 +1778,45 @@ function maskedWindow(job, masking, firstBad, at) {
 
 const incidentId = (target, signature) => `${target.repo.replace(/^xwiki-/, '')}/${target.branch}/${signature}`;
 
+/**
+ * Flickers of one test class that failed in exactly the same builds, as one incident.
+ *
+ * Each test of a class can have its own old flicker issue, and each then got its own row, its own
+ * "already tracked — the issue is where this gets settled", and no analysis: six `ExtensionIT`
+ * tests on 16.10.x failed in the same four of eight builds for three mornings running, which is one
+ * cause — the class, its fixture or its environment — and not six flickers. Two shared failing
+ * builds at least: one is a coincidence any bad build produces.
+ */
+function cofailing(flickering) {
+  const groups = new Map();
+  for (const entry of flickering) {
+    const builds = entry.row.perJob
+      .map(job => `${job.job}:${job.failedBuilds.map(build => build.number).sort().join(',')}`)
+      .sort().join(' ');
+    const failed = entry.row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0);
+    const key = failed >= 2 ? `${entry.incident.id.split('#')[0]}|${builds}` : entry.incident.id;
+    groups.set(key, [...(groups.get(key) || []), entry]);
+  }
+  return [...groups.values()].map(group => {
+    if (group.length === 1) return group[0].incident;
+    const members = group.map(entry => entry.incident).sort((a, b) => a.id.localeCompare(b.id));
+    const issues = [...new Set(members.map(member => member.jira && jiraKey(member)).filter(Boolean))];
+    return {
+      // The smallest test id names the group, as for a breakage: stable while the group holds.
+      ...members[0],
+      tests: members.map(member => member.tests[0]),
+      testCount: members.length,
+      evidence: members.slice(0, 3).map(member => `${member.tests[0]}: ${member.evidence[0]}`),
+      jira: members.find(member => member.jira)?.jira || null,
+      jiraClosed: members.some(member => member.jira) ? null
+        : members.find(member => member.jiraClosed)?.jiraClosed || null,
+      // Every issue that tracks one of them: they describe one cause, and whoever fixes it closes them all.
+      jiras: issues.length > 1 ? issues : undefined,
+      cofailing: true
+    };
+  });
+}
+
 async function incidentsOf(target, args, flickerFor) {
   const incidents = [];
   const jobs = await Promise.all(target.jobs.map(job => jobHistory(job, args.history)));
@@ -1841,6 +1880,7 @@ async function incidentsOf(target, args, flickerFor) {
   }
 
   const breakages = [];
+  const flickering = [];
   for (const [id, row] of rows) {
     const verdict = verdictOf(row);
     // The job that saw it break first owns the window: it is the one whose build revisions bound
@@ -1858,7 +1898,7 @@ async function incidentsOf(target, args, flickerFor) {
       const jiraClosed = jira ? null : closedFlickerFor(id);
       const failedBuilds = row.perJob.reduce((n, job) => n + job.failedBuilds.length, 0);
       const seenBuilds = row.perJob.reduce((n, job) => n + job.seenBuilds.length, 0);
-      incidents.push({
+      flickering.push({ row, incident: {
         ...base(target, 1, 'flicker', id),
         state: verdict,
         tests: [id],
@@ -1878,11 +1918,13 @@ async function incidentsOf(target, args, flickerFor) {
         ...ageOf(window),
         window,
         blame: { tier: 'none', reason: 'a flicker rarely has a culprit commit', suspects: [] }
-      });
+      } });
     } else {
       breakages.push({ id, row, window, verdict, pseudo: isPseudoTest(id) });
     }
   }
+
+  incidents.push(...cofailing(flickering));
 
   // Tests that started failing in the same build broke together, and one cause deserves one
   // incident and one comment — never forty.
@@ -2116,6 +2158,9 @@ function severity(incident) {
   if (incident.class === 1 && incident.state === 'systematic' && incident.jira) return 1.5;
   if (incident.class === 1 && incident.kind === 'test-breakage') return 2;
   if (incident.class === 5) return 3;
+  // Tests failing in exactly the same builds are one cause the per-test issues never looked at as
+  // one, so they rank above any single flicker, tracked or not.
+  if (incident.cofailing) return 3.5;
   if (incident.class === 1 && incident.kind === 'flicker' && !incident.jira) return 4;
   if (incident.class === 3) return 5;
   return 5.5;
@@ -2689,7 +2734,7 @@ function renderDetail(report, { live }) {
     for (const incident of section.list) {
       const cause = causeOf(incident);
       const meta = [kindOf(incident), agedAs(incident),
-        incident.jira ? `tracked as ${jiraKey(incident)}` : null,
+        incident.jira ? `tracked as ${(incident.jiras || [jiraKey(incident)]).join(', ')}` : null,
         incident.jiraClosed ? closedAs(incident.jiraClosed) : null,
         incident.alsoOn?.length && incident.primary !== false ? `also red on ${incident.alsoOn.join(', ')}` : null,
         incident.buildUrl ? `[build](${incident.buildUrl})` : null].filter(Boolean).join(' · ');
@@ -2985,7 +3030,9 @@ function doneOf(incident, report) {
   if (incident.silent) return linked('already commented', incident.notified?.url);
   // Beyond the horizon the analysis is the paste's alone: nothing was posted, whoever it names.
   if (incident.beyondHorizon && incident.deep) return 'long-standing: cause and owner in the paste';
-  if (incident.jira) return `tracked: ${linked(incident.jira, browse(incident.jira))}`;
+  if (incident.jira) {
+    return `tracked: ${(incident.jiras || [jiraKey(incident)]).map(key => linked(key, browse(key))).join(', ')}`;
+  }
   return incident.deep ? 'no owner found' : 'in the paste, not analysed';
 }
 
@@ -3745,6 +3792,8 @@ function digest(incident, keys) {
     ageDays: incident.ageDays, ageIsLowerBound: incident.ageIsLowerBound,
     beyondHorizon: incident.beyondHorizon, testCount: incident.testCount ?? (incident.tests?.length || null),
     jira: incident.jira?.key || null, proven: incident.proven, deep: incident.deep,
+    // Tests of one class failing in exactly the same builds: one cause, and every issue tracking a part of it.
+    cofailing: incident.cofailing || undefined, jiras: incident.jiras,
     // §4's skip list, already applied: where a comment may go, or nothing.
     commentable: incident.commentable || undefined,
     // The suspects a proven culprit may be picked from, when the tool could pick none (§4).
