@@ -88,10 +88,12 @@ complete every section meaningfully:
 
 ## Check what the change adds to SonarCloud
 
-**Run a SonarCloud PR analysis on any PR that changes Java, not only on a Sonar cleanup**, whenever a
-`SONARQUBE_TOKEN` is available. It applies the same quality gate as the branch and is the *only*
-pre-merge check for the rules computed server-side (`javabugs:*` dataflow findings never appear in a
-local build or in the IDE). Run it after `gh pr create`, since it needs the PR number, from the
+A SonarCloud PR analysis is the *only* pre-merge check for server-side rules (`javabugs:*` never
+appear locally): **every PR changing Java gets one; fix what it reports before asking for review.** In
+xwiki-commons, -rendering and -platform the `Quality / Analyze` check runs it with Checkstyle and fails
+on a Sonar issue in a changed line — wait for it (`gh pr checks <n> --watch`), never run it by hand. It
+skips dependency bots; a fork by a non-member of the `xwiki` org gets Checkstyle only. Elsewhere
+(contrib, outside forks), with a `SONARQUBE_TOKEN`, run it once the PR exists, from the
 repository root on the whole reactor:
 
 ```bash
@@ -101,8 +103,7 @@ mvn -B -ntp sonar:sonar -Dsonar.token=$SONARQUBE_TOKEN -Dsonar.pullrequest.key=<
 ```
 
 Then read the verdict — `qualitygates/project_status?projectKey=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`
-— and the findings — `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>` — and fix
-what it reports before asking for review. Two facts that make this safe and cheap: a PR analysis is
+— and the findings — `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`. Two facts that make this safe and cheap: a PR analysis is
 stored separately from the branch's, so it never affects `master`'s measures or issues, and on
 xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
 Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.

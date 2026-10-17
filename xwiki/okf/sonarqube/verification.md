@@ -89,8 +89,9 @@ pre-flight check stays worth doing even with PR analysis in place.
 **`javabugs:*` findings are computed server-side, during the SonarCloud analysis** — neither the local
 scanner nor the IDE reports them, so no local build proves one gone. **A PR analysis does, before
 merge**, and it runs the same rules and gate as the branch: measured on xwiki-commons, a direct *and* an
-interprocedural null dereference were both reported and took the PR gate to ERROR. The recipe is in the
-`xwiki-pull-request` skill — no tests, no `-Pquality` and no coverage, which holds as long as the gate's
+interprocedural null dereference were both reported and took the PR gate to ERROR. In xwiki-commons,
+-rendering and -platform the PR's `Quality / Analyze` check runs it; elsewhere, the manual recipe is in
+the `xwiki-pull-request` skill — no tests, no `-Pquality` and no coverage, which holds as long as the gate's
 `new_coverage` condition stays disabled (`qualitygates/project_status` shows the conditions, and also
 names the red one). Before believing *or* dismissing such a finding, read the analyzer's own path:
 `&additionalFields=_all` on `issues/search` returns `flows[].locations[]`, whose `msg` chain states
