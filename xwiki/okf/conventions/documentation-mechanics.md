@@ -32,9 +32,7 @@ diagnosing why a page renders a warning.
 | `DocApp.Code.LandingPageClass` | The **landing page** equivalent of `DocumentationClass` — carries `highlights`, `summary`, `type`, `target`, `listChildren` |
 
 A documentation page carries the **first two**, and a newly created one needs **both** — a page missing
-the `DocumentationExtensionClass` object is incomplete even though nothing visibly breaks. Count
-documentation pages by their `DocumentationClass` object, as `XWikiOrg.NewDocumentationProgress`
-does: a Solr `space_prefix:documentation` query undercounts them.
+the `DocumentationExtensionClass` object is incomplete even though nothing visibly breaks.
 
 ## Landing pages carry a different class
 
