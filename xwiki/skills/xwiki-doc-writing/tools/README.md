@@ -186,7 +186,8 @@ you never have to open the PNG to find out.
   and to one carrying a **browser-like** UA. The tools send `curl/8.0`; see `okf/servers/index.md`.
 - Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
   the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
-- **A Change Request is created over HTTP, not REST**, and these tools do not do it. From a cookie
+- **A Change Request is created through the application's `/changerequest/` form endpoint — it has no
+  REST API** — and these tools do not do it. From a cookie
   session (POST `j_username`, `j_password` and the login page's `form_token` to
   `/bin/loginsubmit/XWiki/XWikiLogin`), POST the hidden fields of the
   `/bin/edit/<Space>/<Page>?editor=wiki` form with the new `content`, `docReference=<wiki>:<Space>.<Page>`,
