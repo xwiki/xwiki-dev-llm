@@ -9,7 +9,7 @@ Three answers: **what broke**, **which commit** — or that none did (a flicker,
 stale snapshot) — and **what to do next**, done by this run wherever it can be. Go down this list
 and stop as soon as the answers hold; every step is cheaper than the one after it.
 
-1. **The work order**: `evidence`, `blame`, `develocity`, `fixState`, `maskedBy`.
+1. **The work order**: `evidence`, `blame`, `develocity`, `fixState`, `maskedBy`, `snapshotGap`.
 2. **`tools/evidence.mjs`** — one bounded read of what the work order does not carry. For a test:
    its stack cut to XWiki's frames, the server's own errors during that test (the Docker tests
    capture the server log per test), and the screenshot and video archived for it — download the
@@ -27,7 +27,9 @@ and stop as soon as the answers hold; every step is cheaper than the one after i
    build). A lint, compile or enforcer failure reproduces in minutes, and so does a unit test. A
    functional test is not rerun here — that hour belongs to the stabilisation slot (§5).
 5. **The Environment Tests trap, by hand**, when only that job fails and the trace's line numbers
-   match the file at the commit's parent (`okf/servers/jenkins.md`).
+   match the file at the commit's parent (`okf/servers/jenkins.md`). An `infra` incident carrying `snapshotGap`
+   ran against jars that many commits behind its checkout: before blaming the agent, check whether
+   its failing tests use what those production commits changed (page objects, a new webjar).
 
 A *Next* cell that sends a person to do one of these reads is a step this run skipped.
 

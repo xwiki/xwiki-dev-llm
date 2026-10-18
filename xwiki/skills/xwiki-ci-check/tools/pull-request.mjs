@@ -25,6 +25,12 @@
  * `--assignee` is the culprit author for a fix PR, and refused for a flicker-stabilisation draft,
  * which is unassigned (§5).
  *
+ *   node pull-request.mjs --comment 6981 --repo xwiki-platform --file comment.md [--write]
+ *
+ * `--comment` answers on a PR this bot opened (its CI, a review) — the one comment a routine may
+ * post on a PR. It exists because a hand-written `curl` with the bot token went out under the
+ * routine owner's name on 2026-10-18: the sandbox's proxy re-signed the request.
+ *
  * Environment: GH_TOKEN_BOT — the bot account's token, and deliberately nothing else.
  */
 
@@ -122,6 +128,35 @@ export async function openPullRequest({ repo, head, base, title, body: text, ass
   return { url: pr.html_url, number: pr.number, steps, locked };
 }
 
+/**
+ * Comments on a PR the bot opened, as the bot, and checks the comment came back under its name.
+ *
+ * @returns {Promise<{url: string|null, refused?: string}>}
+ */
+export async function commentOnPullRequest({ repo, number, body, write = false }) {
+  const pull = await github(`/repos/xwiki/${repo}/pulls/${number}`);
+  if (!pull.labels?.some(label => label.name === LABEL)) {
+    return { url: null, refused: `#${number} does not carry ${LABEL}: the routine comments only on its own PRs` };
+  }
+  if (!write) {
+    console.log(`--- would comment on ${pull.html_url} ---\n${body}`);
+    return { url: null };
+  }
+  const bot = await github('/user');
+  if (pull.user?.login !== bot.login) {
+    return { url: null, refused: `#${number} was opened by ${pull.user?.login}, not ${bot.login}` };
+  }
+  const created = await github(`/repos/xwiki/${repo}/issues/${number}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ body })
+  });
+  // Said, not assumed: the identity this exists to protect is the one thing worth reading back.
+  if (created.user?.login !== bot.login) {
+    return { url: created.html_url, refused: `posted as ${created.user?.login}, not ${bot.login} — delete it by hand` };
+  }
+  return { url: created.html_url };
+}
+
 // stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
 // reader has not drained yet, so exit from the callback of a write queued behind it instead.
 const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
@@ -138,10 +173,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else if (argv[i] === '--title') options.title = argv[++i];
     else if (argv[i] === '--file') options.file = argv[++i];
     else if (argv[i] === '--assignee') options.assignee = argv[++i];
+    else if (argv[i] === '--comment') options.comment = argv[++i];
     else if (argv[i] === '--draft') options.draft = true;
     else if (argv[i] === '--write') options.write = true;
     else if (argv[i] === '--dry-run') options.write = false;
     else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
+  }
+  if (options.comment) {
+    if (!options.repo || !options.file) { console.error('--comment needs --repo and --file'); process.exit(2); }
+    if (!token && options.write) { console.error('GH_TOKEN_BOT is not set: this tool comments as the CI bot or not at all.'); process.exit(2); }
+    const result = await commentOnPullRequest({ repo: options.repo, number: options.comment,
+      body: readFileSync(options.file, 'utf8'), write: options.write });
+    if (result.refused) {
+      console.error(`not commented: ${result.refused}${result.url ? ` — ${result.url}` : ''}`);
+      process.exit(4);
+    }
+    console.log(result.url ?? 'not commented (rehearsal — pass --write to post)');
+    await exitAfterOutput(0);
   }
   for (const required of ['workOrder', 'kind', 'repo', 'head', 'base', 'title', 'file']) {
     if (!options[required]) { console.error(`--${required.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)} is required`); process.exit(2); }

@@ -36,7 +36,8 @@
  *
  * `--proof` is for an incident carrying `provable` rather than `commentable`: the tool could not
  * pick a culprit, and the run proved one among its suspects. The sha must be one of them, and the
- * comment carries the proof's kind and `--why` under the body.
+ * comment carries the proof's kind and `--why` under the body. On a `commentable` commit it raises
+ * what the comment may say: the tool's `likely` pick, once reproduced, may state the cause.
  *
  * `--pr` posts the same comment, with the same marker and the same idempotency, on a pull request
  * instead of a commit. It exists for the quality gate: the issues that fail it were introduced in a
@@ -77,6 +78,13 @@ const PROOF_LABELS = {
   'diff-link': 'read from the diff, not reproduced'
 };
 
+/** Why a proof is not one, or null. */
+function unproven(proof, why) {
+  if (!PROOFS[proof]) return `a culprit the tool did not pick needs --proof ${Object.keys(PROOFS).join('|')}`;
+  if (!why || why.trim().length < 20) return '--why must say, in one sentence, what links the commit to the failure';
+  return null;
+}
+
 /**
  * The target of a comment on a culprit the model proved among the tool's suspects, an explanation
  * of why there is none, or null when the incident is not `provable` at all.
@@ -84,13 +92,28 @@ const PROOF_LABELS = {
 function provenTarget(found, { sha, pr, proof, why }) {
   if (!found.provable) return null;
   if (pr) return 'a proven culprit is a commit: pass --sha';
-  if (!PROOFS[proof]) return `a culprit the tool did not pick needs --proof ${Object.keys(PROOFS).join('|')}`;
-  if (!why || why.trim().length < 20) return '--why must say, in one sentence, what links the commit to the failure';
+  const weak = unproven(proof, why);
+  if (weak) return weak;
   const suspect = found.provable.suspects.find(entry => sha && sha.length >= 7 && entry.sha.startsWith(sha));
   if (!suspect) {
     return `${sha} is not one of the incident's suspects — a proof picks among them, never outside the window`;
   }
   return { repo: found.provable.repo, state: found.provable.state, sha: suspect.sha, tier: PROOFS[proof], proof, why };
+}
+
+/**
+ * The tool's own pick, raised by a proof. On 2026-10-18 the run reproduced master's lint break on
+ * the rule b565ea607d enabled, and still had to *ask* its author, because `likely` was the tool's
+ * tier and only `provable` took a proof. A proof never moves the target, and a gate's comment stays
+ * `likely` whatever is proven: it names whose code is under a condition, not who broke a build.
+ */
+function raisedTarget(found, { proof, why }) {
+  const target = found.commentable;
+  if (!proof) return target;
+  if (target.pr || found.sonar) return 'a quality-gate comment is worded likely, never more: drop --proof';
+  const weak = unproven(proof, why);
+  if (weak) return weak;
+  return { ...target, tier: target.tier === 'certain' ? 'certain' : PROOFS[proof], proof, why };
 }
 
 /**
@@ -106,7 +129,7 @@ export function refusal(report, { incident, repo, state, sha, pr, proof, why }) 
     return `one comment per commit per run (SKILL.md §4): this incident goes in the comment of ${found.commentedWith}`
       + ' — write both into that one body';
   }
-  const target = found.commentable || provenTarget(found, { sha, pr, proof, why });
+  const target = found.commentable ? raisedTarget(found, { proof, why }) : provenTarget(found, { sha, pr, proof, why });
   if (typeof target === 'string') return target;
   if (!target) return 'the work order does not make this incident commentable (SKILL.md §4)';
   if (repo && repo !== target.repo) return `the incident is in ${target.repo}, not ${repo}`;
@@ -208,7 +231,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await exitAfterOutput(0);
   }
   const found = report.incidents.find(entry => entry.id === options.incident);
-  const target = found.commentable || provenTarget(found, options);
+  const target = found.commentable ? raisedTarget(found, options) : provenTarget(found, options);
   options.repo ??= target.repo;
   options.state ??= target.state;
   options.covers = target.covers || [];

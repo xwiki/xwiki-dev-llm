@@ -52,7 +52,8 @@ export const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}
 const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
   : fix.fromChat ? `[what was said](${fix.url})` : `\`${fix.sha}\``);
 /**
- * The headline each kind of answer earns, and what closes its paragraph.
+ * The headline each kind of answer earns, what closes its paragraph, and its row's *Why* — the
+ * answer is the reason, where a test's state words ("fails every run") would read as a defect.
  *
  * The wording is the whole difference between the two: a commit that touches the failing file has
  * landed and will be judged by the next build, whereas a PR naming the test is somebody's intent —
@@ -61,30 +62,36 @@ const fixRef = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
  */
 export const FIX_HEAD = {
   'fix-unbuilt': {
+    why: 'a commit CI has not built yet looks like the fix',
     whole: 'Possibly fixed already', part: 'Part of this may be fixed already', link: 'by',
     quiet: 'Not analysed, nobody pinged — the next build settles it.'
   },
   'fix-in-flight': {
+    why: 'an open PR names this test',
     whole: 'A fix may be in flight', part: 'Part of this may be in flight', link: '—',
     quiet: 'Not analysed, nobody pinged — the PR is where this gets settled.'
   },
   'stale-snapshot': {
+    why: 'new test code ran against older production jars — no defect shown',
     whole: 'Ran against a stale snapshot', part: 'Part of this ran against a stale snapshot',
     link: '—',
     quiet: 'Not analysed, nobody pinged — the next Environment Tests run has the production code.'
   },
   announced: {
+    why: 'the room was told this was coming',
     whole: 'Announced in the room before it broke', part: 'Part of this was announced in the room',
     link: '—',
     quiet: 'Not analysed, nobody pinged — the room was told this was coming, so the commit this '
       + 'would otherwise be pinned on broke nothing that was working.'
   },
   'being-handled': {
+    why: 'somebody has said they are on it',
     whole: 'Somebody has said they are on it', part: 'Part of this is claimed',
     link: '—',
     quiet: 'Not analysed, nobody pinged — it is claimed, and the claim is at most two days old.'
   },
   'fixed-elsewhere': {
+    why: 'green again on another branch',
     whole: 'Already fixed on another branch', part: 'Part of this is fixed on another branch',
     link: 'by',
     quiet: 'Not analysed, nobody pinged — this is a backport candidate: hand the commit to'
@@ -313,12 +320,19 @@ const STATE_WORDS = {
  * often, over what, in how many environments), which is as far as a renderer can honestly go.
  */
 function whyOf(incident) {
+  if (settled(incident)) return FIX_HEAD[incident.fixState.kind].why;
   if (incident.sonar?.conditions?.length) {
     return incident.sonar.conditions
       .map(condition => `${condition.name} is ${condition.actual}, the gate wants ${condition.threshold}`)
       .join('; ');
   }
-  if (incident.class === 3) return 'the agent or the environment, not the code';
+  if (incident.class === 3) {
+    const gap = incident.snapshotGap;
+    return gap ? `the environment — or the stale snapshot: its jars are from main #${gap.deployedBuild}, `
+      + `${plural(gap.behind, 'commit')} behind, ${gap.changes} `
+      + `of them production changes (newest: ${gap.production.map(commit => `\`${commit.sha}\``).join(', ')})`
+      : 'the agent or the environment, not the code';
+  }
   const bits = [];
   if (incident.class === 1) {
     bits.push(STATE_WORDS[incident.state] || incident.state);
@@ -365,6 +379,18 @@ const unshipped = closed => (closed.unreleased?.length
  */
 const unfixed = closed => !!closed.resolution && closed.resolution !== 'Fixed';
 
+/**
+ * The maintenance line a closed issue's fix skips, as `18.8.x`, or null. Pointed out whatever the
+ * horizon, since it asks for nothing to be written: on 2026-10-18 `ExtensionSecurityTest` failed on
+ * stable-18.8.x for 17 days as "counted, not written about", while XWIKI-25242's Fix Versions
+ * (17.10.14, 18.9.0-rc-1, 18.4.7) said the fix had never reached that line.
+ */
+export function missingLine(closed, branch) {
+  const line = String(branch).match(/^stable-(\d+\.\d+)\.x$/)?.[1];
+  if (!line || unfixed(closed) || !closed.fixVersions?.length) return null;
+  return closed.fixVersions.some(version => version.startsWith(`${line}.`)) ? null : `${line}.x`;
+}
+
 /** Why nobody is asked to do anything — always a reason, never an empty cell. */
 function noOneOwes(incident, horizonDays) {
   if (incident.beyondHorizon) return `older than the ${horizonDays}-day horizon — counted, not written about`;
@@ -383,7 +409,10 @@ function noOneOwes(incident, horizonDays) {
   if (incident.kind === 'flicker' && !incident.proven) {
     return 'not proven yet — an issue is earned by two builds on two days';
   }
-  if (incident.class === 3) return 'nothing in the code to change; watch for the same agent tomorrow';
+  if (incident.class === 3) {
+    return incident.snapshotGap ? 'expect it to clear once main deploys a snapshot again'
+      : 'nothing in the code to change; watch for the same agent tomorrow';
+  }
   return 'below the analysis budget — reported, not analysed';
 }
 
@@ -423,6 +452,12 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
     if (incident.jira && incident.state === 'systematic') {
       lines.push(`someone → re-triage ${jiraKey(incident)}: filed as a flicker, failing every run`);
     }
+  }
+  const missing = incident.jiraClosed && !settled(incident) && incident.primary !== false
+    && missingLine(incident.jiraClosed, incident.branch);
+  if (missing) {
+    lines.push(`someone → backport ${incident.jiraClosed.key}'s fix to ${missing} with \`xwiki-backport\``
+      + ' — its Fix Versions skip this line; verify first');
   }
   if (incident.deep && !settled(incident)) {
     lines.push(`<!-- NEXT: ${incident.id} -->`);
@@ -622,14 +657,19 @@ export function renderDetail(report, { live }) {
   const deep = incidents.filter(incident => incident.deep);
   const recalled = incidents.filter(incident => incident.recalled);
   // Only what the tool knows: whether a comment then goes is the run's decision, in each COMMENT cell.
-  const noOwner = deep.filter(incident => !incident.commentable && !incident.provable && !incident.commentedWith);
-  notes.push(`**No culprit candidate for ${noOwner.length} of the ${deep.length} analysed** — no commit` +
-    ` to attribute them to. **${summary.alreadyCommented}** already carried a comment in the same state,` +
-    ` **${summary.beyondHorizon}** are older than the ${report.horizonDays}-day horizon,` +
-    ` **${recalled.length}** were concluded on an earlier morning and have not changed, and` +
-    ` **${Math.max(0, summary.incidents - deep.length - recalled.length - incidents.filter(settled).length -
-      incidents.filter(incident => incident.primary === false).length)}** were below the deep budget` +
-    ` of ${report.budget} — reported without analysis, by design.`);
+  // Each incident is counted once: an analysed one already commented on has a culprit, and one
+  // beyond the horizon is not also "below the budget" (2026-10-18 counted both, and said "1 are").
+  const named = deep.filter(incident => incident.commentable || incident.provable || incident.commentedWith
+    || incident.silent);
+  const rest = incidents.filter(incident => !incident.deep && !incident.recalled && incident.primary !== false);
+  const answered = rest.filter(settled).length;
+  const old = rest.filter(incident => !settled(incident) && incident.beyondHorizon).length;
+  const below = rest.length - answered - old;
+  notes.push(`**A culprit candidate for ${named.length} of the ${deep.length} analysed**` +
+    `${deep.length > named.length ? ` — no commit to attribute the other ${deep.length - named.length} to` : ''}.` +
+    ` Not analysed: **${answered}** already answered, **${old}** older than the ${report.horizonDays}-day` +
+    ` horizon, **${recalled.length}** concluded on an earlier morning and unchanged, **${below}** below the` +
+    ` deep budget of ${report.budget} — reported, by design.`);
   out.push('', '---', '', ...notes.map(note => `_${note}_`));
   // What tomorrow's run reads back: the analysed rows keep today's date, the recalled ones the date
   // they were concluded on, so a conclusion ages out however many mornings it is carried.
@@ -722,6 +762,18 @@ export const stateLine = incident => [
   incident.beyondHorizon ? 'long-standing' : ''
 ].join('/');
 
+/** An answer as the room reads it: the digest printed `answer being-handled → none` on 2026-10-18. */
+const ANSWER_WORDS = {
+  none: 'unanswered', 'fix-unbuilt': 'a fix unbuilt', 'fix-in-flight': 'a fix PR open',
+  'stale-snapshot': 'a stale snapshot', announced: 'announced', 'being-handled': 'claimed in the room',
+  'fixed-elsewhere': 'fixed on another branch'
+};
+const answerWords = answer => ANSWER_WORDS[answer] || answer;
+const movedAs = (what, from, to) => {
+  if (what !== 'answer') return `${from} → ${to}`;
+  return to === 'none' ? `no longer ${answerWords(from)}` : `${answerWords(from)} → ${answerWords(to)}`;
+};
+
 const parseLine = line => {
   const [kind = '', state = '', answer = '', horizon = ''] = String(line ?? '').split('/');
   return { kind, state, answer, beyondHorizon: horizon === 'long-standing' };
@@ -782,7 +834,7 @@ export function deltaOf(report, previous) {
     const moves = [['kind', was.kind, now.kind], ['state', was.state, now.state],
       ['answer', was.answer || 'none', now.answer || 'none']]
       .filter(([, from, to]) => from !== to)
-      .map(([what, from, to]) => `${what} ${from} → ${to}`);
+      .map(([what, from, to]) => movedAs(what, from, to));
     if (moves.length) {
       changed.push({ id: incident.id, from: was.line, to: state[incident.id], moved: moves,
         dot: DOTS[unreleasable(incident) ? 'red' : 'orange'] });

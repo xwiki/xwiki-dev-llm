@@ -319,6 +319,51 @@ export function shortly(before, after) {
 }
 
 /**
+ * What the latest Environment Tests build checked out beyond the jars it could have resolved: the
+ * main build those jars came from, and the commits in between. Null when there is no gap.
+ */
+async function snapshotGap(repo, jobs, args) {
+  if (!args.github || !token) return null;
+  const env = jobs.find(job => job.label === 'env-tests');
+  const main = jobs.find(job => job.label === 'main');
+  const latest = env?.builds?.[0];
+  // Whether the jars have caught up is what `deployedRevision` answers: a commit after it is absent
+  // from this build's jars however many runs the failure has lasted — and while the main job cannot
+  // deploy, every run is stale.
+  if (!latest || !main) return null;
+  const built = await buildRevision(`${env.url}/${latest.number}`, repo);
+  const deployed = await deployedRevision(main, latest.timestamp, repo);
+  if (!built || !deployed?.sha || built === deployed.sha) return null;
+  // The default 20, not fewer: a main job stuck before its deploy widens the gap, and on 2026-10-17
+  // the commit doing both halves was the 11th newest of 14.
+  return { latest, deployed, commits: await commitsBetween(repo, deployed.sha, built) };
+}
+
+/**
+ * The stale snapshot behind an Environment Tests *setup* failure, as a fact beside it — never an
+ * answer. A setup failure names no test file, so `staleSnapshot` cannot tie it to one commit; on
+ * 2026-10-18 seventeen realtime tests were "infrastructure" while their page objects and a new
+ * webjar sat in commits the jars, three main builds behind, did not have. Reported, so that the
+ * analysis starts there and the row stops blaming the agent; it suppresses nothing.
+ */
+export async function infraSnapshotGap(incident, jobs, args) {
+  if (incident.class !== 3 || incident.window?.job !== 'env-tests' || incident.beyondHorizon) return null;
+  try {
+    const gap = await snapshotGap(incident.repo, jobs, args);
+    const production = (gap?.commits || []).filter(commit => productionIn(commit).length);
+    if (!production.length) return null;
+    return {
+      deployedBuild: gap.deployed.number, build: gap.latest.number, behind: gap.commits.length,
+      changes: production.length,
+      production: production.slice(-5).map(commit => ({ sha: commit.short, author: commit.author || null,
+        title: commit.title, url: commit.url }))
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Whether this incident is the job running new test code against older production code.
  *
  * The evidence is one commit doing both halves of the trap — touching the failing test class *and*
@@ -334,21 +379,10 @@ export async function staleSnapshot(incident, jobs, args) {
   // saw it break first, which is why this reads the jobs it is failing in now.
   const failing = incident.failingJobs || [incident.window?.job || incident.job];
   if (failing.length !== 1 || failing[0] !== 'env-tests') return null;
-  if (!args.github || !token) return null;
-  const env = jobs.find(job => job.label === 'env-tests');
-  const main = jobs.find(job => job.label === 'main');
-  const latest = env?.builds?.[0];
-  // Whether the jars have caught up is what `deployedRevision` answers: a commit after it is absent
-  // from this build's jars however many runs the failure has lasted — and while the main job cannot
-  // deploy, every run is stale.
-  if (!latest || !main) return null;
   try {
-    const built = await buildRevision(`${env.url}/${latest.number}`, incident.repo);
-    const deployed = await deployedRevision(main, latest.timestamp, incident.repo);
-    if (!built || !deployed?.sha || built === deployed.sha) return null;
-    // The default 20, not fewer: a main job stuck before its deploy widens the gap, and on 2026-10-17
-    // the commit doing both halves was the 11th newest of 14.
-    const commits = await commitsBetween(incident.repo, deployed.sha, built);
+    const gap = await snapshotGap(incident.repo, jobs, args);
+    if (!gap) return null;
+    const { latest, commits } = gap;
     const { groups } = forwardKeys(incident);
     const trap = commits.filter(commit => productionIn(commit).length);
     const covered = groups.filter(keys => trap.some(commit => keys.some(key => touches(commit, key))));
@@ -363,7 +397,7 @@ export async function staleSnapshot(incident, jobs, args) {
       url: commit.url,
       where: commit.date
         ? `pushed ${shortly(Date.parse(commit.date), latest.timestamp)} before build #${latest.number} started`
-        : `pushed after main build #${deployed.number}, which build #${latest.number} could not have`
+        : `pushed after main build #${gap.deployed.number}, which build #${latest.number} could not have`
           + ' resolved',
       covers: covered.map(keys => keys[keys.length - 1].replace(/\.java$/, '')),
       of: groups.length,

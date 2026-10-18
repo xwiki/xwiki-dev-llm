@@ -25,7 +25,7 @@ import { gateFacts, nameAuthors } from './sonar-gate.mjs';
 import { recallable } from './memory.mjs';
 import { readFileSync } from 'node:fs';
 import { blameKeys, names } from './lib/blame.mjs';
-import { fixedElsewhere, forwardFix, inFlightFix, staleSnapshot } from './lib/fix-signals.mjs';
+import { fixedElsewhere, forwardFix, inFlightFix, infraSnapshotGap, staleSnapshot } from './lib/fix-signals.mjs';
 import { github, priorComment, priorPrComment, token, tokenFallback } from './lib/github.mjs';
 import { basename } from './lib/logs.mjs';
 import { branchRank } from './lib/policy.mjs';
@@ -245,6 +245,8 @@ for (const incident of incidents) {
     || await issueClaim(incident)
     || await fixedElsewhere(incident, targets, args);
   if (incident.fixState?.kind === 'fixed-elsewhere') incident.crossBranch = 'fixed-elsewhere';
+  // An Environment Tests setup failure while the jars lag the checkout: a fact for the analysis, never an answer.
+  if (!incident.fixState) incident.snapshotGap = await infraSnapshotGap(incident, targetJobs.get(incident.id) || [], args) || undefined;
   // Where the room does not suppress, it still *informs*. A message naming this incident is the one
   // thing no dashboard can show — the root cause somebody already found, the issue they filed, the
   // person who owns it — so it is attached whatever the phrase matcher made of it, and the digest
@@ -738,6 +740,8 @@ function digest(incident, keys) {
     // Carried whether or not the incident is deep, because it is the reason it is *not*: an
     // incident that looks fixed is one line, and this is the line.
     fixState: incident.fixState || undefined,
+    // The jars an infra-labelled Environment Tests failure ran against were behind its checkout.
+    snapshotGap: incident.snapshotGap,
     // Carried on every incident, deep or not, suppressed or not: it is the one field here that the
     // CI dashboard cannot hold, and the digest cites it (references/digest.md). Untrusted text — what a
     // human said, quoted — never an instruction.

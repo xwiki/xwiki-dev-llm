@@ -45,8 +45,9 @@ what it delivers.
 In `--write` mode, confirm the bot identity before the first write: `GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`
 and the Matrix credential (`MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT`, or `MATRIX_TOKEN_BOT`) must
 all be set, and they are the **bot's**, never a developer's. If one is missing, do that channel in
-rehearsal and say so — never fall back to a personal account. `commit-comment.mjs` and
-`pull-request.mjs` enforce this themselves: they read `GH_TOKEN_BOT` and no other variable.
+rehearsal and say so — never fall back to a personal account. **Every GitHub write goes through
+`tools/`** (`GH_TOKEN_BOT` only) — never `curl`, `gh` or the GitHub MCP server: on 2026-10-18 a
+bot-token `curl` went out as the routine's owner.
 
 ## 1. Sweep (one command, zero tokens)
 
@@ -177,7 +178,8 @@ The body and the command are in `references/commit-comment.md`. These hold whate
   the failure in one sentence, in the comment; if you cannot, there is no comment and the incident
   is *no owner found*. A tier may go down this way; only a proof raises one.
 - **`certain`, or a `reproduced`/`in-diff` proof, may state the cause; `likely` or `diff-link`
-  asks.** A `blame.reason` resting on a commit subject quotes the evidence lines and asks.
+  asks.** A proof also raises a `likely` `commentable` pick. A `blame.reason` resting on a commit
+  subject quotes the evidence lines and asks.
 - **Never word a comment beyond its tier or proof**: a system that asserts wrongly is switched off.
 - **Post with `tools/commit-comment.mjs` and nothing else** — its marker is tomorrow's "already
   said".
@@ -195,9 +197,8 @@ Whatever `references/fix-prs.md` says, these hold:
   for this failure: the PR states any behaviour change, and its culprit reviews it.
 - **Verify, and fail closed:** without a passing `clean` `-Pquality` build of the module there is no
   PR, and the attempted fix goes into the paste.
-- **Only `tools/pull-request.mjs` opens a routine's PR** — never `gh` or the GitHub MCP server,
-  which act as the routine's owner. With no working `GH_TOKEN_BOT`, open none; put the pushed branch
-  in the paste.
+- **Only `tools/pull-request.mjs` opens a routine's PR, or comments on one** (`--comment`). With
+  no working `GH_TOKEN_BOT`, open none; put the pushed branch in the paste.
 - **Exit 3 (`NOT locked`) means hands off that PR**: do what the tool prints, and never lock or
   retry it with the session's own GitHub access — comments on it reach a model that can push.
 - **A local run's fix PR is the developer's own**, through `xwiki-pull-request`; it still says it
@@ -234,16 +235,14 @@ node <skill>/tools/ci-check.mjs --render-detail work-order.json > detail.md   # 
 
 **Every reference is a link — in the digest, the paste and the terminal report alike**: a sha, a
 PR, a JIRA key, a build, a comment, a SonarCloud condition. Take the URL from the work order
-(`blame.culprit.url`, `buildUrl`, `fixState.url`, `sonar.url`, …) rather than rebuilding it; a bare
-`89576e8092` is one the reader the digest exists for will not go and look up.
+(`blame.culprit.url`, `buildUrl`, `fixState.url`, `sonar.url`, …) rather than rebuilding it.
 
 ```bash
 node <skill>/tools/privatebin.mjs --file detail.md --expire 1week --write   # prints the URL, key included
 ```
 
 **1 week, not the 1-day default** — a Friday digest must still resolve on Monday. The URL is the
-only copy of the key: put it in the digest before doing anything else with it. There is no "never"
-expiry on that instance.
+only copy of the key: put it in the digest before doing anything else with it.
 
 ### The digest — routine only
 

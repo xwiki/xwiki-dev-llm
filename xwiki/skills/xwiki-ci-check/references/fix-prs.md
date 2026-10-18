@@ -84,6 +84,12 @@ Follow `xwiki-pull-request` for the commit message and the description.
   would read as that colleague's work. Without a working `GH_TOKEN_BOT`, open no PR and put the
   pushed branch in the paste.
 
+**Answering on the bot's PR** — its red check, a review — goes through `pull-request.mjs --comment
+<number> --repo <repo> --file comment.md --write`, which posts only on a PR the bot opened and reads
+the author back. GitHub's `Quality / Analyze` check builds only the changed modules: on a webjar
+that imports workspace packages from `xwiki-platform-node`, `tsc` fails on missing declarations
+whatever the change. Say so once on the PR rather than re-running it.
+
 **The lock is required, not cosmetic.** The routine runs with *Auto-fix PRs* turned on in its
 config, so every comment on its PRs reaches a model that can push, and the lock limits who may write
 one to collaborators. If the tool exits 3 (`NOT locked — …`), this session must not act on that PR,
