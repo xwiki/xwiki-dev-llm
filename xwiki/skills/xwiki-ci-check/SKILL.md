@@ -57,7 +57,7 @@ node <skill>/tools/matrix.mjs --last-memory > memory.json         # what earlier
 node <skill>/tools/ci-check.mjs --chat chat.json --memory memory.json > work-order.json
 ```
 
-Write these files to a scratch directory, never into a checkout.
+Write these files to a scratch directory, not a checkout.
 
 **Read the room and the memory before sweeping** — `last-digest` is "since we last spoke". Both
 reads fail open: without them the sweep runs as it would have.
@@ -207,8 +207,9 @@ Whatever `references/fix-prs.md` says, these hold:
 ### Flicker-stabilisation draft PRs — one per run, and only when nothing blocks a release
 
 Only the incident marked `stabilise` (`references/stabilise.md`); else `summary.stabilise.skipped`
-says why. The pick is the tool's — never stabilise a flake while a break is open, never promote a
-second candidate. The draft is unassigned (`pull-request.mjs --kind stabilise`), outside
+says why — and `.prove` names a blocker to prove instead (`references/prove.md`).
+The pick is the tool's — never stabilise a flake while a break is open, never promote a second
+candidate. The draft is unassigned (`pull-request.mjs --kind stabilise`), outside
 the two fix-PR slots, and on a laptop asked about **before starting**: it holds port 8080 and Docker
 for up to an hour.
 

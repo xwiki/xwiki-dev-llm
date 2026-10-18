@@ -33,7 +33,7 @@ left — `privatebin.mjs` refuses a paste still holding one:
 
 | Marker | Where | What replaces it |
 |---|---|---|
-| `<!-- COMMENT: <id> -->` | the *Next — who* cell of a `commentable` or `provable` incident | what §4 did: `bot → [commented](<comment URL>) on [<sha>](<url>) (<login>)`; a rehearsal or a local no, said as such; or `nobody → no owner found — <why the candidate was dropped, or which suspects were ruled out>` |
+| `<!-- COMMENT: <id> -->` | the *Next — who* cell of a `commentable` or `provable` incident | what §4 did: `bot → [commented](<comment URL>) on [<sha>](<url>) (<login>)`; a rehearsal or a local no, said as such; or `nobody → no owner found — <why the candidate was dropped, or which suspects were ruled out>`; on the `prove` incident, the proof's result (`references/prove.md`) |
 | `<!-- CANDIDATE: <id> -->` | the block of an unconfirmed `fix-in-flight` | **A fix may be in flight** — the linked PR, its author and title — when you confirmed it changes what makes this failure fail; otherwise nothing (`references/fix-signals.md`) |
 
 A `commentedWith` incident's cell names the row whose comment answers it too: one comment per

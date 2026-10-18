@@ -101,11 +101,17 @@ export async function priorPrComment(repo, number, incidentId) {
   return markerIn(await github(`/repos/xwiki/${repo}/issues/${number}/comments`), incidentId);
 }
 
-function markerIn(comments, incidentId) {
-  for (const comment of comments || []) {
+/**
+ * The first comment carrying this incident's marker, and how many people have written in that
+ * thread since — the bot's own later comments are not an answer.
+ */
+export function markerIn(comments, incidentId) {
+  for (const [index, comment] of (comments || []).entries()) {
     // One comment may carry several markers: one per incident it answered (§4, one per commit).
     for (const marker of (comment.body || '').matchAll(/<!--\s*xwiki-ci-check:\s*(\S+)\s+state=(\S+)\s*-->/g)) {
-      if (marker[1] === incidentId) return { state: marker[2], url: comment.html_url, at: comment.created_at };
+      if (marker[1] !== incidentId) continue;
+      const replies = comments.slice(index + 1).filter(later => !BOT_LOGIN.test(later.user?.login || '')).length;
+      return { state: marker[2], url: comment.html_url, at: comment.created_at, replies };
     }
   }
   return null;

@@ -109,6 +109,11 @@ function provenTarget(found, { sha, pr, proof, why }) {
  */
 function raisedTarget(found, { proof, why }) {
   const target = found.commentable;
+  // The incident the stabilisation slot proved: its culprit was asked already, so a second comment
+  // is the proof or nothing.
+  if (target.followUp && proof !== target.followUp) {
+    return `this commit was already asked: the follow-up goes only with --proof ${target.followUp}`;
+  }
   if (!proof) return target;
   if (target.pr || found.sonar) return 'a quality-gate comment is worded likely, never more: drop --proof';
   const weak = unproven(proof, why);

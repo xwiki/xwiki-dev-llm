@@ -438,9 +438,17 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
     lines.push(`see ${cause ? `#${cause.number}` : 'above'} → one cause, analysed on ` +
       `${cause?.branch || incident.alsoOn?.[0] || 'another branch'}`);
   } else if (!incident.beyondHorizon) {
-    if (incident.silent) {
+    if (incident.unanswered) {
+      lines.push(`done → asked ${incident.unanswered.author || 'its author'} on ${incident.unanswered.since}, no answer yet`);
+    } else if (incident.silent) {
       lines.push('done → already commented, in this same state');
-    } else if (incident.commentable || incident.provable) {
+    }
+    // The one incident already asked that still gets a COMMENT cell: the proof's follow-up, or why none went.
+    if (incident.prove) {
+      lines.push(`bot → run the test at \`${incident.commentable.sha.slice(0, 10)}\` and at its parent, `
+        + 'in the stabilisation slot: prove the cause or drop the suspicion');
+    }
+    if (incident.commentable || incident.provable) {
       // Whether the comment goes is the run's decision (§4 may drop the culprit), so a line saying
       // it went would be false the moment it does not: the run fills this in once it has decided.
       lines.push(`<!-- COMMENT: ${incident.id} -->`);
@@ -653,6 +661,10 @@ export function renderDetail(report, { live }) {
       .map(id => (numbers.has(id) ? `#${numbers.get(id)}` : id));
     notes.push(`**No stabilisation fix this run** — ${stabilise.skipped}` +
       `${named.length ? ` (${named.join(', ')})` : ''}.`);
+    if (stabilise.prove) {
+      notes.push(`**The slot proves #${numbers.get(stabilise.prove.id)} instead** — \`${stabilise.prove.short}\``
+        + ` (${stabilise.prove.author || 'its author'}) was asked on ${stabilise.prove.asked} and has not answered.`);
+    }
   }
   const deep = incidents.filter(incident => incident.deep);
   const recalled = incidents.filter(incident => incident.recalled);
@@ -674,7 +686,8 @@ export function renderDetail(report, { live }) {
   // What tomorrow's run reads back: the analysed rows keep today's date, the recalled ones the date
   // they were concluded on, so a conclusion ages out however many mornings it is carried.
   out.push(...memoryBlock(date, numbers, [
-    ...deep.map(incident => ({ id: incident.id, state: incident.memoryState, analysedOn: date })),
+    ...deep.map(incident => ({ id: incident.id, state: incident.memoryState, analysedOn: date, asked: incident.asked,
+      proved: incident.prove ? date : incident.provedOn })),
     ...recalled.map(incident => ({
       id: incident.id, state: incident.memoryState, analysedOn: incident.recalled.analysedOn
     }))
@@ -910,11 +923,15 @@ function doneOf(incident, report) {
   }
   // What the run itself may have done — commented, filed, commented on a closed issue, confirmed a
   // candidate PR — is known only once it has done it.
+  // Named, not @-mentioned: the room sees who has been asked and for how long, and nobody is pinged twice.
+  const unanswered = incident.unanswered && `asked ${incident.unanswered.author || 'its author'} on `
+    + `${linked(incident.unanswered.since, incident.unanswered.url)}, no answer yet`;
   if (incident.commentable || incident.provable || incident.commentedWith || incident.flickerGroup
     || incident.jiraClosed || fix?.candidate) {
-    return `<!-- DONE: ${incident.id} -->`;
+    return `${unanswered ? `${unanswered} · ` : ''}<!-- DONE: ${incident.id} -->`;
   }
   if (incident.recalled) return `as concluded on ${incident.recalled.analysedOn} — in the paste`;
+  if (unanswered) return unanswered;
   if (incident.silent) return linked('already commented', incident.notified?.url);
   // Beyond the horizon the analysis is the paste's alone: nothing was posted, whoever it names.
   if (incident.beyondHorizon && incident.deep) return 'long-standing: cause and owner in the paste';

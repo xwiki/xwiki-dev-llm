@@ -20,12 +20,13 @@ const FENCE = /```json\n([\s\S]*?)\n```/;
  *
  * @param {string} date the run's day
  * @param {Map<string, number>} numbers incident id → row number
- * @param {object[]} incidents those worth remembering: `{id, state, analysedOn}`
+ * @param {object[]} incidents those worth remembering: `{id, state, analysedOn}`, and `asked` (the
+ *   day its culprit was asked) and `proved` (the day the run last tried to prove it) when they apply
  */
 export function memoryBlock(date, numbers, incidents) {
   const rows = {};
-  for (const { id, state, analysedOn } of incidents) {
-    if (numbers.has(id)) rows[numbers.get(id)] = { id, state, analysedOn };
+  for (const { id, state, analysedOn, asked, proved } of incidents) {
+    if (numbers.has(id)) rows[numbers.get(id)] = { id, state, analysedOn, ...(asked ? { asked } : {}), ...(proved ? { proved } : {}) };
   }
   return ['', '<details>', BLOCK_HEAD, '', '```json', JSON.stringify({ v: 1, date, rows }), '```', '', '</details>'];
 }
@@ -34,7 +35,7 @@ export function memoryBlock(date, numbers, incidents) {
 const uncell = text => text.replace(/<br>/g, '\n').replace(/\\\|/g, '|').trim();
 
 /**
- * `{id: {state, analysedOn, why, next, analysis}}` from a paste's text, or `{}` when it carries no
+ * `{id: {state, analysedOn, asked, proved, why, next, analysis}}` from a paste's text, or `{}` when it carries no
  * memory block (a paste from before this existed, or not a paste of this skill at all).
  */
 export function memoryOf(paste) {
@@ -49,7 +50,7 @@ export function memoryOf(paste) {
     return {};
   }
   const out = {};
-  for (const [number, { id, state, analysedOn }] of Object.entries(block.rows || {})) {
+  for (const [number, { id, state, analysedOn, asked, proved }] of Object.entries(block.rows || {})) {
     // `| **3.** <what> | <why> | <next> |` — the cells are split on unescaped pipes only.
     const row = text.split('\n').find(line => line.startsWith(`| **${number}.** `));
     const cells = row ? row.slice(1, -1).split(/(?<!\\)\|/).map(uncell) : [];
@@ -58,7 +59,7 @@ export function memoryOf(paste) {
     // since it is context for the next run, not something to re-publish.
     const analysis = details ? details[1].split('\n\n').filter(part => part && !/^(```|- |\*\*Develocity|_The age)/
       .test(part.trim())).pop()?.trim().slice(0, 800) : undefined;
-    out[id] = { state, analysedOn, why: cells[1], next: cells[2], analysis };
+    out[id] = { state, analysedOn, asked, proved, why: cells[1], next: cells[2], analysis };
   }
   return out;
 }

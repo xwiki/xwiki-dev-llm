@@ -34,7 +34,7 @@ import {
 } from './lib/render.mjs';
 import { chatClaim, chatOf, issueClaim, memoryOfArgs, mentionsOf } from './lib/room.mjs';
 import { discover, incidentsOf, investigate, jobHistory, severity } from './lib/sweep.mjs';
-import { daysSince, plural, settled } from './lib/util.mjs';
+import { DAY, daysSince, plural, settled } from './lib/util.mjs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
 
@@ -301,6 +301,13 @@ const memory = memoryOfArgs(args);
 const today = new Date().toISOString().slice(0, 10);
 for (const incident of incidents) {
   const entry = memory[incident.id];
+  // When the run last spent its stabilisation slot proving this one's culprit (§5): once a week at most.
+  incident.provedOn = entry?.proved;
+  // Except a release blocker whose culprit has been asked: whether anyone answered is the news, and
+  // only an investigation reads the commit's thread (2026-10-18, a6747deb54 asked and never answered).
+  // A paste from before `asked` says it in its rendered Next cell instead.
+  const wasAsked = entry?.asked || /^(done → (already commented|asked)|bot → \[commented\])/m.test(entry?.next || '');
+  if (wasAsked && unreleasable(incident)) continue;
   if (incident.primary !== false && !settled(incident) && recallable(entry, stateLine(incident), today)) {
     incident.recalled = { analysedOn: entry.analysedOn, why: entry.why, next: entry.next, analysis: entry.analysis };
   }
@@ -541,7 +548,26 @@ const stabilisable = incident => incident.class === 1 && incident.kind === 'flic
   && incident.jira && !incident.fixState && incident.alerting && !incident.beyondHorizon
   && incident.primary !== false && incident.state !== 'systematic' && !securityOnlyLines.includes(incident.branch);
 
+// A question asked on the culprit at least two mornings ago, and nobody has written in that thread
+// since. The digest names who was asked (references/digest.md), and a blocker in that state is what
+// the stabilisation slot proves instead of a flake (§5).
+const UNANSWERED_HOURS = 36;
+for (const incident of incidents) {
+  const asked = incident.silent && incident.notified;
+  if (asked && !asked.replies && Date.now() - Date.parse(asked.at) >= UNANSWERED_HOURS * 3600000) {
+    incident.unanswered = { since: asked.at.slice(0, 10), url: asked.url, author: incident.blame?.culprit?.author || null };
+  }
+}
+
 const blockers = incidents.filter(blocksRelease);
+// A morning with a blocker open spends no slot on a flake — but the slot's hour is exactly what a
+// functional test's proof costs, and an analysed breakage whose culprit is not answering is the one
+// incident a proof moves: "could you check?" becomes a stated cause, or the suspicion is dropped.
+const recentlyProved = incident => incident.provedOn
+  && (Date.parse(today) - Date.parse(incident.provedOn)) / DAY < 7;
+const proveCandidate = incident => incident.class === 1 && incident.deep && incident.unanswered
+  && incident.blame?.culprit?.sha && incident.tests?.length && !recentlyProved(incident)
+  && !securityOnlyLines.includes(incident.branch);
 // Highest failure rate first: it costs the most re-runs, and its recent failures are the ones whose
 // screenshot, video and logs Jenkins still holds — the evidence the investigation starts from.
 const stabiliseCandidates = incidents.filter(stabilisable)
@@ -555,6 +581,17 @@ if (blockers.length && !args.rehearseStabilise) {
     // read as a contradiction of both.
     blockers: blockers.map(incident => incident.id)
   };
+  const [proving] = blockers.filter(proveCandidate);
+  if (proving) {
+    proving.prove = true;
+    const { culprit } = proving.blame;
+    const configs = proving.develocity?.configs || [];
+    stabilise.prove = {
+      id: proving.id, test: proving.tests[0], sha: culprit.sha, short: culprit.short, author: culprit.author,
+      asked: proving.unanswered.since,
+      configuration: configs.find(config => config.startsWith(`${proving.branch} /`)) || proving.envs?.[0] || configs[0] || null
+    };
+  }
 } else if (stabiliseCandidates.length) {
   const [pick] = stabiliseCandidates;
   pick.stabilise = true;
@@ -585,6 +622,13 @@ for (const incident of incidents) {
   delete incident.window?.firstBad;
   delete incident.window?.lastGood;
   incident.commentable = commentTarget(incident);
+}
+for (const incident of incidents.filter(entry => entry.prove)) {
+  // Already asked in this state, so the only comment left is the proof: a new marker state, posted
+  // once, and only with `--proof reproduced` (commit-comment.mjs refuses anything less).
+  const { culprit, tier } = incident.blame;
+  incident.commentable = { repo: incident.repo, state: `${incident.state}+reproduced`, tier, sha: culprit.sha,
+    author: culprit.author || null, url: culprit.url, followUp: 'reproduced' };
 }
 oneCommentPerCommit(incidents);
 for (const incident of incidents) incident.provable = provableTarget(incident);
@@ -699,6 +743,7 @@ function toRead(incidents, stabilise) {
   when(live.some(incident => incident.deep && !settled(incident)), 'fix-prs.md', 'before preparing a fix PR (§5)');
   when(live.some(incident => incident.flickerGroup || incident.jiraClosed), 'flicker-issues.md',
     'before filing a flicker issue, or commenting on a closed one (§5)');
+  when(stabilise.prove, 'prove.md', 'before running the prove incident\'s test at its culprit and its parent (§5)');
   when(stabilise.id, 'stabilise.md', 'before invoking xwiki-fix-flickering-docker-test for the stabilise incident (§5)');
   when(incidents.length, 'paste.md', 'before filling the paste\'s markers (§6)');
   return read;
@@ -728,6 +773,13 @@ function digest(incident, keys) {
     provable: incident.provable || undefined,
     // An earlier morning's conclusion, reused because nothing has changed since (§3).
     recalled: incident.recalled || undefined,
+    // Its culprit was asked two mornings ago or more, and nobody has answered on the commit.
+    unanswered: incident.unanswered,
+    // The incident the stabilisation slot proves instead of a flake (§5), and when it last did.
+    prove: incident.prove || undefined,
+    provedOn: incident.provedOn,
+    // A question is out on this incident: tomorrow's run re-examines it rather than recalling it.
+    asked: incident.notified?.at?.slice(0, 10) || (incident.commentable ? today : undefined),
     // The state the memory compares against tomorrow — `stateLine`, which the renderer cannot recompute.
     memoryState: incident.deep || incident.recalled ? stateLine(incident) : undefined,
     // The incident whose comment also answers this one: the same commit, one comment per run.
