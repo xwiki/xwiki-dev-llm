@@ -99,11 +99,11 @@ repository root on the whole reactor:
 ```bash
 mvn -B -ntp -T 1C install -DskipTests   # compile only — no tests, no -Pquality, no coverage needed
 mvn -B -ntp sonar:sonar -Dsonar.token=$SONARQUBE_TOKEN -Dsonar.pullrequest.key=<PR number> \
-  -Dsonar.pullrequest.branch=<branch> -Dsonar.pullrequest.base=master
+  -Dsonar.pullrequest.branch=<branch> -Dsonar.pullrequest.base=master -Dsonar.qualitygate.wait=true
 ```
 
-Then read the verdict — `qualitygates/project_status?projectKey=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`
-— and the findings — `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`. Two facts that make this safe and cheap: a PR analysis is
+It fails on a red gate; then read the findings —
+`issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`. It is safe and cheap: a PR analysis is
 stored separately from the branch's, so it never affects `master`'s measures or issues, and on
 xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
 Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.

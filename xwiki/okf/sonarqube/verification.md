@@ -105,6 +105,9 @@ the plugin has no local Sonar analysis, and a local build runs Checkstyle, not t
 records `src/main/java/...` paths that match nothing on the branch, so every line counts as new code and
 the gate fails on years-old findings.
 
+**Read its gate only through `-Dsonar.qualitygate.wait=true`.** SonarCloud processes the analysis after
+the scanner returns, so `qualitygates/project_status` read right away can still be the previous push's.
+
 ## Related
 
 - [[index]] — rule map, denylist, universal drop conditions.
