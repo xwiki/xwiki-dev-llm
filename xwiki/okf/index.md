@@ -131,8 +131,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 ### processes/
 - **release** — how the three repos are versioned and released together, and which branches a fix may
   still reach.
-- **security-policy** — scoring a vulnerability, keeping it private until disclosure, and merging its
-  fix.
+- **security-policy** — scoring and labelling a vulnerability, keeping it private until disclosure,
+  and merging its fix.
 - **module-lifecycle** — moving a module between repos with its history, and retiring one.
 - **release-notes** — how a release note is stored and created, and which releases owe one. Applied by
   `xwiki-release-documentation`.

@@ -14,9 +14,6 @@ verify: |
 
 # Security severity & disclosure process
 
-The Security Policy page is the source of truth. This file captures the durable shape of the process
-plus the one rule that must never be broken when committing.
-
 ## Do not disclose a vulnerability publicly until it is disclosed (durable rule)
 
 XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is officially disclosed:
@@ -97,6 +94,18 @@ The JIRA issue records the result in **"CVSS Vector"** (`customfield_11870`) and
 (`customfield_11871`, a **number** — `8.7`, not `"8.7"` — the one the vector computes to). Update
 both with `PUT /rest/api/2/issue/<KEY>` and
 `{"fields": {"customfield_11870": "CVSS:4.0/…", "customfield_11871": 8.7}}`.
+
+## JIRA security labels
+
+`security`, plus one `attacker_*` label (what the attacker needs) and one or more `attack_*` (what
+they achieve), per the policy's "Types of attackers/attacks":
+
+- `attacker_guest` no login; `attacker_account` logged in; `attacker_view` view right on the target;
+  `attacker_comment` logged in with comment right; `attacker_edit` edit right; `attacker_script`
+  script right; `attacker_socialeng` physical access to the device.
+- `attack_stability` (DoS), `attack_escalation` (permanently gaining rights), `attack_login` (logging
+  in as another user), `attack_xss` (any code injection), `attack_impersonation` (acting with another
+  user's rights), `attack_dataleak` (reading what should not be viewable), `attack_spam`.
 
 ## Related
 
