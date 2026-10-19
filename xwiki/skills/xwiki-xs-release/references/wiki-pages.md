@@ -10,7 +10,8 @@ byte (some lines carry non-breaking spaces) and read it back.
   replaces it with its `stable` entry. `bin/get/Download/Versions` returns the parsed list as JSON:
   check the new entry is there.
 - **Blog post** (www `Blog`): the **Create a new post** form of the blog home takes the *page name*
-  `xwiki-<version>-released` with the JIRA version (`xwiki-18.9.0-rc-1-released`); then, in the
+  `xwiki-<short>-released`, with the short version of the plan and release notes pages, not the
+  JIRA one (`xwiki-18.9.0RC1-released`, never `xwiki-18.9.0-rc-1-released`); then, in the
   editor, the title (`XWiki 18.9.0 Release Candidate 1 released`), the content and the summary (the
   "extract"), and the categories the help gives for the kind of release (an RC: **Releases** only).
   The content is the help's text around the release notes summary; the summary is the same as one
