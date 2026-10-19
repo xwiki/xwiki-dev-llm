@@ -66,8 +66,10 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   restart). An XML page `PUT` is exempt; form-encoded object `POST`/property writes are not.
 - **An attachment `PUT` needs an explicit `Content-Type: application/octet-stream`.** Without it curl
   sends the body form-urlencoded and the wiki answers **400**.
-- **Wiki ids differ:** www.xwiki.org's main wiki is `xwiki` (`/rest/wikis/xwiki/…`);
-  **extensions.xwiki.org is a subwiki named `extensions`** (`/rest/wikis/extensions/…`), not `xwiki`.
+- **The REST path's wiki id, not the host, selects the wiki.** www.xwiki.org is `xwiki`; every
+  other farm site `<name>.xwiki.org` is the subwiki `<name>` (`dev.xwiki.org` → `/rest/wikis/dev/…`),
+  listed by `GET /rest/wikis`. `/rest/wikis/xwiki/…` on another host silently reads www's main wiki:
+  `404` or an empty list, never an error naming the wiki.
 - **Credentials convention: `~/.xwiki-credentials`** — the developer's xwiki.org write credentials, two
   lines, no quotes and no `export`: `XWIKI_USER=…` / `XWIKI_PASSWORD=…`. Look for that file before
   asking for credentials, but **never print its contents** — not `Read`, not `cat`/`head`/`less`, not
