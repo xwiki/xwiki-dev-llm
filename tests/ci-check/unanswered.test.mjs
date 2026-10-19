@@ -34,13 +34,20 @@ const PROVING = { ...TOGGLE, prove: true,
   commentable: { repo: 'xwiki-platform', state: 'systematic+reproduced', tier: 'likely', sha: A6747, author: 'mflorea',
     followUp: 'reproduced' } };
 
-test('the slot proves the blocker instead, and its row asks for the result', () => {
-  const page = renderDetail(report(PROVING, { skipped: 'a blocker is open', blockers: [ID],
-    prove: { id: ID, short: 'a6747deb54', author: 'mflorea', asked: '2026-10-16' } }), { live: true });
-  assert.match(page, /bot → run the test at `a6747deb54` and at its parent/);
+const PROVE_ORDER = report(PROVING, { skipped: 'a blocker is open', blockers: [ID],
+  prove: { id: ID, short: 'a6747deb54', author: 'mflorea', asked: '2026-10-16' } });
+
+test('the slot goes to the blocker instead, and only its row says what ran', () => {
+  const page = renderDetail(PROVE_ORDER, { live: true });
+  assert.doesNotMatch(page, /bot → run the test/);
   assert.match(page, /<!-- COMMENT: /);
-  assert.match(page, /The slot proves #1 instead\*\* — `a6747deb54` \(mflorea\) was asked on 2026-10-16/);
-  assert.match(page, /"proved":"2026-10-18"/);
+  assert.match(page, /The slot goes to proving #1 instead\*\* — `a6747deb54` \(mflorea\) was asked on 2026-10-16/);
+});
+
+// 2026-10-19: the proof was skipped before any run, and the memory still kept the slot off it for a week.
+test('the memory records a proof attempt only once a run started', () => {
+  assert.doesNotMatch(renderDetail(PROVE_ORDER, { live: true }), /"proved"/);
+  assert.match(renderDetail(PROVE_ORDER, { live: true, proofRan: true }), /"proved":"2026-10-18"/);
 });
 
 test('a second comment on an asked commit is the reproduced proof or nothing', () => {

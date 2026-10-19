@@ -55,7 +55,8 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --full              Emit every field of every incident (debugging; the default is digested)
   --pretty            Human-readable summary instead of the JSON work order
   --render-detail <f> Render the paste body from a work order written earlier ('-' for stdin),
-                      instead of sweeping. Add --live to drop the "dry run" header.
+                      instead of sweeping. Add --live to drop the "dry run" header, and
+                      --proof-ran once a run of summary.stabilise.prove started (references/prove.md).
   --delta <f>         Classify the incidents of a work order ('-' for stdin) against the state the
                       last digest carried, instead of sweeping. NEW / CHANGED / FIXED / SAME, the
                       repo × branch status grid, and the state for the next run. Reads yesterday's
@@ -105,6 +106,7 @@ function parseArgs(argv) {
     else if (key === '--chat') out.chat = argv[++i];
     else if (key === '--memory') out.memory = argv[++i];
     else if (key === '--live') out.live = true;
+    else if (key === '--proof-ran') out.proofRan = true;
     else if (key === '--help' || key === '-h') out.help = true;
     else { console.error(`Unknown argument [${key}]\n\n${USAGE}`); process.exit(2); }
   }
@@ -348,6 +350,9 @@ for (const incident of deep) {
 let develocityOff = args.develocity ? null : 'disabled with --no-develocity';
 for (const incident of deep) {
   if (develocityOff || incident.class !== 1 || !incident.tests?.length) continue;
+  // A class-level failure (`@AfterAll`, `@BeforeAll`) has no method to look up: SubWikiIT's teardown
+  // came back "null failures in null executions" on 2026-10-19.
+  if (incident.tests[0].endsWith('#')) continue;
   // The test that names the incident, and the incident's own error line so that a test failing two
   // different ways is described by the failure *this* incident is about.
   const facts = develocityFacts(incident.tests[0], { match: incident.evidence?.[0] });
@@ -586,10 +591,25 @@ if (blockers.length && !args.rehearseStabilise) {
     proving.prove = true;
     const { culprit } = proving.blame;
     const configs = proving.develocity?.configs || [];
+    // The cheapest place to prove it: the highest failure rate on any branch it is red on, since the
+    // clean parent runs a proof needs fall with the rate. On 2026-10-19 the slot was offered master's
+    // 14.1% (20 parent runs, more than the hour) and gave up, while 18.9.x failed 7 runs in 10 (3).
+    const branches = [proving.branch, ...(proving.alsoOn || [])];
+    const [best] = (proving.develocity?.rates || [])
+      .filter(rate => rate.runs >= 5 && branches.some(branch => rate.name.startsWith(`${branch} /`)))
+      .map(rate => ({ ...rate, r: rate.failures / rate.runs }))
+      .sort((a, b) => b.r - a.r);
     stabilise.prove = {
       id: proving.id, test: proving.tests[0], sha: culprit.sha, short: culprit.short, author: culprit.author,
       asked: proving.unanswered.since,
-      configuration: configs.find(config => config.startsWith(`${proving.branch} /`)) || proving.envs?.[0] || configs[0] || null
+      ...(best ? {
+        configuration: best.name,
+        branch: best.name.split(' /')[0],
+        rate: `${best.failures}/${best.runs}`,
+        parentRuns: best.r >= 1 ? 1 : Math.ceil(Math.log(0.05) / Math.log(1 - best.r))
+      } : {
+        configuration: configs.find(config => config.startsWith(`${proving.branch} /`)) || proving.envs?.[0] || configs[0] || null
+      })
     };
   }
 } else if (stabiliseCandidates.length) {
@@ -828,6 +848,8 @@ function digest(incident, keys) {
     lastGoodBuild: incident.lastGoodBuild,
     // A break revealed by fixing the one that stopped the build before it: its window spans both.
     maskedBy: incident.maskedBy,
+    // A break older than the log budget: its window runs to the last completed build, unread between.
+    unreadBack: incident.unreadBack,
     buildUrl: incident.buildUrl,
     failedIn: incident.failedIn,
     // Enough tests to see the shape of the breakage; the count above is what matters, and the full

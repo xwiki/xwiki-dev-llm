@@ -44,3 +44,23 @@ test('the footer counts each incident once', () => {
   assert.match(page, /A culprit candidate for 1 of the 1 analysed\*\*\. Not analysed: \*\*1\*\* already answered, \*\*1\*\* older/);
   assert.match(page, /\*\*0\*\* below the deep budget/);
 });
+
+// 2026-10-19: "18.9.0-rc-1 unreleased — comment; reopening is a human's call" was the run's
+// instruction, printed in two rows' headings.
+test("a closed issue's unreleased fix is stated, not the run's instruction about it", () => {
+  const order = { generatedAt: '2026-10-19T06:00:00Z', horizonDays: 7, budget: 5, summary: { jobs: 1, red: 1, incidents: 1 },
+    jobs: [], incidents: [{ ...OLD, jiraClosed: { ...XWIKI_25242, unreleased: ['18.9.0-rc-1'] } }] };
+  const rendered = renderDetail(order, { live: true });
+  assert.match(rendered, /18\.9\.0-rc-1 unreleased/);
+  assert.doesNotMatch(rendered, /reopening/);
+});
+
+// 2026-10-19: master's eslint break outlived the log budget; its window must still end at a green build.
+test('a break older than the log budget says the builds before were not read', () => {
+  const ESLINT = { id: 'platform/master/main:Build/eslint:l10n.ts', repo: 'xwiki-platform', branch: 'master', class: 2,
+    kind: 'build-break', state: 'build-break', primary: true, deep: true, firstBadBuild: 9036, lastGoodBuild: 9030,
+    unreadBack: true, ageDays: 0, ageIsLowerBound: true };
+  const rendered = renderDetail({ generatedAt: '2026-10-19T06:00:00Z', horizonDays: 7, budget: 5,
+    summary: { jobs: 1, red: 1, incidents: 1 }, jobs: [], incidents: [ESLINT] }, { live: true });
+  assert.match(rendered, /failing back to #9036 at least; the broken builds before it were not read, and #9030 is the last that completed/);
+});

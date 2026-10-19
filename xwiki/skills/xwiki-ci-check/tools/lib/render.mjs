@@ -37,11 +37,16 @@ const agedAs = incident => (incident.ageDays == null
  */
 function windowOf(incident) {
   if (incident.firstBadBuild == null) return null;
-  return incident.lastGoodBuild == null
-    ? `failing in every build examined, back to #${incident.firstBadBuild} — start not established`
-    : `since #${incident.firstBadBuild}, last good #${incident.lastGoodBuild}`
-      + (incident.maskedBy ? ` — #${incident.maskedBy.build} stopped earlier, on \`${incident.maskedBy.by}\`,`
-        + ' so this may have been there, hidden: the window reaches back past it' : '');
+  if (incident.lastGoodBuild == null) {
+    return `failing in every build examined, back to #${incident.firstBadBuild} — start not established`;
+  }
+  if (incident.unreadBack) {
+    return `failing back to #${incident.firstBadBuild} at least; the broken builds before it were not read, `
+      + `and #${incident.lastGoodBuild} is the last that completed`;
+  }
+  return `since #${incident.firstBadBuild}, last good #${incident.lastGoodBuild}`
+    + (incident.maskedBy ? ` — #${incident.maskedBy.build} stopped earlier, on \`${incident.maskedBy.by}\`,`
+      + ' so this may have been there, hidden: the window reaches back past it' : '');
 }
 
 const shortName = incident => testName(incident.id.split('/').slice(2).join('/'));
@@ -367,10 +372,10 @@ const closedAs = closed => (unfixed(closed)
 
 /**
  * The Fix Versions of a closed issue not yet released, as a clause. Such an issue is the one a
- * *human* may reopen (okf/servers/jira.md); the routine only comments on it (references/fix-signals.md).
+ * *human* may reopen (okf/servers/jira.md); the routine only comments on it (references/fix-signals.md),
+ * which is the run's instruction and never a row's words.
  */
-const unshipped = closed => (closed.unreleased?.length
-  ? `, ${closed.unreleased.join(', ')} unreleased — comment; reopening is a human's call` : '');
+const unshipped = closed => (closed.unreleased?.length ? `, ${closed.unreleased.join(', ')} unreleased` : '');
 
 /**
  * Whether a closed issue was closed *without* a fix — Cannot Reproduce, Won't Fix, Duplicate. Such
@@ -443,11 +448,9 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
     } else if (incident.silent) {
       lines.push('done → already commented, in this same state');
     }
-    // The one incident already asked that still gets a COMMENT cell: the proof's follow-up, or why none went.
-    if (incident.prove) {
-      lines.push(`bot → run the test at \`${incident.commentable.sha.slice(0, 10)}\` and at its parent, `
-        + 'in the stabilisation slot: prove the cause or drop the suspicion');
-    }
+    // The one incident already asked that still gets a COMMENT cell: the proof's result, or why none
+    // ran. No line of the tool's announces the proof: on 2026-10-19 "bot → run the test … prove the
+    // cause" stood above the run's own "proof not attempted".
     if (incident.commentable || incident.provable) {
       // Whether the comment goes is the run's decision (§4 may drop the culprit), so a line saying
       // it went would be false the moment it does not: the run fills this in once it has decided.
@@ -533,7 +536,7 @@ function rowRank(incident, primaries) {
   return 6.5;
 }
 
-export function renderDetail(report, { live }) {
+export function renderDetail(report, { live, proofRan = false }) {
   const { summary, incidents } = report;
   const date = report.generatedAt.slice(0, 10);
   const redRepos = new Set(report.jobs.filter(job => job.result && job.result !== 'SUCCESS').map(job => job.repo));
@@ -662,8 +665,10 @@ export function renderDetail(report, { live }) {
     notes.push(`**No stabilisation fix this run** — ${stabilise.skipped}` +
       `${named.length ? ` (${named.join(', ')})` : ''}.`);
     if (stabilise.prove) {
-      notes.push(`**The slot proves #${numbers.get(stabilise.prove.id)} instead** — \`${stabilise.prove.short}\``
-        + ` (${stabilise.prove.author || 'its author'}) was asked on ${stabilise.prove.asked} and has not answered.`);
+      const number = numbers.get(stabilise.prove.id);
+      notes.push(`**The slot goes to proving #${number} instead** — \`${stabilise.prove.short}\``
+        + ` (${stabilise.prove.author || 'its author'}) was asked on ${stabilise.prove.asked} and has not answered;`
+        + ` what ran is in #${number}'s row.`);
     }
   }
   const deep = incidents.filter(incident => incident.deep);
@@ -684,10 +689,12 @@ export function renderDetail(report, { live }) {
     ` deep budget of ${report.budget} — reported, by design.`);
   out.push('', '---', '', ...notes.map(note => `_${note}_`));
   // What tomorrow's run reads back: the analysed rows keep today's date, the recalled ones the date
-  // they were concluded on, so a conclusion ages out however many mornings it is carried.
+  // they were concluded on, so a conclusion ages out however many mornings it is carried. `proved`
+  // only once a run started (`--proof-ran`): it keeps the slot off the incident for a week, and on
+  // 2026-10-19 a proof skipped before any run did exactly that.
   out.push(...memoryBlock(date, numbers, [
     ...deep.map(incident => ({ id: incident.id, state: incident.memoryState, analysedOn: date, asked: incident.asked,
-      proved: incident.prove ? date : incident.provedOn })),
+      proved: incident.prove && proofRan ? date : incident.provedOn })),
     ...recalled.map(incident => ({
       id: incident.id, state: incident.memoryState, analysedOn: incident.recalled.analysedOn
     }))

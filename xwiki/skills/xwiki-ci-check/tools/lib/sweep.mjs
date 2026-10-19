@@ -161,13 +161,21 @@ const flickerProven = row => {
 };
 
 /** Walks back through the consecutive broken builds that share the latest one's signature. */
-async function breakWindow(job, latest, signature, maxConsole) {
+export async function breakWindow(job, latest, signature, maxConsole) {
   const at = (firstBad, lastGood, atLeast) => ({ job: job.label, jobUrl: job.url, firstBad, lastGood, atLeast });
   let firstBad = latest;
   let read = 1;
   for (const build of job.builds.slice(job.builds.indexOf(latest) + 1)) {
     if (build.result === 'SUCCESS' || build.result === 'UNSTABLE') return at(firstBad, build, false);
-    if (read >= maxConsole) return at(firstBad, null, true);
+    // Out of log budget, the window still ends at the last build that completed: reading the rest
+    // could only move `firstBad`, never `lastGood`, as a masked window shows. Cut short, a break
+    // that outlived the budget had no window, so no culprit and no "already commented": master's
+    // `eslint:l10n.ts`, commented on 2026-10-18, read "no owner found" on 10-19 with its fix PR open.
+    // The age stays a lower bound: the oldest broken build read is not where the break began.
+    if (read >= maxConsole) {
+      const { lastGood } = maskedWindow(job, build, firstBad, at);
+      return { ...at(firstBad, lastGood, true), unread: true };
+    }
     read++;
     const { signature: older } = await diagnose(`${job.url}/${build.number}`);
     // A different cause is not where this one starts: a broken build stops at its first failure, so
@@ -414,7 +422,8 @@ const ageOf = window => ({
   lastGoodBuild: window.lastGood?.number ?? null,
   ageDays: window.firstBad ? daysSince(window.firstBad.timestamp) : null,
   ageIsLowerBound: window.atLeast,
-  maskedBy: window.masked
+  maskedBy: window.masked,
+  unreadBack: window.unread || undefined
 });
 
 // ---- Blame + dedupe pass ---------------------------------------------------------------------

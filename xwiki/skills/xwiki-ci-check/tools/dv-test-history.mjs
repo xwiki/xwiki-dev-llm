@@ -262,6 +262,8 @@ function factsOf(raw, markdown, { match, server, report, days }) {
     configsFailing: failing.length,
     configs: failing.slice(0, 3).map(([name, row]) =>
       `${name} — ${row.fail_count}/${row.runs} (${percent(row.fail_count, row.runs)})`),
+    // Every failing configuration, as numbers: what a proof's repeat count is computed from.
+    rates: failing.map(([name, row]) => ({ name, failures: row.fail_count, runs: row.runs })),
     // The analyser's own conclusions, in its words. Capped because a report with many distinct
     // failures lists one bullet per failure and this is a work-order field, not a document.
     findings: keyFindings(markdown).slice(0, 6),
