@@ -88,4 +88,5 @@ flicker, `xwiki-jira` to file an unknown one, `xwiki-backport` for a fix missing
 
 Everything above stops at the report. The skill that does any of it on its own — daily, across every
 maintained branch, commenting on the culprit commit — is `xwiki-ci-check`; it shares this skill's
-Jenkins client but not its contract.
+Jenkins client but not its contract. The old open-bug backlog in JIRA, not what CI shows red, is
+`xwiki-jira-bfd`'s.

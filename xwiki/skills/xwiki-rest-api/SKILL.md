@@ -3,7 +3,8 @@ name: xwiki-rest-api
 description: Read from and write to a running XWiki instance over its REST API — get a page's content and its xobjects, update page content or object properties, create a new page (optionally with xobjects), and search pages with a Solr query. Use when the user wants to fetch/modify/create wiki pages or objects on a live XWiki (not the XAR source files on disk — for those use xwiki-xar-pages), or to run a Solr search via REST. For deploying a built XAR/JAR extension via the job REST API use xwiki-deploy-extension instead.
 ---
 
-Interact with a running XWiki over its REST API using `curl`.
+Interact with a running XWiki over its REST API using `curl`. op.xwiki.org is OpenProject, not an
+XWiki instance: its work packages are **`xwiki-openproject`**'s.
 
 ## Fundamentals
 

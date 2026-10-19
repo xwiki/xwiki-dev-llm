@@ -3,7 +3,7 @@ title: Verifying a SonarQube fix
 stability: durable
 summary: What makes a SonarCloud fix verified rather than merely compiling — the tests must run, the
   quality profile is mandatory, why removing covered instructions always lowers a JaCoCo ratio, and
-  how to tell your failure from a pre-existing one.
+  which pre-existing failures recur on a Sonar fix.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Building/
 ---
@@ -56,16 +56,10 @@ Small modules with few sites are where this bites; large modules absorb it.
 
 ## Reactor semantics when something fails
 
-- **A module failing mid-reactor skips every module after it.** The modules listed `SUCCESS` before it
-  are genuinely verified; the rest were never built at all. After dropping the failing module, re-run a
-  reactor containing the **skipped** ones — do not assume the first run covered them.
-- **A wide reactor failing on one module for a reason unrelated to your edit → drop that module, keep
-  the rest.** Because build order means a leaf failing last cannot taint the modules built before it,
-  every other `SUCCESS` in the summary stands and no rebuild is needed.
-
-**Telling a pre-existing failure from your own** takes one step: if `git diff --name-only` does not
-list the flagged class, it is not yours — confirm with `git log -1 -- <that class's file>`, which will
-show an unrelated recent commit. Two recurring shapes:
+What a failing module means for the rest of the reactor — re-run the skipped modules, drop one that
+fails for a reason unrelated to your edit — and how to tell a pre-existing failure from your own are
+the **`xwiki-build`** skill's *Reading a multi-module reactor result*. Two pre-existing failures recur
+on a Sonar fix:
 
 - Revapi `java.method.visibilityReduced` on `<init>()` of classes you never touched, typically in
   `xwiki-platform-legacy-oldcore` — the legacy re-export debt described in [[dead-code-rules]].

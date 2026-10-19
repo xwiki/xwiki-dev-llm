@@ -104,17 +104,11 @@ applies to everything a regex cannot decide.
    important *child* pages, not a "key points" summary, and the automatic "More" table already lists
    every child — see `okf/conventions/documentation.md`.
 6. **End a How-to / Tutorial with a result step** — the last numbered item shows the reader *what they
-   should now see*: a short "The macro is inserted in the page, as follows:" plus a **screenshot** (or a
-   **code macro** when the result is text, or the produced output on a Developer page). A procedure that
-   stops at the last action leaves the reader unable to tell whether it worked.
-7. **Put a Reference's members in one table** — `|=Member |=Returns |=Default |=What it does`, not a
-   section per member and not a `name: meaning` bullet list. "Use code examples for API references"
-   asks for the parameters, types, defaults and return value, which is a *row*: a bare signature is a
-   column, and the code example is reserved for what a cell cannot hold (a usage snippet, a builder
-   call, a whole role interface). A section per member earns its place only when each carries something
-   uncellable, such as a screenshot per option. **The table never gets a `Since` / `Version` column** —
-   version information is a `{{version}}` badge on the rows that need one, and only for versions at or
-   after the LTS (step 11).
+   should now see*; its form is in `okf/conventions/documentation.md` → *Content rules per type*.
+7. **Put a Reference's members in one table** (`|=Member |=Returns |=Default |=What it does`), never
+   with a `Since` / `Version` column — version information is a `{{version}}` badge on the rows that
+   need one, and only for versions at or after the LTS (step 11). The rule and its exceptions are in
+   `okf/conventions/documentation.md` → *Content rules per type*.
 8. **Apply the style rules** — `"quotes"` for UI elements, uppercase-first XWiki terminology,
    `##literals##`, link-reference syntax (never hardcoded URLs), `{{scm}}` for GitHub files, the
    code macro with an explicit `language`, the display macro to avoid duplication, and **no overused
