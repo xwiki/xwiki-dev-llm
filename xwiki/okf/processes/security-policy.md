@@ -91,9 +91,10 @@ which metrics are constrained and where the traps are — never a substitute for
   actively-exploited issue may be classed **Blocker**.
 
 The JIRA issue records the result in **"CVSS Vector"** (`customfield_11870`) and **"CVSS Score"**
-(`customfield_11871`, a **number** — `8.7`, not `"8.7"` — the one the vector computes to). Update
-both with `PUT /rest/api/2/issue/<KEY>` and
-`{"fields": {"customfield_11870": "CVSS:4.0/…", "customfield_11871": 8.7}}`.
+(`customfield_11871`, a **number** — `8.7`, not `"8.7"` or `8.7 High` — the one the vector computes
+to), updated with `PUT /rest/api/2/issue/<KEY>` and `{"fields": {"customfield_11870": "CVSS:4.0/…",
+"customfield_11871": 8.7}}`. The ids are instance-specific: if one is rejected, find it with `GET
+/rest/api/2/field`.
 
 ## JIRA security labels
 
