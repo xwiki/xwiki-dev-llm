@@ -37,10 +37,18 @@ assumed. When the user asks for that step:
   automatic import would only pick it up later — then check the imported data, set the state to
   **completed**, and then to **announced** — the latter notifies everyone subscribed to new
   advisories. Re-import the same way whenever the advisory is edited afterwards, e.g. once a
-  backport lands on another branch or the version ranges change. The embargo dates are computed by the
-  release process itself, once every fixed version is released. The app lives on xwiki.org and needs
-  the `XWikiSecurityGroup` membership, so this is the user's action, not something to do for them:
-  remind them of it, with the link, rather than treating the GHSA draft as the end of the job.
+  backport lands on another branch or the version ranges change. Remind the user of it, with the
+  link, rather than treating the GHSA draft as the end of the job; do it for them only when asked:
+  - The import page needs wiki admin rights (SPAPP-35). It and the advisory sheet's status buttons
+    are `/bin/` pages, which ignore Basic auth (`okf/servers/index.md`): use the user's logged-in
+    browser. "Mark announced" only appears once the advisory is completed.
+  - Check the import over REST: the page `SecurityAdvisoryApplication.SecurityEntries.<GHSA ID>`
+    (read it by name: `/query` takes Solr only), its `SecurityAdvisoryApplicationClass` object and
+    one `SecurityAdvisoryImpactedPackageClass` per package, ranges in Maven syntax.
+  - A manual import leaves the embargo date empty: a daily job computes it for **announced**
+    advisories, from the patched versions' release date in the product's release notes. A product
+    without any (every contrib extension) gets the day that job first finds the artifact released
+    (SPAPP-38). A re-import keeps the status but recomputes a hand-edited embargo date (SPAPP-36).
 - **Request the CVE once the advisory is completed and announced**, without waiting for the
   release: a CVE ID can take a while to arrive and publication is blocked without one. Only the
   embargo and publication need the release.
