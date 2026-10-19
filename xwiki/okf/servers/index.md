@@ -10,10 +10,9 @@ sources:
 
 # XWiki development server ecosystem
 
-These are the servers the XWiki dev community uses to develop XWiki and xwiki-contrib projects.
-The **server set and URLs are durable**; anything that changes per release or per person
-(current versions, current managers, open issues, build status) is **volatile** — never cache a
-value, follow the "how to access" recipe to get the live answer.
+The servers used to develop XWiki and xwiki-contrib. Their set and URLs are durable; per-release or
+per-person values (versions, managers, open issues, build status) are volatile — follow the access
+recipe for the live answer.
 
 The canonical, always-current list (with the architecture diagram of how the servers interact)
 is on the dev wiki — fetch it when in doubt:
@@ -38,15 +37,13 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 | [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. WebFetch. |
 | [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST: [[manual-tests]]. |
 | [elk.xwiki.org](https://elk.xwiki.org) | Anonymous usage stats / market-share metrics. | Rarely relevant to coding. |
-| `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. |
+| `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. **Only a mention notifies**: write `[Full Name](https://matrix.to/#/@user:matrix.xwiki.com)` (Element makes it a pill in `m.mentions`; over the API set `m.mentions.user_ids`). Plain `@user` text notifies nobody. |
 
 ## What has MCP today vs. WebFetch-only
 
 - **MCP available (fast, structured):** `discourse` (forum — read always, write when a forum
   credential is set), `sonarqube` (SonarCloud). These ship in this plugin's `.mcp.json`.
-- **Everything else is WebFetch / REST / `gh` / git.** For repeated reads of the same dev-wiki or
-  extensions page within a session, index it once with context-mode (if installed) and search,
-  rather than re-fetching.
+- **Everything else is WebFetch / REST / `gh` / git.**
 
 ## Accessing / writing to the XWiki-run sites via REST
 
