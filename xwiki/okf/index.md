@@ -148,7 +148,7 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 `xwiki-build`, `xwiki-pull-request`, `xwiki-javadoc`, `xwiki-test-guidelines`, `xwiki-convert-tests`,
 `xwiki-convert-tests-docker`, `xwiki-fix-flickering-docker-test`, `xwiki-increase-test-coverage`,
 `xwiki-legacy`, `xwiki-fix-deprecation`, `xwiki-deploy-extension`, `xwiki-capture-ui-change`, `xwiki-rest-api`, `xwiki-xar-pages`, `xwiki-doc-writing`, `xwiki-doc-convert`, `xwiki-doc-export`, `xwiki-translations`,
-`xwiki-contrib-release`, `xwiki-contrib-release-blog-post`, `xwiki-fix-sonarqube-issue`, `xwiki-backport`,
+`xwiki-xs-release`, `xwiki-contrib-release`, `xwiki-contrib-release-blog-post`, `xwiki-fix-sonarqube-issue`, `xwiki-backport`,
 `xwiki-backport-testneeded`, `xwiki-jira`, `xwiki-jira-bfd`, `xwiki-daily-close`, `xwiki-forum`, `xwiki-security-advisory`, `xwiki-openproject`,
 `xwiki-release-test-triage`, `xwiki-ci-check`, `xwiki-release-documentation`, `xwiki-review`,
 `xwiki-presentation`.

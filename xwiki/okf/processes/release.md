@@ -45,7 +45,8 @@ of truth and changes over time — fetch it when actually releasing.
 
 ## Volatile — follow the pointer, do not cache
 
-- The **detailed release steps** → https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess
+- The **detailed release steps** → https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess;
+  performing them through the version's Release Plan → the `xwiki-xs-release` skill.
 - **Current release plans / dates** → https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/
 - **The current dev version** → read the repo's root `pom.xml` (see [[versioning]]).
 - **Role holders** (release manager of the cycle, etc.) → the dev wiki; these rotate.

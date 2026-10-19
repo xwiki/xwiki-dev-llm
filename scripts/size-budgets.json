@@ -89,5 +89,8 @@
   "xwiki/skills/xwiki-security-advisory/SKILL.md": 17000,
   "xwiki/skills/xwiki-test-guidelines/SKILL.md": 6000,
   "xwiki/skills/xwiki-translations/SKILL.md": 11500,
-  "xwiki/skills/xwiki-xar-pages/SKILL.md": 4500
+  "xwiki/skills/xwiki-xar-pages/SKILL.md": 4500,
+  "xwiki/skills/xwiki-xs-release/SKILL.md": 9000,
+  "xwiki/skills/xwiki-xs-release/references/jira-dashboard.md": 3000,
+  "xwiki/skills/xwiki-xs-release/references/wiki-pages.md": 2500
 }
