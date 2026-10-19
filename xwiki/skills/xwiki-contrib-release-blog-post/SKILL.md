@@ -53,10 +53,8 @@ From the extension page on the Extensions wiki (e.g.
   `Wiki Link URL Normalizer Extension 1.10.0 Released`.
 - **Page name:** lowercase kebab-case `<extension>-extension-<version>-released`, with the version
   **kept as is, dots included** — the contrib guide's own example is `blog-extension-1.5-released`,
-  so `documentation-extension-1.15-released`, never `…-1-15-released`. The Blog quick-add form turns
-  spaces **and dots** into dashes and keeps the original case, so it produces a capitalized name like
-  `Wiki-Link-URL-Normalizer-Extension-1-10-0-Released` — **not** what we want. Creating the page
-  over REST (step 5) controls the name: the nested page `Blog.<page-name>.WebHome`, e.g.
+  so `documentation-extension-1.15-released`, never `…-1-15-released`. Step 5 creates it over REST
+  as the nested page `Blog.<page-name>.WebHome`, e.g.
   `wiki-link-url-normalizer-extension-1.10.0-released` (lowercase, dots kept). In a URL the dots
   stay plain; in a wiki *reference* to the page they are escaped
   (`Blog.wiki-link-url-normalizer-extension-1\.10\.0-released.WebHome`).
