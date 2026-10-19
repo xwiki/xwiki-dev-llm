@@ -28,10 +28,10 @@ sources:
 - Localize through the dedicated i18n module and its loader (see the `xwiki-translations` skill).
 - Enable strict mode. Rewrite Prototype.js code to jQuery or plain JavaScript, and when touching
   non-AMD code convert it to AMD instead of mixing both styles in one file.
-- Native events (`click`, …) use the plain DOM API. XWiki custom events (`xwiki:dom:refresh`, …) must
-  go through jQuery (`trigger`/`on`): `xwiki-events-bridge` forwards them only between Prototype.js
-  and jQuery, never as native events, so a Prototype `document.fire` rewritten to `dispatchEvent`
-  reaches no existing listener.
+- Native events (`click`, …) use the DOM API; XWiki custom events (`xwiki:dom:refresh`, …) are fired
+  and listened to with jQuery (`trigger`/`on`). `xwiki-events-bridge` forwards them only between
+  Prototype.js and jQuery: `addEventListener` hears neither, and a `document.fire` rewritten to
+  `dispatchEvent` misses Prototype listeners and passes jQuery ones no data.
 - Check the supported-browser list (plus MDN / caniuse) before using a newer API or syntax; the
   minifier may or may not down-level it.
 - JavaScript modules should have unit-like automated tests, and pass the jsHint/ESLint limits, which
