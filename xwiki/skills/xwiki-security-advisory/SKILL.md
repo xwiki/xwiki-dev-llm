@@ -180,7 +180,7 @@ the vector of its own impact in JIRA and gets the advisory link (Step 6).
 | Patches | `fixVersions`: "has been patched in…" once the fix is committed on every branch, released or not (the advisory is only published after the releases); "will be fixed in…" before that. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`okf/conventions/versioning.md`), and mark them as to be confirmed |
 | Workarounds | From the JIRA description if a mitigation is mentioned, else "no known workaround other than upgrading" |
 | References | The JIRA issue URL, plus the fix commit's SHA/URL — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row above |
-| Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them, and note that a non-committer reporter needs adding as a collaborator on the draft. Credit type (GitHub's definitions): `finder` for the person who discovered the vulnerability, also when they reported it themselves; `reporter` only for someone who passed on a finding that isn't theirs. Also link their account in the Attribution section: `[@login](https://github.com/login)` |
+| Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them. Credit type (GitHub's definitions): `finder` for the person who discovered the vulnerability, also when they reported it themselves; `reporter` only for someone who passed on a finding that isn't theirs. Also link their account in the Attribution section: `[@login](https://github.com/login)` |
 
 CWE: pick the closest match from https://cwe.mitre.org/data/index.html — this is a per-vulnerability
 judgment call, not something to default without reasoning about the actual flaw (e.g. broken access
@@ -222,7 +222,7 @@ reminders), and request the CVE.
 
 Creating the advisory is visible to every organization owner at once, so it happens only when the
 user asks for it, and only after re-running Step 1's check that no advisory exists yet. Then open `references/github-advisory.md` and follow it: the create request, the
-Security team as collaborator, editing a draft others may have changed, the JIRA link, the Security
+Security team and the credited researcher as collaborators, editing a draft others may have changed, the JIRA link, the Security
 Advisory Application import and the CVE request. Two rules hold whatever the user asks:
 
 - No fix is merged through the advisory's temporary private fork in the GitHub UI, which would put

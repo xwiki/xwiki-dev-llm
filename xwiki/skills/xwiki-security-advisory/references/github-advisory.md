@@ -20,7 +20,10 @@ assumed. When the user asks for that step:
   `collaborating_teams` ("not a permitted key", HTTP 422), so set it with a second request on the
   created advisory:
   `gh api repos/<owner>/<repo>/security-advisories/<ghsa_id> --method PATCH --input -` with
-  `{"collaborating_teams": ["security"]}`.
+  `{"collaborating_teams": ["security"]}`. A credited researcher outside that team is added the same
+  way, in `collaborating_users`, so they can see the draft — also when their consent only arrives
+  after the advisory exists: then fill the credit and the `### Attribution` section, add them as a
+  collaborator, and tell them on the JIRA issue.
 - **Read the advisory before changing it.** Others can edit a draft in the GitHub UI, and a PATCH of
   the `description` replaces the whole text. Fetch the current version, compare it with what you sent,
   and merge their changes into yours rather than overwriting them.
