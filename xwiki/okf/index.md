@@ -119,7 +119,8 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
 
 ### servers/
 - **index** (`servers/index.md`) — the xwiki.org servers, how to reach each, the traps of reading
-  and writing over REST, and attributing posts an LLM co-wrote.
+  and writing over REST, the PR review comments `gh pr view` never shows, and attributing posts an
+  LLM co-wrote.
 - **jira** — working with jira.xwiki.org: whether to file at all, the issue fields, assigning,
   linking the PR on an OpenProject work package, resolving, silent bulk edits, attachments, wiki markup.
 - **develocity** — a test's failure history across CI builds with `dv-test-history`: what it
