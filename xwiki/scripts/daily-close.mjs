@@ -19,6 +19,8 @@
  *
  * State lives in `<work root>/daily-close/` (see state-dir.mjs): `config.json`, `history.jsonl`,
  * `actions.jsonl`, and `runs/<date>.json` with the model's `runs/<date>.answers.json` next to it.
+ * `answers.json` keeps every run's judgements: `pending` and `rank` carry one into a later day's
+ * answers while its item is unchanged (daily-close-answers.mjs), and `rank` records the new ones.
  *
  * Every remote failure is an error that names the category it broke, never an empty result: the
  * GitHub search API answers HTTP 403 once past 30 requests a minute, and a script that read that as
@@ -30,13 +32,14 @@
 import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { carryOver, remember } from "./daily-close-answers.mjs";
 import { workRoot } from "./state-dir.mjs";
 
 const JIRA = "https://jira.xwiki.org";
 const FORUM = "https://forum.xwiki.org";
 const DAY = 864e5;
 // Past this much time without human activity an item is stale: counted in the stats, never offered.
-const STALE_DAYS = 365;
+const STALE_DAYS = 180;
 // A repository where the developer wrote at least this share of the last year's commits has no
 // second reviewer to wait for, so the approval rule does not hold its pull requests back.
 const SOLE_COMMITTER_SHARE = 0.9;
@@ -48,6 +51,8 @@ const BOTS = new Set(["claude", "sonarqubecloud", "socket-security", "renovate-b
 
 const dir = join(workRoot(), "daily-close");
 const runsDir = join(dir, "runs");
+// The judgements of every earlier run, reused while their item's facts stay the same.
+const memoryFile = join(dir, "answers.json");
 const today = new Date().toISOString().slice(0, 10);
 
 // ---- small helpers ---------------------------------------------------------------------------
@@ -544,15 +549,21 @@ function loadRun(opts) {
   const file = runFile(opts);
   if (!existsSync(file)) throw new Error(`no run file ${file}: run \`collect\` first`);
   const answersFile = file.replace(/\.json$/, ".answers.json");
-  return { run: readJson(file), answers: readJson(answersFile, {}), answersFile };
+  const run = readJson(file);
+  const answers = readJson(answersFile, {});
+  // What an earlier day judged on the same facts is not asked again.
+  const carried = carryOver(run.items.filter(needsJudgement), answers, readJson(memoryFile, {}), today);
+  if (carried) writeJson(answersFile, answers);
+  return { run, answers, answersFile, carried };
 }
 
 // ---- pending / show --------------------------------------------------------------------------
 
 function pending(opts) {
-  const { run, answers, answersFile } = loadRun(opts);
+  const { run, answers, answersFile, carried } = loadRun(opts);
   const left = run.items.filter((i) => needsJudgement(i) && !answers[i.id]);
   console.log(`answers file: ${answersFile}`);
+  if (carried) console.log(`${carried} answer(s) carried from earlier runs, their items unchanged since`);
   console.log(`${left.length} item(s) waiting for a judgement:`);
   for (const i of left) console.log(`${i.id}\t${i.cls ?? "unjudged"}\t${i.title.slice(0, 80)}`);
 }
@@ -651,13 +662,16 @@ function describeStep(m) {
       : (m.blockers ?? []).join("; "))
       : m.cls);
   const label = m.kind === "pr" ? `${m.repo.split("/")[1]}#${m.number}` : m.kind === "issue" ? m.key : `forum ${m.id.slice(6)}`;
-  const extra = [m.note, m.outdatedThreads ? `${m.outdatedThreads} outdated thread(s) to resolve` : null].filter(Boolean);
+  const extra = [m.note, m.judgedOn ? `judged ${m.judgedOn}` : null, m.outdatedThreads ? `${m.outdatedThreads} outdated thread(s) to resolve` : null].filter(Boolean);
   return `[${label}](${m.solutionUrl ?? m.url}): ${what}${extra.length ? ` (${extra.join("; ")})` : ""}`;
 }
 
 function rank(opts) {
   const { run, answers } = loadRun(opts);
   const cfg = config();
+  // Remembered on the facts as collected, before the answers below rewrite them.
+  writeJson(memoryFile, remember(run.items, answers, readJson(memoryFile, {}), today,
+    { prune: !run.partial && !Object.keys(run.errors).length }));
   // The developer's answers override the rules: a judge reading "this one can now be closed" turns
   // a merge into a close.
   for (const item of run.items) {
@@ -669,6 +683,7 @@ function rank(opts) {
     if (a.solutionPost) item.solutionUrl = `${item.url}/${a.solutionPost}`;
     // A comment that only acknowledges, or a PR its author parked, is nobody waiting on you.
     if (a.waiting === false) item.waitingOnYou = false;
+    if (a.carried) item.judgedOn = a.carried;
   }
   const all = units(run.items);
   const tier = (u) => (u.waitingOnYou ? 0 : u.cls === "ready" ? 1 : 2);
@@ -767,6 +782,12 @@ function done(opts) {
   if (!id || !action.length) throw new Error("usage: done <itemId> <action>");
   mkdirSync(dir, { recursive: true });
   appendFileSync(join(dir, "actions.jsonl"), `${JSON.stringify({ date: new Date().toISOString(), id, action: action.join(" ") })}\n`);
+  // Acted on, the judgement is spent: if the item is still open tomorrow, it has moved on.
+  const memory = readJson(memoryFile, {});
+  if (memory[id]) {
+    delete memory[id];
+    writeJson(memoryFile, memory);
+  }
 }
 
 function setConfig(opts) {

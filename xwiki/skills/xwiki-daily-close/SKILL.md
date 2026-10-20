@@ -44,7 +44,9 @@ dc show <itemId>           # one item: facts, questions, evidence
 ```
 
 Read each item with `show`, one at a time (a run is hundreds of KB), and answer into the answers
-file `pending` names — a JSON object keyed by item id:
+file `pending` names — a JSON object keyed by item id. `pending` has already filled in, marked
+`carried`, the answers of earlier runs whose item has not changed since (at most two weeks old):
+leave them, and judge only what it lists. `rank` remembers your answers for the next runs.
 
 - `cls` — `ready`, `close` or `not-close`, to change the script's verdict. Only `ready` and `close`
   are offered, so set `close` whenever there is a concrete step for the developer.
