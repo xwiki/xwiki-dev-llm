@@ -267,4 +267,4 @@ cycle is the current LTS (the in-progress cycle's `.10` does not exist yet), and
 - **Which JIRA version names exist / are released** →
   `GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions` (each entry has `released` and
   `releaseDate`); the latest released feature line and the current LTS are read from there.
-- **Support strategy / which lines are supported LTS** → WebFetch the `sources:` SupportStrategy page.
+- **Support strategy / which lines are supported LTS** → `curl` the `sources:` SupportStrategy page.

@@ -50,7 +50,7 @@ of what XWiki requires.
 **Not every source holds its own rules.** An OKF topic states its rules inline, but a skill may be a
 *pointer* file — `xwiki-test-guidelines/SKILL.md` is twenty-odd lines that mostly name URLs on
 dev.xwiki.org. When your brief names a skill, load it **and** follow the links that carry the rules
-your brief asks about: a `WebFetch` of the page it names is part of reading your sources, not
+your brief asks about: fetching the page it names (`curl`) is part of reading your sources, not
 exploring. Reading only the pointer leaves your angle with nothing to enforce, and it then reports
 "no issues found" while having checked nothing.
 

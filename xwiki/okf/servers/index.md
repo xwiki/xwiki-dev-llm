@@ -2,7 +2,7 @@
 title: XWiki development server ecosystem
 stability: durable
 summary: The servers making up the xwiki.org dev ecosystem, what each is for, and how an LLM
-  accesses or verifies each one (MCP, REST, or live WebFetch), and attributing posts an LLM co-wrote.
+  accesses or verifies each one (MCP, REST, or live `curl`), and attributing posts an LLM co-wrote.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
@@ -30,20 +30,25 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 | [nexus.xwiki.org](https://nexus.xwiki.org) | Maven artifacts: CI snapshots + official releases. Used by the Extension Manager. | No MCP. Snapshot/release jar names also resolvable under `~/.m2`. Good source to *verify* the current dev version. |
 | [forum.xwiki.org](https://forum.xwiki.org) | Community + dev discussion (replaced most mailing-list usage). | **MCP: `discourse`** (this plugin) — search/read topics and posts with no credential. Posting (reply, new topic) needs `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the `DISCOURSE_USER_API_KEY` pair) in the environment: without them the write tools are not registered at all, so a missing post tool means "no credential set", not "posting unavailable". Drafting and posting — category, tag, title, the confirmation: the `xwiki-forum` skill. |
 | [lists.xwiki.org](https://lists.xwiki.org) | Mailing lists kept for server notifications and committer-private / infra / security discussions. | No MCP. Web archive. |
-| [extensions.xwiki.org](https://extensions.xwiki.org) | Catalog + docs of all free extensions; the source used by in-product Extension Manager. Every extension, a **Project** included, has a per-version page at `Extension/<Space>/Versions/<version>/WebHome` (it carries the release notes). | No MCP. WebFetch an extension page (e.g. to find an extension id/version). |
-| [xwiki.org](https://xwiki.org) | The product/documentation web site (itself a running XWiki instance). New docs live under `/documentation` (see the `xwiki-doc-writing` and `xwiki-doc-convert` skills). | No MCP. WebFetch to read a rendered page. To read/write page content or xobjects programmatically, use its REST API via the `xwiki-rest-api` skill. |
-| [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. WebFetch; index with context-mode for repeated lookups. |
+| [extensions.xwiki.org](https://extensions.xwiki.org) | Catalog + docs of all free extensions; the source used by in-product Extension Manager. Every extension, a **Project** included, has a per-version page at `Extension/<Space>/Versions/<version>/WebHome` (it carries the release notes). | No MCP. `curl` an extension page (e.g. to find an extension id/version). |
+| [xwiki.org](https://xwiki.org) | The product/documentation web site (itself a running XWiki instance). New docs live under `/documentation` (see the `xwiki-doc-writing` and `xwiki-doc-convert` skills). | No MCP. `curl` a rendered page. To read/write page content or xobjects programmatically, use its REST API via the `xwiki-rest-api` skill. |
+| [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. `curl`; index with context-mode for repeated lookups. |
 | [l10n.xwiki.org](https://l10n.xwiki.org) | Weblate — contribute translations. | No MCP. See the `xwiki-translations` skill for the dev side of i18n. |
-| [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. WebFetch. |
+| [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. `curl`. |
 | [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST: [[manual-tests]]. |
 | [elk.xwiki.org](https://elk.xwiki.org) | Anonymous usage stats / market-share metrics. | Rarely relevant to coding. |
 | `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. **Only a mention notifies**: write `[Full Name](https://matrix.to/#/@user:matrix.xwiki.com)` (Element makes it a pill in `m.mentions`; over the API set `m.mentions.user_ids`). Plain `@user` text notifies nobody. |
 
-## What has MCP today vs. WebFetch-only
+## What has MCP today vs. `curl`-only
 
 - **MCP available (fast, structured):** `discourse` (forum — read always, write when a forum
   credential is set), `sonarqube` (SonarCloud). These ship in this plugin's `.mcp.json`.
-- **Everything else is WebFetch / REST / `gh` / git.**
+- **Everything else is `curl` / REST / `gh` / git.**
+- **Fetch every `*.xwiki.org` URL — `/bin/` pages as much as `/rest/` — with plain `curl`.** Cloudflare
+  fronts them all ([[jenkins]] for ci) and lets only curl's default `curl/8.x` User-Agent through: a
+  browser UA, no UA, Python `urllib` or Node `fetch` all get `403`. A script sets `User-Agent:
+  curl/8.x` (as `scripts/jenkins.mjs` does). A `403` there means fix the UA, never "the site blocks
+  automation".
 
 ## Accessing / writing to the XWiki-run sites via REST
 
@@ -51,9 +56,6 @@ xwiki.org, extensions, test, dev and design all run XWiki; program against the R
 (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
-- **The sites sit behind Cloudflare, which blocks a browser-like `User-Agent`.** A `Mozilla/5.0 …
-  Chrome/…` UA — or no UA at all — gets `403` on `/xwiki/rest/…`; the default `curl/8.x` UA gets
-  through, so **never dress the request up as a browser**. It fronts ci.xwiki.org too ([[jenkins]]).
 - **Only `/rest` honors HTTP Basic auth.** The `/bin/` (view/edit/save) endpoints resolve Basic-auth
   requests to `XWiki.Guest`, so a `form_token` scraped from a `/bin/edit` page is the *guest* token
   and gets rejected — authenticate and read/write through `/rest`.

@@ -86,7 +86,7 @@ about how XWiki works or what its rules are — rather than performing a task �
 **`xwiki-knowledge`** skill is the entry point for both reading and extending it, and `okf/index.md`
 is the full, described map. **Volatile facts are never cached** (current version, build/issue status,
 role holders): the relevant file gives a `verify:` recipe instead (read `pom.xml`, query the
-`sonarqube`/`discourse` MCP, or WebFetch the dev wiki — the upstream source of truth).
+`sonarqube`/`discourse` MCP, or `curl` the dev wiki — the upstream source of truth).
 
 OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, read it to choose:
 

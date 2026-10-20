@@ -19,7 +19,7 @@ here. A slimmed copy of this map is injected into every XWiki session via
 2. Check the file's `stability:` frontmatter:
    - `durable` → the inline content is the answer.
    - `volatile` → **do not trust any value written here**; follow the `verify:` recipe (read
-     `pom.xml`, use the `sonarqube`/`discourse` MCP, or WebFetch the listed dev-wiki source).
+     `pom.xml`, use the `sonarqube`/`discourse` MCP, or `curl` the listed dev-wiki source).
 3. For repeated lookups of the same external page in a session, index it once with context-mode (if
    installed) and search — but the OKF never *requires* context-mode.
 

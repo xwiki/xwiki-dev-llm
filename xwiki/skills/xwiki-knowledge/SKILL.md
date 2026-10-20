@@ -23,13 +23,12 @@ session via `instructions/xwiki-org.md`, so you usually already know the topic l
    - `durable` → the inline content is the answer; use it directly.
    - `volatile` → **never quote a value written in the file**; follow its `verify:` recipe instead.
      Typical recipes: read the repo root `pom.xml` `<version>` for the current dev version; query the
-     `sonarqube` MCP for quality/issues; use the `discourse` MCP for forum content; WebFetch the
+     `sonarqube` MCP for quality/issues; use the `discourse` MCP for forum content; `curl` the
      listed dev-wiki `sources:` for anything else that changes.
 3. The dev wiki (dev.xwiki.org) is the upstream source of truth. When a detail is missing or a file
    says the guide is evolving, **fetch the `sources:` URL and prefer it** over the OKF summary.
 4. **Optional accelerator:** if context-mode is installed, index a fetched page once and search it
-   for repeated lookups. The OKF must never *depend* on context-mode — plain Read + WebFetch always
-   works.
+   for repeated lookups. The OKF must never *depend* on context-mode.
 
 ## EXTEND — saving new knowledge (self-improvement)
 
@@ -121,7 +120,7 @@ Self-improvement only happens if learnings flow back. Run the capture check when
 - **(a)** the task *relied on or fetched* a durable, generic XWiki fact — a convention, policy,
   architecture point, or a dev-wiki / xwiki.org doc page — whose topic is **absent from the OKF map,
   or contradicts it**. *Absence is itself the signal; the fact need not be new to you.* In
-  particular, **if you WebFetch an authoritative XWiki doc page to perform a task and its topic isn't
+  particular, **if you fetch an authoritative XWiki doc page to perform a task and its topic isn't
   in the OKF map, offer to capture it.** A whole topic area you needed but the map lacks is a strong
   signal.
 - **(b)** the developer **corrects** you on an XWiki convention, architecture point, or an existing
