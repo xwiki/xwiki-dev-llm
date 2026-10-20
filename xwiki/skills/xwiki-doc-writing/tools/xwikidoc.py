@@ -6,13 +6,13 @@ token scraped by one request is rejected by the next unless the session cookie t
 cookie-less client gets intermittent `403 Invalid or missing form token.` on object writes — passing
 for a while, then failing, depending on which node answered. That single fact is most of this file.
 
-Credentials come from the environment. Source the credentials file inside the command that runs a
-tool, never print it:
-
-    set -a; . ~/.xwiki-credentials; set +a; python3 docpages.py save
+Credentials come from the environment, else from `~/.xwiki-credentials`, which is parsed here, never
+sourced (okf/servers/index.md says why) and never printed.
 
 Environment:
-    XWIKI_USER, XWIKI_PASSWORD   required
+    XWIKI_USER, XWIKI_PASSWORD   required to write, unless the credentials file holds them; a read
+                                 without any goes out as Guest, which is enough for the public
+                                 documentation (`xwiki-doc-export` reads that way)
     XWIKI_BASE                   REST root of the main wiki (default www.xwiki.org's `xwiki`)
 """
 import base64
@@ -30,17 +30,27 @@ VIEW = 'https://www.xwiki.org/xwiki/bin/view/'
 # xwiki.org REST sits behind Cloudflare: it answers 403 both to a request with no User-Agent and to
 # one with a browser-like UA. A curl-style UA passes.
 _UA = 'curl/8.0'
+# Parsed when XWIKI_PASSWORD is not in the environment; None keeps every request anonymous.
+CREDENTIALS = os.path.expanduser('~/.xwiki-credentials')
 _JAR = http.cookiejar.CookieJar()
 _OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_JAR))
 _token = None
 
 
-def _auth():
+def _auth(required=True):
+    """The Basic header, or None for an anonymous read. A write always needs credentials: sent as
+    Guest it would fail on the rights check, after the form-token dance, with a less clear error."""
+    creds = dict(os.environ)
+    if 'XWIKI_PASSWORD' not in creds and CREDENTIALS and os.path.isfile(CREDENTIALS):
+        with open(CREDENTIALS, encoding='utf-8') as f:
+            creds = dict(l.strip().split('=', 1) for l in f if '=' in l)
     try:
-        user, password = os.environ['XWIKI_USER'], os.environ['XWIKI_PASSWORD']
+        user, password = creds['XWIKI_USER'], creds['XWIKI_PASSWORD']
     except KeyError:
-        raise SystemExit('XWIKI_USER / XWIKI_PASSWORD are not set — source your credentials file '
-                         'inside the command, e.g. `set -a; . ~/.xwiki-credentials; set +a; …`')
+        if not required:
+            return None
+        raise SystemExit('No credentials: set XWIKI_USER / XWIKI_PASSWORD or create '
+                         '~/.xwiki-credentials (format in okf/servers/index.md)')
     return 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
 
 
@@ -62,7 +72,10 @@ def viewurl(ref):
 
 def call(url, method='GET', data=None, ctype=None, token=False, accept='application/json'):
     global _token
-    headers = {'User-Agent': _UA, 'Authorization': _auth()}
+    headers = {'User-Agent': _UA}
+    auth = _auth(required=token)
+    if auth:
+        headers['Authorization'] = auth
     if accept:
         headers['Accept'] = accept
     if ctype:
@@ -119,37 +132,45 @@ def farm_wikis():
     return [w['id'] for w in (d or {}).get('wikis', [])]
 
 
-def put_page(base, ref, title=None, content=None, syntax=None, hidden=None):
+def minor_query(minor):
+    """The query string of a write that may be minor. Every page and object write takes it (since
+    XWiki 10.2); the object writes take no version comment, and an object DELETE is always major
+    (XWIKI-25300: Allow setting the version comment when modifying xobjects through the REST API,
+    and support minorRevision when deleting one)."""
+    return '?minorRevision=true' if minor else ''
+
+
+def put_page(base, ref, title=None, content=None, syntax=None, hidden=None, minor=False):
     pairs = [(k, v) for k, v in (('title', title), ('content', content), ('syntax', syntax))
              if v is not None]
     if hidden is not None:
         pairs.append(('hidden', 'true' if hidden else 'false'))
-    st, _, b = write(pageurl(base, ref), 'PUT', form(pairs),
+    st, _, b = write(pageurl(base, ref) + minor_query(minor), 'PUT', form(pairs),
                      'application/x-www-form-urlencoded', base)
     return st, b[:200]
 
 
-def post_object(base, ref, classname, props):
+def post_object(base, ref, classname, props, minor=False):
     pairs = [('className', classname)] + [(f'property#{k}', v) for k, v in props.items()]
-    st, h, b = write(pageurl(base, ref) + '/objects', 'POST', form(pairs),
+    st, h, b = write(pageurl(base, ref) + '/objects' + minor_query(minor), 'POST', form(pairs),
                      'application/x-www-form-urlencoded', base)
     return st, h.get('Location'), b[:200]
 
 
-def put_property(base, ref, classname, number, prop, value):
+def put_property(base, ref, classname, number, prop, value, minor=False):
     """Write one property with a `text/plain` body — no field name to get wrong.
 
     On the form-encoded route the field must be `property#<name>`; a `#`-less name is accepted,
     reports success and leaves the property **empty**, which is why every write here is read back.
     """
-    url = f'{pageurl(base, ref)}/objects/{classname}/{number}/properties/{prop}'
+    url = f'{pageurl(base, ref)}/objects/{classname}/{number}/properties/{prop}{minor_query(minor)}'
     st, _, b = write(url, 'PUT', value.encode('utf-8'), 'text/plain', base)
     return st, b[:200]
 
 
-def put_object(base, ref, classname, number, props):
+def put_object(base, ref, classname, number, props, minor=False):
     """Write several properties of an existing object (the route that can also blank one)."""
-    url = f'{pageurl(base, ref)}/objects/{classname}/{number}'
+    url = f'{pageurl(base, ref)}/objects/{classname}/{number}{minor_query(minor)}'
     st, _, b = write(url, 'PUT', form([(f'property#{k}', v) for k, v in props.items()]),
                      'application/x-www-form-urlencoded', base)
     return st, b[:200]

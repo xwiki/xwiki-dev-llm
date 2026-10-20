@@ -25,7 +25,8 @@ curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" -H "Accept: application/json"
 ```
 
 `versions` = Affects Version/s, `fixVersions` = Fix Version/s. Always pipe through `python3`/`jq` and
-keep only the fields you need — never dump a raw issue into context.
+keep only the fields you need — never dump a raw issue into context. To find which `customfield_*`
+holds a field, add `expand=names`: it maps each field id to its display name.
 
 ## List a project's versions (to choose Affects/Fix Version)
 
@@ -56,7 +57,6 @@ json.dump({"fields": {
     "components":  [{"name": "REST"}],
     # affects version(s) — oldest affected, else last LTS (okf/servers/jira.md):
     "versions":    [{"name": "17.10.0"}],
-    "fixVersions": [{"name": "18.7.0-rc-1"}],
 }}, open("payload.json", "w"))
 PY
 
@@ -66,7 +66,10 @@ curl -s -w '\n%{http_code}\n' -X POST \
   --data @payload.json https://jira.xwiki.org/rest/api/2/issue
 ```
 
-Component / Fix Version can also be set later (see below) — but prefer setting them at creation.
+**Fix Version/s, Assignee and the Flickering Test field (`customfield_10870`) cannot be set at
+creation**: the create screen does not carry them (400 `Field 'fixVersions' cannot be set. It is not
+on the appropriate screen`). Set them right after, with the `update` block below (`set` for the
+field) and with `PUT /issue/KEY/assignee` and `{"name":"<username>"}` (204).
 
 ## Update fields (add/remove without clobbering others)
 
@@ -95,6 +98,20 @@ curl -s -w '\n%{http_code}\n' -X PUT \
   -d '{"fields":{"issuetype":{"name":"Improvement"},"summary":"New summary"}}' \
   "https://jira.xwiki.org/rest/api/2/issue/XWIKI-12345"
 ```
+
+## Link two issues
+
+The link types are `Related` (relates to), `Causality` (causes / is caused by), `Dependency`
+(blocks / depends on) and `Duplicate`; `GET /rest/api/2/issueLinkType` lists them. Returns **201**:
+
+```bash
+curl -s -w '\n%{http_code}\n' -X POST \
+  -H "Authorization: Bearer $JIRA_API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"type":{"name":"Related"},"inwardIssue":{"key":"XWIKI-12345"},"outwardIssue":{"key":"XWIKI-12000"}}' \
+  https://jira.xwiki.org/rest/api/2/issueLink
+```
+
+Read the issue back with `fields=issuelinks` to check the link.
 
 ## Add a comment
 

@@ -4,6 +4,10 @@ on:
   pull_request:
 jobs:
   validate:
+    # A push to a fork is validated against the fork's own master, which is usually releases behind
+    # upstream, so the version-untouched check fails on any branch containing a newer upstream
+    # master. The fork's branch is validated by its pull request's run here instead.
+    if: github.event_name == 'pull_request' || github.repository == 'xwiki/xwiki-dev-llm'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,3 +20,5 @@ jobs:
           node-version: 20
       - name: Consistency checks
         run: node scripts/validate.mjs
+      - name: Unit tests
+        run: node --test

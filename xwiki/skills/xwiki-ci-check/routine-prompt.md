@@ -1,0 +1,123 @@
+# The routine prompt
+
+What the scheduled Claude routine is given, and nothing more. It names the skill and the mode; all
+behaviour lives in `SKILL.md`, its `references/` and `tools/`, which are versioned, validated and
+reviewed. **Changing what the routine does is a pull request to `xwiki-dev-llm`, not an edit to an
+unreviewed routine config** — and going live changes one word.
+
+**Schedule: 06:00 Europe/Paris, daily.** After the overnight builds finish (a platform build takes
+3.4–6.5 h) and before anyone starts work. Monday's run covers the weekend on its own; the 7-day
+blame horizon already handles the backlog that accumulates over one.
+
+**Model: Opus 5** for the dry-run period, to establish what a good diagnosis looks like. Only then
+try a cheaper model and compare the two runs' logs side by side — choosing cheap up front means
+never knowing whether a weak diagnosis was the model or the design.
+
+## Dry run (start here, and stay here for a few days)
+
+```
+Run the xwiki-ci-check skill. Dry run: write nothing anywhere — print the digest, the paste body,
+and every commit comment, JIRA issue and pull request you would have created, in full, to stdout.
+There is nobody to answer a question, so do not ask one: treat every write as declined.
+```
+
+Omitting `--write` is already enough — the skill's default mode writes nothing and every writer tool
+under `tools/` is a no-op without its own `--write`. The wording above says it out loud so that the
+log of a soak run is readable as a rehearsal, and so that the one-word difference from the live
+prompt is visible to whoever edits the routine next.
+
+Read the run logs for a few days. You are looking for: is the blame right? is the wording of a
+`likely` comment actually asking rather than accusing? would any of those PRs have been wrong?
+
+### Stabilisation rehearsal (opt-in, by hand)
+
+The dry run never starts a stabilisation, so `references/stabilise.md` is rehearsed apart, on a
+machine that can hold Docker and port 8080 for an hour:
+
+```
+Run the xwiki-ci-check skill. Stabilisation rehearsal: sweep with ci-check.mjs --rehearse-stabilise,
+write nothing anywhere and treat every write as declined, except starting the stabilisation of the
+summary.stabilise incident. Follow references/stabilise.md through xwiki-fix-flickering-docker-test,
+stop before the PR, and print in full the draft PR or flicker-issue comment you would have posted.
+```
+
+`--rehearse-stabilise` picks the candidate even past a release blocker, and the comment and PR
+tools refuse to write from it.
+
+## Live
+
+```
+Run the xwiki-ci-check skill with --write.
+
+Personal overrides on top of the skill:
+* Any commit you make carries the bot as its author: --author="XWiki LLM Bot <llm-bot@xwiki.org>".
+* Open every pull request with the skill's tools/pull-request.mjs, never with gh or the GitHub MCP
+  server.
+```
+
+> ⚠️ Paste this into the routine whenever it changes here: the live config is not read from this file.
+
+The last bullet repeats §5 of the skill on purpose: the session's own GitHub access is right at hand
+and wrong, so the prompt names it too.
+
+**Auto-fix PRs** is on in the routine's config. It is safe only because every PR the routine opens is
+locked to collaborators, which needs the bot's Write role (below).
+
+## Environment the routine needs
+
+- **Bot credentials** (never a developer's account), in the routine's secret store:
+  - `GH_TOKEN_BOT` — a **classic** token with `public_repo`. It posts the commit comments and
+    opens and locks the fix PRs. Locking needs the bot to hold the **Write** role on
+    `xwiki-commons`, `xwiki-rendering` and `xwiki-platform`; with less, PRs are opened unlocked and
+    not acted on (SKILL.md §5). The branch is still pushed by the Claude GitHub App (see below).
+  - `JIRA_TOKEN_BOT` — the skill maps it onto `JIRA_API_TOKEN` when invoking `xwiki-jira`, so the
+    developer's own JIRA credential is never the one filing.
+  - `MATRIX_USER_BOT` + `MATRIX_PASSWORD_BOT` — **the password, not `MATRIX_TOKEN_BOT`.** matrix.org
+    issues short-lived `mat_` tokens, so a token in a secret store is expired before the first run;
+    `matrix.mjs` logs in per run on a fixed device instead.
+  - Optional, all defaulted: `MATRIX_HOMESERVER` (`https://matrix.org`),
+    `MATRIX_ROOM` (`#xwiki:matrix.xwiki.com`), `XWIKI_CI_PASTE_URL` (`https://bin.xwikisas.com/`).
+- **`SONARQUBE_TOKEN`** — a SonarCloud token for the `xwiki` organization, in the same secret
+  store, and not a bot credential because there is no bot account on SonarCloud. A failing quality
+  gate is the one incident whose cause is nowhere in the Jenkins log — that log says
+  `QUALITY GATE STATUS: FAILED` and stops — so `sonar-gate.mjs` asks SonarCloud over its REST API
+  (no MCP server, no Docker) which condition failed and whose code is under it. Without the token
+  the gate is still reported, with `summary.sonar.unavailable` in place of its cause and nobody
+  named; since a red gate is what §5 fixes first, that is the most useful morning the routine can
+  lose. The account behind the token must be allowed to transition issues, because the gate fix
+  accepts the issues its PR covers as a claim on them. **Do not set `SONARQUBE_PROJECT_KEY`** — the
+  sweep derives the project from the repo, and one global value would report one project's gate for
+  all three.
+- **Checkouts** of `xwiki-commons`, `xwiki-rendering`, `xwiki-platform` and `xwiki-dev-llm`, which
+  are what the fix PRs of §5 are written and verified in. Without them the skill fails closed: no
+  PR, which is the safe outcome but is still an outcome to know about.
+- **The setup script: `xwiki/scripts/routine-setup.sh`**, pasted into the routine's setup field. A
+  sandbox is new every run, so everything past the checkouts is installed there every time — `gh`,
+  the plugin itself, JDK 17 and 21, `xmvn`, and an `~/.m2/settings.xml` pointing at XWiki's Nexus.
+  It also writes, into `~/.claude/settings.json`, a SessionStart hook that starts `dockerd` (the
+  image has no running daemon) and the `autoMode` entries without which the classifier blocks the
+  PrivateBin paste as a public upload — the script's comments say why neither can live elsewhere.
+  It is shared with the SonarCloud routine; keep it that way rather than letting two copies drift.
+  **`xmvn` and the two JDKs are what make one sandbox able to verify a fix on any branch**: it reads
+  `xwiki.java.version` from the pom and exports the matching `JAVA_HOME`, the maintained branches
+  wanting 17 up to stable-17.10.x and 21 from stable-18.4.x on, and a build on a too-new JDK fails
+  in ways that read as code problems and are not.
+- **The Claude GitHub App**, installed on the `xwiki` org — that, and not `GH_TOKEN_BOT`, is what
+  pushes a fix branch, exactly as it does for the SonarQube routine. The branch lives in the
+  upstream repo (`claude/<slug>`); there is no fork anywhere in this design. The PR on top of it is
+  the bot's, opened by `tools/pull-request.mjs`.
+- **Full network access** for the sandbox, not "trusted" — the header of `routine-setup.sh` says why.
+- The `xwiki` plugin loaded, so the skill and the shared `scripts/` are present.
+
+Without the bot credentials the skill does that channel in rehearsal and says so; it never falls back
+to a personal account.
+
+## Running it by hand
+
+A developer can run `/xwiki-ci-check` on their own machine at any time — before a release, or when
+something looks wrong at 11am. That run is the skill's **default mode**: it sweeps and analyses,
+never posts to Matrix, and asks one question before each of the five writes it may make (the paste, a
+commit comment, a flicker issue, a fix PR, a flicker-stabilisation draft PR — that last one *before*
+starting, since it holds the machine for around an hour). It needs no bot credential to be useful: the sweep, the
+analysis and the paste all work with nothing configured. Scope it when the question is
+narrow — `--repos xwiki-platform --branch master`.

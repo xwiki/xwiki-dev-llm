@@ -17,16 +17,45 @@
 //      something that was never the change itself. Instead scripts/release.mjs sets them on master
 //      after the merge (automatically, via .github/workflows/release.yml), which is what makes
 //      installed plugins pull the update.
-//   7. Every `okf/...md` path a skill cites actually exists. Skills delegate their rules to the OKF
-//      rather than restating them, so a renamed or deleted topic would otherwise leave a skill
-//      pointing at nothing — and a reviewer that cannot read its rule source fails silently.
+//   7. Every `okf/...md` path a skill cites actually exists, and so does every `references/...md`
+//      file it names. Skills delegate their rules to the OKF rather than restating them, and keep
+//      what only one branch of a run needs in references/ files opened on demand, so a renamed or
+//      deleted file would otherwise leave a skill pointing at nothing — and a reviewer that cannot
+//      read its rule source fails silently. All of a skill's Markdown is checked, not only SKILL.md.
+//   8. The OKF index stays a map: each entry, and the file, within a size budget. An entry exists to
+//      pick a topic, so it says what the topic is and when to open it; a description long enough to
+//      restate the rules gets acted on in place of the file it points at, at a third of the detail.
+//   9. Every SKILL.md frontmatter parses as YAML. A `name`/`description` is written as an unquoted
+//      (plain) scalar, in which `: ` and ` #` are structural — `: ` anywhere in the value makes the
+//      block unparseable, and ` #` silently truncates the value at that point. The host then loads
+//      the skill with EMPTY (or truncated) metadata rather than failing loudly, so the description
+//      Claude matches against is gone and the skill simply never triggers. This is NOT covered by
+//      `claude plugin validate`: measured against the `yaml` package, three skills here were
+//      unparseable while that command reported only one of them and then passed the repo.
+//  10. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
+//      route work to each other through these pointers, so a renamed or removed skill leaves the
+//      others sending the model to nothing.
+//  11. No paragraph is copied across files. Each fact has one home — a skill, an OKF topic, the
+//      injected xwiki-org.md, README.md — and the other places link to it; a copy drifts from its
+//      original at the first edit of either, and the model then has two rules to choose from.
+//  12. Each skill and OKF file stays within its size budget (scripts/size-budgets.json). Like the
+//      budgets of invariants 5 and 8, it turns growth into a decision: a file only gets longer
+//      when its budget is raised, in the same change and with the reason in the commit message.
+//      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
+//      a loaded skill body — and the budget of one already above the cap may only go down: detail
+//      past it moves into a file the skill opens on demand.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, basename } from "node:path";
+import { dirname, join, basename, relative, sep } from "node:path";
+import {
+  COPY_RATIO, OKF_ENTRY_MAX_BYTES, OKF_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
+  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, okfIndexEntries, orgMapBlock,
+  sharedWithOtherFiles, skillPointers,
+} from "./md-blocks.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -118,23 +147,20 @@ for (const abs of walk(okfRoot)) {
 // xwiki-org.md is injected at the start of every session in every xwiki/* repo, so each line is
 // paid for by every task, including the ones that never needed it. The map is routing only —
 // topic names; okf/index.md is where a topic gets described. Raise a budget only with a reason.
-const ORG_MAX_BYTES = 8000;
-const ORG_MAP_MAX_BYTES = 1800;
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
       `for the always-on file — move the detail into an okf/ topic (described in okf/index.md) or a skill`
   );
 }
-const mapStart = orgMd.indexOf("OKF map");
-const mapEnd = orgMd.indexOf("**Capturing learnings:**");
-if (mapStart === -1 || mapEnd === -1 || mapEnd < mapStart) {
+const mapBlock = orgMapBlock(orgMd);
+if (mapBlock === null) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: cannot locate the OKF map block ` +
       `(expected "OKF map" … "**Capturing learnings:**")`
   );
 } else {
-  const mapBytes = Buffer.byteLength(orgMd.slice(mapStart, mapEnd));
+  const mapBytes = Buffer.byteLength(mapBlock);
   if (mapBytes > ORG_MAP_MAX_BYTES) {
     errors.push(
       `xwiki/instructions/xwiki-org.md: the OKF map block is ${mapBytes} bytes, over the ${ORG_MAP_MAX_BYTES}-byte ` +
@@ -196,15 +222,188 @@ if (!baseSha) {
   }
 }
 
-// ---- Invariant 7: OKF paths cited by skills resolve ------------------------------------------
-// Matches `okf/<dir>/<topic>.md` wherever it appears in a SKILL.md, in backticks or bare.
+// ---- Invariant 7: OKF and references/ paths cited by skills resolve -------------------------
+// Matches `okf/<dir>/<topic>.md` (resolved against xwiki/) and `references/<file>.md` (resolved
+// against the skill's own directory) wherever they appear, in backticks or bare.
 const okfRefPattern = /okf\/[a-z0-9-]+\/[a-z0-9-]+\.md/g;
+const referencesPattern = /(?<![\w/.-])references\/[\w.-]+\.md/g;
+for (const skill of skills) {
+  const skillDir = `xwiki/skills/${skill}`;
+  const docs = walk(join(repoRoot, skillDir))
+    .filter((abs) => abs.endsWith(".md"))
+    .map((abs) => relative(repoRoot, abs).split(sep).join("/"));
+  for (const doc of docs) {
+    const text = read(doc);
+    for (const ref of new Set(text.match(okfRefPattern) ?? [])) {
+      if (!existsSync(join(repoRoot, "xwiki", ref))) errors.push(`${doc}: cites '${ref}', which does not exist`);
+    }
+    for (const ref of new Set(text.match(referencesPattern) ?? [])) {
+      if (!existsSync(join(repoRoot, skillDir, ref))) {
+        errors.push(`${doc}: names '${ref}', which does not exist in ${skillDir}/`);
+      }
+    }
+  }
+}
+
+// ---- Invariant 9: skill frontmatter parses as YAML -------------------------------------------
+// A skill whose frontmatter does not parse loads with empty metadata instead of reporting anything,
+// so its description — the only thing Claude matches on to invoke it — is gone and the skill simply
+// never fires. The descriptions here are long English sentences written as unquoted (plain) scalars,
+// where the two characters YAML treats as structural, `: ` and ` #`, are easy to type by accident:
+// `: ` makes the block unparseable, ` #` truncates the value from there on. A plain scalar also
+// continues onto indented lines, so the offending text is often nowhere near the `description:` line.
+//
+// This does not duplicate `claude plugin validate`, which is weaker: with all three offenders present
+// it named one and passed the repo, while the `yaml` package rejected all three. Rather than depend
+// on a YAML library (this script is Node built-ins only), check the constructs that break a plain
+// scalar. A quoted or block scalar is left alone — being explicitly delimited, it may contain them,
+// and several descriptions here rely on that.
 for (const skill of skills) {
   const skillMd = read(`xwiki/skills/${skill}/SKILL.md`);
-  for (const ref of new Set(skillMd.match(okfRefPattern) ?? [])) {
-    if (!existsSync(join(repoRoot, "xwiki", ref))) {
-      errors.push(`xwiki/skills/${skill}/SKILL.md: cites '${ref}', which does not exist`);
+  const fm = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fm) {
+    errors.push(`xwiki/skills/${skill}/SKILL.md: no YAML frontmatter block`);
+    continue;
+  }
+  const lines = fm[1].split(/\r?\n/);
+  let key = null; // the key whose plain scalar we are inside, or null
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const keyed = line.match(/^([A-Za-z_][\w-]*):(?:[ \t]+(.*))?$/);
+    let text; // the part of this line that belongs to a plain scalar value
+    if (keyed) {
+      const value = keyed[2] ?? "";
+      // Quoted and block scalars delimit themselves, so they may hold anything.
+      if (/^["'|>]/.test(value)) {
+        key = null;
+        continue;
+      }
+      if (/^[-?:,[\]{}#&*!%@`]/.test(value)) {
+        errors.push(
+          `xwiki/skills/${skill}/SKILL.md: frontmatter '${keyed[1]}' starts with the YAML indicator ` +
+            `'${value[0]}' — quote the value`
+        );
+      }
+      key = keyed[1];
+      text = value;
+    } else if (key && /^\s+\S/.test(line)) {
+      text = line; // a continuation line of the plain scalar started above
+    } else {
+      key = null;
+      continue;
     }
+    for (const [pattern, what] of [
+      [/:(?:\s|$)/, "a colon followed by a space or end of line"],
+      [/\s#/, "a space followed by '#'"],
+    ]) {
+      if (pattern.test(text)) {
+        errors.push(
+          `xwiki/skills/${skill}/SKILL.md: frontmatter '${key}' contains ${what} inside an unquoted ` +
+            `value (line ${i + 1} of the frontmatter) — YAML cannot parse it and the skill would ` +
+            `load with empty metadata; rewrite it (an em dash reads the same) or quote the value`
+        );
+      }
+    }
+  }
+}
+
+// ---- Invariant 8: the OKF index stays a map ---------------------------------------------------
+// okf/index.md is read whenever the OKF is consulted, and every topic is already described by its
+// own `summary:` frontmatter, so a long entry is the same text a third time. Budgets, not good
+// intentions, are what stop it growing back: extending the OKF always appends here and never cuts.
+if (Buffer.byteLength(okfIndex) > OKF_INDEX_MAX_BYTES) {
+  errors.push(
+    `xwiki/okf/index.md: ${Buffer.byteLength(okfIndex)} bytes exceeds the ${OKF_INDEX_MAX_BYTES}-byte budget — ` +
+      `an entry picks a topic, it does not summarise it; the rules belong in the topic file`
+  );
+}
+for (const entry of okfIndexEntries(okfIndex)) {
+  if (Buffer.byteLength(entry.text) > OKF_ENTRY_MAX_BYTES) {
+    errors.push(
+      `xwiki/okf/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
+        `${OKF_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
+        `and leave the rules to xwiki/okf/**/${entry.name}.md`
+    );
+  }
+}
+
+// ---- Invariants 10-12 read every tracked Markdown file ---------------------------------------
+// Tracked files only, so a scratch note in a working tree is neither compared nor budgeted.
+const trackedMd = (git(["ls-files", "-z", "--", "*.md"]) ?? "")
+  .split("\0")
+  .filter((p) => p && existsSync(join(repoRoot, p)));
+
+// ---- Invariant 10: skill pointers resolve ----------------------------------------------------
+// Only a name in a pointer phrase is checked: a bare `xwiki-…` is usually a Maven module or a repo.
+// Skills that live in another plugin are listed in md-blocks.mjs, since this repo cannot see them.
+for (const p of trackedMd) {
+  const text = read(p);
+  for (const name of skillPointers(text)) {
+    if (!skills.includes(name) && !EXTERNAL_SKILLS.has(name)) {
+      errors.push(`${p}: points to the skill '${name}', which does not exist under xwiki/skills/`);
+    }
+  }
+}
+
+// ---- Invariant 11: no paragraph copied across files ------------------------------------------
+// A block (paragraph or list item, code fences and frontmatter left out) is a copy when at least half
+// of its 8-word sequences also appear in one block of another file. Below 20 words a repeat is a
+// phrase, not a rule. This catches copy-paste only; a paraphrase is a reviewer's job.
+// A block naming a host's path variable is exempt: each skill has to say for itself where the shared
+// okf/ and scripts/ are on each host, as a skill cannot include another file.
+// The splitting, words and thresholds are in md-blocks.mjs, shared with consolidation-candidates.mjs.
+const dupIndex = indexBlocks(trackedMd.filter(inDupScope), read);
+const { blocks } = dupIndex;
+const reported = new Set();
+blocks.forEach((block, i) => {
+  for (const [j, count] of sharedWithOtherFiles(dupIndex, i)) {
+    const pair = `${Math.min(i, j)}-${Math.max(i, j)}`; // report a copy once, not from both sides
+    if (count / block.shingles.size < COPY_RATIO || reported.has(pair)) continue;
+    reported.add(pair);
+    errors.push(
+      `${block.path} and ${blocks[j].path} hold the same paragraph ` +
+        `(${Math.round((100 * count) / block.shingles.size)}% shared: "${block.text.slice(0, 80).replace(/\s+/g, " ")}…") — ` +
+        `keep the fact in one of the two and point to it from the other`
+    );
+  }
+});
+
+// ---- Invariant 12: skill and OKF files stay within their size budget -------------------------
+// Covers what the model reads as instructions: skills (not their tools/, which hold data and the
+// scripts' own docs) and OKF topics. okf/index.md has its own budgets (invariant 8). A file with no
+// entry gets the default, so a new file needs an entry only once it outgrows it.
+// A SKILL.md is read whole once the skill fires, so its ceiling is the published guideline for a skill
+// body (https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices): under 500 lines,
+// about 5,000 tokens. OKF topics and reference files are opened on demand and have no such ceiling.
+const budgets = JSON.parse(read("scripts/size-budgets.json"));
+for (const p of trackedMd) {
+  if (!isBudgeted(p)) continue;
+  const size = Buffer.byteLength(read(p));
+  const max = budgetOf(p, budgets);
+  if (size > max) {
+    errors.push(
+      `${p}: ${size} bytes exceeds its ${max}-byte budget. Raise its entry in scripts/size-budgets.json ` +
+        `only if the new text passes all three tests, saying why in the commit message: every reader of the ` +
+        `file needs it (else move it to the skill's references/ or a narrower OKF topic), it has no other home (else point to the OKF topic ` +
+        `or skill that holds it), and it is as short as it can be — see "Each fact has one home" in CLAUDE.md`
+    );
+  }
+}
+for (const p of Object.keys(budgets)) {
+  if (!trackedMd.includes(p)) errors.push(`scripts/size-budgets.json: '${p}' no longer exists — remove its entry`);
+}
+// Compared with the merge base, like invariant 6, so only what this branch did is judged. Skipped when
+// the base has no budgets yet: the change introducing them is what sets the over-cap entries.
+const baseBudgetsText = baseSha && git(["show", `${baseSha}:scripts/size-budgets.json`]);
+const baseBudgets = baseBudgetsText ? JSON.parse(baseBudgetsText) : null;
+for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
+  if (!p.endsWith("/SKILL.md") || max <= SKILL_MAX_BYTES) continue;
+  const before = baseBudgets[p] ?? SKILL_MAX_BYTES;
+  if (max > before) {
+    errors.push(
+      `scripts/size-budgets.json: '${p}' is raised from ${before} to ${max} bytes, but a SKILL.md over ` +
+        `${SKILL_MAX_BYTES} bytes may only shrink — move detail into a file the skill opens on demand`
+    );
   }
 }
 

@@ -1,10 +1,11 @@
 ---
 title: Secure-coding conventions (escaping, untrusted input, right checks)
 stability: durable
-summary: How to escape user input and other untrusted values in scripts/templates, why translation
-  values are untrusted, which right each scripting language requires, the context-author right-check
-  rule for script services, and never interpolating identifiers or references into queries and
-  include/display targets.
+summary: How to escape user input and other untrusted values for each output context, why
+  translation values are untrusted, which right each scripting language requires, the context-author
+  and pass-the-entity right-check rules, saving as author in script services and serializing a
+  possibly-null author, displaying rather than parsing XObject properties, safe XML parsing, and
+  never interpolating identifiers or references into queries and include/display targets.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Security/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Scripting/
@@ -37,7 +38,16 @@ word-order and escaping mechanics.)
 
 - **HTML output:** `$escapetool.xml($content)`. Also escapes `{`, so it prevents closing an HTML
   macro through user input. Sufficient for text that is simply displayed.
+- **HTML attribute:** `$escapetool.xml`, **not** `$escapetool.html`, which leaves the single quote.
 - **XWiki syntax:** `$services.rendering.escape($content, 'xwiki/2.1')`.
+  A user-controlled **link label** (`[[label>>target]]`) needs it **twice**: the parser unescapes the
+  link once to split label from target, then parses the label as wiki syntax again, so a single
+  escape still lets markup in the label run. The target takes a single escape.
+- **JavaScript string:** `$escapetool.javascript` (or `$escapetool.json` for a JSON value) —
+  `$escapetool.xml` leaves the backslash. No tool supports a JS **template literal**: never insert a
+  value into one.
+- **Query:** never `$escapetool.sql` — bind the value (see *Structural interpolation* below).
+- **Velocity:** never `#evaluate` a value a user can control — no escaping makes it safe.
 - **HTML attributes with special meaning** (e.g. a link/button `href`/`target`): escaping alone is
   **not** enough — a fully escaped value can still be a `javascript:` URL that runs on click. Use
   `$services.html.isAttributeSafe($htmlElement, $attributeName, $attributeValue)` to check the value
@@ -98,7 +108,52 @@ user accessed the document — this prevents CSRF-style escalation. If permissio
 the author cannot be trusted: do nothing dangerous and disclose nothing sensitive. A service that
 acts or discloses without further checks must require **Programming Right** of the context author.
 
-## HTML sanitization is configurable
+**Always pass the entity** — the defaults answer a different question than they seem to:
+
+- `hasAccess(Right.ADMIN)` with no entity (also `$xwiki.hasAdminRights()`, `$hasAdmin`) checks the
+  *current document*, so a mere **space** admin passes. For wiki admin pass the wiki —
+  `hasAccess(Right.ADMIN, new WikiReference(wikiId))` — or use `$xwiki.hasWikiAdminRights()`.
+- For Script and Programming Right the entity decides *whose* rights: `hasAccess(Right.SCRIPT,
+  reference)` checks the content author of the document at `reference`, not the running script's
+  author. No entity checks the running script's author; for a given user on a given entity use
+  `AuthorizationManager#hasAccess(right, user, entity)`.
+
+**Programming Right exists only on the main wiki**: a subwiki admin has Script Right, never
+Programming Right. Do not require it for what subwiki admins must be able to do; do require it for
+what they must not.
+
+**Saving a document.** A script service — or any API a script can call — must never save with the
+*current user* as author when the calling script's author lacks Programming Right: a script that a
+more privileged user merely views would store content in their name, which then runs with their
+rights. `Document#save()` already falls back to the script's author in that case — reuse it or apply
+the same check.
+
+**Serializing an author.** The `document` `UserReferenceSerializer<DocumentReference>` turns a
+`null` user reference into the **current user**, so an author that may be missing becomes whoever
+the code runs for — check for `null` first. Guest needs no special case: it serializes to `null`,
+the only `DocumentReference` for guest (`XWiki.XWikiGuest` is deprecated).
+
+## Rendering an XObject property — display it, never parse its raw value
+
+`$doc.display('property', $object)` runs the property with the rights of its document's effective
+metadata author. `$object.getValue('property')` inserted into content that is parsed as XWiki syntax
+or evaluated as Velocity runs it with the rights of the *rendering* page's author instead. Despite its
+name, `$object.get('property')` returns the **displayed** property: read or compare the value with
+`getValue`.
+
+## Parsing XML — use the XML Module helpers
+
+Never create a parser (`XMLInputFactory`, `DocumentBuilderFactory`, `SAXParserFactory`, …) yourself:
+use `StAXUtils.getXMLStreamReader(...)` or `XMLUtils.parse(...)` (xwiki-commons-xml), already
+configured not to load external DTDs and entities. An own parser must disable DTDs and external
+entities explicitly — `XMLConstants.FEATURE_SECURE_PROCESSING` is not enough with every
+implementation.
+
+## HTML cleaning is not escaping; sanitization is configurable
+
+**The HTML macro's cleaning (`clean="true"`, the default) is not escaping.** When the content author
+has Script Right — always the case for HTML a Velocity script produces — cleaning only makes the HTML
+valid; it keeps scripts and event handlers. Escape every inserted value, even inside `{{html}}`.
 
 The HTML element/attribute sanitizer (in `xwiki-commons-xml`) backs the cleaning configuration. Its
 allow-lists, forbidden tags/attributes, allowed-URI regexp and per-element attribute restrictions

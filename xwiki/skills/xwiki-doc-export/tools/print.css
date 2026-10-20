@@ -1,0 +1,97 @@
+/* Print stylesheet of the xwiki-doc-export book (headless Chrome, A4). */
+
+@page {
+  size: A4;
+  margin: 20mm 18mm 22mm 18mm;
+  @bottom-center { content: counter(page); font: 9pt "Helvetica Neue", Arial, sans-serif; color: #666; }
+}
+@page :first { @bottom-center { content: none; } }
+
+html { font: 10.5pt/1.5 "Helvetica Neue", Arial, "Liberation Sans", sans-serif; color: #1a1a1a; }
+body { margin: 0; }
+
+/* Cover */
+.cover { height: 240mm; display: flex; flex-direction: column; justify-content: center; break-after: page; }
+.cover .book-title { font-size: 30pt; line-height: 1.2; margin: 0 0 6mm; color: #0c4a78; }
+.cover .book-sub { font-size: 14pt; color: #555; margin: 0 0 20mm; }
+.cover dl { font-size: 9.5pt; color: #444; display: grid; grid-template-columns: max-content 1fr; gap: 1.5mm 6mm; }
+.cover dt { font-weight: 600; }
+.cover dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Contents -- the number column has a fixed width so both passes lay out identically */
+.toc { break-after: page; }
+.toc h1 { font-size: 20pt; color: #0c4a78; margin: 0 0 6mm; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { display: flex; align-items: baseline; margin: 0; break-inside: avoid; }
+.toc li a { color: inherit; text-decoration: none; flex: 1; }
+.toc li::after { content: none; }
+.toc .toc-page { width: 12mm; text-align: right; font-variant-numeric: tabular-nums; }
+.toc .toc-1 { font-weight: 600; margin-top: 3mm; }
+.toc .toc-2 { padding-left: 6mm; }
+.toc .toc-3 { padding-left: 12mm; font-size: 9.5pt; color: #333; }
+
+/* Chapters */
+article { margin: 0; }
+article.depth-1, .break-page article:not(.depth-0) { break-before: page; }
+.break-page article:not(.depth-1) { margin-top: 0; }
+article.depth-2, article.depth-3, article.depth-4, article.depth-5, article.depth-6, article.depth-7 { margin-top: 10mm; }
+h1, h2, h3, h4, h5, h6 { color: #0c4a78; line-height: 1.25; break-after: avoid; margin: 1.2em 0 0.4em; position: relative; }
+/* Sized by the level within the page (rel-N), not by the tag, which follows the tree depth. */
+.rel-1 { font-size: 17pt; }
+article.depth-1 > .rel-1 { font-size: 22pt; }
+article.depth-2 > .rel-1 { font-size: 19pt; }
+.rel-2 { font-size: 14pt; }
+.rel-3 { font-size: 12pt; }
+.rel-4, .rel-5, .rel-6 { font-size: 11pt; }
+.toc h1 { font-size: 20pt; }
+.page-title { margin-top: 0; }
+.page-meta { font-size: 8.5pt; color: #666; text-transform: none; margin: -0.2em 0 1em; }
+.marker { position: absolute; left: 0; top: 0; font-size: 1px; color: #fff; }
+p, li { orphans: 3; widows: 3; }
+
+a { color: #0c62a8; text-decoration: none; }
+.medium-print a.ext::after { content: " (" attr(href) ")"; font-size: 8pt; color: #666; overflow-wrap: anywhere; }
+
+/* Images. border-box, so the border is inside the 100%: otherwise a full-width screenshot is two
+   pixels wider than the column and loses its right edge. The height cap keeps a tall screenshot
+   on one page, scaled down rather than cut. */
+img { max-width: 100%; height: auto; box-sizing: border-box; }
+img.shot { display: block; border: 1px solid silver; max-height: 225mm; width: auto; margin: 2mm 0;
+           break-inside: avoid; }
+img.diagram { display: block; max-height: 225mm; width: auto; margin: 2mm auto; break-inside: avoid; }
+img.icon { display: inline; vertical-align: middle; }
+.gallery br { display: none; }
+
+/* Code */
+pre { background: #f5f7f9; border: 1px solid #dde3e8; border-radius: 2px; padding: 3mm; font-size: 8.5pt;
+      line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; break-inside: avoid; }
+code, .monospace, tt { font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 0.9em; }
+.monospace { background: #f2f4f6; padding: 0 0.2em; border-radius: 2px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* Tables */
+table { border-collapse: collapse; width: 100%; margin: 3mm 0; font-size: 9pt; }
+th, td { border: 1px solid #cfd6dc; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+th { background: #eef2f5; }
+tr { break-inside: avoid; }
+
+/* Callouts, keys, version notes */
+.box { border-left: 3px solid #7a8a99; background: #f5f7f9; padding: 2mm 3mm; margin: 3mm 0; break-inside: avoid; }
+.box.infomessage { border-color: #2f7bbf; background: #eef5fb; }
+.box.warningmessage { border-color: #d39e00; background: #fdf7e6; }
+.box.errormessage { border-color: #c0392b; background: #fbeeee; }
+.box.successmessage { border-color: #2e8b57; background: #edf7f1; }
+span.box { display: inline; padding: 0.3mm 1.5mm; }
+.callout-label { margin-right: 0.3em; }
+.key { font-family: Menlo, Consolas, monospace; font-size: 0.85em; border: 1px solid #b8c0c8; border-bottom-width: 2px;
+       border-radius: 3px; padding: 0 0.35em; background: #fafbfc; }
+.version-note { font-size: 0.85em; color: #555; font-style: italic; }
+.online-only { font-style: italic; color: #555; }
+.online-only a { overflow-wrap: anywhere; }
+
+/* Highlights and the section maps */
+ul.highlights { padding-left: 5mm; }
+ul.highlights .hl-desc { color: #444; }
+.in-this-section { margin-top: 5mm; padding: 3mm 4mm; border: 1px solid #dde3e8; border-radius: 2px; break-inside: avoid; }
+.in-this-section .its-label { font-weight: 600; margin: 0 0 1mm; color: #0c4a78; }
+.in-this-section ul { margin: 0; padding-left: 5mm; }

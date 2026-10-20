@@ -18,8 +18,9 @@ apply to a translated string.
   do not edit them in a feature change.
 - **JAR resource bundles:** `src/main/resources/.../ApplicationResources.properties` (+ `_fr`, …).
 
-Reuse an existing key when the exact same text already exists; otherwise add a new key following the
-module's prefix convention.
+Add a new key following the module's prefix convention. **Never reuse another place's key, even for
+identical text**: other languages inflect it or translate an English homonym differently
+([L10N Conventions](https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions/)).
 
 ## How to render in Velocity
 

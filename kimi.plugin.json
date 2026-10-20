@@ -1,6 +1,6 @@
 {
   "name": "xwiki",
-  "version": "1.9.10",
+  "version": "1.20.11",
   "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
   "interface": {
     "displayName": "XWiki",
@@ -18,13 +18,10 @@
       "bearerTokenEnvVar": "DEVELOCITY_MCP_ACCESS_KEY"
     },
     "sonarqube": {
-      "command": "node",
-      "args": ["./xwiki/scripts/start-sonarqube-mcp.mjs"],
-      "env": {
-        "SONARQUBE_URL": "https://sonarcloud.io",
-        "SONARQUBE_ORG": "xwiki",
-        "SONARQUBE_TOOLSETS": "cag,projects,analysis,issues",
-        "SONARQUBE_ADVANCED_ANALYSIS_ENABLED": "true"
+      "url": "https://api.sonarcloud.io/mcp",
+      "bearerTokenEnvVar": "SONARQUBE_TOKEN",
+      "headers": {
+        "SONARQUBE_ORG": "xwiki"
       }
     }
   },
@@ -37,6 +34,11 @@
       "event": "PostToolUse",
       "matcher": "Write|Edit",
       "command": "node \"./xwiki/scripts/check-line-endings.mjs\""
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "command": "node \"./xwiki/scripts/check-commit-text.mjs\""
     }
   ]
 }

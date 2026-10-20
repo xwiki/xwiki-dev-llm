@@ -4,7 +4,9 @@ stability: durable
 summary: How the browser container reaches XWiki under each servlet engine and why that makes the two
   configurations exercise different networking, which engine to pick for the local loop and when the
   containerised one is mandatory, the setup-failure symptom table (a beforeAll failure is never
-  evidence about your change), and what several agents sharing one machine contend for.
+  evidence about your change), a run silently testing other code than yours, why runs leak
+  containers and networks when ryuk cannot reach the daemon, and what several agents sharing one
+  machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
 ---
@@ -59,9 +61,73 @@ below. Repair the machine and re-run; do not start debugging the change.
 | `Could not start container … standalone-firefox … TimeoutException` | the Docker daemon is starved; the browser missed its wait strategy |
 | `Reached error page: about:neterror?e=dnsNotFound&u=http://xwikiweb:8080/…` | containerised engine only — the browser cannot resolve the `xwikiweb` alias. Daemon under load, or a stale/broken testcontainers network |
 | `SocketException: Connection reset` while provisioning extensions | the servlet container was still booting when provisioning started; daemon starved |
+| `NullPointerException: networkMode was not specified` starting `standalone-firefox`, or `all predefined address pools have been fully subnetted` | the daemon has no address pool left for a new network: earlier runs leaked their testcontainers networks (see below) |
+| `Can't find descriptor for the component …` or `Failed to initialize mandatory document` at startup, then a `500` while provisioning | the WAR mixes SNAPSHOT jars built before and after a recent commit of the branch (see below) |
+| `Dependency [X-<v>] is not compatible with core extension feature [X/<older v>]` | a stale `target/`; or, on a branch older than master, extension SNAPSHOTs came from Nexus (built from master): `-Dxwiki.test.ui.offline=true`, which `-o` does not set |
+| `Extension [X] is already installed on namespace [wiki:xwiki]` | several classes in one `-Dit.test`: run one per invocation |
+| `WARBuilder` cannot resolve X while CI is green | an old locally installed SNAPSHOT pom shadows the branch's: `mvn install -N` it from the checkout |
 
-`JETTY_STANDALONE` needs the right JDK **on `PATH`**, not only in `JAVA_HOME`, because the wiki's JVM
-is spawned by a shell script.
+A date assertion failing only locally (`ExtensionIT`, `AttachmentIT`) is the time zone: prefix the
+command with `TZ=UTC`.
+
+### Mixed SNAPSHOT jars after the branch moved
+
+Every module of the test WAR you did not `install` yourself comes from the last Nexus deploy, which
+lags the branch (the same mechanism as Environment Tests in [[jenkins]]). When a commit since that
+deploy changed several modules together, the WAR can mix jars from before and after it, and XWiki
+fails at startup. `install` from the branch the modules touched by the commits since the jars' date
+(`git log origin/<branch> --since=<date>`), plus `xwiki-platform-web-war` when templates changed; the
+profiles the test framework modules need are in `xwiki-build`.
+
+### The run does not test the code you just built
+
+A run proves a fix only once the WAR is shown to carry it (`javap -p` the class from
+`target/<combo>/…/WEB-INF/lib/<artifact>-SNAPSHOT.jar`). It silently does not when:
+
+- `target/<combo>/` holds the WAR an earlier run extracted, which is reused: remove it between A/B
+  runs;
+- a remote timestamped SNAPSHOT in `~/.m2` beats your `install`: delete `<artifact>/<version>-SNAPSHOT/`
+  there and install again;
+- the jar was installed without `clean` (`xwiki-build`);
+- the run was restored from the Develocity cache: no `Tests run:` line. Add
+  `-Ddevelocity.cache.local.enabled=false -Ddevelocity.cache.remote.enabled=false`.
+
+## Leftover containers and networks: ryuk has to reach the daemon
+
+The framework never stops the browser container or removes the run's network itself: testcontainers
+starts a `testcontainers/ryuk` container per test JVM, and ryuk removes everything labelled with that
+JVM's session once the JVM is gone. When ryuk cannot do it, nothing else does, and each run leaves
+its browser container (a couple of gigabytes, still running) and its network behind. The networks are
+what breaks first: each one holds an address pool, and once the pools are exhausted every run dies in
+`beforeAll` with the `networkMode` / `address pools` lines of the table above.
+
+The known cause is the ryuk image of **testcontainers 1.17 and older**, still used by builds on old
+XWiki parents (contrib extensions especially): the 0.3.x images speak Docker API 1.29, which recent
+daemons refuse — ryuk logs `client version 1.29 is too old` and removes nothing. Later ryuk images
+negotiate the API version. The fix is per machine and applies to every testcontainers version, since
+the protocol between testcontainers and ryuk has not changed across them:
+
+```properties
+# ~/.testcontainers.properties (or TESTCONTAINERS_RYUK_CONTAINER_IMAGE in the environment);
+# take the ryuk image of the latest testcontainers release
+ryuk.container.image=testcontainers/ryuk:<version>
+```
+
+The `xwiki-it-slot.mjs` wrapper (`xwiki-build` skill) applies such an image when the daemon refuses
+the old ryuk and nothing is configured, and warns when leftover networks have piled up. It removes
+nothing: the old ryuk container carries no session label, so from outside a leftover cannot be told
+apart from a resource of another run still in progress. With no Docker functional test running, the
+leftovers go with:
+
+```bash
+docker rm -f $(docker ps -aq --filter label=org.testcontainers=true)
+docker network prune -f --filter label=org.testcontainers=true
+```
+
+**verify:** `docker version --format '{{.Server.MinAPIVersion}}'` gives the oldest API the daemon
+accepts; the ryuk image a testcontainers version uses by default is the `testcontainers/ryuk:` string
+in its jar (`unzip -p testcontainers-<v>.jar 'org/testcontainers/utility/*.class' | strings | grep
+testcontainers/ryuk:`).
 
 ## What several agents on one machine contend for
 
@@ -74,7 +140,8 @@ distinct collisions, in the order they bite:
 - **The daemon has a finite budget.** Each run holds a servlet engine, a browser container of a
   couple of gigabytes, and a ryuk. A few concurrent runs starve it, and starvation never announces
   itself as such — it surfaces as the setup failures in the table above. Long-lived containers that
-  are nobody's test (MCP servers, leftovers from killed runs) count against the same budget.
+  are nobody's test (MCP servers, leftovers from killed runs or from a ryuk that cannot reach the
+  daemon) count against the same budget.
 - **`~/.m2` is shared.** Two `mvn install` of the same SNAPSHOT from different worktrees interleave,
   so a run can install the artifact another agent has just written. Serialising the whole Maven
   invocation, not merely the failsafe phase, is what removes this one. Related: an extension whose

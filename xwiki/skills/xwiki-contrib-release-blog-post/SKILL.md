@@ -1,6 +1,6 @@
 ---
 name: xwiki-contrib-release-blog-post
-description: Announce an xwiki-contrib extension release by creating the "<Extension> Extension <version> Released" blog post on the xwiki.org Blog, following the contrib release-documentation convention (page name, title, content/summary templates, categories, publish date). Use after releasing an xwiki-contrib extension (groupId org.xwiki.contrib) when the blog-post step of the release documentation still needs doing. This is for contributed extensions only — not core xwiki-platform releases; for the release notes and issue documentation of a core release use xwiki-release-documentation. For writing/reviewing general documentation pages use xwiki-doc-writing instead; for deploying a XAR/JAR to a running instance use xwiki-deploy-extension.
+description: Announce an xwiki-contrib extension release by creating the "<Extension> Extension <version> Released" blog post on the xwiki.org Blog, following the contrib release-documentation convention (page name, title, content/summary templates, categories, publish date). Use after releasing an xwiki-contrib extension (groupId org.xwiki.contrib) when the blog-post step of the release documentation still needs doing (the release itself is xwiki-contrib-release). This is for contributed extensions only — not core xwiki-platform releases; for the release notes and issue documentation of a core release use xwiki-release-documentation. For writing/reviewing general documentation pages use xwiki-doc-writing instead; for deploying a XAR/JAR to a running instance use xwiki-deploy-extension.
 ---
 
 # Announce an xwiki-contrib extension release on the xwiki.org Blog
@@ -15,8 +15,8 @@ https://contrib.xwiki.org/xwiki/bin/view/Main/WebHome#HDocumentation — when a 
 unclear or looks outdated, consult that page and prefer it. The templates below already incorporate
 one fix the live guide was missing (the per-version page link, see step 3).
 
-Browser mechanics (open/snapshot/fill/click) are handled by the **agent-browser** skill — load it
-for the how-to of driving Chrome; this skill covers only the XWiki-specific content and the gotchas.
+The post is created over the **xwiki.org REST API**, never by driving the editor in a browser, and
+saved **unpublished**: the developer verifies it, then edits or publishes it (step 6).
 
 ## 1. Gather the release facts
 
@@ -28,9 +28,8 @@ From the extension page on the Extensions wiki (e.g.
   segment, e.g. `WikiLinkURLNormalizer`). Used to build the reference
   `extensions:Extension.<space path>.WebHome`.
 - **Extension type** — shown in the extension's metadata on the page. Most extensions are type
-  "Extension" or "Application"; some multi-module projects are type **"Project"**. This affects
-  which template to use in step 3 (see `okf/servers/index.md`, the extensions.xwiki.org row, for the
-  page-structure difference).
+  "Extension" or "Application"; some multi-module projects are type **"Project"**. The templates
+  of step 3 are the same for both. The type only decides which page you announce:
   - **Announce the top-level Project page, not a child module page.** A multi-module Project (e.g.
     `Extension/Documentation/`, type "Project") aggregates child pages such as
     `Extension/Documentation/DocumentationApplication/` (type "Application/XAR"). The release
@@ -39,33 +38,26 @@ From the extension page on the Extensions wiki (e.g.
     you intend to announce; if it says "Application"/"XAR" but sits under a "Project", step up to the
     parent.
 - **Released version** and **release date**.
-- **What changed** in this version:
-  - For **non-project types**: each version has a dedicated page at
-    `https://extensions.xwiki.org/xwiki/bin/view/Extension/<ExtensionSpace>/Versions/<version>/`
-    (reference `extensions:Extension.<space path>.Versions.<version>.WebHome`). The JIRA issues
-    listed there (e.g. "Add support for local URL fragments", "Depend on XWiki 15.10+") are the
-    basis for the release text and any minimal-version change.
-  - For **project types**: there are no `Versions/<version>/` sub-pages, but the Project homepage
-    itself has a **Versions** section with one heading per version, giving a stable in-page anchor
-    `#H<version>` (e.g. `#H1.14`) that the version link points at (see step 3). Gather the changes
-    from that section, and from the git log (`git log --oneline <prev-tag>..<release-tag>`) and the
-    JIRA/OpenProject issues referenced in the commit messages.
+- **What changed** in this version: each version, of a Project as well as of an
+  Extension/Application, has a dedicated page at
+  `https://extensions.xwiki.org/xwiki/bin/view/Extension/<ExtensionSpace>/Versions/<version>/`
+  (reference `extensions:Extension.<space path>.Versions.<version>.WebHome`), the one linked from the
+  Version column of the page's Versions table. Its release notes (the JIRA issues of the fix
+  version, or the OpenProject work packages copied there at release time) are the basis for the
+  release text and any minimal-version change. Complete them with the git log
+  (`git log --oneline <prev-tag>..<release-tag>`) when a note is too terse to explain the change.
 
 ## 2. Page name and title
 
 - **Title:** `<Extension name> Extension <version> Released` — e.g.
   `Wiki Link URL Normalizer Extension 1.10.0 Released`.
-- **Page name:** lowercase kebab-case `<extension>-extension-<version>-released`. The Blog quick-add
-  form turns spaces **and dots** into dashes and keeps the original case, so it produces a
-  capitalized name like `Wiki-Link-URL-Normalizer-Extension-1-10-0-Released` — **not** what we want.
-  Instead create the page with a controlled name by opening the edit URL directly (nested page,
-  matching recent posts such as `guided-tour-extension-0-1-released`):
-
-  ```
-  https://www.xwiki.org/xwiki/bin/edit/Blog/<page-name>/WebHome?template=Blog.BlogPostTemplate&parent=Blog.WebHome&title=<URL-encoded title>&Blog.BlogPostClass_0_title=<URL-encoded title>
-  ```
-
-  with `<page-name>` = `wiki-link-url-normalizer-extension-1-10-0-released` (lowercase, dots → dashes).
+- **Page name:** lowercase kebab-case `<extension>-extension-<version>-released`, with the version
+  **kept as is, dots included** — the contrib guide's own example is `blog-extension-1.5-released`,
+  so `documentation-extension-1.15-released`, never `…-1-15-released`. Step 5 creates it over REST
+  as the nested page `Blog.<page-name>.WebHome`, e.g.
+  `wiki-link-url-normalizer-extension-1.10.0-released` (lowercase, dots kept). In a URL the dots
+  stay plain; in a wiki *reference* to the page they are escaped
+  (`Blog.wiki-link-url-normalizer-extension-1\.10\.0-released.WebHome`).
 
 ## 3. Content and summary templates (XWiki 2.1 syntax)
 
@@ -76,10 +68,10 @@ summary/extract fields.
 feature, or minimal-version bump), following the intro sentence. The *summary/extract* field stays a
 single flowing sentence — no bullet list there.
 
-### Non-project type (has version sub-pages)
-
 The version link points to the **dedicated version page** (the older guide pointed it at a
-no-longer-existing `anchor="H<version>"` on the extension homepage):
+no-longer-existing `anchor="H<version>"` on the extension homepage). This holds for a Project too:
+its Versions section is a Live Data table with no per-version heading, so a `#H<version>` anchor
+lands nowhere.
 
 **Content:**
 
@@ -109,33 +101,9 @@ The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<versi
 `extensions:` is the cross-wiki prefix (the Blog is on the `xwiki` wiki, versions on the
 `extensions` wiki — same farm, so `doc:` references resolve).
 
-### Project type (no version sub-pages)
-
-There is no dedicated version page, but the Project homepage's **Versions** section has a per-version
-heading, so link the version to that in-page anchor `anchor="H<version>"` on the homepage. Unlike a
-reference, the dots inside the `anchor="..."` string are **not** escaped (`H1.14`, not `H1\.14`):
-
-**Content:**
-
-```
-The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<version>>>doc:extensions:Extension.<space path>.WebHome||anchor="H<version>"]] has been released.
-
-This release brings the following changes:
-
-* <change 1>
-* <change 2>
-* <...one bullet per change; last one is the minimal-version bump if any>
-```
-
-**Summary / extract:**
-
-```
-The [[<extension name>>>doc:extensions:Extension.<space path>.WebHome]] [[<version>>>doc:extensions:Extension.<space path>.WebHome||anchor="H<version>"]] has been released. <one-sentence description>
-```
-
-Example version link (Documentation project 1.14): the name "Documentation" reads awkwardly on its
-own, so add the word "extension" after the link — `The [[Documentation>>...]] extension
-[[1.14>>doc:extensions:Extension.Documentation.WebHome||anchor="H1.14"]] has been released.`
+When the extension's name reads awkwardly on its own, add the word "extension" after the link —
+e.g. `The [[Documentation>>doc:extensions:Extension.Documentation.WebHome]] extension
+[[1.15>>doc:extensions:Extension.Documentation.Versions.1\.15.WebHome]] has been released.`
 
 ## 4. Categories
 
@@ -148,56 +116,41 @@ Tick **all six** (these also push the announcement to the "What's New" feed of e
 - `What's New for XWiki: Admin User`
 - `What's New for XWiki: Extension`
 
-## 5. Publish and date
+## 5. Save it unpublished over REST
 
-- Check the **Publish** checkbox (so it publishes when saved).
-- Set **Publish date** to the actual release date (form format `dd/mm/yyyy hh:mm:ss`), unless the
-  user wants the posting date.
+Write as the developer's xwiki.org account (`okf/servers/index.md`; the `xwiki-doc-writing`
+`tools/xwikidoc.py` client handles the auth and the form token), on
+`https://www.xwiki.org/xwiki/rest/wikis/xwiki/spaces/Blog/spaces/<page-name>/pages/WebHome`. Build
+that URL yourself: a helper splitting a reference on `.` cuts the dotted page name in two.
 
-## 6. Create it in the browser
+1. Check it answers `404`, so no existing post is overwritten.
+2. `PUT` the page, form-encoded: `title`, `parent=Blog.WebHome`, `syntax=xwiki/2.1`, an empty
+   `content` (the post lives in its object, as in published posts) and `hidden=true`.
+3. `POST …/objects` with `className=Blog.BlogPostClass` and `property#title`, `property#content`,
+   `property#extract`, `property#published=0`, `property#hidden=1` and `property#publishDate` set to
+   the release date as `dd/MM/yyyy HH:mm:ss`. Read the wiki syntax from files, never inline in the
+   shell, which mangles quotes.
+4. `PUT …/objects/Blog.BlogPostClass/0/properties/category` as `text/plain`, the six
+   `Blog.Categories.<name>` values joined by `|`: repeating `property#category` in the POST keeps
+   only the first.
+5. Read every property back and compare it with what was sent.
 
-Use the **agent-browser** skill. Key gotchas learned the hard way:
+Never write a macro name with its braces in the text: a literal `{{image}}` is *executed* and
+renders an error box. Refer to macros in prose ("the image macro").
 
-- **Login required.** Creating a blog post needs an authenticated xwiki.org account with blog-post
-  permissions. If not logged in, have the user log in in the visible window.
-- **agent-browser launches headless (invisible) by default.** If the user needs to see the page /
-  click Save themselves, launch a **visible** window: `agent-browser --headed --session <name>
-  open …`. A pre-existing headless daemon for the default session will ignore `--headed`, so use a
-  fresh `--session` (and `close --all` / kill stragglers if needed). Transfer an existing login into
-  the new session with `state save <file>` from the logged-in session then `--state <file>` on the
-  headed launch.
-- **Enter wiki syntax via Source mode.** The content and summary fields are CKEditor; click each
-  field's **"Source"** button, then `fill` the resulting textarea with the wiki-syntax template.
-- **Never write a macro name with its braces in the text.** A literal `{{image}}` (or any
-  `{{macro}}`) in the content is *executed* by the renderer at Preview — e.g. `{{image}}` fails with
-  `Failed to execute the [image] macro. Cause: [Parameter [reference] is mandatory]` and shows as a
-  `.xwikirenderingerror`. Refer to macros in prose ("the image macro"), not as `{{image}}`.
-- **Fill from a file to avoid shell quote-mangling.** Content with double quotes (e.g. a `"How-to"`
-  label) gets mangled if passed inline through the shell. Write the wiki syntax to a temp file and
-  fill with `agent-browser … fill @ref "$(cat file.txt)"` — command substitution keeps quotes literal.
-- **Re-fill the Source textarea after any Preview round-trip.** Clicking **"Back To Edit"** re-renders
-  the fields as WYSIWYG; if the content had macro-like text the WYSIWYG round-trip can corrupt it. On
-  returning to edit, re-click "Source" and re-`fill` both fields from the files before re-previewing.
-  Category/Publish/date state does survive the round-trip; only the CKEditor content needs re-filling.
-- Check the 6 category checkboxes, the Publish checkbox, and set the publish date.
+## 6. Verify, then hand off
 
-## 7. Verify, then hand off
-
-- Use the editor's **Preview** to confirm the links resolve and there are **no rendering errors**
-  (`.xwikirenderingerror`). Click **"Back To Edit"** to return.
-  - For non-project types: verify the version link `href` points to
-    `…/Extension/<ExtensionSpace>/Versions/<version>/`.
-  - For project types: verify the version link `href` points to `…/Extension/<ExtensionSpace>/#H<version>`
-    (the Versions-section anchor on the homepage).
-  - Also confirm the changes render as a proper bullet list and the summary as a single sentence.
-- **Do not Save unless asked.** The default is to leave the form fully filled and let the user
-  review and press **Save** / **Save & View** themselves. Save automatically only when the user
-  explicitly tells you to.
+- Fetch `https://www.xwiki.org/xwiki/bin/view/Blog/<page-name>/` as the developer: it shows
+  "This blog post is not published yet.", no `.xwikirenderingerror`, the changes as a bullet list,
+  and every link resolving (no `wikicreatelink`), the version link on
+  `…/Extension/<ExtensionSpace>/Versions/<version>/`.
+- **Never publish it.** Give the developer that URL and ask them to verify the post, then edit it
+  or publish it themselves ("Edit", tick "Publish", "Save & View").
 
 ## Worked example (Wiki Link URL Normalizer 1.10.0)
 
 - Title: `Wiki Link URL Normalizer Extension 1.10.0 Released`
-- Page: `Blog.wiki-link-url-normalizer-extension-1-10-0-released`
+- Page: `Blog.wiki-link-url-normalizer-extension-1.10.0-released`
 - Content:
   ```
   The [[Wiki Link URL Normalizer>>doc:extensions:Extension.WikiLinkURLNormalizer.WebHome]] [[1.10.0>>doc:extensions:Extension.WikiLinkURLNormalizer.Versions.1\.10\.0.WebHome]] has been released.
@@ -207,7 +160,6 @@ Use the **agent-browser** skill. Key gotchas learned the hard way:
   * Adds support for normalizing local URLs that contain anchors (URL fragments)
   * Raises the minimal supported XWiki version to 15.10
   ```
-- Categories: the six in step 4. Publish: on. Date: `11/06/2026 12:00:00`.
-- This example is a non-project (Extension) type. For a **Project** type, link the version to the
-  homepage anchor (`…WebHome||anchor="H<version>"`) instead of a version sub-page — see §3 "Project
-  type". Example: the Documentation project 1.14 announcement links `[[1.14>>doc:extensions:Extension.Documentation.WebHome||anchor="H1.14"]]`.
+- Categories: the six in step 4. Published: no (the developer publishes it). Date: `11/06/2026 12:00:00`.
+- A **Project** type works the same way: the Documentation project 1.15 announcement links
+  `[[1.15>>doc:extensions:Extension.Documentation.Versions.1\.15.WebHome]]`.

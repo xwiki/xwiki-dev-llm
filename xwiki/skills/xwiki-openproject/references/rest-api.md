@@ -4,6 +4,9 @@ Mechanics for `https://op.xwiki.org`. The *when* and the safety rules are in `SK
 is the calls.
 
 - Base: `https://op.xwiki.org/api/v3`
+- `<ID>` in a work package path is either its numeric `id` or its project-based `displayId`
+  (`/api/v3/work_packages/DA-96`, `/DA-96/form`, `/DA-96/activities` all work). Report the
+  `displayId` to people — see `SKILL.md`.
 - Auth header: `Authorization: Bearer $OPENPROJECT_API_TOKEN`
 - Responses are **HAL+JSON**: real data sits under `_embedded`, capabilities under `_links`. A
   `_links.<action>` that is present is an action the token may perform; an absent one is a
@@ -62,7 +65,7 @@ import sys,json
 d = json.load(sys.stdin)
 print('total', d['total'])
 for w in d['_embedded']['elements']:
-    print(w['id'], '|', w['_links']['type']['title'], '|', w['_links']['status']['title'], '|', w['subject'])"
+    print(w['displayId'], '|', w['_links']['type']['title'], '|', w['_links']['status']['title'], '|', w['subject'])"
 ```
 
 Useful filters (same shape, combined in the array):
@@ -85,6 +88,7 @@ curl -s -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" \
   | python3 -c "
 import sys,json
 w = json.load(sys.stdin)
+print('displayId   ', w['displayId'], '(id', w['id'], ')')
 print('subject     ', w['subject'])
 print('lockVersion ', w['lockVersion'])
 print('type/status ', w['_links']['type']['title'], '/', w['_links']['status']['title'])
@@ -127,14 +131,14 @@ form points at the project-less `/api/v3/work_packages` regardless of which one 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Type: application/json" \
   -d "$BODY" "https://op.xwiki.org<COMMIT_HREF>?notify=false" \
-  | python3 -c "import sys,json;w=json.load(sys.stdin);print('created', w['id'], w['subject'])"
+  | python3 -c "import sys,json;w=json.load(sys.stdin);print('created', w['displayId'], w['subject'])"
 ```
 
 `$BODY` works because the commit endpoint accepts the same shape, except that the project-less
 endpoint needs `_links.project`. The form has already resolved one for you, so the robust body is
 its own `_embedded.payload` — send that when your own `$BODY` omits the project.
 
-Then report `https://op.xwiki.org/work_packages/<id>`.
+Then report `https://op.xwiki.org/work_packages/<displayId>` (e.g. `.../work_packages/DA-96`).
 
 Required writable fields are `subject`, `project`, `type`, `status`, `priority` — `project` comes
 from the path (or the payload), and `status`/`priority` are defaulted by the instance, so
@@ -189,6 +193,15 @@ curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Ty
 
 Read the existing thread with `GET /api/v3/work_packages/<ID>/activities` — elements are
 `Activity` objects whose `comment.raw` is Markdown; many carry only field changes and no comment.
+
+## Preview how Markdown renders
+
+Plain-text body in, HTML out; a work package link shows as `<a class="issue work_package …">`.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $OPENPROJECT_API_TOKEN" -H "Content-Type: text/plain" \
+  --data-binary 'See #DA-103.' https://op.xwiki.org/api/v3/render/markdown
+```
 
 ## Errors
 

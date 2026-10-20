@@ -5,7 +5,8 @@ summary: Line length, license headers, the component system, the javax→jakarta
   -legacy module rules for XWiki Java code.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle
-  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCopyrightheaderinsourcefiles
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFileencoding
 ---
 
 # Code style and structural conventions
@@ -16,9 +17,12 @@ authoritative source of truth.
 
 ## Formatting
 
-- **Lines must not exceed 120 characters.** This is enforced by Checkstyle in the `quality` profile.
-- **LGPL license headers** are required on **every** file, configuration files included (validated by
-  `license-maven-plugin`). Add missing headers with `mvn license:format -B -ntp`. The comment syntax
+- **Lines must not exceed 120 characters** in source files — enforced by Checkstyle, which runs in the
+  default build. Prose outside source files is never hard-wrapped (`instructions/xwiki-org.md`).
+- **LGPL license headers** are required on **every** file, configuration files and dotfiles (e.g.
+  `.editorconfig`) included, unless its format has no comment syntax (e.g. JSON). `license-maven-plugin`
+  only checks the files its includes match (POMs and some `src/**` types), so add a header by hand to
+  any other file; `mvn license:format -B -ntp` adds the missing ones it checks. The comment syntax
   depends on the file type: `/* … */` for Java & JavaScript, `<!-- … -->` for XML & Vue, `#` for shell
   scripts, `.properties` and YAML, `REM` for `.bat`, `##` for Velocity.
 
@@ -40,9 +44,12 @@ authoritative source of truth.
 
 ## File encoding
 
-- **Java sources: ASCII characters only** — use Unicode escapes inside strings and XML entities in
-  Javadoc (there are no `@author` tags, so this is rarely a constraint).
-- **Translation files: ASCII only with Unicode escapes** (stricter than the `.properties` spec).
+- **Java sources (main, test, AspectJ): UTF-8, non-ASCII allowed** — except invisible or ambiguous
+  characters (controls other than tab/LF/CR, U+00A0, U+00AD, zero-width, bidi controls, BOM), which
+  must be written `\uXXXX`: they hide bugs or malicious code from review. Checkstyle enforces it.
+- **`.properties` files, translation bundles included: ISO-8859-1**, the encoding they are loaded
+  with; anything outside it is written `\uXXXX`. Checkstyle fails the build on a UTF-8 one. The
+  repos' `.editorconfig` declares both rules, but agents do not honor it.
 - **Wiki document sources: UTF-8.**
 - Other XML files declare their encoding in the `<?xml?>` header, UTF-8 whenever possible; all other
   textual resources are UTF-8 with as few non-ASCII characters as possible.
@@ -74,9 +81,9 @@ The project is **migrating away from `javax.*` in favour of `jakarta.*`**. In ne
 
 ## Backward compatibility
 
-Public API changes are checked for binary/semantic compatibility by **Revapi** (in the `quality`
-profile). See [[backward-compatibility]] for the policy, the `@Unstable` lifecycle, and the
-default-method pattern for evolving interfaces.
+Public API changes are checked for binary/semantic compatibility by **Revapi**, which runs in the
+default build. See [[backward-compatibility]] for the policy, the `@Unstable` lifecycle, the
+default-method pattern for evolving interfaces, and who may use `internal` packages.
 
 ## Suppressing a static-analysis warning
 
@@ -95,6 +102,23 @@ Conventions (all verifiable with `grep -rn -B4 '@SuppressWarnings("java:S'`):
 
 A Checkstyle suppression is a different mechanism and does not affect Sonar: a class-level
 `@SuppressWarnings("checkstyle:MultipleStringLiterals")` does **not** suppress `java:S1192`.
+
+To silence a rule across **many** classes rather than one, declare it in the `<properties>` of
+`xwiki-commons/xwiki-commons-pom/pom.xml` as a `sonar.issue.ignore.multicriteria` entry — never in the
+SonarCloud UI, where it would apply silently to every branch:
+
+```xml
+<sonar.issue.ignore.multicriteria>e1,e2</sonar.issue.ignore.multicriteria>
+<sonar.issue.ignore.multicriteria.e1.ruleKey>java:S1133</sonar.issue.ignore.multicriteria.e1.ruleKey>
+<sonar.issue.ignore.multicriteria.e1.resourceKey>
+  **/xwiki-*-legacy-*/**/*.java
+</sonar.issue.ignore.multicriteria.e1.resourceKey>
+```
+
+Both current entries cover the `-legacy` modules: `java:S1133` (deprecated-API usage) and
+`java:S1214` (constants in an interface). A legacy module exists to keep publishing an old API shape
+unchanged, so neither is actionable there. Because the exclusion now lives in the pom rather than in
+the UI, adding one has to be merged to every maintained branch or those branches keep reporting it.
 
 Which rules are worth suppressing rather than fixing is in [[index]] (the SonarQube corpus); the
 procedure is the `xwiki-fix-sonarqube-issue` skill.

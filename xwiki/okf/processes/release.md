@@ -23,21 +23,30 @@ of truth and changes over time — fetch it when actually releasing.
 - Version numbering and the milestone/RC/final cadence are defined in **Versioning and Release
   Practices** (the same page that backs the `@since`/`@Unstable` rules — see [[versioning]] and
   [[backward-compatibility]]).
-- **Backport targets follow the cycle.** Ordinary fixes go to the maintained stable branches of the
-  current cycle and the previous one. The branch **two cycles back** (current major − 2) takes
-  **security fixes only** — a "Critical" vulnerability, CVSS >= 7 per [[security-policy]] — never an
-  ordinary bug fix, however small. Derive that branch from the root `pom.xml` version rather than
-  memorising it: with master on `18.x` the security-only line is `16.10.x`, and it becomes `17.10.x`
-  once master reaches `19.x`. A repo offering a `backport stable-<old>.x` GitHub label does not make
-  that branch a routine target.
+- **Backport targets are the LTS branches.** Two LTS lines are maintained in parallel: the
+  Intermediate LTS `N.4.x` (branched end of May) and the Cycle LTS `N.10.x` (branched end of
+  November) — with master on `18.9`, `18.4.x` and `17.10.x`. Derive them from the root `pom.xml`
+  version rather than memorising them.
+- **The recent stable branches are not routine backport targets.** A new stable ships every month,
+  so an ordinary fix rides the next release instead of paying for an extra one — a release is
+  expensive and the wait is under a month. Backport to one only **on demand**: a mistake bad
+  enough that a freshly released stable needs a bugfix release now.
+- The LTS line **older** than the maintained two takes **security fixes only** — a "Critical"
+  vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix, however small; with
+  master on `18.x` that is `16.10.x`. A repo offering a `backport stable-<old>.x` GitHub label does
+  not make that branch a routine target. **Never name that line in a public artifact** — a PR body,
+  a JIRA issue or fix version, a commit message, a forum post — not even to explain why it is
+  excluded: naming it implies a support commitment that does not exist. List the targets and stop.
 - Released artifacts and snapshots are published to **nexus.xwiki.org** (see [[index]] in
   `servers/`); the Extension Manager consumes them.
-- xwiki-contrib extensions follow their **own** release + documentation process, including a release
-  blog post — use the `xwiki-contrib-release-blog-post` skill for that step.
+- xwiki-contrib extensions follow their **own** release + documentation process — use the
+  `xwiki-contrib-release` skill, which hands the release blog post off to
+  `xwiki-contrib-release-blog-post`.
 
 ## Volatile — follow the pointer, do not cache
 
-- The **detailed release steps** → https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess
+- The **detailed release steps** → https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess;
+  performing them through the version's Release Plan → the `xwiki-xs-release` skill.
 - **Current release plans / dates** → https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/
 - **The current dev version** → read the repo's root `pom.xml` (see [[versioning]]).
 - **Role holders** (release manager of the cycle, etc.) → the dev wiki; these rotate.

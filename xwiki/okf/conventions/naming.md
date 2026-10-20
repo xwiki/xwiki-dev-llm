@@ -21,6 +21,10 @@ sources:
 - **Singular form** in artifactIds and directories: `xwiki-platform-flamingo-theme`, *not* `-themes`;
   children reuse the parent's prefix (`xwiki-platform-flamingo-theme-test`).
 - **Java package** follows the groupId: `org.xwiki.<short project name>`.
+- **Two display names per pom**: `<name>` is `<Project> - <Module>`, the parent's included
+  (`Prism.js - Parent POM`), so the reactor listing aligns; the `xwiki.extension.name` property is the
+  Extension Manager and extensions.xwiki.org name (`Prism.js Macro`), the parent's naming the Project
+  page. It is inherited: set it in the parent pom and override it in every extension module.
 
 Qualifier meanings:
 

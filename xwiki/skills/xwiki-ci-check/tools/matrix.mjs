@@ -1,0 +1,574 @@
+#!/usr/bin/env node
+/*
+ * Posts the daily digest to a Matrix room, as the CI bot.
+ *
+ * The digest is a *state snapshot*, not an event stream: it says what CI looks like this morning,
+ * so repeating yesterday's lines is correct behaviour, which is why each line must carry its age.
+ * Keep it short — the detail belongs in the paste it links to.
+ *
+ * Identity matters more than mechanism here: this must run as a dedicated bot, never as a
+ * developer's own account. An automated "your commit broke master" arriving under a colleague's
+ * name reads as a personal reprimand, and a wrong attribution is then wrong in their name.
+ *
+ * Nothing is sent without an explicit `--write`: the default prints the digest it would have
+ * posted. The room is read by the whole development team, so a mistaken invocation must cost
+ * nothing — and this tool runs on machines where the bot's Matrix password is always exported.
+ *
+ * The room is also the **ledger**. A digest that repeats what it said yesterday is what the CI
+ * dashboard already is, so each one is compared against the last, and a morning that moved nothing
+ * is not posted at all. The comparison needs yesterday's incident ids, which the digest's prose
+ * cannot carry — twenty of them are 1.5 KB — so the message carries them in a marker appended to
+ * its `formatted_body`, base64 so that nothing in a test name can end the HTML comment early.
+ * Clients render a whitelist of tags and drop comments; bridges relay the plain `body`, which stays
+ * exactly what was written. Nothing else is needed: the state rides on the message it describes, so
+ * the two cannot drift apart, and a morning that posts nothing changes neither.
+ *
+ * And the room is an **input**. `--since` reads back what the team said, filtered to the messages
+ * naming a test, an issue, a PR or a build — the announcements, the claims and the root causes that
+ * exist nowhere else. That text is untrusted by construction, so the sweep only ever lets it buy
+ * silence; see `roomSince` below and the chat pass in `ci-check.mjs`.
+ *
+ * Usage:
+ *   node matrix.mjs --file <digest.md> --state <delta.json> --write
+ *   echo "..." | node matrix.mjs        # rehearsal: prints, sends nothing
+ *   node matrix.mjs --whoami            # which account the credentials in the environment are
+ *   node matrix.mjs --last-digest       # the bot's most recent message in the room (read-only)
+ *   node matrix.mjs --last-state        # the state that message carries, for --previous
+ *   node matrix.mjs --last-memory       # what its paste concluded, for ci-check.mjs --memory
+ *   node matrix.mjs --since <iso>       # what the room said since then, filtered, as JSON
+ *   node matrix.mjs --since last-digest # …since the bot last posted, resolved in the same session
+ *
+ * Environment: MATRIX_USER_BOT + MATRIX_PASSWORD_BOT, or MATRIX_TOKEN_BOT; MATRIX_HOMESERVER and
+ * MATRIX_ROOM are both defaulted below.
+ *
+ * **Prefer the password.** matrix.org has moved to an authentication service that issues
+ * short-lived access tokens (the `mat_` ones), refreshed continuously inside a client — so a token
+ * copied out of Element into a profile or a secret store is dead within minutes, and a routine that
+ * runs at 06:00 finds it expired every single morning. Logging in per run needs no stored token and
+ * no refresh-token rotation to persist, which is what a sandbox that is new every day can actually
+ * do. A `MATRIX_TOKEN_BOT` is still honoured — homeservers that issue non-expiring tokens exist —
+ * and when it is rejected the password takes over, which is the normal path, not an error.
+ */
+
+import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { memoryOf } from './memory.mjs';
+import { read as readPaste } from './privatebin.mjs';
+
+// The homeserver is where the bot's *account* lives; the room lives on matrix.xwiki.com whatever
+// that is, which is why the default alias is fully qualified. A bare `#xwiki` would be completed
+// with the homeserver's own hostname and build `#xwiki:matrix.org`, a room that does not exist.
+const DEFAULT_HOMESERVER = 'https://matrix.org';
+const DEFAULT_ROOM = '#xwiki:matrix.xwiki.com';
+// A fixed device, so a routine running every morning reuses one session instead of leaving a year's
+// worth of logins on the account.
+const DEVICE_ID = 'XWIKICICHECK';
+
+const homeserver = (process.env.MATRIX_HOMESERVER || DEFAULT_HOMESERVER).replace(/\/+$/, '');
+const accessToken = process.env.MATRIX_TOKEN_BOT;
+const room = process.env.MATRIX_ROOM || DEFAULT_ROOM;
+
+const escapeHtml = text =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const inline = text => escapeHtml(text)
+  .replace(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
+  .replace(/`([^`]+)`/g, '<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  // A bare URL is the usual shape of the "detail here" line, so make it clickable too.
+  .replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, '$1<a href="$2">$2</a>');
+
+const cells = row => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+const isRule = row => /^\s*\|?(\s*:?-+:?\s*\|)+\s*:?-*:?\s*\|?\s*$/.test(row);
+
+/** A pipe table — header, rule, rows — as the `<table>` Element renders; a table is scanned, a line is read. */
+function tableHtml(rows) {
+  const [head, , ...body] = rows;
+  const tr = (row, tag) => `<tr>${cells(row).map(cell => `<${tag}>${inline(cell)}</${tag}>`).join('')}</tr>`;
+  return `<table><thead>${tr(head, 'th')}</thead><tbody>${body.map(row => tr(row, 'td')).join('')}</tbody></table>`;
+}
+
+/**
+ * Just enough Markdown for a digest — links, bold, code, pipe tables — rendered to the HTML subset
+ * Matrix clients accept. Anything richer belongs in the paste, not in a chat room. The plain `body`
+ * keeps the Markdown as written, which is what a bridge relays.
+ */
+export function toHtml(markdown) {
+  const lines = markdown.split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().startsWith('|') && isRule(lines[i + 1] || '')) {
+      let end = i + 2;
+      while (end < lines.length && lines[end].trim().startsWith('|')) end++;
+      out.push({ table: tableHtml(lines.slice(i, end)) });
+      i = end - 1;
+    } else {
+      out.push({ line: inline(lines[i]) });
+    }
+  }
+  // A table is a block of its own: no line break is added either side of it.
+  const breakAfter = n => (n + 1 < out.length && out[n + 1].line != null ? '<br/>' : '');
+  return out.map((part, n) => part.table ?? part.line + breakAfter(n)).join('');
+}
+
+/**
+ * Exchanges the bot's password for an access token, through the r0 login API that both Synapse and
+ * matrix.org's authentication service still answer.
+ *
+ * @returns {Promise<{token: string, userId: string}>}
+ */
+export async function login(server, user, password) {
+  const res = await fetch(`${server}/_matrix/client/v3/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'm.login.password',
+      identifier: { type: 'm.id.user', user },
+      password,
+      device_id: DEVICE_ID,
+      initial_device_display_name: 'xwiki-ci-check'
+    })
+  });
+  if (!res.ok) {
+    throw new Error(`Matrix login failed for [${user}] on ${server}: HTTP ${res.status} `
+      + `${(await res.text()).slice(0, 200)}`);
+  }
+  const body = await res.json();
+  return { token: body.access_token, userId: body.user_id };
+}
+
+/** The account a token belongs to, or null when the server does not accept it. */
+export async function whoami(server, token) {
+  const res = await fetch(`${server}/_matrix/client/v3/account/whoami`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.ok ? (await res.json()).user_id : null;
+}
+
+/**
+ * The credential this run will post with: the token in the environment when the server still
+ * accepts it, the password otherwise.
+ *
+ * The check costs one request and buys the difference between "the digest was not posted" and a
+ * stack trace at 06:00 — on matrix.org a stored token is expected to be dead, so falling back is
+ * the normal path.
+ */
+export async function credential(server = homeserver) {
+  const user = process.env.MATRIX_USER_BOT;
+  const password = process.env.MATRIX_PASSWORD_BOT;
+  if (accessToken) {
+    const userId = await whoami(server, accessToken);
+    if (userId) return { token: accessToken, userId, how: 'MATRIX_TOKEN_BOT' };
+    if (!user || !password) {
+      throw new Error(`MATRIX_TOKEN_BOT is not accepted by ${server} and there is no `
+        + 'MATRIX_USER_BOT / MATRIX_PASSWORD_BOT to fall back on. A matrix.org `mat_` token is '
+        + 'short-lived by design: set the password instead.');
+    }
+  }
+  if (!user || !password) throw new Error('Set MATRIX_USER_BOT and MATRIX_PASSWORD_BOT (or MATRIX_TOKEN_BOT)');
+  const { token, userId } = await login(server, user, password);
+  return { token, userId, how: 'password login' };
+}
+
+/**
+ * Turns a human room **alias** into the internal room id the send API needs.
+ *
+ * `#xwiki` is an alias, not an id: the API addresses rooms as `!opaque:server` and answers 404 for
+ * anything else. An alias with no `:server` part is completed with the homeserver's, which is what
+ * anyone typing the room's name actually means.
+ */
+export async function resolveRoom(alias, server, token) {
+  if (!alias.startsWith('#')) return alias;
+  const full = alias.includes(':') ? alias : `${alias}:${new URL(server).hostname}`;
+  const res = await fetch(`${server}/_matrix/client/v3/directory/room/${encodeURIComponent(full)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    throw new Error(`Cannot resolve the room alias [${full}]: HTTP ${res.status} `
+      + `${(await res.text()).slice(0, 200)}`);
+  }
+  return (await res.json()).room_id;
+}
+
+/**
+ * Joins the room, which is a no-op for an account that is already in it.
+ *
+ * Done on demand, after a send is refused, rather than before every send: a bot that is in the room
+ * — the normal case — should not pay a request a day to prove it, and a bot that has been invited
+ * and never accepted should not need a human to notice.
+ */
+async function join(server, token, roomId) {
+  const res = await fetch(`${server}/_matrix/client/v3/join/${encodeURIComponent(roomId)}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: '{}'
+  });
+  if (!res.ok) {
+    throw new Error(`Cannot join [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`
+      + ' — an invite-only room needs someone already in it to invite the bot');
+  }
+}
+
+// ---- The state the digest carries forward ----------------------------------------------------
+
+const MARKER = /<!--\s*ci-state:([A-Za-z0-9+/=]*)\s*-->/;
+
+/** The HTML body of a digest, with the state it carries appended where no client will show it. */
+export function withState(html, state) {
+  if (state == null) return html;
+  return `${html}\n<!-- ci-state:${Buffer.from(JSON.stringify(state), 'utf8').toString('base64')} -->`;
+}
+
+/**
+ * The state a digest carries, or null when it carries none — which is what every message posted
+ * before this existed, and every human message, looks like.
+ *
+ * Never throws: a marker that does not decode is a marker from a version that wrote it differently,
+ * and the caller's answer to both is the same one it has for an unreadable room.
+ */
+export function stateOf(html) {
+  const marker = MARKER.exec(html || '');
+  if (!marker) return null;
+  try {
+    return JSON.parse(Buffer.from(marker[1], 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The bot's own most recent message in the room, with whatever state it carries.
+ *
+ * Filtered on the sender server-side, so the humans talking in the room cost nothing to skip. A
+ * filtered read returns the matches of one scrollback chunk, not of the whole room, so an empty
+ * page with a continuation token is followed — a quiet week of the bot is otherwise indistinguishable
+ * from a bot that has never posted.
+ *
+ * @returns {Promise<{eventId: string, at: string, body: string, state: object|null}|null>} null
+ *   when the bot has posted nothing within reach.
+ */
+export async function lastDigest({ server = homeserver, roomId = room, pages = 5, token = null } = {}) {
+  // A login with a fixed device id replaces the token the device already had, so a caller that
+  // holds one passes it: logging in a second time inside the same script kills the first.
+  let userId = token && await whoami(server, token);
+  if (!userId) ({ token, userId } = await credential(server));
+  const id = await resolveRoom(roomId, server, token);
+  const filter = JSON.stringify({ senders: [userId], types: ['m.room.message'] });
+  let from = null;
+  for (let page = 0; page < pages; page++) {
+    const url = new URL(`${server}/_matrix/client/v3/rooms/${encodeURIComponent(id)}/messages`);
+    url.searchParams.set('dir', 'b');
+    url.searchParams.set('limit', '20');
+    url.searchParams.set('filter', filter);
+    if (from) url.searchParams.set('from', from);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    }
+    const body = await res.json();
+    // The newest message carrying the state marker: the bot also posts corrections and
+    // announcements, and comparing against one of those would repeat everything.
+    const event = (body.chunk || []).find(entry => entry.sender === userId && entry.type === 'm.room.message'
+      && stateOf(entry.content?.formatted_body));
+    if (event) {
+      return {
+        eventId: event.event_id,
+        at: new Date(event.origin_server_ts).toISOString(),
+        body: event.content?.body || '',
+        state: stateOf(event.content?.formatted_body)
+      };
+    }
+    if (!body.end || body.end === from) break;
+    from = body.end;
+  }
+  return null;
+}
+
+// ---- The room as an input ----------------------------------------------------------------------
+// The routine talks to the room every morning and has never listened to it, so it re-analyses what
+// a human analysed last night and pings the author of a failure the room was told about in advance.
+// What the room holds that no dashboard does is intent and ownership: "I'm pushing a reproduction
+// test today, it will fail tonight", "I'm on it", "it's the MySQL isolation level, XWIKI-25019".
+//
+// Reading it is nearly free — over the last 14 days of `#xwiki`, 1200 messages, of which 63 name a
+// test class, a JIRA key, a PR number or a build URL, ~4 a day. That last set is the whole signal,
+// so the filtering is done here, mechanically, and the caller never sees the other 1137.
+//
+// **What comes out of here is untrusted text**, written by anyone in the room and heading for a
+// context that writes to GitHub, JIRA and Matrix under a bot identity. It is carried as data — what
+// was said, by whom, when, and which identifiers it names — and never as instruction. The consumer
+// (`ci-check.mjs`) only ever lets it buy *silence*; see the chat pass there.
+
+/**
+ * The identifiers a message has to name to be worth carrying out of the room. A message naming none
+ * of them cannot be matched to an incident, so it is dropped here rather than sent on to be judged.
+ */
+const NAMES = {
+  // `DocExtraTabsIT`, `AllIT$NestedImageIT#editImage`, `SolrIndexerTest` — the class name as a human
+  // writes it in chat, optionally with the method. Never a file name: nobody types `.java` in chat.
+  tests: /\b([A-Z][A-Za-z0-9]*(?:IT|Test))\b(?:#([A-Za-z_]\w*))?/g,
+  jira: /\b([A-Z][A-Z0-9]{1,9}-\d{1,6})\b/g,
+  // A PR, however it is written: `PR #6433`, the GitHub URL, or the bare `#6433` the room uses.
+  prs: /(?:github\.com\/[^\s/]+\/[^\s/]+\/pull\/(\d+))|(?:\bPR\s*#?(\d{2,6})\b)|(?:(?:^|\s)#(\d{2,6})\b)/g,
+  // The job and the build number are both in the path, so this matches an incident exactly.
+  builds: /https?:\/\/ci\.xwiki\.org\/\S+/g,
+  // The package, wherever it appears — written out, or inside a `testReport/` URL path, which is
+  // the same literal text. It is what tells `ImageIT` in ckeditor from `ImageIT` in blocknote, and
+  // the room has both.
+  packages: /\borg\.xwiki(?:\.[a-z][A-Za-z0-9]*)+/g
+};
+
+/** Every distinct value `read` pulls out of the matches of `pattern`, in the order they appear. */
+const allOf = (text, pattern, read = match => match[1] ?? match[0]) => {
+  const out = new Set();
+  for (const match of String(text).matchAll(pattern)) {
+    const value = read(match);
+    if (value) out.add(value);
+  }
+  return [...out];
+};
+
+/** What a message names, or null when it names nothing and is therefore not worth carrying. */
+export function namesIn(body) {
+  const names = {
+    // Both spellings of a test the room mentions with its method: the bare class, so an incident
+    // spanning another method of it still matches, and `Class#method` for the exact one.
+    tests: allOf(body, NAMES.tests, m => m[1]).concat(
+      allOf(body, NAMES.tests, m => (m[2] ? `${m[1]}#${m[2]}` : null))),
+    jira: allOf(body, NAMES.jira),
+    // Whichever of the three spellings matched.
+    prs: allOf(body, NAMES.prs, m => m[1] || m[2] || m[3]),
+    builds: allOf(body, NAMES.builds, m => m[0]),
+    packages: allOf(body, NAMES.packages, m => m[0])
+  };
+  // A package on its own names no incident, so it does not earn a message its place here: it is
+  // carried to *narrow* the other names, never to match by itself.
+  return [names.tests, names.jira, names.prs, names.builds].some(list => list.length) ? names : null;
+}
+
+/**
+ * Where a reader of the digest can go to read the sentence for themselves, in context.
+ *
+ * Built on the room's alias whenever there is one, not its ID: `#xwiki:matrix.xwiki.com` is a
+ * version 12 room, whose ID has no server part (`!zdPf…`), and a client that does not parse those
+ * opens nothing — reported from Element on 2026-10-17. An alias resolves everywhere and needs no
+ * `via`; an ID gets the server it names, else the one we read it from.
+ */
+export const permalink = (server, room, eventId) => {
+  const link = `https://matrix.to/#/${encodeURIComponent(room)}/${encodeURIComponent(eventId)}`;
+  if (room.startsWith('#')) return link;
+  return `${link}?via=${room.includes(':') ? room.split(':').slice(1).join(':') : new URL(server).hostname}`;
+};
+
+/**
+ * What the room has said since `since`, filtered to the messages that name something a CI incident
+ * can be matched against.
+ *
+ * The bot's own messages are excluded: its digests name every test it is reporting, so reading them
+ * back would let the routine hear its own voice as a human claim and go quiet on it forever.
+ *
+ * @param {string} since ISO timestamp — normally the last digest's, so the window is "since we last
+ *   spoke". Bounded by `pages` whatever it says, because a room read is not a backfill.
+ * @returns {Promise<{at: string, sender: string, body: string, names: object, permalink: string}[]>}
+ *   oldest first.
+ */
+export async function roomSince({ server = homeserver, roomId = room, since, pages = 12, token = null } = {}) {
+  let userId = token && await whoami(server, token);
+  if (!userId) ({ token, userId } = await credential(server));
+  const id = await resolveRoom(roomId, server, token);
+  const floor = Date.parse(since);
+  const filter = JSON.stringify({ types: ['m.room.message'] });
+  const out = [];
+  let from = null;
+  for (let page = 0; page < pages; page++) {
+    const url = new URL(`${server}/_matrix/client/v3/rooms/${encodeURIComponent(id)}/messages`);
+    url.searchParams.set('dir', 'b');
+    url.searchParams.set('limit', '50');
+    url.searchParams.set('filter', filter);
+    if (from) url.searchParams.set('from', from);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      throw new Error(`Cannot read [${roomId}]: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    }
+    const body = await res.json();
+    let reached = false;
+    for (const event of body.chunk || []) {
+      if (event.origin_server_ts < floor) { reached = true; continue; }
+      if (event.sender === userId || event.type !== 'm.room.message') continue;
+      const names = namesIn(event.content?.body || '');
+      if (!names) continue;
+      out.push({
+        at: new Date(event.origin_server_ts).toISOString(),
+        // The localpart, which is the name the room writes and the digest will quote. The display
+        // name would cost a profile request each, to print very nearly the same string.
+        sender: String(event.sender).replace(/^@/, '').split(':')[0],
+        body: event.content.body,
+        names,
+        permalink: permalink(server, roomId.startsWith('#') && !roomId.includes(':')
+          ? `${roomId}:${new URL(server).hostname}` : roomId, event.event_id)
+      });
+    }
+    if (reached || !body.end || body.end === from) break;
+    from = body.end;
+  }
+  return out.reverse();
+}
+
+/**
+ * The email addresses in a digest — which must be none. The room is public, and the one source of
+ * addresses upstream (SonarCloud's SCM author) is turned into logins by the sweep; this is the
+ * brake for an address that reaches the text some other way. A Matrix id (`@jdoe:matrix.org`, in a
+ * matrix.to link or not) is not an address and does not match.
+ */
+export const addressesIn = text => String(text).match(
+  /(?<![\w.%+/#-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w-])/g) || [];
+
+/**
+ * @param {object|null} state carried forward for the next run's comparison; see `withState`.
+ * @returns {Promise<string>} the event id of the posted message.
+ */
+export async function send(text, { server = homeserver, token = null, roomId = room, state = null } = {}) {
+  for (const [name, value] of [['MATRIX_HOMESERVER', server], ['MATRIX_ROOM', roomId]]) {
+    if (!value) throw new Error(`${name} is not set — the digest cannot be posted`);
+  }
+  if (addressesIn(text).length) throw new Error(`the digest holds an email address (${addressesIn(text).join(', ')})`);
+  if (text.includes('<!--')) throw new Error('the digest still holds a marker of ci-check.mjs --render-digest');
+  token ??= (await credential(server)).token;
+  roomId = await resolveRoom(roomId, server, token);
+  const body = JSON.stringify({
+    msgtype: 'm.text',
+    body: text,
+    format: 'org.matrix.custom.html',
+    formatted_body: withState(toHtml(text), state)
+  });
+  // A transaction id makes the send idempotent per attempt, so the retry below cannot double-post.
+  const put = () => fetch(
+    `${server}/_matrix/client/v3/rooms/${encodeURIComponent(roomId)}/send/m.room.message/${randomUUID()}`,
+    { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body }
+  );
+  let res = await put();
+  if (res.status === 403) {
+    await join(server, token, roomId);
+    res = await put();
+  }
+  if (!res.ok) throw new Error(`Matrix send failed: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+  return (await res.json()).event_id;
+}
+
+// ---- CLI -------------------------------------------------------------------------------------
+
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const argv = process.argv.slice(2);
+  let file = null;
+  let stateFile = null;
+  // Default-safe: sending is opt-in. `--dry-run` remains accepted for saying so explicitly.
+  let write = false;
+  let identify = false;
+  let read = null;
+  let since = null;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--file') file = argv[++i];
+    else if (argv[i] === '--state') stateFile = argv[++i];
+    else if (argv[i] === '--write') write = true;
+    else if (argv[i] === '--dry-run') write = false;
+    else if (argv[i] === '--whoami') identify = true;
+    else if (argv[i] === '--last-digest') read = 'digest';
+    else if (argv[i] === '--last-state') read = 'state';
+    else if (argv[i] === '--last-memory') read = 'memory';
+    else if (argv[i] === '--since') { read = 'since'; since = argv[++i] || null; }
+    else { console.error(`Unknown argument [${argv[i]}]`); process.exit(2); }
+  }
+  // A credential problem is the expected failure of this tool, so it reports it as a sentence. A
+  // stack trace in a 06:00 routine log says "the tool is broken" about a token that merely expired.
+  const fail = error => { console.error(`matrix.mjs: ${error.message}`); process.exit(1); };
+  if (identify) {
+    await credential()
+      .then(({ userId, how }) => console.log(`${userId} on ${homeserver} (${how}), posting to ${room}`))
+      .catch(fail);
+    await exitAfterOutput(0);
+  }
+  if (read === 'since') {
+    const day = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    // `last-digest` resolves the window inside this one session, sharing its login: the caller
+    // would otherwise have to parse a timestamp out of a JSON file in the shell, which is how a
+    // documented command becomes something nobody runs as written.
+    let asked = since;
+    if (asked === 'last-digest') {
+      const { token } = await credential().catch(() => ({ token: null }));
+      asked = token ? (await lastDigest({ token }).catch(() => null))?.at ?? null : null;
+    }
+    // A day, when there is no last digest to date the window from — the room read must not become a
+    // backfill of a room that has been quiet, or of a routine that has never run.
+    const floor = (asked && !Number.isNaN(Date.parse(asked))) ? new Date(asked).toISOString() : day;
+    // Exits 0 whatever happens, like the other two reads: a room that cannot be read must leave the
+    // sweep able to run, and `available: false` is how the consumer is told it heard nothing rather
+    // than that nothing was said.
+    await roomSince({ since: floor })
+      .then(messages => console.log(JSON.stringify({ available: true, since: floor, messages }, null, 2)))
+      .catch(error => console.log(JSON.stringify(
+        { available: false, since: floor, reason: error.message, messages: [] }, null, 2)));
+    await exitAfterOutput(0);
+  }
+  if (read) {
+    // Both reads exit 0 whatever happens, because both are consumed by a routine that must still
+    // produce a digest when the room cannot be read. `available` is the whole difference between
+    // "nothing has changed" and "nothing is known", and only the caller can tell them apart.
+    const last = await lastDigest().catch(error => error);
+    if (read === 'digest') {
+      if (last instanceof Error) console.error(`matrix.mjs: ${last.message}`);
+      else console.log(last ? last.body : '');
+    } else if (read === 'memory') {
+      // The digest links its paste, and the paste holds the conclusions (memory.mjs). Any failure
+      // on the way — no digest, an expired paste, a paste from before the memory existed — is an
+      // empty memory: the sweep then analyses as it always did.
+      const url = last instanceof Error ? null : last?.body.match(/https?:\/\/\S+\?[0-9a-f]+#\w+/)?.[0];
+      const memory = url ? await readPaste(url).then(memoryOf).catch(error => error) : null;
+      console.log(JSON.stringify(memory instanceof Error || !memory
+        ? { available: false, reason: memory?.message || (last instanceof Error ? last.message : 'no paste linked') }
+        : { available: true, at: last.at, memory }, null, 2));
+    } else if (last instanceof Error) {
+      console.log(JSON.stringify({ available: false, reason: last.message }, null, 2));
+    } else {
+      console.log(JSON.stringify(
+        { available: true, at: last?.at || null, state: last?.state || {} }, null, 2));
+    }
+    await exitAfterOutput(0);
+  }
+  const text = file ? readFileSync(file, 'utf8') : readFileSync(0, 'utf8');
+  if (!text.trim()) { console.error('Nothing to post'); process.exit(2); }
+  // Refused in a rehearsal too, so that a dry run shows the digest a live run would not post.
+  if (addressesIn(text).length) {
+    console.error(`matrix.mjs: not posting — the digest holds an email address (${addressesIn(text).join(', ')}).`
+      + ' The room is public: name a person by their GitHub login, as sonar.culprits does.');
+    process.exit(2);
+  }
+  // `--render-digest` leaves a marker for what only the run knows; one still here is a digest
+  // half-written — or, for SILENT, a morning that posts nothing.
+  if (text.includes('<!--')) {
+    console.error(`matrix.mjs: not posting — the digest still holds a marker: ${text.match(/<!--[^>]{0,80}/)[0]}…`
+      + ' Fill or delete every marker (references/digest.md).');
+    process.exit(2);
+  }
+  // The delta report can be handed over as it is: what the next run needs from it is its `state`.
+  const carried = stateFile ? (JSON.parse(readFileSync(stateFile, 'utf8')) ?? {}) : null;
+  const state = carried && (carried.state ?? carried);
+  // The security-only lines `ci-check.mjs --delta` withheld (okf/processes/release.md: never named
+  // in a public artifact). The rendered digest already leaves them out; a hand edit must not undo it.
+  const named = (carried?.withheld || []).flatMap(branch => [branch, branch.replace(/^stable-/, '')])
+    .filter(name => text.includes(name));
+  if (named.length) {
+    console.error(`matrix.mjs: not posting — the digest names a security-only line (${[...new Set(named)].join(', ')}).`
+      + ' The room is public: leave that line to the paste (references/digest.md).');
+    process.exit(2);
+  }
+  if (write) {
+    await send(text, { state }).then(eventId => console.log(eventId)).catch(fail);
+  } else {
+    console.log(`--- would post to ${room} on ${homeserver} (pass --write to send) ---\n${text}`
+      + (state ? `\n--- carrying the state of ${Object.keys(state).length} incident(s) ---` : ''));
+  }
+}

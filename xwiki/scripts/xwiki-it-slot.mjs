@@ -12,6 +12,13 @@
  * Wrap the whole Maven invocation rather than the test phase alone — the `install` of the SNAPSHOT
  * artifacts is part of what is being serialised.
  *
+ * It also keeps testcontainers' leftovers from piling up. Testcontainers removes a run's containers
+ * and networks through a ryuk container once the test JVM exits, but the ryuk of testcontainers 1.17
+ * and older (0.3.x) speaks Docker API 1.29, which recent daemons refuse: every run then leaks its
+ * browser container and its network until the daemon has no address pool left. So when the daemon
+ * refuses that API version and no ryuk image is configured, the command runs with a ryuk that
+ * negotiates the API version, and a run starting while leftover networks have piled up says so.
+ *
  *   node xwiki-it-slot.mjs -- mvn verify -B -ntp -Pdocker,integration-tests
  *   node xwiki-it-slot.mjs --max 1 -- mvn verify …     # exclusive
  *   node xwiki-it-slot.mjs --status                    # who is holding what
@@ -25,7 +32,7 @@
  * Exit codes: the command's own, or 75 (EX_TEMPFAIL) when no slot came free in time.
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -35,6 +42,19 @@ import { itSlotDir } from './state-dir.mjs';
 const NO_SLOT_EXIT = 75;
 const POLL_MS = 5000;
 const REPORT_EVERY_MS = 60000;
+
+/** The Docker API version spoken by the 0.3.x ryuk images, the default of testcontainers 1.17 and older. */
+const OLD_RYUK_API_VERSION = '1.29';
+/**
+ * A ryuk that negotiates the Docker API version, verified to reap with testcontainers 1.17 and 2.0. It
+ * replaces the ryuk of whatever testcontainers version the build uses, newer ones included, which is
+ * harmless while the testcontainers-ryuk protocol stays unchanged: only a testcontainers release that
+ * changes that protocol requires moving this to the ryuk that release names.
+ */
+const WORKING_RYUK_IMAGE = 'testcontainers/ryuk:0.14.0';
+const TESTCONTAINERS_LABEL = 'org.testcontainers=true';
+/** Empty testcontainers networks above which the daemon is about to run out of address pools. */
+const EMPTY_NETWORKS_WARNING = 10;
 
 const slotDir = itSlotDir();
 
@@ -123,13 +143,105 @@ function tryAcquire(max, entry) {
   return null;
 }
 
+/**
+ * @returns {string[]|null} the output lines of a docker command, or null when docker is missing, the
+ *   daemon is unreachable or the command failed: the checks below are advisory and skip themselves then.
+ */
+function docker(...args) {
+  const result = spawnSync('docker', args, { encoding: 'utf8', timeout: 15000 });
+  if (result.error || result.status !== 0) return null;
+  return result.stdout.split('\n').map(line => line.trim()).filter(Boolean);
+}
+
+function compareVersions(left, right) {
+  const a = left.split('.').map(Number);
+  const b = right.split('.').map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const difference = (a[i] || 0) - (b[i] || 0);
+    if (difference !== 0) return difference;
+  }
+  return 0;
+}
+
+/**
+ * @returns {Map<string, string>} the developer's testcontainers settings: `~/.testcontainers.properties`,
+ *   overridden by the matching `TESTCONTAINERS_*` environment variables, which is testcontainers' own
+ *   precedence.
+ */
+function testcontainersSettings() {
+  const settings = new Map();
+  try {
+    const file = path.join(os.homedir(), '.testcontainers.properties');
+    for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+      const match = /^\s*([^#!=\s]+)\s*[=:]\s*(.*?)\s*$/.exec(line);
+      if (match) settings.set(match[1], match[2]);
+    }
+  } catch {
+    // No properties file: testcontainers' defaults apply.
+  }
+  for (const key of ['ryuk.container.image', 'ryuk.disabled']) {
+    const value = process.env[`TESTCONTAINERS_${key.replaceAll('.', '_').toUpperCase()}`];
+    if (value) settings.set(key, value);
+  }
+  return settings;
+}
+
+/**
+ * @returns {object|null} the environment to add to the command so that ryuk can reach the daemon, or
+ *   null when nothing needs to change: the daemon accepts the old ryuk, the developer chose a ryuk
+ *   image or disabled ryuk, or docker cannot be queried.
+ */
+function ryukEnvironment(settings) {
+  if (settings.has('ryuk.container.image') || settings.get('ryuk.disabled') === 'true') return null;
+  const minimum = docker('version', '--format', '{{.Server.MinAPIVersion}}');
+  if (!minimum || minimum.length === 0 || compareVersions(minimum[0], OLD_RYUK_API_VERSION) <= 0) return null;
+  console.error(`Running with ${WORKING_RYUK_IMAGE}: the Docker daemon refuses the ryuk of testcontainers 1.17 `
+    + 'and older (set ryuk.container.image in ~/.testcontainers.properties to choose another one).');
+  return { TESTCONTAINERS_RYUK_CONTAINER_IMAGE: WORKING_RYUK_IMAGE };
+}
+
+/** @returns {{containers: string[], networks: string[]}|null} the testcontainers resources on the daemon. */
+function testcontainersResources() {
+  const containers = docker('ps', '-aq', '--no-trunc', '--filter', `label=${TESTCONTAINERS_LABEL}`);
+  const networks = docker('network', 'ls', '-q', '--no-trunc', '--filter', `label=${TESTCONTAINERS_LABEL}`);
+  return containers && networks ? { containers, networks } : null;
+}
+
+/** @returns {number} how many testcontainers networks have no container attached, i.e. are leftovers. */
+function countEmptyNetworks(networks) {
+  if (networks.length === 0) return 0;
+  const counts = docker('network', 'inspect', '--format', '{{len .Containers}}', ...networks) || [];
+  return counts.filter(count => count === '0').length;
+}
+
+const CLEANUP_COMMANDS = '  docker rm -f $(docker ps -aq --filter label=org.testcontainers=true)\n'
+  + '  docker network prune -f --filter label=org.testcontainers=true\n'
+  + 'Run them only when no other Docker functional test is running on this machine.';
+
+function warnAboutEmptyNetworks(resources) {
+  const empty = countEmptyNetworks(resources.networks);
+  if (empty < EMPTY_NETWORKS_WARNING) return;
+  console.error(`${empty} testcontainers networks are left over from earlier runs. Each one holds an address `
+    + 'pool, and once they are exhausted every run dies in beforeAll ("all predefined address pools have been '
+    + 'fully subnetted", or "networkMode was not specified"). To remove the leftovers:\n' + CLEANUP_COMMANDS);
+}
+
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write('', () => process.exit(code)));
+
 const { options, command } = parseArgs(process.argv.slice(2));
 const max = Math.max(1, options.max || Number(process.env.XWIKI_LLM_IT_SLOTS) || 2);
 
 if (options.status) {
   console.log(`Slots: ${max} (${slotDir})`);
   console.log(describe(listHolders(max)));
-  process.exit(0);
+  const resources = testcontainersResources();
+  if (resources) {
+    console.log(`Testcontainers on the daemon: ${resources.containers.length} container(s), `
+      + `${resources.networks.length} network(s) of which ${countEmptyNetworks(resources.networks)} without container`);
+  }
+  await exitAfterOutput(0);
 }
 
 if (command.length === 0) {
@@ -174,7 +286,11 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
   process.on(signal, () => { release(); process.exit(128 + os.constants.signals[signal]); });
 }
 
-const child = spawn(command[0], command.slice(1), { stdio: 'inherit' });
+const resources = testcontainersResources();
+if (resources) warnAboutEmptyNetworks(resources);
+const ryukEnv = ryukEnvironment(testcontainersSettings());
+
+const child = spawn(command[0], command.slice(1), { stdio: 'inherit', env: { ...process.env, ...ryukEnv } });
 child.on('error', error => {
   release();
   console.error(`Cannot run [${command[0]}]: ${error.message}`);

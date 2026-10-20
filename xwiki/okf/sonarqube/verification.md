@@ -3,7 +3,7 @@ title: Verifying a SonarQube fix
 stability: durable
 summary: What makes a SonarCloud fix verified rather than merely compiling — the tests must run, the
   quality profile is mandatory, why removing covered instructions always lowers a JaCoCo ratio, and
-  how to tell your failure from a pre-existing one.
+  which pre-existing failures recur on a Sonar fix.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Building/
 ---
@@ -31,12 +31,11 @@ skip tests to go green.
 ## `-Plegacy,quality` is mandatory
 
 Build every affected module in one reactor with **both** profiles: `-Plegacy` to include the
-`-legacy-*` modules, and `-Pquality` because that is where the gates live. See the `xwiki-build`
-skill for the command and the profile table.
+`-legacy-*` modules, and `-Pquality` for the coverage gate (Checkstyle, Revapi and the Enforcer run
+in the default build). See the `xwiki-build` skill for the command and the profile table.
 
 **`-Pquality` is not optional for a Sonar fix specifically**, because the `jacoco:check` goal that
-enforces each module's pinned `xwiki.jacoco.instructionRatio` runs only there — as do Revapi and the
-Enforcer. A fix that removes code can drop a module below its ratio and **fail in CI even though the
+enforces each module's pinned `xwiki.jacoco.instructionRatio` runs only there. A fix that removes code can drop a module below its ratio and **fail in CI even though the
 local `install` was green**. That failure is invisible without `-Pquality`.
 
 ## Removing covered instructions always lowers the ratio
@@ -57,16 +56,10 @@ Small modules with few sites are where this bites; large modules absorb it.
 
 ## Reactor semantics when something fails
 
-- **A module failing mid-reactor skips every module after it.** The modules listed `SUCCESS` before it
-  are genuinely verified; the rest were never built at all. After dropping the failing module, re-run a
-  reactor containing the **skipped** ones — do not assume the first run covered them.
-- **A wide reactor failing on one module for a reason unrelated to your edit → drop that module, keep
-  the rest.** Because build order means a leaf failing last cannot taint the modules built before it,
-  every other `SUCCESS` in the summary stands and no rebuild is needed.
-
-**Telling a pre-existing failure from your own** takes one step: if `git diff --name-only` does not
-list the flagged class, it is not yours — confirm with `git log -1 -- <that class's file>`, which will
-show an unrelated recent commit. Two recurring shapes:
+What a failing module means for the rest of the reactor — re-run the skipped modules, drop one that
+fails for a reason unrelated to your edit — and how to tell a pre-existing failure from your own are
+the **`xwiki-build`** skill's *Reading a multi-module reactor result*. Two pre-existing failures recur
+on a Sonar fix:
 
 - Revapi `java.method.visibilityReduced` on `<init>()` of classes you never touched, typically in
   `xwiki-platform-legacy-oldcore` — the legacy re-export debt described in [[dead-code-rules]].
@@ -90,17 +83,28 @@ pre-flight check stays worth doing even with PR analysis in place.
 **`javabugs:*` findings are computed server-side, during the SonarCloud analysis** — neither the local
 scanner nor the IDE reports them, so no local build proves one gone. **A PR analysis does, before
 merge**, and it runs the same rules and gate as the branch: measured on xwiki-commons, a direct *and* an
-interprocedural null dereference were both reported and took the PR gate to ERROR. The recipe is in the
-`xwiki-pull-request` skill — no tests, no `-Pquality` and no coverage, which holds as long as the gate's
+interprocedural null dereference were both reported and took the PR gate to ERROR. In xwiki-commons,
+-rendering and -platform the PR's `Quality / Analyze` check runs it; elsewhere, the manual recipe is in
+the `xwiki-pull-request` skill — no tests, no `-Pquality` and no coverage, which holds as long as the gate's
 `new_coverage` condition stays disabled (`qualitygates/project_status` shows the conditions, and also
 names the red one). Before believing *or* dismissing such a finding, read the analyzer's own path:
 `&additionalFields=_all` on `issues/search` returns `flows[].locations[]`, whose `msg` chain states
 every assumption it made ("Assuming this condition to be false"). Print `startLine` + `msg` only — the
 raw arrays are huge.
 
+The same PR analysis is the only way to check *any* fix against Sonar's own analyzer before merge:
+the plugin has no local Sonar analysis, and a local build runs Checkstyle, not the Sonar rules.
+
+**Run a PR analysis from the repository root, never from inside a module.** Run from a module, it
+records `src/main/java/...` paths that match nothing on the branch, so every line counts as new code and
+the gate fails on years-old findings.
+
+**Read its gate only through `-Dsonar.qualitygate.wait=true`.** SonarCloud processes the analysis after
+the scanner returns, so `qualitygates/project_status` read right away can still be the previous push's.
+
 ## Related
 
 - [[index]] — rule map, denylist, universal drop conditions.
 - [[strategy]] — XWiki's testing conventions and the coverage policy.
 - [[backward-compatibility]] — what Revapi treats as breaking.
-- [[code-style]] — the 120-column rule Checkstyle enforces in `quality`.
+- [[code-style]] — the 120-column rule Checkstyle enforces.

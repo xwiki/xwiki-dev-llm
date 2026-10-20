@@ -81,7 +81,7 @@ the real contract. If a detail genuinely can't be determined, describe what is k
 - **Deprecation**: use both the `@Deprecated` annotation (with `since = "…"`, no `forRemoval` — XWiki does not break
   APIs) and the `@deprecated` Javadoc tag. In the tag say WHY it is deprecated and WHAT to use instead (with a
   `{@link}`); do **not** repeat the version there (the annotation's `since` is what the tool shows). For deprecation
-  across several branches use a comma-separated `since`, for example `@Deprecated(since = "15.5RC1,14.10.12")`.
+  across several branches use a comma-separated `since`, for example `@Deprecated(since = "14.10.12,15.5RC1")`.
 - **Do not duplicate inherited Javadoc.** For an `@Override` method, either add nothing (inherits automatically) or
   use `{@inheritDoc}` and then add only what is specific. Always keep the `@Override` annotation.
 

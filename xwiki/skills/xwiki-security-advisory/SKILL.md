@@ -21,6 +21,26 @@ disclosure ([[security-policy]] in the OKF owns the full rule):
 - Don't paste the vulnerability description into anything that isn't either the private GitHub
   advisory draft or a local work file.
 
+## No proof of concept in the advisory
+
+The advisory describes the vulnerability without enabling its reproduction: which feature or
+endpoint is affected, the general attack vector, the requirements (rights, configuration) and the
+impact — but **no PoC**: no exploit request, URL, page to target, payload, parameter values or
+step-by-step reproduction, even when the JIRA issue has them (they stay in JIRA, where they're needed
+for the fix). General about the mechanism, but **exact about the requirements**: name each right or
+setting the attacker needs (e.g. "edit right on any page and comment right on a page whose author
+has programming right") and say which of them the standard rights give everyone, so an admin with
+non-standard rights can tell whether their wiki is affected. Scanners automatically import published advisories and try the reproduction steps they
+contain. The Security Policy requires this since October 2026: a warning in its "Security Advisory
+template and information" section, and a `/!\ Don't provide reproduction steps. /!\` line under the
+template's `### Impact` — a reminder for the author, not part of the advisory, so leave it out of
+the draft (Step 2 has the live wording).
+
+**This is a change from past practice**: many published XWiki advisories contain a PoC or the exact
+request to reproduce the vulnerability (e.g. GHSA-57q2-6cp4-9mq3 gives the URL to call). Don't take
+past advisories as an example for the Impact section's level of detail — Step 3 uses them only for
+the wording of the CVSS comments.
+
 ## Step 1 — Fetch the source JIRA issue
 
 Security issues carry a restricted **Security Level** (e.g. "Confidential"), so `fields.security` is
@@ -35,14 +55,17 @@ curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" \
 From the response's `fields`, collect:
 
 - `summary`, `description` (the vulnerability write-up, in JIRA wiki markup — usually has an
-  `h2. Impact` / `h2. PoC` structure you can lift from directly), `security` (confirms it's
-  restricted), `priority`, `versions` (Affects), `fixVersions`, `reporter`.
-- Scan `customfield_*` values for a **CVSS vector string** (starts `CVSS:4.0/…` or `CVSS:3.1/…`) and
-  its paired numeric score — instances number these fields differently, so grep for the shape, don't
-  hardcode a field id.
+  `h2. Impact` / `h2. PoC` structure — lift the impact from it, never the PoC), `security` (confirms it's
+  restricted), `priority`, `versions` (Affects), `fixVersions`, `reporter`. An empty `security`
+  means the issue is public: either it was disclosed, and the check below finds its published
+  advisory, or it was filed public, and the policy's checklist ("Verify that the Confidential level
+  is set") comes first — tell the user before drafting.
+- The **CVSS vector** (`customfield_11870`, e.g. `CVSS:4.0/…`) and its numeric **score**
+  (`customfield_11871`); both fields are described in `okf/processes/security-policy.md`.
 - A `customfield_*` holding a `devSummaryJson`/pull-request bean can reveal whether a fix PR/commit
   already exists — useful for the Patches/References sections once a fix lands (remember: the fix
-  commit message will be **obfuscated**, per [[security-policy]], so don't expect the JIRA key in it).
+  commit message keeps the JIRA key but replaces the issue title with a neutral summary, per
+  [[commit-messages]], so don't search it for the title's words).
 
 **If the fetch fails** — no `JIRA_API_TOKEN` set, a network/auth error, or a 404 (which for a
 restricted issue usually means the account behind the token isn't in the security group, not that
@@ -52,6 +75,22 @@ vulnerability description (impact, affected component, how to reproduce); affect
 fix version(s) if already decided; the reporter's name and whether they've agreed to be credited; and
 a CVSS vector/score if one has already been agreed on. Draft with whatever they provide, and mark
 anything still missing as an explicit `[TBD]` in the draft rather than inventing a value for it.
+
+### Check that no advisory exists yet
+
+The JIRA web link can be missing (XWIKI-23438 has none, yet GHSA-53gx-j3p6-2rw9 covers it), so
+check both places:
+
+```bash
+curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" "https://jira.xwiki.org/rest/api/2/issue/<KEY>/remotelink" \
+  | jq '.[].object | select(.title == "Security Advisory") | .url'
+gh api --paginate "repos/<owner>/<repo>/security-advisories?per_page=100" \
+  --jq '.[] | select((.description // "") | test("<KEY>\\b")) | {ghsa_id, state, html_url}'
+```
+
+GitHub lists drafts only to an organization owner or a collaborator on them, so an empty result
+from another account rules out published advisories only. When one exists, stop and show it to the
+user: the job becomes reviewing or editing it (`references/github-advisory.md`), never a second one.
 
 ## Step 2 — Fetch the live advisory template and scoring guidance
 
@@ -65,7 +104,12 @@ curl -s "https://dev.xwiki.org/xwiki/rest/wikis/dev/spaces/Community/spaces/Secu
   -H "Accept: application/json"
 ```
 
-Take the `content` field (xwiki/2.1 syntax). Two parts of it matter:
+Take the `content` field (xwiki/2.1 syntax). Three parts of it matter:
+
+- The **`= What's the process to handle security issues? =`** section is the committer checklist the
+  whole job is measured against — it carries steps that live nowhere else, in particular the
+  Security Advisory Application import and the CVE request of Step 6. Read it, don't stop at the two
+  sections below.
 
 - The **`= Security Advisory template and information =`** section holds the literal markdown
   template, inside a `{{code language="markdown"}} … {{/code}}` block — copy its section structure
@@ -96,15 +140,24 @@ still-private/draft one — whose vector is close to the one at hand, and read h
 row's comment:
 
 ```bash
-gh api repos/<owner>/<repo>/security-advisories --jq \
-  '.[] | select(.state=="published") | {ghsa_id, summary, cvss: .cvss.vector_string}'
+gh api --paginate "repos/<owner>/<repo>/security-advisories?state=published&per_page=100" --jq \
+  '.[] | {ghsa_id, summary, cvss: (.cvss_severities.cvss_v4.vector_string // .cvss.vector_string)}'
 gh api repos/<owner>/<repo>/security-advisories/<ghsa_id> --jq '.description'
 ```
+
+(`.cvss` holds only a CVSS 3 vector.) Precedents that comment each metric are rare: the published
+advisories give the vector alone, except GHSA-5446-j3r6-h5xp (`xwiki-contrib/application-activitypub`,
+the template's table) and GHSA-jm43-hrq7-r7w6 (`xwiki-platform`, a "CVSS explanation" list). Find
+others with `select(.description | test("CVSS Score Computation|Attack vector:"; "i"))`; without a
+close one, write each comment from Step 2's guidance alone.
 
 Match the **register** — tight and mechanism-specific, one sentence per row (e.g. "Reachable by a
 guest, who does not need an account." rather than a generic "Low privileges needed") — not the
 literal wording. This is wording inspiration only: the advisory's **section structure** still comes
-exclusively from the live template fetched in Step 2, never from a past advisory's layout.
+exclusively from the live template fetched in Step 2, never from a past advisory's layout, and
+past advisories are no example for the Impact section's level of detail (many contain a PoC, see
+"No proof of concept in the advisory") nor for the version ranges (see
+`references/affected-products.md`).
 
 ## Step 4 — Draft the advisory
 
@@ -112,65 +165,46 @@ Fill the template using the mapping below — from the JIRA fields fetched in St
 user's direct answers when that fetch failed. Leave nothing as a silent placeholder: flag anything
 still missing to the user instead of guessing it.
 
+**One advisory for several issues.** A vulnerability is sometimes filed as several JIRA issues, a
+second one "for advisory packaging" (e.g. a separate impact of the same attack). They get **one**
+advisory: its Impact describes each of them, its References list every issue, its affected products
+cover the modules of all of them, and it carries a single CVSS score, the highest. Each issue keeps
+the vector of its own impact in JIRA and gets the advisory link (Step 6).
+
 | Advisory field | Source |
 |---|---|
 | Title | JIRA `summary` |
-| Impact prose | JIRA `description`'s explanation/PoC, rewritten as impact + affected versions, in your own words — not a verbatim copy-paste of internal notes |
+| Impact prose | JIRA `description`'s explanation, rewritten as affected feature + attack vector + requirements + impact + affected versions, in your own words — **without the PoC** (see "No proof of concept in the advisory") and not a verbatim copy-paste of internal notes |
 | CVSS table | The vector found in Step 1, valued per the Step 2 scoring guidance, worded per the Step 3 precedent for the *comment* column |
-| Affected package(s) / vulnerable version range | The module(s) touched, and `versions` (Affects) → GitHub's version-range syntax — see "Affected products (packages) and version ranges" below |
-| Patches | `fixVersions` if the fix isn't released yet ("will be fixed in…"); the actual released versions + patch commit once it is |
+| Affected package(s) / vulnerable version range | The module(s) touched, and `versions` (Affects), verified against the code history → GitHub's version-range syntax — see "Affected products (packages) and version ranges" below — the checks are in `references/affected-products.md`, which also covers updating JIRA when they differ |
+| Patches | `fixVersions`: "has been patched in…" once the fix is committed on every branch, released or not (the advisory is only published after the releases); "will be fixed in…" before that. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`okf/conventions/versioning.md`), and mark them as to be confirmed |
 | Workarounds | From the JIRA description if a mitigation is mentioned, else "no known workaround other than upgrading" |
-| References | The JIRA issue URL, plus the fix commit's SHA/URL — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row below |
-| Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them, and note that a non-committer reporter needs adding as a collaborator on the draft |
+| References | The JIRA issue URL, plus the fix commit's SHA/URL — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row above |
+| Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them. Credit type (GitHub's definitions): `finder` for the person who discovered the vulnerability, also when they reported it themselves; `reporter` only for someone who passed on a finding that isn't theirs. Also link their account in the Attribution section: `[@login](https://github.com/login)` |
 
 CWE: pick the closest match from https://cwe.mitre.org/data/index.html — this is a per-vulnerability
 judgment call, not something to default without reasoning about the actual flaw (e.g. broken access
 control against a user-controlled identifier is usually CWE-639, missing authorization generally is
-CWE-862, XSS is CWE-79, etc.).
+CWE-862, XSS is CWE-79, etc.). Check the entry's **Vulnerability Mapping** "Usage" on its MITRE page:
+`ALLOWED` or `ALLOWED-WITH-REVIEW` only. Content executed with the wrong author's rights is CWE-270,
+not the discouraged CWE-269.
 
 ### Affected products (packages) and version ranges
 
-Follow GitHub's guide
-(https://docs.github.com/en/enterprise-cloud@latest/code-security/tutorials/fix-reported-vulnerabilities/write-security-advisories)
-together with the pattern every already-published XWiki advisory uses (check a couple with `gh api
-repos/<owner>/<repo>/security-advisories/<ghsa_id> --jq '.vulnerabilities'`, same as in Step 3):
+Every advisory needs them, and they are where past advisories went wrong, so **before writing any
+affected product or range, open `references/affected-products.md`** and work through all of it.
+Never copy the ranges of a past XWiki advisory. The file covers these checks, and the draft records
+the outcome of each one, "none" included:
 
-- **Ecosystem:** `maven`. **Package name:** the leaf module's `groupId:artifactId` that actually
-  carries the vulnerable code — never an umbrella/parent artifact. Examples from past advisories:
-  `org.xwiki.platform:xwiki-platform-oldcore`, `org.xwiki.platform:xwiki-platform-office-viewer`,
-  `org.xwiki.platform:xwiki-platform-repository-rest-server`. More than one module affected → one
-  **Affected product** entry per module, not a single combined one.
-- **Legacy counterpart:** when the vulnerable module has a backward-compatibility module that also
-  ships the vulnerable code, list it as its own **Affected product**, mirroring the main module's
-  ranges and patched versions one-for-one. These modules live under
-  `xwiki-platform-core/xwiki-platform-legacy/` and insert `legacy-` as an *infix* — the counterpart
-  of `xwiki-platform-oldcore` is `xwiki-platform-legacy-oldcore`, not `xwiki-platform-oldcore-legacy`.
-  It matters because the legacy artifact AspectJ-weaves the wrapped module's classes into itself
-  (`weaveDependencies` in its pom, with the wrapped module at `provided` scope), so it carries its
-  own copy of the vulnerable bytecode: an instance running the legacy jar is vulnerable, and a
-  scanner matching only the main artifact would report it as clean. Confirm it actually wraps the
-  vulnerable module rather than assuming from the name —
-  `grep -A5 weaveDependencies xwiki-platform-core/xwiki-platform-legacy/<legacy-module>/pom.xml` —
-  and skip it when the legacy module only re-exports unrelated deprecated APIs. Published precedent:
-  GHSA-57q2-6cp4-9mq3, GHSA-r38m-cgpg-qj69 and GHSA-3738-p9x3-mv9r all pair
-  `xwiki-platform-oldcore` with `xwiki-platform-legacy-oldcore` over identical ranges.
-- **Vulnerable version range:** XWiki advisories are consistently a single open-ended lower bound,
-  `>= <oldest known affected version>`, with **no upper bound** — the flaw is present in every
-  release up to the fix. Only add an upper bound if the vulnerable code path was independently
-  removed or replaced before the security fix landed.
-- **Patched version(s):** list **every maintained branch's fix version** on the same entry — XWiki
-  backports a security fix to all currently supported branches at once, so one Affected product
-  typically carries several patched versions (one per branch), not just the newest.
-- **Version string format:** the dashed dev-version notation, e.g. `18.7.0-rc-1`, never the
-  JIRA/`@since`-style `18.7.0RC1` — GitHub's comparator treats a hyphenated suffix as a prerelease
-  (`2.0.0-a` sorts *before* `2.0.0`), so getting this wrong silently breaks the range.
-- **Operator syntax:** a space between the operator and the version (`>= 1.0.0`, not `>=1.0.0`); a
-  comma **and** a space between the two bounds of one range (`>= 1.0.0, <= 2.0.0`); `<=` when the
-  named version is itself the patched one, `<` when it's the first *unpatched* one — this is exactly
-  the OSV exclusive-upper-bound trap the live template already flags in Step 2 (you cannot write
-  `< 17.10.9` unless `17.10.9` is also a patched version — write `<= 17.10.8` instead). A single
-  field cannot express a disjoint range (e.g. two separate vulnerable bands): use two Affected
-  product entries for the same package instead of trying to combine them.
+- the leaf module(s) holding the vulnerable code, under the `maven` ecosystem;
+- a legacy counterpart weaving that module in (the `legacy-` infix, confirmed in its pom);
+- each module's history over the affected range (renames, splits, merges);
+- modules repackaging it (an `artifactItem`, an assembly `<dependencySet>`, a webjar);
+- variants of the vulnerable code that the fix did not touch;
+- the first affected release, from the release tags containing the introducing commit;
+- one band per fixed branch, both bounds set, one patched version per band;
+- the Maven version format and the operator syntax GitHub and OSV accept;
+- JIRA brought in line with the verified versions, vector, score and priority.
 
 ## Step 5 — Save the draft
 
@@ -179,33 +213,24 @@ and the markdown body for the GitHub advisory's description field — to a file 
 directory, e.g. `<work>/<repo>/<date>-<JIRA-KEY>-security-advisory/advisory-draft.md`, headed with a
 **CONFIDENTIAL, do not commit or post publicly** banner. Show it to the user in the conversation too.
 
+End by listing what remains after the draft, even when the user does not go on to Step 6: create
+the GitHub advisory, add the Security team, link it on the JIRA issue(s), import it into the
+Security Advisory Application once the fix is merged (that import is what triggers the disclosure
+reminders), and request the CVE.
+
 ## Step 6 — Creating the real draft advisory on GitHub (only when asked)
 
-Drafting the text is safe to do proactively; actually creating the GitHub Security Advisory is a
-repo-visible action (visible to all org owners immediately) and must be explicitly requested, not
-assumed. When the user asks for that step:
+Creating the advisory is visible to every organization owner at once, so it happens only when the
+user asks for it, and only after re-running Step 1's check that no advisory exists yet. Then open `references/github-advisory.md` and follow it: the create request, the
+Security team and the credited researcher as collaborators, editing a draft others may have changed, the JIRA link, the Security
+Advisory Application import and the CVE request. Two rules hold whatever the user asks:
 
-- Create it via `gh api repos/<owner>/<repo>/security-advisories -X POST -f ...` or point the user to
-  the GitHub UI flow linked from the template section (both are described in
-  https://docs.github.com/en/code-security/security-advisories/repository-security-advisories/creating-a-repository-security-advisory).
-- Add the **`XWiki/Security`** GitHub team as a collaborator on the draft — the policy page calls
-  this out explicitly as an easy thing to forget.
-- Add a link to the draft advisory back on the JIRA issue (a normal comment/field edit — safe since
-  the issue is already restricted).
-- Do **not** merge any fix through the advisory's temporary private fork via the GitHub UI — that
-  leaks the JIRA title into the commit log. Use the manual merge recipe in
-  [[security-policy]] (`okf/processes/security-policy.md`) instead.
-- Publishing/disclosing the advisory (making it public) happens only once the embargo date is
-  reached **and** a CVE ID has been received — never publish opportunistically.
+- No fix is merged through the advisory's temporary private fork in the GitHub UI, which would put
+  the JIRA title in the commit log; the manual merge recipe is in `okf/processes/security-policy.md`.
+- Nothing is published before both the embargo date and a CVE ID.
 
 ## Troubleshooting
 
-- **JIRA fetch fails** (missing token, network/auth error, or 404) → don't block: ask the user
-  directly for the missing fields (see Step 1) and draft from their answers. A 404 on a restricted
-  issue usually means the account can't see it, not that the key is wrong.
-- **No CVSS vector found in `customfield_*`** → it may not have been scored yet; compute it with the
+- **No CVSS vector in `customfield_11870`** → it may not have been scored yet; compute it with the
   user using the Step 2 guidance and the official calculator (https://www.first.org/cvss/v4.0/)
   rather than guessing a score.
-- **Fix not merged yet** → say so in the Patches section ("will be fixed in …") and put the
-  `[commit SHA once merged]` placeholder in References, instead of inventing a commit; come back and
-  fill in the real SHA/URL once it lands.

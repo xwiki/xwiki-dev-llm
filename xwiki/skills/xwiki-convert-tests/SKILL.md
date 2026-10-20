@@ -9,6 +9,8 @@ Use this skill when converting existing **unit tests** that use JUnit4 (`@Before
 
 **For converting functional IT tests** (browser-based tests using `getUtil()`, `AbstractAuthenticatedTest`, page objects) to the JUnit5 Docker framework (`@UITest`), use the **`xwiki-convert-tests-docker`** skill instead.
 
+Load **`xwiki-test-guidelines`** too: its rules for writing a test still apply to the converted one.
+
 ## Code style rules to apply during conversion
 
 These apply to every file touched:
@@ -18,7 +20,7 @@ These apply to every file touched:
 * Remove `throws Exception` from method signatures unless it is actually necessary (see "checked exceptions" section below).
 * Remove the `test` prefix from test method names (`testFoo` → `foo`).
 * Normalize method names to proper camelCase (e.g. `handlecustomContentType` → `handleCustomContentType`, `getURLerror` → `getURLError`).
-* Replace `Arrays.asList(...)` with `List.of(...)`, `Collections.emptyList()` with `List.of()`, `Collections.emptySet()` with `Set.of()`, `Collections.singleton(x)` with `Set.of(x)`.
+* Replace `Arrays.asList(...)` with `List.of(...)`, `Collections.emptyList()` with `List.of()`, `Collections.emptySet()` with `Set.of()`, `Collections.singleton(x)` with `Set.of(x)` — but keep `Collections.singletonList(array)`: `List.of(array)` spreads the array into elements.
 * Replace `new ArrayList<>(); list.add(...)` patterns with `List.of(...)` where the list is not mutated.
 * Replace `list.get(0)` with `list.getFirst()` and `list.get(list.size() - 1)` with `list.getLast()` (Java 21+).
 * Use static imports for all assertions (`assertEquals`, `assertTrue`, etc.) from `org.junit.jupiter.api.Assertions`.
@@ -397,6 +399,10 @@ Key point: no `@ExtendWith` needed — `@ComponentTest` already sets up `Mockito
 | `assertThat(obj, sameInstance(other))` | `assertSame(other, obj)` |
 | `assertThat(arr, equalTo(arr2))` (byte[]) | `assertArrayEquals(arr2, arr)` |
 | `assertThat(arr, not(equalTo(arr2)))` (byte[]) | `assertFalse(Arrays.equals(arr, arr2))` |
+
+Only these. A matcher JUnit 5 has no equivalent for — `containsString`, `hasItem`,
+`containsInAnyOrder`, … — stays Hamcrest: rewriting it as `assertTrue(x.contains(y))` drops the
+actual value from the failure message. See the assertion rule in `okf/testing/strategy.md`.
 
 ## Mockito Answer: anonymous class → lambda
 

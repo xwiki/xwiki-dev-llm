@@ -1,6 +1,6 @@
 ---
 name: xwiki-doc-convert
-description: Convert OLD XWiki documentation into the new xwiki.org documentation tree. Old documentation = pages under https://www.xwiki.org/xwiki/bin/view/Documentation/ and all extension pages under https://extensions.xwiki.org/xwiki/bin/view/Extension/ (the Extensions wiki). New documentation = https://www.xwiki.org/xwiki/bin/view/documentation/ (and pages nested under it). Use when migrating/refactoring a legacy page (or an extension page) into the new tree — treating the legacy content as source material, re-classifying it by Diataxis type, dropping obsolete content, and verifying nothing useful was lost. A conversion is run as a persisted plan of one-session tasks, so also use this skill to RESUME, continue or check the status of a conversion already under way. For authoring/reviewing a page that is already in the new tree, use xwiki-doc-writing instead; xwiki-release-documentation records the legacy pages it had to edit as migration candidates for this skill, and never converts them itself.
+description: Convert OLD XWiki documentation into the new xwiki.org documentation tree. Old documentation = pages under https://www.xwiki.org/xwiki/bin/view/Documentation/ and all extension pages under https://extensions.xwiki.org/xwiki/bin/view/Extension/ (the Extensions wiki). New documentation = https://www.xwiki.org/xwiki/bin/view/documentation/ (and pages nested under it). Use when migrating/refactoring a legacy page (or an extension page) into the new tree — treating the legacy content as source material, re-classifying it by Diataxis type, dropping obsolete content, and verifying nothing useful was lost. A conversion is run as a persisted, resumable plan of tasks, so also use this skill to RESUME, continue or check the status of a conversion already under way. For authoring/reviewing a page that is already in the new tree, use xwiki-doc-writing instead; to export a subtree to a (translated) PDF, use xwiki-doc-export; xwiki-release-documentation records the legacy pages it had to edit as migration candidates for this skill, and never converts them itself.
 ---
 
 # Converting old documentation into the new documentation
@@ -28,13 +28,12 @@ drafted together as data, linted offline, published idempotently, then audited. 
 `xwiki-doc-writing/tools/README.md` — hand-rolling REST calls for a whole tree re-earns every trap it
 already handles.
 
-## A conversion runs as a plan, one task per session
+## A conversion runs as a plan of chained tasks
 
 A real conversion — a legacy page split into several new ones, each needing freshly captured
 screenshots, plus the original page's attachments and backlinks — does not fit in one context
-window. So this skill **never converts directly**. It first writes a plan to disk, then executes
-**one task per session**, keeping the status in that plan so any later session can pick the work up
-cold.
+window. So this skill **never converts directly**. It first writes a plan to disk, then works
+through it task after task, keeping the status in that plan so a fresh session can pick it up cold.
 
 **Do this before anything else, on every invocation:**
 
@@ -43,27 +42,29 @@ cold.
    conventions), run **`python3 docplan.py status`**. That one call *is* the orientation: it finds
    `conversion/PLAN.md`, and prints the current task's full brief, the setup answers, the recent
    decisions, the open questions and what comes next. **Do not read `PLAN.md` by hand** — in chunks
-   it costs a dozen turns at full context, which is the single largest avoidable cost in a
-   conversion. Ask the developer only if the tool finds no plan and several conversions are in
-   flight.
+   it costs a dozen turns at full context. Ask the developer only if the tool finds no plan and
+   several conversions are in flight.
 2. **No plan yet** → this session is the **planning session**. Do steps 0–1 of the flow below and
-   *enumerate* (do not yet read) the legacy pages in scope, then write
-   `conversion/PLAN.md` and the first task files — one `extract-*` per legacy page, then
-   `target-map` (layout, standard task set and templates:
+   *enumerate* (do not yet read) the legacy pages in scope, then write `conversion/PLAN.md` and the
+   first task files — `extract`, then `target-map` (layout, standard task set and templates:
    [references/conversion-plan.md](references/conversion-plan.md)), show the developer the task list,
    and **stop**. Converting nothing is the correct outcome of a planning session.
-3. **A plan exists** → `docplan.py status` already gave you the task and its brief. Run `docplan.py
-   start <NN>`, execute it, then `docplan.py done <NN> "<outcome>"` (which writes the status and the
-   Outcome to both PLAN.md and the task file), and **stop** — report what landed and what comes
-   next. Do not read the other task files or the raw legacy source; not spending that context is the
-   entire point of the split. Do not roll into the next task.
-4. **Checkpoint before you run out of room**, not after: at roughly a quarter of the context window
-   left, stop mid-task, record in the task file exactly where to resume, and hand back. A task that
-   is too big for one session is a planning bug — split it in PLAN.md rather than pushing through.
+3. **A plan exists** → `docplan.py start <NN>`, execute the task, `docplan.py done <NN> "<outcome>"`,
+   then **go straight on to the next task**: `docplan.py brief` prints its brief alone (the setup and
+   decisions are already in context). Do not read the other task files or the raw legacy source.
+4. **Stop only at a gate**, and report what landed and what comes next:
+   - after `target-map` — the developer approves the split before any page is drafted;
+   - before `publish` — the one task that writes to public xwiki.org;
+   - a task that is blocked, or an open question a following task depends on;
+   - the hand-off point below.
+5. **Hand off on context size, not on the window.** Between two tasks, once the context is past
+   about **200k tokens**, stop and tell the developer to continue in a fresh session (it resumes from
+   `docplan.py status`). A task that pushes the context past ~300k on its own: checkpoint it (a
+   `Resumed at:` note in the task file), hand off, and split it in PLAN.md — it was a planning bug.
+   Why these numbers, and not one task per session or a sub-agent per task: the reference's
+   "Resume protocol".
 
-**How a session runs out of room.** Every turn re-reads the whole conversation, so a session costs
-roughly *turns × context* and each of these is paid for by every turn that follows it. Three habits
-decide whether a task fits in one session:
+**Habits that keep a session small:**
 
 - **One call, not a conversation, for anything mechanical.** `docplan.py status` instead of reading
   the plan in chunks; one script that answers five questions instead of five `cat`/`grep`/`sed`
@@ -71,8 +72,8 @@ decide whether a task fits in one session:
 - **Never open a screenshot to check whether the capture worked** — `docshot.sh` reports its own
   dimensions and box verdict, and a PNG read into the conversation stays there for every later turn.
   Open one only to judge *content* ("is the right menu open?"), once, not once per attempt.
-- **Read the inventory, never the raw legacy source.** That is what the `extract-*` tasks produced
-  it for; re-reading the legacy page spends the context the split was meant to save.
+- **Read the inventory, never the raw legacy source.** That is what the `extract` task produced it
+  for; re-reading the legacy page spends the context the plan was meant to save.
 
 **Nothing reaches xwiki.org until the whole set is ready.** xwiki.org is public: for the weeks a
 conversion is in flight, every reader who lands on it sees whatever is currently there. A page
@@ -89,10 +90,9 @@ planning session, and in any session that has to re-plan or split a task.
 
 ## Conversion flow
 
-Which task owns which step: **0–1** the planning session · **2** one `extract-*` task per legacy
-page · **3–5** `target-map` · **6–8** one `page-*` task per target page, which drafts and lints but
-does **not** publish · **9** `dedup` · **10** `original-*` · **11** `deletions` · **12** the single
-`publish` task at the end.
+Which task owns which step: **0–1** the planning session · **2** `extract` · **3–5** `target-map` ·
+**6–8** one `page-*` task per target page, which drafts and lints but does **not** publish · **9**
+`dedup` · **10–11** `originals` · **12** the single `publish` task at the end.
 
 0. **Ask the developer the four setup questions from `xwiki-doc-writing` first** (that skill's "Before
    writing anything" section owns the credentials-file lookup and the exact questions), and **record
@@ -164,7 +164,7 @@ does **not** publish · **9** `dedup` · **10** `original-*` · **11** `deletion
     earlier in this conversion** and then merged, moved or dropped. Every deletion follows
     `okf/conventions/page-deletion.md` (list the backlinks, complete the list with a search, handle them,
     then delete), and relocating a page is a rename/move rather than a delete-and-recreate.
-12. **Publish, once, at the end** — as a single task, after `dedup` and `original-*` have settled the
+12. **Publish, once, at the end** — as a single task, after `dedup` and `originals` have settled the
     set. Save the pages **parents before children** so no page is ever live without its hub, then run
     `docpages.py verify`, which is the first time xwiki.org's own doc checker sees them: expect a
     round of fixes (page-name violations in particular) and re-save. Prefer a **Change Request** for
@@ -224,7 +224,8 @@ only complete record of what the legacy page said — comparing legacy → new, 
   superseded page, or an intermediate page created during this conversion), the backlinks were handled
   **before** the delete, per `okf/conventions/page-deletion.md`.
 - **Guideline compliance** — titles, page names, page-structure fields and style follow
-  `okf/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist).
+  `okf/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist,
+  `xwiki-doc-writing/references/review-checklist.md`).
 
 Do **not** raise a finding merely because you would have phrased something differently: every finding
 must be justified by lost information, changed meaning, outdated content, a Diataxis violation, a

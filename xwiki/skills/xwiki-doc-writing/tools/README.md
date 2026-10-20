@@ -3,7 +3,7 @@
 Five scripts for the mechanical half of writing or converting a documentation tree: draft the pages
 as data, check them offline, publish them, prove what landed. The rules they enforce are the subset
 of `okf/conventions/documentation.md` a regex can decide — they replace the tedium, not the review
-checklist in `SKILL.md`.
+checklist in `references/review-checklist.md`.
 
 They exist because each of these steps has a failure mode that **passes silently**. Every rule below
 was added the first time it produced a defect on a live page.
@@ -14,7 +14,11 @@ was added the first time it produced a defect on a live page.
 | `docpages.py` | `lint` \| `save` \| `pin` \| `verify` over a page set held as a Python module. |
 | `docshot.sh` | Capture a screenshot at a `size` width with the mandatory red box, and check it. |
 | `checkredbox.py` | Prove each screenshot's red box is a closed rectangle. |
-| `docplan.py` | `status` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Conversions only. |
+| `docplan.py` | `status` \| `brief` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Also the plan bookkeeping of `xwiki-doc-export`. |
+
+`xwiki-doc-export/tools/docexport.py` imports `xwikidoc.py` (it reads anonymously: without
+`XWIKI_USER`/`XWIKI_PASSWORD` a read goes out as Guest, a write still refuses) and drives `docplan.py`
+with `--plan`, so check it too when changing either.
 
 **A second reason these exist: a mechanical question answered by a tool costs one turn, and answered
 by looking costs several.** A documentation task runs long — dozens of pages, hundreds of turns — and
@@ -31,13 +35,10 @@ set. Two habits matter as much as the scripts:
 - **Batch the shell.** One script that answers five questions costs one turn; five commands cost
   five, each at full context.
 
-Requirements: Python 3 (standard library only), `agent-browser` and macOS `sips` for the screenshot
-pair, and `~/.xwiki-credentials` (see `okf/servers/index.md`). Source the credentials **inside** the
-command so they are never printed:
-
-```bash
-set -a; . ~/.xwiki-credentials; set +a
-```
+Requirements: Python 3 (standard library only), `agent-browser` for the screenshot pair — plus macOS
+`sips` whenever a shot is resampled, i.e. unless it is an `x,y,w,h` region at the target width — and
+`~/.xwiki-credentials` (see `okf/servers/index.md`), which `xwikidoc.py` parses itself when
+`XWIKI_USER`/`XWIKI_PASSWORD` are not in the environment — never `source` it.
 
 ## The page set
 
@@ -80,6 +81,7 @@ A conversion adds a fifth step around them — the plan that carries it across s
 python3 docplan.py status         # FIRST call of a conversion session: the whole orientation
 python3 docplan.py start 07       # before working on task 07
 python3 docplan.py done 07 "source/latex.txt + inventory, 41 items"
+python3 docplan.py brief          # chaining on in the same session: the next task's brief alone
 ```
 
 `save` takes page references to limit it to those pages. Add `--pages <module>` before the command to
@@ -108,12 +110,15 @@ procedure's entry step). A region already at the target width is saved unresampl
 
 **`lint`** — the traps that produce a *plausible-looking* page rather than an error: a scheme-like
 token followed by a colon (`image:` emits an empty image reference), an unmatched `--` striking
-through the rest of the block, a URL inside `##…##`, a single-brace `{macro}` (an f-string field
+through the rest of the block, a URL inside `##…##`, an inline `{{code}}` literal (the
+checker's missing-`language` violation), a single-brace `{macro}` (an f-string field
 halves every `{{`, and the halved macro renders as literal text), an absolute URL to a farm subwiki
 (renders external and is **never indexed as a backlink**), a `caption` carrying the capture version,
 a title repeating the page type or the audience, an image without `size`/`alt`, an attachment
 declared but not shown (or shown but not declared), a How-to with no result-step visual or with one
-on only a minority of its steps, a topic page that is not an Explanation linking to its
+on only a minority of its steps, a topic page (read from the path: directly under an audience
+page, so a set holding one page below an existing topic is not mistaken for one) that is not an
+Explanation linking to its
 Extensions-wiki page. What counts as that visual follows the audience: a **screenshot**, except on a
 `target=developer` page, where it is a **code example** — a Developer procedure has no UI to shoot,
 and asking it for screenshots is what leaves a correct page permanently reported as broken. Three
@@ -127,9 +132,9 @@ is the defect rather than the cure. Its last two checks are
 pages — and are why the whole set is linted rather than one page.
 
 `lint` reads the fields with `{{code}}`/`{{plantuml}}` bodies blanked, and that blanking has to drop
-**complete inline pairs from a line before deciding whether the line opens a block**: the house style
-writes an inline `{{code}}man{{/code}}` in most paragraphs, and a scanner testing the opening pattern
-first treats one as an opener that never closes, blanking the rest of the field from every check.
+**complete inline pairs from a line before deciding whether the line opens a block**: legacy pages
+write an inline `{{code}}` in most paragraphs, and a scanner testing the opening pattern first treats
+one as an opener that never closes, blanking the rest of the field from every check.
 
 **`save`** — writes attachments *before* content, so no revision is ever saved with a dangling image;
 then reads every field back, because **a `202` does not mean the write landed** (a property write
@@ -151,15 +156,16 @@ diagram needs a third pass: the macro renders **asynchronously**, so the first H
 until the macro output is inlined and then fetches the image itself, which is the only way a page
 published with a diagram that renders nothing does not pass every check.
 
-**`docplan.py`** — a conversion runs one task per session, so every session opens by re-deriving
+**`docplan.py`** — a conversion spans many sessions, so every fresh session opens by re-deriving
 where it is. Done by hand that is `PLAN.md` read in five or six `sed` chunks plus the task file,
 then two more reads to update a status cell — a dozen turns before any documentation is written,
-repeated for every task in the plan. `status` prints the current task's full brief, the setup
+repeated for every session of the plan. `status` prints the current task's full brief, the setup
 answers, the recent decisions and what comes next, in one call; `start` / `done` write the status
 back to `PLAN.md` **and** the task file, which is also the pair that otherwise drifts apart.
 `Decisions` and `Open questions` are trimmed to their most recent entries — a conversion accumulates
 tens of thousands of characters of them, and the recent ones are the ones a session would otherwise
-re-litigate.
+re-litigate. A session that chains on to the next task already holds all that, so `brief` prints the
+next task's brief alone.
 
 **`docshot.sh` / `checkredbox.py`** — the red box is drawn as an overlay appended to `<body>`, never
 as a CSS `outline`, which any ancestor with `overflow: hidden` clips into a three-sided box; the
@@ -176,10 +182,16 @@ you never have to open the PNG to find out.
 
 - The **form token is session-bound**. `xwikidoc.py` keeps a cookie jar for that reason; without one,
   object writes fail intermittently with `403 Invalid or missing form token.`
-- xwiki.org REST is behind Cloudflare: it answers `403` both to a request with **no** `User-Agent`
-  and to one carrying a **browser-like** UA. The tools send `curl/8.0`; see `okf/servers/index.md`.
+- The tools send `curl/8.0` as User-Agent, the one Cloudflare lets through (`okf/servers/index.md`).
 - Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
   the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
+- **A Change Request is created through the application's `/changerequest/` form endpoint — it has no
+  REST API** — and these tools do not do it. From a cookie
+  session (POST `j_username`, `j_password` and the login page's `form_token` to
+  `/bin/loginsubmit/XWiki/XWikiLogin`), POST the hidden fields of the
+  `/bin/edit/<Space>/<Page>?editor=wiki` form with the new `content`, `docReference=<wiki>:<Space>.<Page>`,
+  `crTitle` and `crDescription` (`crDraft=1` for a draft) to `/xwiki/changerequest/<wiki>/create`: the
+  302's `Location` is the Change Request.
 - A conversion also has to finish the **original** page — strip its prose, wire its "Documentation"
   button, delete its attachments, triage its backlinks. That is `okf/conventions/documentation-migration.md`
   and the `xwiki-doc-convert` skill; these tools do not do it for you.

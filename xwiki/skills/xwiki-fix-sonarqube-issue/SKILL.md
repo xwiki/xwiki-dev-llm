@@ -36,7 +36,9 @@ log call and silently changes what gets written into the job log.
 
 The cost here is almost entirely file reads while evaluating candidates. Rules:
 
-* **Discover cheaply before listing bodies.** First get the rule distribution without issue bodies:
+* **Discover cheaply before listing bodies.** First get the rule distribution without issue bodies
+  (the `issueStatuses=OPEN` filter is load-bearing — it is what hides the issues an open PR has
+  already claimed):
   `curl -s -u "$SONARQUBE_TOKEN:" "https://sonarcloud.io/api/issues/search?organization=xwiki&componentKeys=$SONARQUBE_PROJECT_KEY&issueStatuses=OPEN&severities=BLOCKER,CRITICAL&facets=rules&ps=1"`
   For an exact per-rule count read the response `total` from a `&rules=java:SXXXX&ps=1` query, not a
   facet value.
@@ -59,10 +61,11 @@ The cost here is almost entirely file reads while evaluating candidates. Rules:
 * **Always trim the JSON.** Some rules attach huge `flows`/`locations` arrays. Pipe every
   `issues/search` response through `jq`/`python3` and keep only `key,rule,component,line,message,effort`.
   Never dump a raw response into context.
-* **Skip issues that already have an open agent PR.** Fetch the list once, up front, with
-  `gh pr list --search "is:pr label:llm-agent is:open"`. Scope the off-limits check by **(rule +
-  module)**, not rule alone — a per-module PR only claims the files it touched. But a **same-file** open
-  PR is off-limits even for a different rule, because a concurrent edit risks a merge conflict.
+* **Skip issues that already have an open fix PR.** Fetch the list once, up front, with
+  `gh pr list --search "is:pr is:open in:title SonarQube OR SonarCloud"` (the title convention
+  below). Scope the off-limits check by **(rule + module)**, not rule alone — a per-module PR only
+  claims the files it touched. But a **same-file** open PR is off-limits even for a different rule,
+  because a concurrent edit risks a merge conflict.
 * **Ask what else the lines you are about to rewrite already carry.** One query per candidate file —
   `"…/issues/search?componentKeys=<the issue's full component>&resolved=false&ps=100"` — then compare
   with the lines your edit touches. A rewrite SonarCloud cannot match re-dates those findings into the
@@ -122,20 +125,20 @@ compiles, so the build will not catch it.
 
 * Never break backward compatibility.
 * Do **not** suppress or ignore an issue merely to clear it. If a fix is hard or would take more than
-  ~15 minutes, drop it and pick another. When an issue is a genuine **false positive**, the right
-  resolution is `@SuppressWarnings("java:SXXXX")` plus a `//` comment saying why — in the code, not
-  just *Accepted* in SonarCloud. The convention is in `okf/conventions/code-style.md`.
+  ~15 minutes, drop it and pick another — dropping leaves the issue **OPEN** for a later sweep, which
+  is not the same as retiring it. Retiring a finding (`@SuppressWarnings`, *False positive*,
+  *Accepted*) is the last resort and is the developer's call — see **Before retiring an issue** below.
 * Use Apache Commons helpers only when they genuinely reduce boilerplate.
 * **Verify the modified modules build with their tests running** — never `-DskipTests`, always
   `-Plegacy,quality`. See `okf/sonarqube/verification.md` and the **xwiki-build** skill.
 * One PR per rule family; the PR's commits must be relevant only to the issues it fixes.
 * Open the PR with `gh`. For commit/PR conventions use the **xwiki-pull-request** skill; SonarQube
-  fixes normally have no JIRA issue, so use `[Misc] <description>` and mention SonarQube in it:
+  fixes normally have no JIRA issue, so use `[Misc] <description>` with the word "SonarQube" in it:
   ```
   [Misc] <short description of the problem; mention SonarQube>
   * <optional detail bullets>
   ```
-* Add the `llm-agent` label to the PR.
+* Add the `llm-agent` label when running as the scheduled routine (rule in **xwiki-pull-request**).
 * Include a link to the SonarCloud issue in the PR description, and note any module you excluded from
   the change (and why) — see `okf/sonarqube/verification.md`.
 * **Security issues:** do not reveal what was fixed (commit logs are public and could expose a
@@ -153,16 +156,54 @@ Then **do not stop at closing it**. Ship the `@SuppressWarnings` + rationale ver
 and narrow the rule's entry in `okf/sonarqube/` to the code shape that provoked the objection — do
 not blanket-denylist a rule that is fine elsewhere.
 
+## Before retiring an issue: prevent it, do not silence it
+
+Calling a finding a false positive — or "real but not worth fixing" — is the cheapest thing you can
+do and the one that hides it forever. So before proposing it, work out what would make the rule stop
+firing **because the code no longer has the shape it objects to**, and put those options to the
+developer:
+
+* **Refactor the flagged code.** The shape Sonar objects to is often genuinely awkward (a nested
+  `try`, a boolean flag parameter, a field that only exists for a serialization contract). Changing
+  it clears this finding and every future one on the same shape.
+* **Introduce the missing API.** When the idiom exists only because no clean API expresses the
+  intent, the fix is that API: add the new method/component, deprecate the old one and move it to the
+  module's `-legacy` — the **xwiki-legacy** skill owns that move, **xwiki-knowledge** the `@since` /
+  `@Deprecated(since = …)` strings.
+* **Encapsulate the deliberate idiom once.** When the same justified pattern is flagged across many
+  sites, one helper — or one class-level suppression on the single class that owns the idiom —
+  beats N scattered suppressions.
+* **Defer the prevention** when it is real work beyond this sweep — the finding then stays **OPEN**:
+  a design change that is waiting to be made is not an accepted one. File a JIRA issue **only if the
+  work changes a public API** (or otherwise affects users or extension developers) — adding an API
+  and legacifying the old one always does. A pure refactoring needs no issue and ships as `[Misc]`.
+
+**Propose, do not decide.** Present the viable options with, for each, what it changes, roughly what
+it costs, and what it risks (backward compatibility, blast radius) — then let the developer choose,
+suppression included. Never apply a suppression or a SonarCloud transition on your own judgment.
+
+Retiring in the code is right when the developer picks it, and when the analyser is simply wrong
+about the code — it cannot see reflective dispatch, XStream serialization or a cross-module contract.
+Then the `//` comment says *why the analyser is wrong*, per `okf/conventions/code-style.md`, and the
+suppression goes in the code, not only in SonarCloud.
+
 ## Closing the issues
 
-**Never transition an issue the PR fixes.** SonarCloud closes it as FIXED on its own at the next
+**Accept the issues the PR fixes, as a claim on them.** Discovery filters on `issueStatuses=OPEN`,
+so an issue left open while a PR already handles it is picked up and fixed a second time by the next
+sweep. Accepting is what reserves it. SonarCloud still closes it as FIXED on its own at the next
 branch analysis after the merge — a `@SuppressWarnings` fix included, since the rule then stops
-raising it. *Accepted* means "won't fix": on a fixed issue it buys nothing, and hides a real defect
-from the quality gate if the PR never lands. Turning a red gate green before the merge is the
+raising it. Turning a red quality gate green before the merge is a separate question and is the
 developer's call — ask.
 
-Transition only a finding the code keeps as it is — `falsepositive` for one that is wrong,
-`accept` for one that is real but deliberately not worth fixing — with a comment saying why:
+**A claim is provisional: whatever the PR stops covering goes back to OPEN.** Reopen every issue it
+claimed when the PR is closed or abandoned, and exactly the dropped sites' issues when review or a
+quality-gate condition narrows it. A stale *Accepted* is worse than never having claimed: neither a
+later sweep nor a developer browsing open issues will ever see that finding again.
+
+Transition a finding the code keeps as it is with the same call — `falsepositive` for one that is
+wrong, `accept` for one that is real but deliberately not worth fixing — once the developer has
+chosen that over the prevention options above, and with a comment saying why:
 
 ```bash
 curl -s -u "$SONARQUBE_TOKEN:" -X POST "https://sonarcloud.io/api/issues/add_comment" \
@@ -171,7 +212,9 @@ curl -s -u "$SONARQUBE_TOKEN:" -X POST "https://sonarcloud.io/api/issues/do_tran
   --data-urlencode "issue=$ISSUE_KEY" --data-urlencode "transition=accept"
 ```
 
-(The `sonarqube` MCP server's `change_sonar_issue_status` is an alternative to the transition call.)
+Releasing a claim is the same call with `transition=reopen`. (The `sonarqube` MCP server's
+`change_sonar_issue_status` is an alternative to the transition call, with `status` `accept`,
+`falsepositive` or `reopen`.)
 
 For many issues: each one costs ~2 requests, so a 20+ issue loop will blow a short command timeout —
 run it in the background and make it idempotent by re-querying which keys are still OPEN.

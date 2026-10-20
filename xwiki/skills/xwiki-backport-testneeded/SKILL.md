@@ -47,7 +47,7 @@ Follow **xwiki-backport** end to end. Two testneeded-specific touches on top:
 ## `@since` on every branch (and master) — the test-specific layer
 
 The **generic `@since` adjustment** — add the target branch's line, keep the block identical on every
-branch (master/source included), decide the lines empirically and ascending, the durable format — is
+branch (master/source included), decide the lines empirically, the durable format — is
 **xwiki-backport §3.D**. Apply it. This section adds only what is specific to `testneeded` tests:
 
 Scope — what carries `@since` for a test backport (see `xwiki-knowledge` → versioning):

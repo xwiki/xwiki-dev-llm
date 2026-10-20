@@ -20,6 +20,9 @@
 //   node scripts/release.mjs --dry-run       # print the decision, touch nothing
 //   node scripts/release.mjs --push          # also push the commit and the tag
 //
+// With --push, a push rejected because the branch moved meanwhile is retried: the unpushed release is
+// dropped, the checkout reset to the remote tip and the whole decision made again (see rewind()).
+//
 // Exits 0 having done nothing when no shipping file changed since the last release, so it is safe to
 // run unattended on every push to master (see .github/workflows/release.yml).
 // Node built-ins only.
@@ -40,6 +43,10 @@ const git = (args, { allowFailure = false } = {}) => {
     throw new Error(`git ${args.join(" ")} failed: ${e.stderr || e.message}`);
   }
 };
+
+// stdout is asynchronous on a pipe (macOS): process.exit() right after a write cuts off whatever the
+// reader has not drained yet, so exit from the callback of a write queued behind it instead.
+const exitAfterOutput = code => new Promise(() => process.stdout.write("", () => process.exit(code)));
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -63,135 +70,185 @@ const targets = [
   { path: "opencode.jsonc", pattern: (v) => `// version: ${v}`, count: 1 },
 ];
 
-const currentVersion = JSON.parse(read(".claude-plugin/marketplace.json")).metadata?.version;
-if (!/^\d+\.\d+\.\d+$/.test(currentVersion ?? "")) {
-  console.error("release.mjs: cannot read a X.Y.Z version from .claude-plugin/marketplace.json " +
-    `(got ${currentVersion})`);
-  process.exit(1);
-}
-
-// ---- What has shipped already -----------------------------------------------------------------
-// The release tag is the marker. Before the first tagged release there is none, so fall back to the
-// commit that introduced the current version string — which is exactly the previous release commit.
-const tag = git(["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*"], { allowFailure: true });
-let base = tag;
-let baseLabel = tag && `tag ${tag}`;
-if (!base) {
-  const marketplace = ".claude-plugin/marketplace.json";
-  base = git(["log", "-1", "--format=%H", "-S", `"version": "${currentVersion}"`, "--", marketplace],
-    { allowFailure: true });
-  baseLabel = base && `commit ${base.slice(0, 8)} (introduced ${currentVersion}; no release tag yet)`;
-}
-if (!base) {
-  console.error("release.mjs: cannot determine the last release point (no vX.Y.Z tag, and no commit set the current " +
-    "version) - pass an explicit segment and tag this release by hand once to seed the marker");
-  process.exit(1);
-}
-
-const changed = (git(["diff", "--name-only", base, "HEAD"]) || "").split("\n").filter(Boolean);
-const shipping = changed.filter((f) => f.startsWith("xwiki/"));
-if (!shipping.length) {
-  console.log(`release.mjs: nothing to release - no file under xwiki/ changed since ${baseLabel}.`);
-  process.exit(0);
-}
-
-// ---- Which segment moves ----------------------------------------------------------------------
-// A capability inventory, compared between the last release and HEAD. Only membership matters: a
-// skill whose text was edited is a patch, a skill that appeared or disappeared is a minor.
-const showAt = (rev, path) => git(["show", `${rev}:${path}`], { allowFailure: true });
-const inventory = (rev) => {
-  const skills = (git(["ls-tree", "-r", "--name-only", rev, "--", "xwiki/skills/"]) || "")
-    .split("\n")
-    .filter((f) => f.endsWith("/SKILL.md"))
-    .map((f) => f.split("/")[2]);
-  const keys = (json, pick) => {
-    try {
-      return Object.keys(pick(JSON.parse(json)) ?? {});
-    } catch {
-      return [];
-    }
-  };
-  const mcp = showAt(rev, "xwiki/.mcp.json");
-  const hooks = showAt(rev, "xwiki/hooks/hooks.json");
-  const plugins = (git(["ls-tree", "-r", "--name-only", rev, "--", "xwiki/opencode/plugins/"]) || "")
-    .split("\n")
-    .filter(Boolean);
-  return {
-    skill: skills,
-    "MCP server": mcp ? keys(mcp, (o) => o.mcpServers) : [],
-    hook: hooks ? keys(hooks, (o) => o.hooks) : [],
-    "opencode plugin": plugins,
-  };
-};
-
-const before = inventory(base);
-const after = inventory("HEAD");
-const inventoryChanges = [];
-for (const kind of Object.keys(after)) {
-  const [was, now] = [new Set(before[kind]), new Set(after[kind])];
-  for (const name of now) if (!was.has(name)) inventoryChanges.push(`${kind} added: ${name}`);
-  for (const name of was) if (!now.has(name)) inventoryChanges.push(`${kind} removed: ${name}`);
-}
-
-// The escape hatch: a trailer in any commit message in the range. Commit messages are immutable
-// history, so two branches declaring a bump never collide the way two edited manifests do.
-const log = git(["log", "--format=%B%x00", `${base}..HEAD`]) || "";
-const declared = [...log.matchAll(/^\s*Release-Bump:\s*(major|minor|patch)\s*$/gim)].map((m) => m[1].toLowerCase());
-
-const rank = { patch: 0, minor: 1, major: 2 };
-const derived = inventoryChanges.length ? "minor" : "patch";
-const candidates = [derived, ...declared];
-const segment = forced ?? candidates.reduce((a, b) => (rank[b] > rank[a] ? b : a));
-
-const reasons = [];
-if (forced) reasons.push(`forced by --${forced}`);
-if (inventoryChanges.length) reasons.push(...inventoryChanges);
-else reasons.push("content edits only (no capability added or removed)");
-for (const d of declared) reasons.push(`declared by a Release-Bump: ${d} commit trailer`);
-
-const [major, minor, patch] = currentVersion.split(".").map(Number);
-const next = {
-  major: `${major + 1}.0.0`,
-  minor: `${major}.${minor + 1}.0`,
-  patch: `${major}.${minor}.${patch + 1}`,
-}[segment];
-
-console.log(`last release : ${baseLabel}`);
-console.log(`changed since: ${shipping.length} file(s) under xwiki/ (${changed.length} in total)`);
-console.log(`segment      : ${segment}`);
-for (const r of reasons) console.log(`               - ${r}`);
-console.log(`new version  : ${currentVersion} -> ${next}`);
-
-if (dryRun) {
-  console.log("release.mjs: --dry-run, nothing written.");
-  process.exit(0);
-}
-
-// ---- Write, commit, tag -----------------------------------------------------------------------
-for (const { path, pattern, count } of targets) {
-  const text = read(path);
-  const from = pattern(currentVersion);
-  const found = text.split(from).length - 1;
-  if (found !== count) {
-    console.error(`release.mjs: ${path}: expected ${count} occurrence(s) of '${from}', found ${found} - aborting ` +
-      "without writing anything (fix the manifest, or the version fields would drift apart)");
+// ---- One release attempt ----------------------------------------------------------------------
+// Decides from the current HEAD, writes, commits and tags, and returns the new version. A retried push
+// calls it again from scratch, because the new branch tip may already carry another run's release.
+const release = async () => {
+  const currentVersion = JSON.parse(read(".claude-plugin/marketplace.json")).metadata?.version;
+  if (!/^\d+\.\d+\.\d+$/.test(currentVersion ?? "")) {
+    console.error("release.mjs: cannot read a X.Y.Z version from .claude-plugin/marketplace.json " +
+      `(got ${currentVersion})`);
     process.exit(1);
   }
-  writeFileSync(join(repoRoot, path), text.split(from).join(pattern(next)));
-  console.log(`wrote ${path}`);
-}
 
-const message = [`[Misc] Release ${next}`, "", ...reasons.map((r) => `* ${r}`)].join("\n");
-git(["add", "--", ...targets.map((t) => t.path)]);
-git(["commit", "-m", message]);
-git(["tag", "-a", `v${next}`, "-m", `Release ${next}`]);
-console.log(`committed and tagged v${next}`);
+  // ---- What has shipped already -----------------------------------------------------------------
+  // The release tag is the marker. Before the first tagged release there is none, so fall back to the
+  // commit that introduced the current version string — which is exactly the previous release commit.
+  const tag = git(["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*"], { allowFailure: true });
+  let base = tag;
+  let baseLabel = tag && `tag ${tag}`;
+  if (!base) {
+    const marketplace = ".claude-plugin/marketplace.json";
+    base = git(["log", "-1", "--format=%H", "-S", `"version": "${currentVersion}"`, "--", marketplace],
+      { allowFailure: true });
+    baseLabel = base && `commit ${base.slice(0, 8)} (introduced ${currentVersion}; no release tag yet)`;
+  }
+  if (!base) {
+    console.error("release.mjs: cannot determine the last release point (no vX.Y.Z tag, and no commit set the current " +
+      "version) - pass an explicit segment and tag this release by hand once to seed the marker");
+    process.exit(1);
+  }
 
-if (push) {
-  const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
-  git(["push", "origin", `HEAD:${branch}`]);
-  git(["push", "origin", `v${next}`]);
-  console.log(`pushed ${branch} and v${next} to origin`);
-} else {
-  console.log(`run 'git push origin HEAD && git push origin v${next}' to publish it`);
+  const changed = (git(["diff", "--name-only", base, "HEAD"]) || "").split("\n").filter(Boolean);
+  const shipping = changed.filter((f) => f.startsWith("xwiki/"));
+  if (!shipping.length) {
+    console.log(`release.mjs: nothing to release - no file under xwiki/ changed since ${baseLabel}.`);
+    await exitAfterOutput(0);
+  }
+
+  // ---- Which segment moves ----------------------------------------------------------------------
+  // A capability inventory, compared between the last release and HEAD. Only membership matters: a
+  // skill whose text was edited is a patch, a skill that appeared or disappeared is a minor.
+  const showAt = (rev, path) => git(["show", `${rev}:${path}`], { allowFailure: true });
+  const inventory = (rev) => {
+    const skills = (git(["ls-tree", "-r", "--name-only", rev, "--", "xwiki/skills/"]) || "")
+      .split("\n")
+      .filter((f) => f.endsWith("/SKILL.md"))
+      .map((f) => f.split("/")[2]);
+    const keys = (json, pick) => {
+      try {
+        return Object.keys(pick(JSON.parse(json)) ?? {});
+      } catch {
+        return [];
+      }
+    };
+    const mcp = showAt(rev, "xwiki/.mcp.json");
+    const hooks = showAt(rev, "xwiki/hooks/hooks.json");
+    const plugins = (git(["ls-tree", "-r", "--name-only", rev, "--", "xwiki/opencode/plugins/"]) || "")
+      .split("\n")
+      .filter(Boolean);
+    return {
+      skill: skills,
+      "MCP server": mcp ? keys(mcp, (o) => o.mcpServers) : [],
+      hook: hooks ? keys(hooks, (o) => o.hooks) : [],
+      "opencode plugin": plugins,
+    };
+  };
+
+  const before = inventory(base);
+  const after = inventory("HEAD");
+  const inventoryChanges = [];
+  for (const kind of Object.keys(after)) {
+    const [was, now] = [new Set(before[kind]), new Set(after[kind])];
+    for (const name of now) if (!was.has(name)) inventoryChanges.push(`${kind} added: ${name}`);
+    for (const name of was) if (!now.has(name)) inventoryChanges.push(`${kind} removed: ${name}`);
+  }
+
+  // The escape hatch: a trailer in any commit message in the range. Commit messages are immutable
+  // history, so two branches declaring a bump never collide the way two edited manifests do.
+  const log = git(["log", "--format=%B%x00", `${base}..HEAD`]) || "";
+  const declared = [...log.matchAll(/^\s*Release-Bump:\s*(major|minor|patch)\s*$/gim)].map((m) => m[1].toLowerCase());
+
+  const rank = { patch: 0, minor: 1, major: 2 };
+  const derived = inventoryChanges.length ? "minor" : "patch";
+  const candidates = [derived, ...declared];
+  const segment = forced ?? candidates.reduce((a, b) => (rank[b] > rank[a] ? b : a));
+
+  const reasons = [];
+  if (forced) reasons.push(`forced by --${forced}`);
+  if (inventoryChanges.length) reasons.push(...inventoryChanges);
+  else reasons.push("content edits only (no capability added or removed)");
+  for (const d of declared) reasons.push(`declared by a Release-Bump: ${d} commit trailer`);
+
+  const [major, minor, patch] = currentVersion.split(".").map(Number);
+  const next = {
+    major: `${major + 1}.0.0`,
+    minor: `${major}.${minor + 1}.0`,
+    patch: `${major}.${minor}.${patch + 1}`,
+  }[segment];
+
+  console.log(`last release : ${baseLabel}`);
+  console.log(`changed since: ${shipping.length} file(s) under xwiki/ (${changed.length} in total)`);
+  console.log(`segment      : ${segment}`);
+  for (const r of reasons) console.log(`               - ${r}`);
+  console.log(`new version  : ${currentVersion} -> ${next}`);
+
+  if (dryRun) {
+    console.log("release.mjs: --dry-run, nothing written.");
+    await exitAfterOutput(0);
+  }
+
+  // ---- Write, commit, tag -----------------------------------------------------------------------
+  for (const { path, pattern, count } of targets) {
+    const text = read(path);
+    const from = pattern(currentVersion);
+    const found = text.split(from).length - 1;
+    if (found !== count) {
+      console.error(`release.mjs: ${path}: expected ${count} occurrence(s) of '${from}', found ${found} - aborting ` +
+        "without writing anything (fix the manifest, or the version fields would drift apart)");
+      await exitAfterOutput(1);
+    }
+    writeFileSync(join(repoRoot, path), text.split(from).join(pattern(next)));
+    console.log(`wrote ${path}`);
+  }
+
+  const message = [`[Misc] Release ${next}`, "", ...reasons.map((r) => `* ${r}`)].join("\n");
+  git(["add", "--", ...targets.map((t) => t.path)]);
+  git(["commit", "-m", message]);
+  git(["tag", "-a", `v${next}`, "-m", `Release ${next}`]);
+  console.log(`committed and tagged v${next}`);
+  return next;
+};
+
+// ---- Push -------------------------------------------------------------------------------------
+// Branch and tag go in one atomic push, so a tag never lands without its commit. Returns false when
+// the branch moved on the remote since the checkout (several merges landing within seconds): either
+// before the push started (non-fast-forward) or while it ran (the server's ref lock saw a newer
+// value). Any other failure throws.
+const pushRelease = (branch, version) => {
+  try {
+    execFileSync("git", ["push", "--atomic", "origin", `HEAD:${branch}`, `v${version}`],
+      { cwd: repoRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return true;
+  } catch (e) {
+    if (/\(fetch first\)|non-fast-forward|cannot lock ref|incorrect old value/.test(e.stderr ?? "")) return false;
+    throw new Error(`git push failed: ${e.stderr || e.message}`);
+  }
+};
+
+// Drops the unpushed release and moves to the remote tip, so the next attempt decides again. This
+// discards local state, which is harmless on CI's fresh checkout; anywhere else it refuses unless the
+// release commit is the only local commit and the tree is clean, so nobody's own work is lost.
+const rewind = async (branch, version) => {
+  const ahead = git(["rev-list", "--count", `refs/remotes/origin/${branch}..HEAD^`], { allowFailure: true });
+  const dirty = git(["status", "--porcelain", "--untracked-files=no"]);
+  if (ahead !== "0" || dirty) {
+    console.error(`release.mjs: origin/${branch} moved, but HEAD carries local commits or changes besides the ` +
+      `release commit - not resetting; v${version} is committed and tagged locally only. Drop it ` +
+      `('git tag -d v${version} && git reset --hard HEAD^'), rebase onto origin/${branch} and run again`);
+    await exitAfterOutput(1);
+  }
+  git(["tag", "-d", `v${version}`]);
+  git(["fetch", "origin", branch, "--tags"]);
+  git(["reset", "--hard", `origin/${branch}`]);
+};
+
+const maxAttempts = 3;
+const branch = push && git(["rev-parse", "--abbrev-ref", "HEAD"]);
+for (let attempt = 1; ; attempt++) {
+  const next = await release();
+  if (!push) {
+    console.log(`run 'git push origin HEAD && git push origin v${next}' to publish it`);
+    break;
+  }
+  if (pushRelease(branch, next)) {
+    console.log(`pushed ${branch} and v${next} to origin`);
+    break;
+  }
+  if (attempt === maxAttempts) {
+    console.error(`release.mjs: origin/${branch} kept moving - push rejected ${maxAttempts} times, giving up`);
+    await exitAfterOutput(1);
+  }
+  console.log(`origin/${branch} moved since the checkout - rewinding to it and deciding again`);
+  await rewind(branch, next);
 }

@@ -13,7 +13,8 @@ keep it on the commands below and on any new `mvn` command you run.
 
 **Always start with `clean`** (`mvn clean <goal>`). XWiki builds leave generated artifacts and
 per-module state behind, and stale `target/` (and locally-installed SNAPSHOTs) cause confusing,
-hard-to-diagnose failures.
+hard-to-diagnose failures — including a jar from the Develocity build cache that lacks your edit,
+installed under `BUILD SUCCESS`.
 
 ## Build with the JDK the branch targets — `xmvn`
 
@@ -72,6 +73,25 @@ here unless you explicitly want to bypass those checks. It does **not**, however
 test-coverage check — add `-Pquality` for that (see Notes); do so whenever the change touches
 production code.
 
+## JavaScript: the pnpm workspace
+
+The front-end packages of xwiki-platform are an **Nx monorepo over a pnpm workspace**, and their
+sources live *inside* the core modules that ship them — `xwiki-platform-livedata`,
+`xwiki-platform-ckeditor`, `xwiki-platform-blocknote`. So a Maven build of one of those modules
+builds its JavaScript too, and a JavaScript-only change can be iterated far faster outside Maven:
+
+```bash
+pnpm install                                # from the repo root, once
+pnpm run build                              # every package
+pnpm --filter @xwiki/blocknote run build     # one package
+```
+
+Use `pnpm`, not `npm`: the workspace is defined by a pnpm lockfile, and `npm install` in it produces
+a different tree that then fails in ways the lockfile was there to prevent. The Maven build remains
+the oracle — a change that passes `pnpm run build` still has to pass its module's `mvn` build, which
+is what runs the linters and packages the WebJar. Front-end *conventions* (AMD modules, WebJars,
+skin extensions, accessibility) are `okf/conventions/frontend.md`, not this skill.
+
 ## Validate **every** module the change touched
 
 A change that spans many modules (a cross-cutting sweep, a refactoring) is only verified for the
@@ -86,10 +106,10 @@ mvn clean install -B -ntp -Plegacy,quality -fae -pl <comma-separated module path
 list mechanically from the diff (`git show --name-only`, then walk up to the nearest `pom.xml`) —
 not from memory of what you edited.
 
-Two ways `-pl` rejects a path with *"Could not find the selected project in the reactor"* even when
-the path is correct: the module is only activated by a profile (`*-test-docker` modules need
-`-Pdocker,integration-tests`), or it is not in the root reactor at all (`xwiki-platform-distribution/**`
-builds from its own `pom.xml`). Add the profiles, or build that module from its own tree.
+`-pl` rejects a path with *"Could not find the selected project in the reactor"* even when the path
+is correct when the module is only activated by a profile: `*-test-docker` modules need
+`-Pdocker,integration-tests`, and `xwiki-platform-distribution/**` needs `-Pdistribution`. Add the
+profiles, or build that module from its own `pom.xml`.
 
 ## Checkstyle alone — `mvn checkstyle:check` is NOT the check CI runs
 
@@ -145,6 +165,9 @@ mvn test -B -ntp -pl <module-path> -Dtest=MyTestClass#myMethod
 
 # Integration tests
 mvn verify -B -ntp -pl <module-path> -Pintegration-tests
+
+# Methods of a Docker test nested in AllIT (quote the $; + joins methods)
+mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests -Dit.test='AllIT$NestedXxxIT#m1+m2'
 ```
 
 ### Docker ITs
@@ -163,6 +186,11 @@ lsof -nP -iTCP:8080 -sTCP:LISTEN                           # who owns the standa
 ps -Ao command | grep "[i]ntegration-tests,docker"         # other agents' runs
 docker ps --format '{{.Names}}\t{{.Image}}\t{{.Status}}'   # what the daemon already carries
 ```
+
+Testcontainers leftovers — browser containers and networks of finished runs — mean ryuk could not
+remove them, and once the networks exhaust the daemon's address pools every run dies in `beforeAll`.
+`xwiki-it-slot.mjs --status` counts them, and the wrapper runs testcontainers with a ryuk the daemon
+accepts; the cause, the per-machine fix and the cleanup are in `running-docker-its.md`.
 
 **2. Never stop an XWiki instance you did not start.** `@UITest` defaults to `JETTY_STANDALONE`,
 which runs XWiki on the **host** and binds 8080/8079. When something already listens there, the
@@ -203,6 +231,25 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" --status   # who is holdi
 Two runs at a time by default (`--max N`, or `XWIKI_LLM_IT_SLOTS`). Exit code **75** means no slot
 came free within `--wait` (3600s default) — report which run holds it rather than launching anyway.
 
+`-Dxwiki.test.ui.keepRunning=true` leaves the wiki up after the tests and blocks Maven until
+`stop.txt` exists in the module directory (the log says so after `Access XWiki at:`) — never
+background it without planning to create that file. Create it **empty** (`touch stop.txt`): the
+framework then deletes it, so its absence afterwards means the stop worked. A non-empty file is kept
+(with a warning), fails the class on the "files outside `target/`" check, and stops the next
+`keepRunning` run at once.
+
+**To run one test many times** — measuring a flicker's pass *rate* rather than seeing whether it
+passed once — use `scripts/xwiki-it-repeat.mjs` instead of looping by hand. It takes the slot for
+the whole session, keeps each failing repetition's report, screenshot and video, excludes the runs
+that died in `beforeAll` from the rate, and writes a `report.json` and a pasteable `summary.md`:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-repeat.mjs" --module <module-path> \
+  --test TestClass#testMethod --runs 20 --browser chrome --label before
+```
+
+The `xwiki-fix-flickering-docker-test` skill owns when and how to use it.
+
 **5. A failure in `beforeAll` is never evidence about your change.**
 `RuntimeException: Error setting up the XWiki testing environment` means no test method ran. Repair
 the machine and re-run; the symptom table in the OKF topic says which cause each line points at.
@@ -218,14 +265,15 @@ definitions.
 | `legacy`            | Includes backward-compatibility (`-legacy`) modules; almost always needed |
 | `integration-tests` | Activates integration-test (`*IT.java`) execution via Failsafe       |
 | `docker`            | Runs the Docker-based integration tests (requires Docker installed); used together with `integration-tests` |
-| `quality`           | Checkstyle + Revapi + Enforcer checks, **plus the JaCoCo coverage check** (see Notes) |
+| `quality`           | **The JaCoCo coverage check** and Javadoc generation (see Notes); Checkstyle, Revapi and the Enforcer already run without it |
 
 ## Notes
 
 - The `legacy` profile activates backward-compatibility shim modules and is almost always required.
 - Skip flags worth knowing: `-Dxwiki.checkstyle.skip=true` (Checkstyle),
   `-Dxwiki.revapi.skip=true` (API compat), `-Dxwiki.surefire.captureconsole.skip=true`
-  (stdout capture check).
+  (stdout capture check), `-Dxwiki.jacoco.skip=true` (JaCoCo — not `-Djacoco.skip`, which the
+  parent POM overrides).
 - Checkstyle and Revapi run in the `verify` phase (not `test`), so `mvn test` won't catch them —
   use `mvn clean verify` or `install` to validate.
 - **The JaCoCo test-coverage check runs ONLY under `-Pquality`.** The `jacoco:check` goal that
@@ -237,6 +285,8 @@ definitions.
   `xwiki-increase-test-coverage` skill), there is almost no slack: removing or simplifying code —
   including a mechanical SonarQube fix — can shift the covered/total instruction ratio and fail the
   check. This failure is invisible without `-Pquality` and only surfaces in CI (which builds with it).
+  Running a subset of a module's tests (`-Dtest`, `-Dit.test`) under `-Pquality` fails this check
+  even when they pass; add `-Dxwiki.jacoco.skip=true`.
 
 ## Reading a multi-module reactor result
 

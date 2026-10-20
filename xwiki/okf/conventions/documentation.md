@@ -12,10 +12,9 @@ summary: The rules for xwiki.org documentation — Diataxis page types & audienc
   one page (granularity, keeping verbosity low, a hub page routing rather than narrating, how
   duplication is actually detected & why the surviving copy of shared content wants a visible page rather
   than a hidden `{{display}}` fragment), the page-structure xobject fields (Highlights/More/Related and their exact
-  semantics), documentation style (incl. never hard-wrapping prose — on xwiki.org pages and forum
-  posts alike — and not overusing the em dash), attachment/image/video rules (incl. webm + the
-  `{{embed}}` macro, what `caption` is and is *not* for, and drawing the red box as an overlay so no
-  ancestor clips it),
+  semantics), documentation style (incl. never hard-wrapping prose and not overusing the em dash),
+  attachment/image/video rules (incl. webm + the `{{embed}}` macro, what `caption` is and is *not*
+  for, and drawing the red box as an overlay so no ancestor clips it),
   page location — settled with the developer up front, as concrete alternatives — version-perspective
   and `{{version}}` rules, the XWiki syntax traps that silently
   mis-render (incl. linking a farm subwiki by URL instead of `doc:<wiki>:<ref>`, the nine cases where an
@@ -31,8 +30,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/CreateNewDocumentation/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/LandingPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle/
-  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HighlightsPage/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationNavigationPanel/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HorizontalMenu/
@@ -98,18 +98,20 @@ the type-grouped landing pages.
 | Reference | **Does not** start with a verb; indicates the topic is covered extensively — "All Wiki Pages" |
 | Explanation | **Does not** start with a verb; a phrase naming the subject, answering "why" — "Conflict Resolution" |
 
+An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title; the accepted
+words are listed on [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/).
+
 **Titles use English title case** — capitalise the significant words, not just the first:
-*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. This rule is **not currently
-stated** on the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/)
-page even though existing pages follow it, so it is worth adding upstream.
+*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. Per the guide's
+[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
+page, which also lets a title be **more explicit than its page name** where readability requires it.
 
 **Titles and page names must not contain the page type** — no "How to", "Explanation", "Reference",
 "Tutorial", etc. These are **reserved terms**: the type is already conveyed by the content, the
 structure and the badge, so repeating it is redundant. Nor may they repeat the **audience**: a topic
 page is titled just "AntiSpam" under `…admin.` *and* under `…dev.` — never "AntiSpam for Developers" —
 since the path and the badge already carry it. Per the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageTitlesNames/)
+[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
 page.
 
 **Disambiguation is a parenthetical in the title, and is not added to the page name** — e.g. "All the
@@ -124,8 +126,11 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
 - **Remove stop words** manually ("a", "the", "on", "when", "while"…) until xwiki.org is on XWiki
   18.1.0+ (which does it automatically).
 - Follow the title as closely as possible while respecting the rules above.
-- **No repetition between parent and child paths** — rely on the parent for context
-  (`../wiki-editor-toolbar/support`, not `../wiki-editor-toolbar/wiki-editor-toolbar-support`).
+- **No repetition between parent and child paths** — the same word **or a variation of it** — rely on
+  the parent for context (`../wiki-editor-toolbar/support`, not `../wiki-editor-toolbar/wiki-editor-toolbar-support`).
+  This holds even when the parent names the object of the child's action: `tags/add-page`, not
+  `tags/add-tag-page`. The title, which may be more explicit than the page name, carries the full
+  wording ("Add a Tag to a Page"), so the page stays understandable out of context.
 
 ## Content rules per type
 
@@ -301,7 +306,7 @@ The fields:
 
 - **Content** — the main content for the page type. Additional headings go under it as level-2 (or
   lower) headings.
-- **FAQ** — level-2 headings phrased as **questions** a user/admin/developer might have, with answers
+- **FAQ** — **optional**; level-2 headings phrased as **questions** a user/admin/developer might have, with answers
   limited to **1–2 sentences**. If a longer answer is needed, create a dedicated Explanation page.
   **At most 5 entries, and at most 25 lines of FAQ content**: beyond either limit the `faqEntryCount`
   documentation check reports a **warning**, and the surplus must become a separate troubleshooting
@@ -323,16 +328,22 @@ The fields:
 
   Highlights are **recommended once a page has more than 15 child pages**, with a **maximum of 6**
   highlights — on documentation pages and landing pages alike. "Child pages", "rows of the automatic
-  *More* table" and the guide's former "pages in the LiveTable" all mean the same set. **No automatic
-  documentation check enforces any of this** (the checks cover FAQ size, images, videos, attachments,
-  page names/titles, syntax and verbs — never Highlights), so it is a convention reviewers uphold, not
-  a gate. Source of truth:
+  *More* table" and the guide's former "pages in the LiveTable" all mean the same set. The `highlights`
+  check enforces the threshold (counting only child *documentation* pages), the maximum and the syntax,
+  but never sees landing pages, which carry no `DocumentationClass`. Source of truth:
   [Highlights on a Page](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HighlightsPage/).
 - **More** — **automatic**; a filterable livedata table of the page's **child** pages plus a search
   box. Nothing to fill. Highlights are displayed inside this section.
 - **Related links** — links to pages with related content that are **NOT children** of this page. A
-  child belongs in **Highlights**, never here. Two further rules:
+  child belongs in **Highlights**, never here. Further rules:
   - **A `related` field must never link to its own page.**
+  - **A leaf page has no Related requirement** (the guide is silent): a reviewer flags an obvious
+    missing link to a non-child page on the same subject, as advice, not as a violation.
+  - **A top-level page** (directly under an audience page) **must link to its same-topic counterparts for
+    the other audiences**, when they exist — the `topLevelRelatedLinks` check matches them by page name,
+    within the same section.
+  - **Labels are `<exact page title> (for <target>)`**, `<target>` being **plural**: Users, Administrators or
+    Developers. A linked title already ending with its qualifier is the whole label.
   - **After a restructure, re-check it.** Moving a page *in* under a hub turns it into a child, which
     silently puts it in breach of the not-children rule inside that hub's `related` — the link still
     resolves, so no broken-reference sweep can detect it. The check a restructure needs is not only
@@ -347,6 +358,9 @@ The fields:
 
   The prefix is what makes the badge at the bottom of the page resolve to the Extensions wiki, so an
   unprefixed id renders no badge. Empty when no extension applies (e.g. installation pages).
+  An **empty `id` on the extension page is completed there** (`<groupId>:<artifactId>`), and an
+  extension with no page on the Extensions wiki is imported first, per
+  [Link the Documentation Page to its Extension](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/).
   **Older pages carrying an unprefixed id are the non-conformant ones** — do not "fix" a prefixed id
   to match them. The generic
   [Apply Diataxis](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis/) page does
@@ -375,6 +389,8 @@ Use the guide for the authoring rules, and that page for what each structure fie
   and each entry gets a Diataxis **Explanation** page, located in the place in the documentation
   hierarchy where that explanation makes sense. Same source page, "Glossary" section.
 - **Literals / computer terms** — use the `##monospace##` notation — e.g. `the ##age## xproperty`.
+  **Never an inline `{{code}}age{{/code}}`**: the checker reports each one as a code macro without
+  `language`. Inline code is only the workaround for `--` and URLs (see the rendering traps below).
 - **Linking** — do **not** hardcode xwiki.org URLs; use XWiki **link reference syntax** (copy the
   page reference from its Information tab). Use the relative reference for same-wiki links and the
   global reference for cross-wiki links. To link to a file on GitHub, use the `{{scm}}` macro so SCM
@@ -383,16 +399,18 @@ Use the guide for the authoring rules, and that page for what each structure fie
   can never use it), and it has **no `anchor` parameter** (so it cannot link to a section of a README).
   Signature (from [Macros.SCM](https://www.xwiki.org/xwiki/bin/view/Macros/SCM)): `user` (default
   `xwiki`), `project` (default `xwiki-platform`), `branch` (default `master`), `path`, `raw`.
+- **JIRA issues** — link a JIRA issue only to point at a **bug or limitation that is not fixed yet**
+  (the reader's workaround or the place to follow it), and re-check its status before linking. Never
+  link the issue that introduced a feature or fixed a bug: the page describes the current behavior,
+  and an issue number there is history the reader has no use for — its fix version, where it matters,
+  is a `{{version}}` badge instead. A link to a JQL query of *unresolved* issues is fine; so is the
+  project's issue tracker in Related links. When the issue gets fixed, the link and the sentence it
+  supports are updated or removed.
 - **Macros** — use the **code macro with an explicit `language` parameter** for code snippets
   (omitting it is slower and mis-colors). Use the **display macro** to avoid duplicated content: put
   repeated text/steps/images on a single hidden page and display it where needed.
-- **Never hard-wrap prose** — write each paragraph (and each list item) as a **single unbroken line**,
-  however long. This holds for xwiki.org page content *and* for forum.xwiki.org (Discourse) posts:
-  both reflow prose themselves, so manual line breaks inside a paragraph gain nothing and actively
-  hurt — they are painful to re-wrap in the web editor and can leak into the rendered output. The
-  **120-character limit is a Java-source rule** ([[code-style]]), enforced by Checkstyle; applying it
-  to prose bound for a web editor is a category error. Only fenced/`{{code}}` blocks keep their own
-  line structure, since there the code's formatting rules apply.
+- **Never hard-wrap prose** — each paragraph and list item is one line; only `{{code}}` blocks keep
+  their line structure.
 - **Do not overuse the em dash (`—`)** — it is not a substitute for a comma, a period, a colon or
   parentheses. Use the mark the sentence actually needs; keep the em dash for a sharp interruption or
   a genuine aside. **Exception:** inside a direct quote, punctuation stays exactly as the quoted
@@ -579,7 +597,9 @@ page splits edits in two, and the split decides whether a Change Request is the 
   typing errors, broken links, small rephrasings for clarity, and other low-impact fixes that change
   neither structure nor meaning. Tick **"minor"** so the page's followers are not notified, write a
   short version summary ("fixed typo", "fix broken link"), and use **Preview** before saving. Opening
-  a Change Request for a typo is the noise this rule exists to prevent.
+  a Change Request for a typo is the noise this rule exists to prevent. Over REST, "minor" is
+  `?minorRevision=true` on **every** write, an xobject property (FAQ, Related) included
+  (`xwikidoc.py`: `minor=True`); an xobject write cannot carry the summary (XWIKI-25300).
 - **Major changes — save via a Change Request.** New documentation, refactoring a page to the guide,
   restructuring navigation, moving content between locations, and bulk edits across many pages. When
   a page already has an open Change Request covering related work, add to **that** one rather than

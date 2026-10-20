@@ -14,9 +14,6 @@ verify: |
 
 # Security severity & disclosure process
 
-The Security Policy page is the source of truth. This file captures the durable shape of the process
-plus the one rule that must never be broken when committing.
-
 ## Do not disclose a vulnerability publicly until it is disclosed (durable rule)
 
 XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is officially disclosed:
@@ -28,6 +25,12 @@ XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is 
   security group), not as a public ticket. Security discussion happens on the
   committer-private/security mailing list (see [[index]] in `servers/`).
 - Code comments must never carry a live exploit description either — see [[code-comments]].
+- The **published advisory** carries no PoC either (no exploit request, payload or reproduction
+  steps — only the affected feature, attack vector, requirements and impact), even after
+  disclosure: scanners import advisories and replay their PoCs. The PoC stays in the JIRA issue.
+  The Security Policy's "Security Advisory template and information" section has required this
+  since October 2026. It changes past practice (older advisories often have one), so past
+  advisories are no model for it. Drafting details: the `xwiki-security-advisory` skill.
 
 This is why a security fix's public commit looks deliberately mundane.
 
@@ -56,9 +59,7 @@ XWiki **fixes several metric values by policy**, and they do not match a calcula
 generic CVSS instinct. So never score from memory: read
 [Best practices for computing CVSS](https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/#HBestpracticesforcomputingCVSS)
 first and take **every** metric from it, then compute with a CVSS 4 calculator. What follows is only
-which metrics are constrained and where the traps are — never a substitute for that read. The
-per-metric values themselves are not cached here, nor in the `xwiki-security-advisory` skill's
-Step 2, which reads the same section live.
+which metrics are constrained and where the traps are — never a substitute for that read.
 
 - **Attack Vector** is fixed by policy for every XWiki vulnerability — take it from the source
   rather than reasoning about the exploit path.
@@ -69,14 +70,43 @@ Step 2, which reads the same section live.
 - Some **vulnerability classes fix their impact metrics outright** (XSS and SSRF both do), on the
   subsequent system as well as the vulnerable one. The trap: asserting high *subsequent* impact
   claims the finding is code execution rather than XSS, so it has to be established, never assumed.
-- A **right required to exploit** can cap the impacts (Script right does). The trap: the caveat is
-  about the right the attack *needs*, not the right it *yields* — escalating from a right that is
-  already powerful is not scored as critical.
+- A **right required to exploit** can cap the impacts (Script right does): escalating from a right
+  that is already powerful is not scored as critical. The trap: a right the attack *yields* never
+  caps.
+- Score the impacts from what the attacker **can achieve**, never from what the PoC printed: a
+  Guest gaining script execution is scored by what that execution reaches, not lowered for lacking
+  programming right, and a probe proving that code runs says nothing about its reach. An unassessed
+  impact is an open question to raise, not a default *Low*.
 - **Attack Complexity**, **Attack Requirements** and **User Interaction** have no XWiki best practice
   — use the official CVSS definitions. Merely *viewing* a page is **passive** interaction, not none.
+- The trap with **Attack Complexity**: it describes a protection the attacker must defeat (e.g. a
+  secret to guess), never the fact that the attacker holds a privilege — Privileges Required
+  already encodes that, and counting it twice understates the finding.
+- The trap with **Attack Requirements**: before setting it to *Present* because of the wiki's access
+  setup, check the usual setups — public wiki, Guest view denied in the global rights, and "Prevent
+  unregistered users from viewing pages". They differ, since some bundled pages carry their own
+  rights for Guest.
 - **Critical** vs **Major** is split by the CVSS score (Critical at the higher band); a committer may
   raise to Critical below the threshold for high system impact or another strong argument, and an
   actively-exploited issue may be classed **Blocker**.
+
+The JIRA issue records the result in **"CVSS Vector"** (`customfield_11870`) and **"CVSS Score"**
+(`customfield_11871`, a **number** — `8.7`, not `"8.7"` or `8.7 High` — the one the vector computes
+to), updated with `PUT /rest/api/2/issue/<KEY>` and `{"fields": {"customfield_11870": "CVSS:4.0/…",
+"customfield_11871": 8.7}}`. The ids are instance-specific: if one is rejected, find it with `GET
+/rest/api/2/field`.
+
+## JIRA security labels
+
+`security`, plus one `attacker_*` label (what the attacker needs) and one or more `attack_*` (what
+they achieve), per the policy's "Types of attackers/attacks":
+
+- `attacker_guest` no login; `attacker_account` logged in; `attacker_view` view right on the target;
+  `attacker_comment` logged in with comment right; `attacker_edit` edit right; `attacker_script`
+  script right; `attacker_socialeng` physical access to the device.
+- `attack_stability` (DoS), `attack_escalation` (permanently gaining rights), `attack_login` (logging
+  in as another user), `attack_xss` (any code injection), `attack_impersonation` (acting with another
+  user's rights), `attack_dataleak` (reading what should not be viewable), `attack_spam`.
 
 ## Related
 

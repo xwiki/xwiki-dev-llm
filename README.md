@@ -14,6 +14,13 @@ The Claude marketplace manifest lives at the repo root (`.claude-plugin/marketpl
 Kimi plugin manifest lives at `kimi.plugin.json`, the opencode config lives at `opencode.jsonc`,
 and the shared plugin content lives under [`xwiki/`](xwiki).
 
+- [Install](#install) — [Claude Code](#claude-code) · [Kimi Code](#kimi-code) · [opencode](#opencode)
+- [What you get](#what-you-get) — [Always on](#always-on--no-invocation) · [Skills](#when-you-ask--skills) · [What the skills use](#what-the-skills-use)
+- [Setup](#setup) — credentials and environment variables
+- [Validate](#validate) — what to run after a change
+- [Versioning and releases](#versioning-and-releases)
+- [Contributing](#contributing)
+
 ## Install
 
 ### Claude Code
@@ -75,11 +82,12 @@ ln -s "$XWIKI_LLM_HOME/xwiki/skills" ~/.config/opencode/skills
 - *Per project.* Copy `opencode.jsonc` to `opencode.json` in an XWiki repo (it needs no editing —
   it reads `XWIKI_LLM_HOME`). This scopes the config to that repo only.
 
-**Line-ending guard (optional).** Symlink the plugin into an opencode plugin directory:
+**Guard plugins (optional).** Symlink them into an opencode plugin directory:
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/opencode/plugins/xwiki-line-endings.js
+ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/opencode/plugins/xwiki-commit-text.js
 ```
 
 > **Note — no git-remote scoping in opencode.** In Claude Code the org conventions are injected only
@@ -88,279 +96,120 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/o
 > equivalent hook, so with the *global* config the conventions load in every repo. Use the
 > *per-project* config if you need them scoped to XWiki repos only.
 
-## What the `xwiki` plugin provides
+## What you get
 
-- **Org-wide conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all
-  repos". In Claude Code and Kimi Code it is injected into every session by a `SessionStart` hook
-  (`xwiki/scripts/inject-org-instructions.mjs`), **scoped by git remote** so it only applies inside
-  `xwiki/*` and `xwiki-contrib/*` repos (never in personal projects) — plus any other GitHub org you
-  name in `XWIKI_LLM_ORGS`, for a company or fork following the same conventions. The hook is written in Node
-  (which ships with Claude Code), so it works on Windows, macOS and Linux without a bash or `jq`
-  dependency. In opencode it is loaded via the `instructions` config entry (not remote-scoped — see
-  the opencode install note above).
-- **A single work directory** — every file a task needs but the repo must not hold (plan and
-  handoff files, extracted source, drafts, notes, screenshots) goes under one root instead of being
-  scattered over the repo, the system temp directory and your home directory. That root sits in
-  your platform's state directory, overridable with `XWIKI_LLM_WORK` (see the environment-variable
-  table below for the exact defaults); each piece of work gets its own
-  `<work>/<repo>/<YYYY-MM-DD>-<slug>/` directory, so it is findable later and removable in one
-  command. Nothing is created up front — a session that writes no work file leaves no trace — and
-  the `SessionStart` hook appends the resolved absolute path to the injected conventions so the
-  model does not have to guess it. Files that only matter until the end of the current session stay
-  in the host's own session scratch directory. Up to version 1.5.0 the default root was
-  `~/.xwiki-llm/work` on every OS; if you have files there, move them to the new root (while
-  anything remains, each session starts with a reminder to do so) — or point `XWIKI_LLM_WORK` at the
-  old path to keep it.
-- **Docker IT slot limiter** (`xwiki/scripts/xwiki-it-slot.mjs`) — a wrapper that caps how many
-  XWiki functional-test runs (`-Pdocker,integration-tests`) execute at once on one machine, two by
-  default (`--max N`, or `XWIKI_LLM_IT_SLOTS`). Such a run holds a servlet engine, a browser
-  container of a couple of gigabytes and a ryuk, and writes SNAPSHOT artifacts into the shared
-  `~/.m2`; several agents launching one at the same time starve the Docker daemon, and starvation
-  surfaces as a failure in `beforeAll` that reads like a product bug rather than as an
-  out-of-resources error. Wrap the whole Maven invocation —
-  `node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-slot.mjs" -- mvn verify …` — and later runs queue
-  instead of colliding; `--status` shows who holds what, the slot is released however the command
-  ends, and one whose holder died is reclaimed. Not a hook: the `xwiki-build` skill tells Claude to
-  use it, so it costs nothing in sessions that run no functional test.
-- **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — a `PostToolUse` hook on
-  `Write`/`Edit` that checks every file written against the explicit `eol` declared by the repo's
-  `.gitattributes` (via `git check-attr`). On a CRLF/LF mismatch it fails with a clear message so
-  Claude Code rewrites the file with the right endings, preventing spurious whole-file diffs. It
-  enforces this deterministically and at near-zero token cost — it only emits output on an actual
-  violation, and stays silent when no `eol` is declared (so it never mis-fires on Windows
-  `core.autocrlf` working trees). Also Node-based for cross-platform support. In Kimi Code the same
-  warning is emitted, but because `PostToolUse` hooks are observation-only there, the model must
-  act on the warning itself. In opencode the same check runs as a plugin
-  (`xwiki/opencode/plugins/xwiki-line-endings.js`, a `tool.execute.after` hook reusing the same
-  logic).
-- **MCP servers** (`xwiki/.mcp.json` for Claude; mirrored in `kimi.plugin.json` and `opencode.jsonc`):
-  - `discourse` — forum.xwiki.org. Search/read topics and posts with no credentials. Set
-    `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the user-key pair) and the same server also
-    gets write tools, so Claude can post and reply on the forum — see "Forum write access" below.
-  - `develocity` — community.develocity.cloud, the Develocity instance holding XWiki's build
-    scans: failure details, test outcomes, build-cache effectiveness. It is a remote server
-    (streamable HTTP), so nothing runs locally; the Develocity access key is read from
-    `DEVELOCITY_MCP_ACCESS_KEY`. Optional: with the variable unset, Claude Code and Kimi Code
-    simply skip the server.
-  - `sonarqube` — SonarCloud code-quality analysis (Docker). Reads `SONARQUBE_TOKEN` and the
-    repo-specific `SONARQUBE_PROJECT_KEY` from the environment; no secrets are committed.
-    `SONARQUBE_PROJECT_KEY` is optional (it defaults to empty), so repos that have no SonarCloud
-    project do not fail to load the server.
-- **OKF — knowledge base** (`xwiki/okf/`) — a curated, LLM-oriented corpus of XWiki *declarative*
-  knowledge: conventions (`conventions/`), architecture (`architecture/`), the dev-server ecosystem
-  (`servers/`), testing strategy (`testing/`), SonarQube rule-fix correctness (`sonarqube/` — split
-  per rule family so a fix loads only the one it needs) and release process (`processes/`). It complements the
-  skills (which hold task *procedures*): the OKF holds *facts*. A slimmed map of it is injected via
-  `xwiki-org.md`; `okf/index.md` is the full map. Durable facts are stored inline; **volatile facts
-  (versions, build/issue status, role holders) are stored as a "where to look + how to verify"
-  pointer, never as a cached value**, so the corpus does not go stale silently. New knowledge is
-  added only through a reviewed PR — the `xwiki-knowledge` skill governs reading and extending it.
-- **Skills** (`xwiki/skills/`):
-  - `xwiki-knowledge` — read and extend the OKF knowledge base (declarative XWiki knowledge).
-  - `xwiki-build` — canonical Maven build/test commands.
-  - `xwiki-pull-request` — conventions for creating a PR (template, commit format, squash/backport).
-  - `xwiki-review` — multi-angle XWiki-aware review of a PR, a commit range or the working tree: one
-    specialist reviewer per angle (conventions, architecture, backward compatibility, defensive
-    conventions, performance, tests, accessibility, i18n/UX, documentation, data & migration, spec
-    conformance), each finding independently challenged and dropped unless it survives, before
-    anything is posted.
-    **Explicit invocation only** — it is not used for a plain "review this" (that stays a normal,
-    cheap review); ask for it by name (`/xwiki-review`) when you want the expensive full pass.
-  - `xwiki-jira` — view/search/create/update/transition issues on jira.xwiki.org (jira-cli or REST).
-  - `xwiki-security-advisory` — draft a GitHub Security Advisory for a vulnerability from a security-restricted JIRA issue, following the live template on the XWiki Security Policy page.
-  - `xwiki-openproject` — search/view/create/update/comment on work packages in op.xwiki.org (OpenProject) over REST API v3, with the `/form` dry run before every write.
-  - `xwiki-test-guidelines` — testing best practices and the XWiki test frameworks.
-  - `xwiki-javadoc` — write clear, useful Javadoc following the XWiki Java Code Style and Oracle conventions.
-  - `xwiki-convert-tests` — convert unit tests to JUnit5/Mockito.
-  - `xwiki-convert-tests-docker` — convert functional IT tests to the Docker `@UITest` framework.
-  - `xwiki-increase-test-coverage` — raise and lock in a module's unit-test coverage (JaCoCo instruction ratio).
-  - `xwiki-legacy` — move a deprecated public API out of a main module into its `-legacy` companion (migrate callers, remove, re-add via a plain class or an AspectJ aspect, Revapi ignore).
-  - `xwiki-fix-flickering-docker-test` — fix a flickering Docker-based functional test.
-  - `xwiki-release-test-triage` — before a release, triage a branch's failing tests on ci.xwiki.org: rated across environments and recent builds, known flickers vs. unknown ones vs. real breakages, and whether each breakage is already fixed on another branch.
-  - `xwiki-deploy-extension` — deploy a XAR/JAR extension to a running XWiki instance.
-  - `xwiki-rest-api` — read/write a running XWiki over REST: get page content & xobjects, update pages & object properties, create pages (with xobjects), Solr search.
-  - `xwiki-xar-pages` — edit extension wiki pages (XAR XML): the `xar:format` / `xar:verify` conventions.
-  - `xwiki-translations` — externalize and render i18n strings safely.
-  - `xwiki-doc-writing` — write, update or review a page of xwiki.org documentation per the XWiki Documentation Guide (Diataxis).
-  - `xwiki-doc-convert` — convert old documentation (the `Documentation` space or the Extensions wiki) into the new `/documentation` tree, as a resumable plan of one-session tasks (also used to resume a conversion already under way).
-  - `xwiki-release-documentation` — **explicit invocation only.** Audit the documentation of fixed issues, for a whole Fix Version or for one issue: decide from the actual diff whether each needs a documentation page and/or a release-note entry, write them (entries through the Release Notes Application REST endpoints), and fill the `Documentation` / `Documentation in Release Notes` JIRA fields with the URLs.
-  - `xwiki-contrib-release-blog-post` — create the "<Extension> Extension <version> Released" announcement on the xwiki.org Blog for an xwiki-contrib extension.
-  - `xwiki-fix-sonarqube-issue` — find and fix SonarCloud issues and open a PR; the
-    per-rule fix correctness and drop conditions it applies live in `xwiki/okf/sonarqube/`.
-  - `xwiki-backport` — backport any change to an older branch: cherry-pick `-x`, adapt to the branch (module pom versions, Java level, style/API), verify, open the PR.
-  - `xwiki-backport-testneeded` — backport `testneeded`-labelled tests to supported stable branches, adjust `@since` across branches, open the PRs (builds on `xwiki-backport`).
+### Always on — no invocation
 
-## Required environment variables
+| What | When it fires | Tune with |
+|---|---|---|
+| **Org conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all repos": build commands, commit format, code conventions, `@since` rules | Every session, in `xwiki/*` and `xwiki-contrib/*` repos only (scoped by git remote) | `XWIKI_LLM_ORGS` to add your own orgs. No scoping in opencode — see the install note above |
+| **Work directory** — plans, handoffs, drafts and notes go to one root instead of the repo, `/tmp` and your home | The first time a task needs a file that must outlive the session | `XWIKI_LLM_WORK` ([defaults](docs/setup.md)) |
+| **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — blocks a write whose endings contradict the repo's `.gitattributes`, so no spurious whole-file diffs | Every `Write`/`Edit`; silent unless violated | — |
+| **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name` or `#123`, which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; summary line exempt | — |
 
-| Variable                | Used by   | Notes                                              |
-|-------------------------|-----------|----------------------------------------------------|
-| `XWIKI_LLM_HOME`        | opencode  | Absolute path to your `xwiki-dev-llm` checkout. **opencode only** (Claude Code and Kimi Code resolve paths themselves). |
-| `XWIKI_LLM_ORGS`        | Claude Code, Kimi Code | Extra GitHub orgs, comma- or whitespace-separated (e.g. `acme-corp,acme-labs`), whose repos should also get the org conventions injected. Optional — `xwiki` and `xwiki-contrib` always match. Not used by opencode, which has no remote scoping. |
-| `XWIKI_LLM_WORK`        | all hosts | Absolute path to the work directory for plans, handoffs, drafts and other cross-session state. Optional — defaults to `$XDG_STATE_HOME/xwiki-llm/work` on Linux/macOS, falling back to `~/.local/state/xwiki-llm/work` when `XDG_STATE_HOME` is unset (as it is by default on macOS); and to `%LOCALAPPDATA%\xwiki-llm\work` on Windows, falling back to `%USERPROFILE%\AppData\Local\xwiki-llm\work` when `LOCALAPPDATA` is unset. |
-| `SONARQUBE_TOKEN`       | sonarqube | Your personal SonarCloud token (same for all repos). |
-| `SONARQUBE_PROJECT_KEY` | sonarqube | The SonarCloud project key — **differs per repo**. Optional: leave it unset in repos that have no SonarCloud project. |
-| `DEVELOCITY_MCP_ACCESS_KEY` | develocity | Your community.develocity.cloud access key, **bare** (no `community.develocity.cloud=` prefix). Optional — without it the build-scan MCP is not loaded. See "Develocity access" below. |
-| `JIRA_API_TOKEN`        | `xwiki-jira` (jira-cli / REST) | Your jira.xwiki.org personal access token. Optional — only needed to act on JIRA issues. See "JIRA access" below. |
-| `JIRA_AUTH_TYPE`        | jira-cli  | Set to `bearer` (PAT auth) for the self-hosted XWiki JIRA.       |
-| `DISCOURSE_API_KEY`     | discourse | A forum.xwiki.org **admin** API key. Optional — without it the forum MCP is read-only. See "Forum write access" below. |
-| `DISCOURSE_API_USERNAME`| discourse | The forum username the admin API key acts as (e.g. your own). Required together with `DISCOURSE_API_KEY`. |
-| `DISCOURSE_USER_API_KEY` + `DISCOURSE_USER_API_CLIENT_ID` | discourse | Alternative to the admin key: a forum **user** API key, which any account can hold. |
+A pushed commit message cannot be fixed without rewriting a shared branch, and a CRLF diff hides the
+real change — which is why those two are hooks and not conventions. Both are Node (no bash, no `jq`),
+observation-only under Kimi Code, and available to opencode as plugins.
 
-### Setting `SONARQUBE_PROJECT_KEY` per repo
+### When you ask — skills
 
-The project key is specific to each repository, so set it per checkout. The recommended way is
-[direnv](https://direnv.net): drop an `.envrc` in each repo (it loads automatically when you `cd`
-in, and unloads when you leave). Add `.envrc` to your **global** gitignore so it's never committed:
+⚠ = **explicit invocation only**: named or nothing, because it is expensive or it writes.
+**Needs** is what must be set for the skill to do its job — [how to set it](docs/setup.md); a `—`
+means it needs nothing.
 
-```bash
-# ~/dev/xwiki/xwiki-platform/.envrc
-export SONARQUBE_TOKEN="<your-sonarcloud-token>"   # or set once in your shell profile
-export SONARQUBE_PROJECT_KEY="org.xwiki.platform:xwiki-platform"
-```
+**Build & test**
 
-```bash
-# ~/dev/xwiki/xwiki-commons/.envrc
-export SONARQUBE_PROJECT_KEY="org.xwiki.commons:xwiki-commons"
-```
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-build`](xwiki/skills/xwiki-build/) | Maven commands: the right JDK, profiles, single module, single test | — | "run `EditIT` in `xwiki-platform-flamingo-skin-test`" |
+| [`xwiki-test-guidelines`](xwiki/skills/xwiki-test-guidelines/) | The rules and frameworks for writing a test — loads itself before any test change, down to one `@Test` | — | "add a test for this" |
+| [`xwiki-convert-tests`](xwiki/skills/xwiki-convert-tests/) | Convert unit tests to JUnit 5 + Mockito | — | "convert this test class to JUnit 5" |
+| [`xwiki-convert-tests-docker`](xwiki/skills/xwiki-convert-tests-docker/) | Convert functional ITs to the Docker `@UITest` framework | — | "convert these ITs to `@UITest`" |
+| [`xwiki-increase-test-coverage`](xwiki/skills/xwiki-increase-test-coverage/) | Recompute a module's JaCoCo ratio and raise the pom's floor | — | "bump the coverage ratio for this module" |
+| [`xwiki-fix-flickering-docker-test`](xwiki/skills/xwiki-fix-flickering-docker-test/) | Investigate a flicker from its CI evidence, confirm a hypothesis by forcing the race, then fix it | Docker | "fix the `NotificationsIT` flicker" |
 
-Then run `direnv allow` in each repo once. Without direnv, just `export` the vars in your shell
-before launching Claude Code from that repo.
+**Code & APIs**
 
-Find a repo's exact key on its SonarCloud project page (**Project Information → Project Key**) at
-https://sonarcloud.io/organizations/xwiki/projects.
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" from the OKF, and extend it by PR | — | "what's our policy on comments in code?" |
+| [`xwiki-javadoc`](xwiki/skills/xwiki-javadoc/) | Write Javadoc per the XWiki code style | — | "javadoc this class" |
+| [`xwiki-fix-deprecation`](xwiki/skills/xwiki-fix-deprecation/) | Move every caller of a deprecated API — Java, Velocity, wiki pages, JS — to its replacement, then retire the API to legacy; proposes easy candidates | — | "fix some easy deprecations" |
+| [`xwiki-legacy`](xwiki/skills/xwiki-legacy/) | Move a deprecated API with no caller left to its `-legacy` module: remove, re-add, Revapi | — | "retire `XWikiRightService`" |
+| [`xwiki-translations`](xwiki/skills/xwiki-translations/) | Externalize and render i18n strings safely (escaping, word order) | — | "externalize these strings" |
+| [`xwiki-xar-pages`](xwiki/skills/xwiki-xar-pages/) | Edit extension wiki pages in a XAR (`xar:format` / `xar:verify` conventions) | — | "add a page to this XAR" |
 
-## Forum write access (for the `discourse` MCP server)
+**Issues, PRs & review**
 
-The `discourse` server always provides search and read of [forum.xwiki.org](https://forum.xwiki.org)
-without any credential. Posting — replying to a topic, creating one, drafting a proposal — needs one,
-because the underlying server registers its write tools only when it is authenticated. This is
-**optional**: leave the variables unset and everything keeps working read-only.
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-jira`](xwiki/skills/xwiki-jira/) | View, search, create, update and transition jira.xwiki.org issues | `JIRA_API_TOKEN` | "file a bug for this in XWIKI" |
+| [`xwiki-jira-bfd`](xwiki/skills/xwiki-jira-bfd/) | Prepare a Bug Fixing Day: score the old backlog, propose closes and quick wins, apply only the approved closes (you run the apply) | `JIRA_API_TOKEN`; `TYPESAFE_TOKEN`, or the `claude` CLI as the judge | "prepare the BFD on the 5-year-old XWIKI bugs" |
+| [`xwiki-daily-close`](xwiki/skills/xwiki-daily-close/) ⚠ | Your daily push on work you already have open: PRs, assigned issues and forum topics you started that are ready or one step from done, ranked, with stats and trend; offers each merge, close or forum conclusion for a yes | `gh` login; `JIRA_API_TOKEN`; `DISCOURSE_API_*` to write on the forum (read-only without) | `/xwiki-daily-close` |
+| [`xwiki-forum`](xwiki/skills/xwiki-forum/) | Draft and post forum.xwiki.org topics and replies: category, `brainstorming`/`proposal`/`vote` tag instead of a title prefix, confirmation of every field before posting | `DISCOURSE_API_*` to post (draft to paste without) | "prepare a brainstorming post about X" |
+| [`xwiki-pull-request`](xwiki/skills/xwiki-pull-request/) | Commit format, PR template, squash and backport conventions | `gh` login | "open a PR for this branch" |
+| [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | One specialist reviewer per angle, each finding challenged before it is posted; asks for a quick or full security pass when the private `xwiki-security` plugin is installed | `gh` login | `/xwiki-review PR 6453` |
+| [`xwiki-backport`](xwiki/skills/xwiki-backport/) | Cherry-pick to an older branch and *adapt* it (poms, Java level, `@since`, API drift) | `gh` login | "backport this to stable-18.8.x" |
+| [`xwiki-backport-testneeded`](xwiki/skills/xwiki-backport-testneeded/) | The `testneeded` sweep: backport one issue's test to every supported branch | `gh` login, `JIRA_API_TOKEN` | "backport the test of XWIKI-24710" |
+| [`xwiki-security-advisory`](xwiki/skills/xwiki-security-advisory/) | Draft a GitHub Security Advisory from a security-restricted issue | `JIRA_API_TOKEN` | "draft the advisory for XWIKI-25001" |
+| [`xwiki-openproject`](xwiki/skills/xwiki-openproject/) | Work packages on op.xwiki.org (**not** the issue tracker) | `OPENPROJECT_API_TOKEN` | "what's on my OpenProject list?" |
 
-Two kinds of credential work, whichever you can get:
+**CI & quality**
 
-- **Admin API key** (forum admins only) — create it at
-  https://forum.xwiki.org/admin/api/keys with *User Level: Single User* pointing at your own account,
-  and scope it to what you actually want Claude to do (the *Granular* scope, e.g. only
-  `posts#create`, is a good default — the server's write tools cover topics, posts, PMs, categories
-  and users, and the key is what bounds them). Then:
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-release-test-triage`](xwiki/skills/xwiki-release-test-triage/) | Reads CI and reports: known flicker, unknown flicker or real breakage — does it block the release? Never writes | — | "is master green?" |
+| [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | to analyse, nothing — but a red quality gate keeps its cause only with `SONARQUBE_TOKEN`, and a failing test its history only with a [Develocity key](docs/setup.md); the **bot** tokens to write (`GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`, `MATRIX_*`) | `/xwiki-ci-check xwiki-platform, master only` |
+| [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `okf/sonarqube/`) and open the PR | `SONARQUBE_TOKEN`, `SONARQUBE_PROJECT_KEY` | "fix a Sonar issue in this repo" |
 
-  ```bash
-  export DISCOURSE_API_KEY="<the-key>"
-  export DISCOURSE_API_USERNAME="<your-forum-username>"
-  ```
+**Documentation** — the ones that write to xwiki.org read your credentials from `~/.xwiki-credentials`.
 
-- **User API key** (any account) — generated through Discourse's
-  [user-api-key flow](https://meta.discourse.org/t/user-api-keys-specification/48536), which yields a
-  key plus a client id:
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-doc-writing`](xwiki/skills/xwiki-doc-writing/) | Write, update or review an xwiki.org page per the Documentation Guide (Diataxis) | `~/.xwiki-credentials` | "document this feature" |
+| [`xwiki-doc-convert`](xwiki/skills/xwiki-doc-convert/) | Migrate an old page into the new `/documentation` tree, as a resumable plan | `~/.xwiki-credentials` | "convert the Skin Extensions page" |
+| [`xwiki-doc-export`](xwiki/skills/xwiki-doc-export/) | Export a `/documentation` subtree to one PDF in navigation order, optionally translated (official UI terms), re-translating only what changed since the last export — as a resumable plan | Chrome/Chromium; `pdftotext` for page numbers; an xwiki-platform checkout to translate | "export the XS user documentation to a German PDF" |
+| [`xwiki-release-documentation`](xwiki/skills/xwiki-release-documentation/) ⚠ | Audit a release's fixed issues: what needs a page, what needs a release note, then write both and fill the JIRA fields | `~/.xwiki-credentials`, `JIRA_API_TOKEN` | `/xwiki-release-documentation 18.8.0` |
+| [`xwiki-contrib-release`](xwiki/skills/xwiki-contrib-release/) | Release a contrib extension: `release:prepare`/`perform` to Nexus, issue-tracker version, extensions.xwiki.org, hand-off to the blog post | Nexus `xwiki-staging` account + GPG in `~/.m2/settings.xml`, `JIRA_API_TOKEN` or `OPENPROJECT_API_TOKEN` | "release v1.15 of the doc app" |
+| [`xwiki-xs-release`](xwiki/skills/xwiki-xs-release/) | Drive an XWiki Standard release's Release Plan with the release manager: pre-build checks, release notes, JIRA dashboard, wiki pages, branch cleanup, announcement drafts | `~/.xwiki-credentials`, `JIRA_API_TOKEN`, `gh`, a logged-in browser for the JIRA dashboard and Jenkins | "help me release 18.10.0RC1" |
+| [`xwiki-contrib-release-blog-post`](xwiki/skills/xwiki-contrib-release-blog-post/) | The "<Extension> Extension X.Y Released" blog post on xwiki.org | `~/.xwiki-credentials` | "announce the Jira extension 9.2 release" |
+| [`xwiki-presentation`](xwiki/skills/xwiki-presentation/) | Build a `.pptx` deck in the XWiki look, then PDF/PNG/Keynote | LibreOffice, [Python deps](xwiki/skills/xwiki-presentation/tools/requirements.txt) | "build a deck on XWiki 18.x for FOSDEM" |
 
-  ```bash
-  export DISCOURSE_USER_API_KEY="<the-key>"
-  export DISCOURSE_USER_API_CLIENT_ID="<the-client-id>"
-  ```
+**Running wiki**
 
-Set them in your shell profile, or per project with [direnv](https://direnv.net) as described above.
-Never commit them: the launcher (`xwiki/scripts/start-discourse-mcp.mjs`) passes the credential to
-the server in a temporary `0600` profile file, so it stays out of the process list, but keeping it
-out of git is on you. Anything Claude posts goes out under the account the key acts as, so it should
-confirm the exact text with you before posting.
+| Skill | What it does | Needs | Example |
+|---|---|---|---|
+| [`xwiki-rest-api`](xwiki/skills/xwiki-rest-api/) | Read and write a live instance over REST: pages, xobjects, Solr search | the instance's login (`~/.xwiki-credentials` for xwiki.org) | "what's in the sandbox page?" |
+| [`xwiki-deploy-extension`](xwiki/skills/xwiki-deploy-extension/) | Install a built XAR/JAR into a running XWiki via the job REST API | the instance's login | "deploy this XAR to localhost:8080" |
+| [`xwiki-capture-ui-change`](xwiki/skills/xwiki-capture-ui-change/) | Capture the "before" screenshot of a UI fix that the branch can no longer produce, on the released version's Docker image or by deploying the pre-fix code locally. Runs only with your approval | the `agent-browser` skill; Docker, or a prebuilt jetty+hsqldb distribution | "show the before of this button fix" |
 
-If the forum refuses the credential (revoked, expired, wrong username), the launcher says so on
-stderr and starts the server read-only, rather than letting it fail to start and take the search and
-read tools down with it.
+### What the skills use
 
-## Develocity access (for the `develocity` MCP server)
+| | |
+|---|---|
+| **OKF** (`xwiki/okf/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Extended only through a reviewed PR. |
+| **`discourse` MCP** | forum.xwiki.org: search and read with no credential, post with one ([setup](docs/setup.md#forum-write-access-for-the-discourse-mcp-server)) |
+| **`develocity` MCP** | community.develocity.cloud: build scans, test outcomes, flaky history, cache hit rates ([setup](docs/setup.md#develocity-access-for-the-develocity-mcp-server-and-dv-test-history)) |
+| **`sonarqube` MCP** | SonarCloud issues and quality gates, per repo ([setup](docs/setup.md)) |
+| **IT slot limiter** (`xwiki/scripts/xwiki-it-slot.mjs`) | Caps concurrent Docker IT runs on one machine (2 by default). Several agents starting one at once starve the Docker daemon, and starvation surfaces as a `beforeAll` failure that reads like a product bug. Also runs testcontainers with a ryuk the daemon accepts, so runs on old XWiki parents stop leaking containers and networks |
+| **Repeat-run oracle** (`xwiki/scripts/xwiki-it-repeat.mjs`) | Runs one functional test N times on one configuration and reports the pass **rate** — a flicker is a probability, and "it passed" is not evidence that a fix worked. Keeps each failing repetition's report, screenshot and video |
 
-[community.develocity.cloud](https://community.develocity.cloud) is the Develocity instance that
-stores the build scans of every CI build and provides the remote build cache. It is Gradle's free
-instance for open-source projects, shared with other projects, so XWiki's data is scoped by the
-project ID `xwiki` (set in each repo's `.mvn/develocity.xml`). Its MCP server exposes that data —
-exception details and stack traces for a failed build, test outcomes and flaky-test history, build
-timings and cache hit rates, and diffs between two builds — so you can investigate a CI failure
-without leaving the terminal.
+## Setup
 
-This is **optional**, and unlike the other servers it needs a credential just to list its tools: the
-access key is validated on *every* request. So leave `DEVELOCITY_MCP_ACCESS_KEY` unset if you don't have a
-key — Claude Code and Kimi Code then skip the server instead of erroring on each session.
-
-To set it up, sign in to https://community.develocity.cloud, open **Settings → Access keys**
-(https://community.develocity.cloud/settings/access-keys), generate a key, and export it:
-
-```bash
-export DEVELOCITY_MCP_ACCESS_KEY="<the-access-key>"
-```
-
-**Why not `DEVELOCITY_ACCESS_KEY`?** There is only one kind of Develocity credential — the access
-key you just created — but that name is already taken by the Maven and Gradle Develocity
-extensions, which require the value to be host-scoped:
-`DEVELOCITY_ACCESS_KEY=community.develocity.cloud=<key>`
-(the host prefix exists so the key can't be sent to a server it wasn't issued for). An HTTP
-`Authorization: Bearer` header needs the bare key instead, so one variable cannot serve both. The
-separate name lets you keep both, with the same key in each:
-
-```bash
-export DEVELOCITY_ACCESS_KEY="community.develocity.cloud=<the-access-key>"  # Maven/Gradle build
-export DEVELOCITY_MCP_ACCESS_KEY="<the-access-key>"                         # this plugin's MCP server
-```
-
-The key's Develocity user needs the *Access build data via the API and MCP* permission (included in
-the default Developer role).
-
-## JIRA access (for the `xwiki-jira` skill)
-
-The `xwiki-jira` skill lets Claude view, search, create, update and transition issues on
-[jira.xwiki.org](https://jira.xwiki.org). This is **optional** — set it up only if you want Claude to
-operate on JIRA. Two backends; the skill auto-detects which is available.
-
-### Recommended: install `jira-cli`
-
-[`jira-cli`](https://github.com/ankitpokhrel/jira-cli) gives the richest experience. XWiki's JIRA is
-a **self-hosted (Server/Data Center)** instance authenticated with a **personal access token (PAT)**:
-
-1. Install it — e.g. `brew install ankitpokhrel/jira-cli/jira-cli` (see the
-   [installation guide](https://github.com/ankitpokhrel/jira-cli/wiki/Installation) for Nix, Docker, etc.).
-2. Create a PAT in your JIRA profile (**Profile → Personal Access Tokens**) and export it, plus the
-   bearer auth type, in your shell profile (or a git-ignored `.envrc` as above):
-   ```bash
-   export JIRA_API_TOKEN="<your-jira-personal-access-token>"
-   export JIRA_AUTH_TYPE="bearer"
-   ```
-3. Run `jira init` and choose:
-   - installation type **Local** (on-premise, not Cloud),
-   - server **`https://jira.xwiki.org`**,
-   - authentication type **bearer** (PAT),
-   - your login (JIRA username / email) and a default project (e.g. `XWIKI`).
-
-### Fallback: REST API only
-
-If you don't install `jira-cli`, the skill falls back to the JIRA REST API using the **same**
-`JIRA_API_TOKEN` as a bearer token — just export it:
-
-```bash
-export JIRA_API_TOKEN="<your-jira-personal-access-token>"
-```
-
-The token is read from the environment and never committed. Issue-field conventions (Component,
-Affects/Fix Version) are documented once in `xwiki/okf/servers/jira.md`.
-
-## xwiki.org credentials (for the documentation skills)
-
-**Optional.** The documentation skills write to xwiki.org over REST; put your xwiki.org credentials in
-**`~/.xwiki-credentials`** (`chmod 600`) and they are found instead of asked for. Two lines, no quotes
-and no `export` — the file is sourced:
-
-```
-XWIKI_USER=MyUserName
-XWIKI_PASSWORD=<your-xwiki.org-password>
-```
+Optional, all of it — see **[docs/setup.md](docs/setup.md)** for the environment variables and the
+credentials for JIRA, the forum, Develocity, SonarCloud and xwiki.org.
 
 ## Validate
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map, size budgets, copied paragraphs)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
+A weekly Claude routine ([`scripts/consolidation-routine.md`](scripts/consolidation-routine.md))
+then looks for what the validator cannot judge — near-duplicate rules, wordiness, files to split — and
+opens at most one `[Misc] Weekly consolidation:` PR for a committer to review; it never merges.
 
 ## Versioning and releases
 

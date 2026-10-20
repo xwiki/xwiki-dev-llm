@@ -32,6 +32,11 @@ The documented format is:
 - Corollary: the title is reused verbatim on every commit referencing the issue, so **it must read
   well as a commit summary**. Word it with that in mind (JIRA's own "use nice user-friendly titles"
   rule pushes the same way), and do not reword it casually afterwards.
+- **A repo tracked on OpenProject** (op.xwiki.org) instead of JIRA — some contrib projects, e.g.
+  `xwiki-contrib/documentation` (project `DA`) — uses the work package's **project-based id** as the
+  key: `DA-96: <the work package subject>`. That id is the API's `displayId` (`<PROJECT>-<n>`), not
+  the instance-wide numeric `id`, and the old `OP#<n>` form is wrong since the instance switched to
+  project-based ids. See the `xwiki-openproject` skill.
 - Use **`[Misc]`** when there is genuinely no issue. The dev wiki scopes this to trivial things —
   "adding a small javadoc, renaming a single variable, cosmetic changes, ignore files". The test for
   whether an issue is required is *"is my change going to affect any user or any extension developer
@@ -49,11 +54,30 @@ The documented format is:
   (a shared eslint config, say) are dev-only however they are declared, and a published `package.json`
   is not evidence otherwise — what settles it is how its consumers depend on it.
 
-Issue tracker is https://jira.xwiki.org (NOT GitHub Issues); see [[jira]] for access and the
-issue-field conventions. For the full PR/commit flow (one squashed commit per issue, PR description,
-backports) use the `xwiki-pull-request` skill.
+- **Backtick every `@` token and every hand-written `#123` in a commit body or PR body.** GitHub
+  autolinks them: `@since` links to and notifies the GitHub account of that name — an unrelated
+  third party, as are `param`, `deprecated`, `Inject`, `Component`, `Override`, `Deprecated`,
+  `UITest` and `Nested` — and `#123` resolves against the GitHub repo, while XWiki's issues live in
+  JIRA. Java messages are full of Javadoc tags and annotations, so this is easy to hit. Backticks
+  suppress the autolink even though a commit message renders no other markup, and stay visible as
+  literal characters. Get it right *before* committing: **a pushed commit message cannot be fixed**
+  except by rewriting a shared branch, which is worse than the mention. The `check-commit-text` hook
+  blocks it, but only for what it can parse out of the command — not a guarantee.
+  - **To link a PR, write `xwiki/xwiki-platform#123` or its URL** — backticks would drop the link.
+  - **Two things are exempt.** The summary line is the issue title verbatim, so it cannot take
+    backticks; avoid bare `@` tokens when *writing the JIRA issue title* instead. And the `(#6304)`
+    GitHub's squash merge appends is its own correct reference to the merged PR, not yours to escape.
+
+Issue tracker is https://jira.xwiki.org (NOT GitHub Issues), or op.xwiki.org for the few repos
+tracked there; see [[jira]] for access and the issue-field conventions. For the full PR/commit flow
+(one squashed commit per issue, PR description, backports) use the `xwiki-pull-request` skill.
 
 **Security fixes are the exception:** until an issue is officially disclosed, the public commit
 message must be **obfuscated** — describe the mechanical change, never that it closes a vulnerability
-or how it was exploitable. This overrides the copy-the-title rule, since the title would leak the
-nature of the issue. See [[security-policy]].
+or how it was exploitable. Obfuscate only the message *content*: **keep the `XWIKI-NNNNN:` key**
+(it discloses nothing on its own and preserves traceability to the restricted issue and the
+backports), and replace just the verbatim title with the neutral description. So it overrides the
+copy-the-title rule only — not `[Misc]`, not a dropped key — since the title would leak the nature of
+the issue. The neutral summary of the issue's first commit then **plays the role of the title**: every
+later commit for the issue (a follow-up fixing a wrong `@since`, a backport) reuses it verbatim and
+says what it does in the bullets. See [[security-policy]].

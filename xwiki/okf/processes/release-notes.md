@@ -47,18 +47,26 @@ Application`). An xwiki-contrib extension normally does **not** use it.
 Its release notes are the **Repository application's** per-version ones on extensions.xwiki.org: the
 `notes` property (pretty name "Release Notes") of the `ExtensionCode.ExtensionVersionClass` object on
 the version page `Extension.<Name>.Versions.<version>.WebHome`, rendered in the Versions section of
-the extension page (`https://extensions.xwiki.org/xwiki/bin/view/Extension/<Name>/#HVersions`). In
-practice that property holds a `{{jira}}` macro over the fix version, so the release note *is* the
-list of issues carrying that Fix Version — the shape a core *bugfix* release note has, for every
-release rather than only the bugfix ones.
+the extension page (`https://extensions.xwiki.org/xwiki/bin/view/Extension/<Name>/#HVersions`). For a
+multi-module **Project**, it is the Project's version page, with an `ExtensionCode.ProjectVersionClass`
+object. For a JIRA-tracked extension, that property holds a `{{jira}}` macro over the fix version, so
+the release note *is* the list of issues carrying that Fix Version: the shape a core *bugfix* release
+note has, here for every release. For an **OpenProject**-tracked one, no such macro exists yet, and the
+work packages are copied in by hand (format in the `xwiki-contrib-release` skill).
 
 So for a fixed issue of such an extension:
 
-- **`Documentation in Release Notes` is `N/A`**, and that is not an oversight: there is no per-issue
-  entry to point at, the issue being in the release note by virtue of its Fix Version.
-- **Nothing is owed until the version is released.** The version page is created by the Repository
-  application from the Maven repository once the artifacts are deployed, and the release itself is
-  announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
+- **Its release-notes field is the version page**, never `N/A`: once that page exists, every issue
+  of the version gets `https://extensions.xwiki.org/xwiki/bin/view/Extension/<Space>/Versions/<version>/`
+  (the Project's page for a multi-module project) in JIRA's `Documentation in Release Notes`, or in
+  OpenProject's **Release Notes Documentation** custom field. Some older ones point at a
+  `#H<version>` anchor of the extension page, which no longer exists: don't copy that form.
+  OpenProject's **Reference Documentation** is the counterpart of the JIRA `Documentation` field.
+- **The release-notes side is owed only once the version is released** (the reference
+  documentation is done before, in the `xwiki-contrib-release` preflight). The version page is
+  created by the Repository application's import from the Maven repository, nightly or forced by the
+  `xwiki-contrib-release` skill, so right after the deploy there may be no URL to write yet. The
+  release itself is announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
 
 `verify:` read a version page's `notes` — under
 `/xwiki/rest/wikis/extensions/spaces/Extension/spaces/<Name>/spaces/Versions/spaces/<version>`,
@@ -95,9 +103,19 @@ ReleaseNotes.Data.<Product>.<ShortVersion>.WebHome        ← ReleaseNotes.Code.
 - **A bugfix release note renders a `{{jira}}` issue list instead of the entries**, so its issues
   need no entry.
 
-**Entries belong to the version JIRA names as the Fix Version.** For a `.0` cycle that is the RC
-(`18.8.0-rc-1`), and the final release note (`18.8.0`) holds *no* entries of its own — it displays
-the RC's through aggregation. Adding entries to the final release note would duplicate them.
+**Entries belong to the version JIRA names as the Fix Version.** For a `.0` cycle that is normally
+the RC (`18.8.0-rc-1`), and the final release note (`18.8.0`) displays the RC's entries through
+aggregation, so an entry for a change shipped in the RC goes on the RC only: repeating it on the
+final would duplicate it. **The exception is a change that only made it into the final**, after the
+RC was released — its Fix Version is the final, and its entry is stored on the final release note,
+which shows it merged with the RC's (`ReleaseNotes.Data.XWiki.18\.5\.0.Entry001` is one).
+
+**A warning for administrators who upgrade is an upgrade note, not an entry.** Each release note
+has a `== Issues specific to {{velocity}}$product $version{{/velocity}} ==` section under
+"Backward Compatibility and Migration Notes", which the template fills with the placeholder
+`<issues specific to the project>`; an upgrade note is a `=== … ===` subsection of it, in the page
+content itself. Unlike an entry it can go on a **bugfix** release note too, so a change fixed on
+several branches gets the same note on each version's release note.
 
 ## The REST endpoints (since Release Notes Application 2.7)
 
@@ -229,7 +247,6 @@ done | python3 -c "import json,sys; [print(c['category']) for l in sys.stdin for
 
 ## Access
 
-xwiki.org REST needs the `/xwiki/rest/…` path (not `/rest/…`), plain `curl`'s User-Agent (a
-browser-like one is blocked by Cloudflare) and Basic auth from `~/.xwiki-credentials` for anything
-that writes — all in [[../servers/index]]. JIRA over REST with `JIRA_API_TOKEN` as a bearer token is
-in [[../servers/jira]].
+xwiki.org REST access — the `/xwiki/rest/…` path, the User-Agent, Basic auth from
+`~/.xwiki-credentials` for writes — is in [[../servers/index]]. JIRA over REST with `JIRA_API_TOKEN`
+as a bearer token is in [[../servers/jira]].

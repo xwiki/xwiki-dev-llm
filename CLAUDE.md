@@ -17,12 +17,19 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, always-on budget)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, size budgets, copied paragraphs)
+node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
-Run both after any change to the plugin. `scripts/validate.mjs` also runs in CI (GitHub Actions) on
-every push and pull request. There is no build step, no test runner, and no lint — JSON manifests and
-Markdown/`.mjs` files are the entire artifact.
+Run all three after any change to the plugin; CI (GitHub Actions) runs the last two on every push and
+pull request. There is no build step and no lint — JSON manifests and Markdown/`.mjs` files are the
+entire artifact. A tool whose logic is worth pinning (today `xwiki-ci-check`'s) keeps that logic in
+importable modules, tested from `tests/<skill>/` with real inputs: CI logs, pastes, room messages.
+
+Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
+and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,
+its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
+logic with `validate.mjs` through `scripts/md-blocks.mjs`).
 
 ## Release
 
@@ -72,16 +79,17 @@ Inside `xwiki/`:
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
   by `xwiki-it-slot.mjs`). Never recompute those paths in another script, and never restate the
-  platform rules in a doc — README.md's `XWIKI_LLM_WORK` table row is the one human-readable copy,
+  platform rules in a doc — `docs/setup.md`'s `XWIKI_LLM_WORK` table row is the one human-readable copy,
   and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
   work directory". Run directly, the script prints that work root: that is how opencode gets it,
   having no `SessionStart` hook and reading `xwiki-org.md` verbatim.
 - **`.mcp.json`** — MCP servers: `discourse` (forum.xwiki.org), `develocity`
-  (community.develocity.cloud — XWiki's build scans) and `sonarqube` (SonarCloud via Docker). All
-  three read their credentials from the environment via `${VAR}` expansion — never hardcode
-  these. `SONARQUBE_PROJECT_KEY` and the `DISCOURSE_*` variables use the `${VAR:-}` default form on
-  purpose: Claude Code refuses to load a server whose `${VAR}` is unset, and both are optional
-  (many repos have no SonarCloud project; forum credentials are opt-in).
+  (community.develocity.cloud — XWiki's build scans) and `sonarqube` (SonarCloud). All three read
+  their credentials from the environment via `${VAR}` expansion — never hardcode these. The
+  `DISCOURSE_*` variables use the `${VAR:-}` default form on purpose: Claude Code refuses to load a
+  server whose `${VAR}` is unset, and forum credentials are opt-in. `develocity` and `sonarqube` are
+  remote (HTTP) servers, so no local process runs; keep it that way — the `mcp/sonarqube` Docker
+  image they replaced cost ~840 MiB per session.
 - **`scripts/start-discourse-mcp.mjs`** — launcher for the `discourse` server, used by all three
   hosts. Anonymous and read-only by default; when a forum credential is in the environment
   (`DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME`, or the `DISCOURSE_USER_API_KEY` +
@@ -89,15 +97,14 @@ Inside `xwiki/`:
   the forum. A wrapper is required because that choice is conditional on the credential being set,
   which a static MCP manifest cannot express; the credential goes into a temporary 0600 profile
   file rather than on the command line, keeping it out of the process list.
-- **`scripts/start-sonarqube-mcp.mjs`** — launcher for the `sonarqube` server, used by Kimi Code and
-  opencode (see `kimi.plugin.json` and `opencode.jsonc`). Neither expands a shell-style `${PWD}`
-  inside an MCP command, so the script resolves the workspace mount from the session's working
-  directory at runtime; Claude Code runs the `docker` command directly from `.mcp.json`.
 - **`skills/*/SKILL.md`** — one skill per directory; the `name`/`description` frontmatter is what
   Claude matches against. Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
   cross-reference each other (e.g. `xwiki-convert-tests` vs `xwiki-convert-tests-docker`,
   `xwiki-test-guidelines` building on the others), so when editing one, check the others' "use X
-  instead" pointers stay accurate.
+  instead" pointers stay accurate. What only one branch of a run needs — or only a sub-agent reads —
+  goes in the skill's `references/*.md`, one level deep, named in SKILL.md at the point where it must
+  be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
+  SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
   `xwiki-line-endings.js`, which ports the line-ending guard to opencode's `tool.execute.after` hook
   and reuses `scripts/check-line-endings.mjs` (that script exports a shared `checkLineEndings()`
@@ -118,10 +125,27 @@ Inside `xwiki/`:
 - **`xwiki/instructions/xwiki-org.md` is injected into every session** in every `xwiki/*` repo, so
   it has a byte budget the validator enforces. Its OKF map lists topic *names*; a topic is described
   in `xwiki/okf/index.md`. Put a rule there only when it must be obeyed without opening any OKF file.
+- **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
+  point to it instead of restating it. The validator fails a paragraph copied across files and a skill
+  or OKF file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the
+  file. A `SKILL.md` stops at 20,000 bytes (Anthropic's 500-line / 5,000-token guideline); one already
+  above it may only shrink. Below that, raise an entry only when the new text passes all three tests:
+  1. **Every reader of the file needs it** — otherwise it goes in the skill's `references/`, opened
+     where it applies, or in a narrower OKF topic.
+  2. **It has no other home** — otherwise point to the OKF topic or skill that holds (or should hold) it.
+  3. **It is as short as it can be**, the text around it included.
+
+  Then set the entry to the new size plus about 10%, and say in the commit message why the three hold.
+- **State the goal, a constraint or a non-obvious fact — not the steps.** The model picks the method
+  once it knows what must hold and what it cannot guess (a shared stash, a mangling CLI). Give steps
+  only where it would otherwise get them wrong: a fragile or irreversible operation, or a convention
+  it cannot infer. A spelled-out recipe takes away its judgment, goes stale, and can be wrong.
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
   instead) — that text is the only thing Claude sees when deciding to invoke it.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the
-  install flow, the provided skills/MCP servers, and the required env vars for human readers.
+  install flow and holds one table row per skill and per always-on feature — a row, not a section:
+  the detail belongs in the skill's own `SKILL.md`, which is where both a developer and the model
+  read it. Credentials and environment variables live in `docs/setup.md`, not in README.md.
 - The XWiki-development facts (Maven profiles, JIRA keys, test frameworks, `@since` versioning) live
   in `instructions/xwiki-org.md` and the `skills/`, not here. Edit those files to change guidance
   given to developers in XWiki repos.

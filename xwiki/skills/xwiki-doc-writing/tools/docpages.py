@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Lint, publish and audit a set of xwiki.org documentation pages held in a Python module.
 
-    set -a; . ~/.xwiki-credentials; set +a
     python3 docpages.py lint                    # offline; run until it prints 0 problems
     python3 docpages.py save [ref …]            # idempotent publish (page, attachments, xobjects)
     python3 docpages.py pin                     # pin child order, verified via the tree service
@@ -66,9 +65,9 @@ def strip_verbatim(text):
     """Blank the body of `{{plantuml}}` / `{{code}}` blocks: their content is not XWiki syntax and
     must not be linted as such (a PlantUML arrow is a legitimate `--`).
 
-    Complete inline pairs are dropped from a line *before* deciding whether it opens a block. The
-    house style writes `... {{code}}man{{/code}} ...` in nearly every paragraph, and a scanner that
-    tests the opening pattern first matches that as an opener and never clears the flag, blanking
+    Complete inline pairs are dropped from a line *before* deciding whether it opens a block. Legacy
+    pages carry an inline `{{code}}` in nearly every paragraph, and a scanner that tests the opening
+    pattern first matches one as an opener and never clears the flag, blanking
     every following line of the field: false "declared but not referenced" on images that are right
     there, and — worse — real defects on those lines hidden from every check."""
     out, inside = [], False
@@ -114,6 +113,11 @@ def lint(mod):
                                     f'`{{{{`, double them): {line[:80]}')
                 if re.search(r'\(% *style', line):
                     problems.append(f'{where} inline style: {line[:80]}')
+            # Raw field: `strip_verbatim` drops the inline pairs this looks for.
+            for i, line in enumerate(p[field].split('\n'), 1):
+                for m in re.finditer(r'\{\{code\}\}(.*?)\{\{/code\}\}', line):
+                    problems.append(f'{name}/{field}:{i} inline code macro for a literal, use '
+                                    f'##{m.group(1)}##: {line[:80]}')
                 if re.search(rf'https?://({farm})\.xwiki\.org', line):
                     problems.append(f'{where} absolute URL to a page of the same farm — use '
                                     f'doc:<wiki>:<ref>: {line[:80]}')
@@ -214,20 +218,22 @@ def lint(mod):
                                     f'a column, not a code example')
             # A `name: meaning` bullet list is a two-column table written as prose. This catches the
             # page that has tables elsewhere, which the rule above cannot see. It reads the raw
-            # content, not `body`: the inline `{{code}}` pairs this matches on are exactly what
-            # `strip_verbatim` drops from a line.
+            # content, not `body`: an inline `{{code}}` name is exactly what `strip_verbatim` drops
+            # from a line.
             runs, run = [0], 0
             for line in p['content'].split('\n'):
-                run = run + 1 if re.match(r'^\* \{\{code\}\}[^{]+\{\{/code\}\}[^:]{0,20}:',
-                                          line) else 0
+                run = run + 1 if re.match(r'^\* (##[^#]+##|\{\{code\}\}[^{]+\{\{/code\}\})'
+                                          r'[^:]{0,20}:', line) else 0
                 runs.append(run)
             if max(runs) >= 3:
                 problems.append(f'{name}: reference states {max(runs)} members as a '
                                 f'`name: meaning` bullet list — that is a table')
 
         if name in (p['ref'] for p in mod.ALL):
-            parent = '.'.join(p['space'][:-1]) + '.WebHome'
-            if parent not in refs:            # a root of this page set = a topic page
+            # A topic page is a top-level page: its parent is an audience page, i.e. the path is
+            # documentation.<xs|extensions>.<audience>.<topic>. Read from the path, not from the page
+            # set, so that a set holding one new page below an existing topic is not taken for one.
+            if len(p['space']) == 4 and p['page'] == 'WebHome':
                 if p['type'] != 'explanation':
                     problems.append(f'{name}: topic page is not an explanation')
                 if 'doc:extensions:' not in p['content'].split('. ')[0]:

@@ -24,9 +24,13 @@ the mechanics here), **xwiki-build** (Maven), **xwiki-pull-request** (PR/commit 
   needs the change (e.g. from an issue's JIRA `fixVersions`): it needs branch **B** only if the change
   landed **after** B was cut **and** is **not** already released on B's line. (Do not hardcode which
   branches are supported — that changes every release; ask or infer from the last patch release of
-  each active line.)
-- **The target branch's version**, read from its root `pom.xml` `<version>` (e.g.
-  `17.10.10-SNAPSHOT`). Needed for the pom-version check (§3.A) and the `@since` adjustment (§3.D).
+  each active line.) For a bug fix, B also needs it only if B has the faulty code — which may have
+  reached B as a cherry-pick, so check per "Affected version of an issue" in `okf/conventions/versioning.md`,
+  never by commit ancestry.
+- **The target branch's version**, read from its root `pom.xml` `<version>` on `origin/<branch>`
+  after a fetch (e.g. `17.10.10-SNAPSHOT`) — never derived from local tags, which go stale; see
+  `okf/conventions/versioning.md`. Needed for the pom-version check (§3.A) and the `@since` adjustment
+  (§3.D).
 - **The target branch's Java level.** It depends on the XWiki version and differs across lines (newer
   lines use newer JDKs). Do NOT hardcode — resolve it from the version via the Java Support Strategy
   (linked from the org instructions / `dev.xwiki.org`), or read the branch's effective build config.
@@ -138,9 +142,9 @@ Backporting **adds** `@since` lines, it never replaces the existing ones. Two th
   backport); if the source's block is missing a line, fix it there too (a separate `@since` commit /
   PR on the source branch) — otherwise the branches drift.
 
-Decide the lines **empirically**, one per version-line, **ascending** by version number: inspect what
-each branch already carries (`git show origin/<branch>:<path>` for the file) and add only the missing
-lines. **Never invent an `@since`** where the source code did not already have one.
+Decide the lines **empirically**, one per version-line: inspect what each branch already carries
+(`git show origin/<branch>:<path>` for the file) and add only the missing lines, keeping the block's
+existing order. **Never invent an `@since`** where the source code did not already have one.
 
 For the exact format and *which elements* carry `@since` (reusable classes/members — `internal` ones
 and test tools such as page objects and test frameworks included — versus the tests themselves, which
@@ -171,9 +175,11 @@ mvn -B -ntp -Plegacy -DskipTests test-compile
   proves it resolves the reactor build, not the stale snapshot.
 - **Page-object gotcha:** building only a leaf `*-test-docker` module fails to compile a backported
   test when the sibling `*-test-pageobjects` (holding a newly-added page-object API) is pulled as a
-  *published* dependency without the new class. First `install` the changed page-object module(s) from
-  the branch (or build from the reactor root with `-pl <module> -am`). CI builds the full reactor so it
-  doesn't hit this.
+  *published* dependency without the new class. The same staleness makes a Docker IT fail at XWiki
+  startup — not a backport defect; see "Mixed SNAPSHOT jars after the branch moved" in
+  `okf/testing/running-docker-its.md`. First `install` the changed sibling module(s) from the branch
+  (or build from the reactor root with `-pl <module> -am`). CI builds the full reactor so it doesn't
+  hit this.
 - **CI on each PR is authoritative** for functional runs on real infrastructure. To run a Docker IT
   locally as a demo, use the `xwiki/build` DockerHub image (github.com/xwiki/xwiki-docker-build),
   mounting the docker socket (Docker-out-of-Docker) and your `~/.m2`:

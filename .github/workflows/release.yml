@@ -38,11 +38,17 @@ jobs:
           # Full history *and tags*: release.mjs diffs against the last release tag to decide both
           # whether there is anything to release and which segment moves.
           fetch-depth: 0
+          # The branch tip, not the pushed commit: a run queued behind another in the release group
+          # must see the release commit and tag that run pushed, or it recomputes and re-cuts the same
+          # version. GitHub can start two runs for a single push.
+          ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Consistency checks
         run: node scripts/validate.mjs
+      - name: Unit tests
+        run: node --test
       - name: Cut the release
         env:
           SEGMENT: ${{ inputs.segment }}

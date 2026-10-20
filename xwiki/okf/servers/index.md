@@ -2,7 +2,7 @@
 title: XWiki development server ecosystem
 stability: durable
 summary: The servers making up the xwiki.org dev ecosystem, what each is for, and how an LLM
-  accesses or verifies each one (MCP, REST, or live WebFetch).
+  accesses or verifies each one (MCP, REST, or live `curl`), and attributing posts an LLM co-wrote.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
@@ -10,10 +10,9 @@ sources:
 
 # XWiki development server ecosystem
 
-These are the servers the XWiki dev community uses to develop XWiki and xwiki-contrib projects.
-The **server set and URLs are durable**; anything that changes per release or per person
-(current versions, current managers, open issues, build status) is **volatile** — never cache a
-value, follow the "how to access" recipe to get the live answer.
+The servers used to develop XWiki and xwiki-contrib. Their set and URLs are durable; per-release or
+per-person values (versions, managers, open issues, build status) are volatile — follow the access
+recipe for the live answer.
 
 The canonical, always-current list (with the architecture diagram of how the servers interact)
 is on the dev wiki — fetch it when in doubt:
@@ -23,39 +22,40 @@ https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
 
 | Server | Purpose | How an LLM accesses / verifies it |
 |--------|---------|-----------------------------------|
-| [github.com/xwiki](https://github.com/xwiki) | All `xwiki` and `xwiki-contrib` source repos. | `gh` CLI / git. PRs are the contribution unit (see the `xwiki-pull-request` skill). |
+| [github.com/xwiki](https://github.com/xwiki) | All `xwiki` and `xwiki-contrib` source repos. | `gh` CLI / git. PRs are the contribution unit (see the `xwiki-pull-request` skill). `gh pr view` omits the inline review comments: read `gh api repos/<o>/<r>/pulls/<n>/comments` too before acting on a PR, an approval often keeps its requests there. |
 | [jira.xwiki.org](https://jira.xwiki.org) | Issue tracker (NOT GitHub Issues). Per-repo keys: `XWIKI`, `XCOMMONS`, `XRENDERING`, plus a key per contrib extension. | No MCP. `jira-cli` (recommended) or REST API (`Authorization: Bearer $JIRA_API_TOKEN`); details + issue-field conventions in [[jira]], procedure in the `xwiki-jira` skill. Reference issues by key (`XWIKI-12345`). |
 | [ci.xwiki.org](https://ci.xwiki.org) | Jenkins CI — builds every repo on source change. | No MCP, but a full **REST API** (anonymous read): append `/api/json?tree=…` to any job/build URL — do **not** scrape the UI. Status is volatile. Recipes + the Cloudflare User-Agent trap in [[jenkins]]. |
-| [community.develocity.cloud](https://community.develocity.cloud) | Develocity — stores CI build scans and provides build caching for CI and local builds. Gradle's free instance for open-source projects, shared with other projects, so XWiki's data is scoped by the project ID `xwiki` (set in `.mvn/develocity.xml`). | **MCP: `develocity`** (this plugin) — build failures with stack traces, test outcomes and flaky-test history, build timings, cache effectiveness, build-to-build diffs. Remote (streamable HTTP) at `https://community.develocity.cloud/mcp`; needs `DEVELOCITY_MCP_ACCESS_KEY`, which is validated on *every* request including tool listing, so a missing key means the server is absent, not read-only. Build scans are also browsable at `https://community.develocity.cloud/scans`. |
-| [sonar.xwiki.org](https://sonar.xwiki.org) → [sonarcloud.io (org `xwiki`)](https://sonarcloud.io/organizations/xwiki/projects/) | Code-quality analysis + quality gate (fails CI on gate failure). `sonar.xwiki.org` redirects to the SonarCloud `xwiki` organization, where analysis now runs. | **MCP: `sonarqube`** (this plugin) — needs `SONARQUBE_TOKEN` + per-repo `SONARQUBE_PROJECT_KEY`. See the `xwiki-fix-sonarqube-issue` skill. The MCP has no quality-gate tool: read `api/qualitygates/project_status` over REST, which — like the other read endpoints — answers **without a token** for the public `xwiki` org. |
+| [community.develocity.cloud](https://community.develocity.cloud) | Develocity — stores CI build scans and provides build caching for CI and local builds. Gradle's free instance for open-source projects, shared with other projects, so XWiki's data is scoped by the project ID `xwiki` (set in `.mvn/develocity.xml`). | **MCP: `develocity`** (this plugin) — build failures with stack traces, test outcomes and flaky-test history, build timings, cache effectiveness, build-to-build diffs. Remote (streamable HTTP) at `https://community.develocity.cloud/mcp`; needs `DEVELOCITY_MCP_ACCESS_KEY`, which is validated on *every* request including tool listing, so a missing key means the server is absent, not read-only. Build scans are also browsable at `https://community.develocity.cloud/scans`. A test's history across builds: [[develocity]]. |
+| [sonar.xwiki.org](https://sonar.xwiki.org) → [sonarcloud.io (org `xwiki`)](https://sonarcloud.io/organizations/xwiki/projects/) | Code-quality analysis + quality gate (fails CI on gate failure). `sonar.xwiki.org` redirects to the SonarCloud `xwiki` organization, where analysis now runs. | **MCP: `sonarqube`** (this plugin) — SonarSource's hosted server, nothing runs locally; needs `SONARQUBE_TOKEN`. It has no local code analysis (see [[verification]]). The skills also call the REST API (`https://sonarcloud.io/api/…`) with per-repo `SONARQUBE_PROJECT_KEY`; its read endpoints answer **without a token** for the public `xwiki` org. See the `xwiki-fix-sonarqube-issue` skill. |
 | [nexus.xwiki.org](https://nexus.xwiki.org) | Maven artifacts: CI snapshots + official releases. Used by the Extension Manager. | No MCP. Snapshot/release jar names also resolvable under `~/.m2`. Good source to *verify* the current dev version. |
-| [forum.xwiki.org](https://forum.xwiki.org) | Community + dev discussion (replaced most mailing-list usage). | **MCP: `discourse`** (this plugin) — search/read topics and posts with no credential. Posting (reply, new topic) needs `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the `DISCOURSE_USER_API_KEY` pair) in the environment: without them the write tools are not registered at all, so a missing post tool means "no credential set", not "posting unavailable". Confirm the exact text with the developer before posting — it goes out under their forum account. |
+| [forum.xwiki.org](https://forum.xwiki.org) | Community + dev discussion (replaced most mailing-list usage). | **MCP: `discourse`** (this plugin) — search/read topics and posts with no credential. Posting (reply, new topic) needs `DISCOURSE_API_KEY` + `DISCOURSE_API_USERNAME` (or the `DISCOURSE_USER_API_KEY` pair) in the environment: without them the write tools are not registered at all, so a missing post tool means "no credential set", not "posting unavailable". Drafting and posting — category, tag, title, the confirmation: the `xwiki-forum` skill. |
 | [lists.xwiki.org](https://lists.xwiki.org) | Mailing lists kept for server notifications and committer-private / infra / security discussions. | No MCP. Web archive. |
-| [extensions.xwiki.org](https://extensions.xwiki.org) | Catalog + docs of all free extensions; the source used by in-product Extension Manager. Extension/Application types have a per-version page at `Extension/<Space>/Versions/<version>/WebHome`; **Project** types do not. | No MCP. WebFetch an extension page (e.g. to find an extension id/version). |
-| [xwiki.org](https://xwiki.org) | The product/documentation web site (itself a running XWiki instance). New docs live under `/documentation` (see the `xwiki-doc-writing` and `xwiki-doc-convert` skills). | No MCP. WebFetch to read a rendered page. To read/write page content or xobjects programmatically, use its REST API via the `xwiki-rest-api` skill. |
-| [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. WebFetch; index with context-mode for repeated lookups. |
+| [extensions.xwiki.org](https://extensions.xwiki.org) | Catalog + docs of all free extensions; the source used by in-product Extension Manager. Every extension, a **Project** included, has a per-version page at `Extension/<Space>/Versions/<version>/WebHome` (it carries the release notes). | No MCP. `curl` an extension page (e.g. to find an extension id/version). |
+| [xwiki.org](https://xwiki.org) | The product/documentation web site (itself a running XWiki instance). New docs live under `/documentation` (see the `xwiki-doc-writing` and `xwiki-doc-convert` skills). | No MCP. `curl` a rendered page. To read/write page content or xobjects programmatically, use its REST API via the `xwiki-rest-api` skill. |
+| [dev.xwiki.org](https://dev.xwiki.org/xwiki/bin/view/Community/) | The dev guide / development practices wiki — source of truth for conventions and process. | No MCP. `curl`; index with context-mode for repeated lookups. |
 | [l10n.xwiki.org](https://l10n.xwiki.org) | Weblate — contribute translations. | No MCP. See the `xwiki-translations` skill for the dev side of i18n. |
-| [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. WebFetch. |
+| [design.xwiki.org](https://design.xwiki.org) | Design proposals. | No MCP. `curl`. |
+| [test.xwiki.org](https://test.xwiki.org) | The manual tests run at each release, and their results — the source when automating one. | REST: [[manual-tests]]. |
 | [elk.xwiki.org](https://elk.xwiki.org) | Anonymous usage stats / market-share metrics. | Rarely relevant to coding. |
-| `#xwiki:matrix.xwiki.org` | Real-time chat (Matrix). | Not programmatically accessed by the LLM. |
+| `#xwiki:matrix.xwiki.com` | Real-time chat (Matrix), unencrypted. | Client-server API through an account on another homeserver (matrix.xwiki.com takes no registrations); `xwiki-ci-check` posts its digest there. **Only a mention notifies**: write `[Full Name](https://matrix.to/#/@user:matrix.xwiki.com)` (Element makes it a pill in `m.mentions`; over the API set `m.mentions.user_ids`). Plain `@user` text notifies nobody. |
 
-## What has MCP today vs. WebFetch-only
+## What has MCP today vs. `curl`-only
 
 - **MCP available (fast, structured):** `discourse` (forum — read always, write when a forum
   credential is set), `sonarqube` (SonarCloud). These ship in this plugin's `.mcp.json`.
-- **Everything else is WebFetch / REST / `gh` / git.** For repeated reads of the same dev-wiki or
-  extensions page within a session, index it once with context-mode (if installed) and search,
-  rather than re-fetching.
+- **Everything else is `curl` / REST / `gh` / git.**
+- **Fetch every `*.xwiki.org` URL — `/bin/` pages as much as `/rest/` — with plain `curl`.** Cloudflare
+  fronts them all ([[jenkins]] for ci) and lets only curl's default `curl/8.x` User-Agent through: a
+  browser UA, no UA, Python `urllib` or Node `fetch` all get `403`. A script sets `User-Agent:
+  curl/8.x` (as `scripts/jenkins.mjs` does). A `403` there means fix the UA, never "the site blocks
+  automation".
 
-## Accessing / writing to xwiki.org & extensions.xwiki.org via REST
+## Accessing / writing to the XWiki-run sites via REST
 
-Both sites run XWiki; program against the REST API (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
+xwiki.org, extensions, test, dev and design all run XWiki; program against the REST API
+(`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
-- **The sites sit behind Cloudflare, which blocks a browser-like `User-Agent`.** A `Mozilla/5.0 …
-  Chrome/…` UA — or no UA at all — gets `403` on `/xwiki/rest/…`; the default `curl/8.x` UA gets
-  through, so **never dress the request up as a browser**. The same block fronts ci.xwiki.org
-  ([[jenkins]]): it is a farm-wide rule, not a doc-site one.
 - **Only `/rest` honors HTTP Basic auth.** The `/bin/` (view/edit/save) endpoints resolve Basic-auth
   requests to `XWiki.Guest`, so a `form_token` scraped from a `/bin/edit` page is the *guest* token
   and gets rejected — authenticate and read/write through `/rest`.
@@ -65,20 +65,36 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   restart). An XML page `PUT` is exempt; form-encoded object `POST`/property writes are not.
 - **An attachment `PUT` needs an explicit `Content-Type: application/octet-stream`.** Without it curl
   sends the body form-urlencoded and the wiki answers **400**.
-- **Wiki ids differ:** www.xwiki.org's main wiki is `xwiki` (`/rest/wikis/xwiki/…`);
-  **extensions.xwiki.org is a subwiki named `extensions`** (`/rest/wikis/extensions/…`), not `xwiki`.
+- **The REST path's wiki id, not the host, selects the wiki.** www.xwiki.org is `xwiki`; every
+  other farm site `<name>.xwiki.org` is the subwiki `<name>` (`dev.xwiki.org` → `/rest/wikis/dev/…`),
+  listed by `GET /rest/wikis`. `/rest/wikis/xwiki/…` on another host silently reads www's main wiki:
+  `404` or an empty list, never an error naming the wiki.
 - **Credentials convention: `~/.xwiki-credentials`** — the developer's xwiki.org write credentials, two
   lines, no quotes and no `export`: `XWIKI_USER=…` / `XWIKI_PASSWORD=…`. Look for that file before
   asking for credentials, but **never print its contents** — not `Read`, not `cat`/`head`/`less`, not
   an `ls`-then-dump of its directory, not a "keys only" probe: the format is documented right here, so
   opening it teaches nothing, while anything printed enters the context *and* the session transcript
   on disk, which outlives the file. Test the *effect* instead: `test -f ~/.xwiki-credentials` answers
-  "is it there", an authenticated `/rest` GET answers "does it work". Source it **inside** each command
-  that needs it (shell state does not persist between commands), so the password never reaches the
-  context: `set -a; . ~/.xwiki-credentials; set +a` then `curl -u "$XWIKI_USER:$XWIKI_PASSWORD" …`.
-  If a password does leak into the conversation, say so plainly and tell the developer to rotate it —
-  a transcript cannot be un-sent. Same rule for any other secret store the developer points at
-  (`~/.netrc`, an env file, a password-manager export).
+  "is it there", an authenticated `/rest` GET answers "does it work". **Parse the file, never `source`
+  it.** The values are unquoted, so a password containing `(`, `)`, `$`, `` ` ``, `&`, `;` or a space —
+  ordinary in a generated password — makes `. ~/.xwiki-credentials` a shell **syntax error**, and bash
+  quotes the offending line, password and all, into the output: sourcing is the one method that leaks
+  the secret precisely when the secret is strong. Read the two `KEY=VALUE` lines in the language doing
+  the request instead, splitting on the first `=` only, and keep the value in a variable you never
+  print — in Python, `dict(l.strip().split('=', 1) for l in open(...) if '=' in l)` feeding an
+  `Authorization: Basic` header. For `curl`, print that header from Python and pipe it in with
+  `-H @-`, which also keeps it off the process list:
+  `python3 -c "import base64,os; d=dict(l.strip().split('=',1) for l in open(os.path.expanduser('~/.xwiki-credentials')) if '=' in l); print('Authorization: Basic '+base64.b64encode((d['XWIKI_USER']+':'+d['XWIKI_PASSWORD']).encode()).decode())" | curl -H @- …`
+  (stdin then carries the header, so send a body with `-d @file`, not `@-`). If a password does leak into the conversation, say so plainly and
+  tell the developer to rotate it — a transcript cannot be un-sent. Same rule for any other secret
+  store the developer points at (`~/.netrc`, an env file, a password-manager export).
+
+## Posts an LLM co-wrote
+
+A forum post, JIRA description or comment, or GitHub comment an LLM co-wrote goes out under the
+developer's name, so it ends with `PS: This post was co-written with Claude Code.` (plus what else it
+did, when that matters). Commits and PRs (`xwiki-pull-request`) and comments whose tool appends its
+own footer (`xwiki-ci-check`) are attributed their own way.
 
 ## Verifying volatile facts
 

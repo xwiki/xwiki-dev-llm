@@ -40,7 +40,7 @@ every day.
 | S1066 S1125 S1126 S1155 S1264 S1488 S1596 S1602 S1612 S1858 S1905 S2130 S2864 S3012 S3024 S3358 S3706 S4201 S6353 S6397 S7158 | [[simplification-rules]] |
 | S1604 S1640 S1643 S6126 S6201 S6204 S6211 S6485 | [[modernization-rules]] |
 | S125 S1068 S1118 S1130 S1144 S1172 S1185 S1481 S1854 | [[dead-code-rules]] |
-| S1143 S1163 S1192 S2093 S2119 S2147 S3626 S4719 S5361 | [[constant-and-resource-rules]] |
+| S1143 S1163 S1192 S1214 S2093 S2119 S2147 S3626 S4719 S5361 | [[constant-and-resource-rules]] |
 | S2133 S3415 S5778 S5783 S5785 S5786 S6068 S8714 S8924 | [[test-code-rules]] |
 
 Ordered roughly safest-first: comment-only and pure-syntax rules cannot change behaviour;
@@ -85,7 +85,11 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   rule's *variable* half is a different matter and is **not** denylisted — see [[syntax-rules]].
 - **`S4144`** "implementation is identical to method X" — deduplicating two methods that legitimately
   mean different things is a design decision.
-- **`S115`** constant naming, **`S1214`** constants-in-interface — cross-module renames, breaking.
+- **`S115`** constant naming — a cross-module rename of published API, breaking.
+- **`S1214`** constants-in-interface — **denylisted on published API only**, and the decision is
+  recorded in the code rather than in SonarCloud. Inside an `internal` package it is a normal fix, and
+  in a `-legacy` module the rule is already excluded pom-wide. See
+  [[constant-and-resource-rules]] for the three cases.
 - **`S1845`** name differing only by capitalization — a cross-module rename of published API.
 - **`S2447`** "return null from a Boolean method" — on an existing **script service** returning `null`
   is the pre-`#try()` contract meaning "an error occurred, call `getLastError()`", and changing the
@@ -137,7 +141,7 @@ build gate to make a fix pass.
   no slack is an unavoidable drop. (Note that files rich in a given issue are often *excluded from
   Checkstyle* at the module-pom level — which is why the debt accumulated there — but Sonar scans
   them anyway, so the 120-char rule still applies to what you write.)
-- **The fix changes a public API's shape or visibility** → Revapi fails under `-Pquality`. Reducing an
+- **The fix changes a public API's shape or visibility** → Revapi fails the build. Reducing an
   implicit-public constructor to `private`, narrowing a modifier, or removing a public member are all
   breaking. See [[backward-compatibility]]. Classes in an `internal` package are exempt (Revapi
   ignores them) and are therefore the clean subset for these rules.
@@ -154,10 +158,21 @@ build gate to make a fix pass.
 
 ## Retiring an issue that should not be fixed
 
-When an issue is a genuine false positive, the resolution is **in the code, not in SonarCloud**: add
-`@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
+Retiring is the **last** resort, after the options that would stop the rule firing at all have been
+weighed: refactoring the flagged shape, adding the API the idiom is missing (deprecating the old one
+into `-legacy`), encapsulating the idiom once, or deferring the change and leaving the finding OPEN —
+with a JIRA issue only when that change touches public API. Those options are the developer's to
+choose, not the sweep's — the procedure for putting them up is in the `xwiki-fix-sonarqube-issue`
+skill.
+
+When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**:
+add `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
 *Accepted* in SonarCloud alone hides the reasoning from the next developer, who will try to "fix" it
 again. The full convention is in [[code-style]].
+
+*Accepted* has a second and unrelated use: **claiming** the issues an open PR already fixes, so that
+the next sweep — which discovers work with `issueStatuses=OPEN` — does not redo them. That claim says
+nothing about the code and is provisional: issues a PR drops or abandons must be reopened.
 
 ## Related
 

@@ -3,7 +3,8 @@ name: xwiki-rest-api
 description: Read from and write to a running XWiki instance over its REST API — get a page's content and its xobjects, update page content or object properties, create a new page (optionally with xobjects), and search pages with a Solr query. Use when the user wants to fetch/modify/create wiki pages or objects on a live XWiki (not the XAR source files on disk — for those use xwiki-xar-pages), or to run a Solr search via REST. For deploying a built XAR/JAR extension via the job REST API use xwiki-deploy-extension instead.
 ---
 
-Interact with a running XWiki over its REST API using `curl`.
+Interact with a running XWiki over its REST API using `curl`. op.xwiki.org is OpenProject, not an
+XWiki instance: its work packages are **`xwiki-openproject`**'s.
 
 ## Fundamentals
 
@@ -13,11 +14,10 @@ Interact with a running XWiki over its REST API using `curl`.
 - **Auth:** HTTP Basic — `curl -u Admin:admin ...`. With no credentials you act as `XWiki.Guest`
   (read-only on public pages; writes get `401`). Always authenticate for write operations.
   For a **remote** instance (xwiki.org…), look for the `~/.xwiki-credentials` file before asking the
-  developer for credentials — **never print that file**, source it inside each command; its format and
-  the full rule are in `okf/servers/index.md`.
-- **xwiki.org is behind Cloudflare:** `www.xwiki.org` and `extensions.xwiki.org` answer `403` to a
-  `/xwiki/rest/…` request carrying a browser-like `User-Agent` (or none at all) — send the default
-  `curl/8.x` UA and do not dress the request up as a browser (see [[servers/index]]).
+  developer for credentials — **never print that file** and **parse it, never `source` it**; its
+  format, the rule and the `curl` recipe are in `okf/servers/index.md`.
+- **Send the default `curl` User-Agent** to the xwiki.org sites — Cloudflare answers `403` to a
+  browser-like one or none ([[servers/index]]).
 - **Format:** responses are XML by default. Ask for JSON with `?media=json` on the URL **or** an
   `Accept: application/json` header. Send bodies with `-H "Content-Type: application/xml"` (or
   `application/x-www-form-urlencoded`).

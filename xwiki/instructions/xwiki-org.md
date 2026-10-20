@@ -9,8 +9,9 @@ follows.
 
 - **Issue tracker:** https://jira.xwiki.org (NOT GitHub Issues). Each repo has its own JIRA project
   key — `XWIKI` (Platform), `XCOMMONS` (Commons), `XRENDERING` (Rendering), a per-extension key for
-  contrib. Reference issues by their key (e.g. `XWIKI-12345`). To view/create/update issues use the
-  **`xwiki-jira`** skill, which owns the backend choice and its traps; issue-field conventions are in
+  contrib. Reference issues by key (`XWIKI-12345`). To view/create/update issues use the
+  **`xwiki-jira`** skill, which owns the backend choice and its traps; issue-field conventions, and
+  **assigning an issue to the developer once work on it starts** (OpenProject too), in
   `okf/servers/jira.md`.
 - XWiki Commons, XWiki Rendering and XWiki Platform are **released together with the same version**.
 - The **Java version depends on the XWiki version** (defined in the `pom.xml`) — build with that JDK,
@@ -31,13 +32,13 @@ follows.
 
 ## Commits, issues & PRs
 
-- When there is an issue, the summary line is the key followed by **the issue's title, verbatim** —
-  not a summary you write: `XWIKI-12345: <the JIRA issue title>` (use the repo's own key —
-  `XCOMMONS-…`, `XRENDERING-…`, etc.). What *this* commit does goes in the body as `*` bullets.
+- When there is an issue, the summary line is the key followed by **the issue's title, verbatim**:
+  `XWIKI-12345: <the JIRA issue title>` (the repo's own key). What *this* commit does goes in the
+  body as `*` bullets.
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
   developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
-- **A change with a visible result carries before/after images** — on its JIRA issue, and in the PR
-  body when there is one. Producing them is also how you check it works: `okf/servers/jira.md`.
+- **A visible change carries images, plus a "before" for a UI fix** — on its JIRA issue, and in
+  its PR body if any. Producing them is also how you check it works: `okf/servers/jira.md`.
 
 ## Building & tests
 
@@ -45,20 +46,19 @@ follows.
   `clean`/`verify` gotchas — use the **`xwiki-build`** skill (the canonical reference).
 - **Always pass `-B -ntp`** on every `mvn` invocation (batch mode + no-transfer-progress), to
   suppress interactive prompts and the download/progress lines that otherwise flood the output.
-- Unit test classes end with `*Test.java` (Surefire); integration test classes end with `*IT.java`
-  (Failsafe).
 - Tests must **not** write to stdout/stderr — enforced by Surefire's `CaptureConsole` listener.
-  Skip per-module with `-Dxwiki.surefire.captureconsole.skip=true`.
-- After adding or changing unit tests in a module, run the **`xwiki-increase-test-coverage`** skill
-  as part of that change. Deeper testing guidance: **`xwiki-test-guidelines`** skill /
-  `okf/testing/strategy.md`.
+- **A change comes with an automated test failing without it**, templates, wiki pages and JS
+  included (exceptions: `okf/testing/strategy.md`). **Load the `xwiki-test-guidelines` skill before
+  creating or changing any test**, even a single `@Test`/`@UITest` method.
+- After adding or changing unit tests in a module, run **`xwiki-increase-test-coverage`** in that
+  same change.
 
 ## Code conventions
 
-- **Lines must not exceed 120 characters** — that is a rule about *source*. Never hard-wrap prose:
-  a paragraph on an xwiki.org page or a forum post is one unbroken line.
-- LGPL license headers are required on every source file — run `mvn license:format -B -ntp` to add
-  missing headers.
+- **Lines must not exceed 120 characters** — in source files only. Never hard-wrap prose elsewhere
+  (commits, JIRA, xwiki.org, forum, Matrix, GitHub): a paragraph or list item is one line.
+- LGPL license headers are required on every file whose format allows comments, dotfiles included
+  (`mvn license:format -B -ntp` only fixes the files it checks).
 - In new code, prefer the `jakarta.*` namespaces over `javax.*` (the project is migrating
   `javax`→`jakarta`) — e.g. `jakarta.inject.*` for `@Inject`, `@Named`, `Provider`.
 - Use the XWiki **Component system** (`@Component`/`@Inject`/`@Role`) rather than passing context
@@ -68,9 +68,9 @@ follows.
   `ByteArrayOutputStream`), which OOMs on real data. Full guidance: `okf/conventions/performance.md`.
 - `-legacy` modules only re-export deprecated APIs; public API changes are checked by Revapi. Rules:
   `okf/conventions/code-style.md`, `okf/conventions/backward-compatibility.md`.
-- **Comments:** describe the code as it is *now* and state the real reason inline; never justify by
-  history ("as it was before") or link transient resources (JIRA keys, forum/PR/commit URLs) — those
-  rot. Full policy: `okf/conventions/code-comments.md`.
+- **Comments:** describe the code as it is *now*, with the real reason inline so the comment outlives
+  its links; never justify by history ("as it was before"). An issue reference is optional and
+  carries the key *and* title. Full policy: `okf/conventions/code-comments.md`.
 
 ## Versioning new/deprecated APIs
 
@@ -86,26 +86,26 @@ about how XWiki works or what its rules are — rather than performing a task �
 **`xwiki-knowledge`** skill is the entry point for both reading and extending it, and `okf/index.md`
 is the full, described map. **Volatile facts are never cached** (current version, build/issue status,
 role holders): the relevant file gives a `verify:` recipe instead (read `pom.xml`, query the
-`sonarqube`/`discourse` MCP, or WebFetch the dev wiki — the upstream source of truth).
+`sonarqube`/`discourse` MCP, or `curl` the dev wiki — the upstream source of truth).
 
 OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, read it to choose:
 
 - `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `script-services`, `performance`, `logging`, `naming`,
-  `frontend`, `server-side-rendering`,
+  `frontend`, `server-side-rendering`, `velocity-code-style`,
   `translations`, `dependencies`; and the xwiki.org documentation rules — `documentation`,
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
-- `okf/architecture/` — `component-system`, `macro-refactoring`, `wiki-user-scope`, `solr-search`,
-  `wiki-application-data`, `required-rights`.
-- `okf/testing/` — `strategy`, `running-docker-its`.
+- `okf/architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
+  `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`.
+- `okf/testing/` — `strategy`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
 - `okf/sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
   rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,
-  `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by the
-  `xwiki-fix-sonarqube-issue` skill, which owns the procedure.
-- `okf/servers/` — `index` (JIRA, CI, Nexus, SonarCloud, forum: how to reach each, and writing over
-  REST), `jira`, `jenkins`.
+  `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by
+  `xwiki-fix-sonarqube-issue`.
+- `okf/servers/` — `index` (reaching and writing to every dev server),
+  `jira`, `jenkins`, `develocity`.
 - `okf/processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
 - `okf/decisions/` — ADRs (the *why* behind durable architectural choices).
 

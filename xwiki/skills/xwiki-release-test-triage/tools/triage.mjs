@@ -6,14 +6,9 @@
  */
 
 import {
-  buildRevision, enc, getJSON, isPseudoTest, outcomes, releaseTrainJobs, testResults, testedBuilds
+  buildRevision, isPseudoTest, outcomes, releaseTrainJobs, testResults, testedBuilds
 } from '../../../scripts/jenkins.mjs';
-
-const JIRA = 'https://jira.xwiki.org';
-// "Flickering tests" (filter 14240), the list the Release Plan links to.
-const FLICKER_JQL = 'labels = flickering AND status in (Open, "In Progress", Reopened)';
-// The JIRA field holding the fully-qualified test, e.g. a.b.AllIT$NestedFooIT#bar.
-const FLICKER_FIELD = 'customfield_10870';
+import { knownFlickers } from '../../../scripts/jira-flickers.mjs';
 
 const USAGE = `Usage: node triage.mjs --branch <branch> [options]
 
@@ -54,28 +49,6 @@ async function revision(buildUrl, repo, branch) {
   } catch {
     return { sha, behind: null };
   }
-}
-
-async function knownFlickers() {
-  const data = await getJSON(
-    `${JIRA}/rest/api/2/search?jql=${enc(FLICKER_JQL)}&maxResults=200&fields=summary,${FLICKER_FIELD}`);
-  const byTest = new Map();
-  const all = [];
-  for (const issue of data?.issues || []) {
-    const entry = { key: issue.key, summary: issue.fields.summary };
-    all.push(entry);
-    const ref = issue.fields[FLICKER_FIELD];
-    if (ref) byTest.set(ref.trim().replace(/\(.*$/, ''), entry);
-  }
-  // Not every flicker issue fills the field in, so fall back to the summary — but only when it
-  // names both the class and the method, since a bare method name matches far too much.
-  return id => {
-    const exact = byTest.get(id);
-    if (exact) return exact;
-    const [className, method] = id.split('#');
-    const simpleName = className.split(/[.$]/).pop().replace(/^Nested/, '');
-    return all.find(issue => issue.summary.includes(simpleName) && issue.summary.includes(method)) || null;
-  };
 }
 
 /** @returns {Map} test id -> one row aggregating every job and environment of the branch. */

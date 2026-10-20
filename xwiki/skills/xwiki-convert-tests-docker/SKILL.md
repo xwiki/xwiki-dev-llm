@@ -9,99 +9,15 @@ Use this skill when converting existing tests that use the JUnit4 legacy functio
 
 For converting unit tests (JUnit4/JMock → JUnit5/Mockito), use the `xwiki-convert-tests` skill instead.
 
+Load **`xwiki-test-guidelines`** too: its rules for writing a test still apply to the converted one.
+
 ## Module structure
 
-Create a new Maven module alongside the existing test module (e.g. `xwiki-platform-extension-test-docker`):
-
-```
-src/
-  test/
-    it/org/xwiki/<feature>/test/docker/
-      AllIT.java       ← test suite entry point
-      FeatureIT.java   ← test class
-    resources/
-      packagefile/     ← any test resource files (XAR packages, etc.)
-    webapp/            ← optional: files overlaid onto the test WAR (see "Overriding WAR files")
-```
-
-### AllIT.java
-
-`AllIT` is the single entry point: it carries `@UITest` and aggregates every test class as a JUnit5
-`@Nested` inner class, so XWiki is started **once** and shared across all of them.
-
-```java
-package org.xwiki.<feature>.test.docker;
-
-import org.junit.jupiter.api.Nested;
-import org.xwiki.test.docker.junit5.UITest;
-
-@UITest
-class AllIT
-{
-    @Nested
-    class NestedFeatureIT extends FeatureIT
-    {
-    }
-    // Add one @Nested class per *IT test class.
-}
-```
-
-The `xwiki-commons` parent pom sets the failsafe `<includes>` default to `**/AllIT.java`, so only
-`AllIT` runs — every test class must be reachable as a `@Nested` class from it.
-
-**Where does the `@UITest` configuration go?** When a test class needs `@UITest` parameters
-(`extraJARs`, `properties`, …), put them on the **test class's own `@UITest`**, and leave a bare
-`@UITest` on `AllIT` — e.g. `xwiki-platform-extension-test-docker` (`ExtensionIT` holds the config,
-`AllIT` is bare). A test class that needs no configuration can be left **without** any `@UITest` of
-its own (e.g. `xwiki-platform-rest-test-docker`, whose pom documents that the nested classes are not
-`@UITest`-annotated). Either way it must not be run standalone — only `AllIT` is executed.
-
-### pom.xml key elements
-
-```xml
-<packaging>jar</packaging>
-
-<dependencies>
-  <!-- The feature's page objects module -->
-  <dependency>
-    <groupId>org.xwiki.platform</groupId>
-    <artifactId>xwiki-platform-<feature>-test-pageobjects</artifactId>
-    <version>${project.version}</version>
-    <scope>test</scope>
-  </dependency>
-  <!-- Docker test framework -->
-  <dependency>
-    <groupId>org.xwiki.platform</groupId>
-    <artifactId>xwiki-platform-test-docker</artifactId>
-    <version>${project.version}</version>
-    <scope>test</scope>
-  </dependency>
-</dependencies>
-
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-failsafe-plugin</artifactId>
-    </plugin>
-  </plugins>
-</build>
-```
-
-### Activating from the parent pom.xml
-
-Add a `docker` profile to the parent test module's `pom.xml`:
-
-```xml
-<profiles>
-  <profile>
-    <id>docker</id>
-    <modules>
-      <module>xwiki-platform-<feature>-test-docker</module>
-    </modules>
-  </profile>
-</profiles>
-```
+Lay out the new modules as the "Functional-test module layout" section of `okf/testing/strategy.md`
+describes, via the `xwiki-knowledge` skill. It covers the `-test` / `-test-pageobjects` /
+`-test-docker` modules and their profiles, the `-test-docker` pom, the `AllIT` entry point with a
+`@UITest` on every test class, and where `@since` goes. Create the `-test-docker` module in the
+feature's existing `-test` module, next to the legacy test module it replaces.
 
 ## @UITest annotation
 
@@ -396,4 +312,4 @@ mvn clean verify -B -ntp \
 3. Run `mvn clean verify` with the `docker` profile and confirm 0 failures, 0 errors.
 4. Verify the DOOD use case by running the build itself inside the `xwiki/build` container (Docker socket mounted, e.g. on Tomcat) — this matches how CI runs it and validates everything in one run. See "Verify the DOOD use case" above.
 5. Check that `@Order` values cover the expected dependency chain between tests.
-6. Confirm `@BeforeEach` cleanup uninstalls/deletes all state that tests create, so tests are independent.
+6. Drop cleanup that only deletes what the tests created: a module's tests need none (cleanup rule in `okf/testing/strategy.md`). Keep a reset a later assertion depends on, as above.

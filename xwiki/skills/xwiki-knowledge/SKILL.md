@@ -23,13 +23,12 @@ session via `instructions/xwiki-org.md`, so you usually already know the topic l
    - `durable` → the inline content is the answer; use it directly.
    - `volatile` → **never quote a value written in the file**; follow its `verify:` recipe instead.
      Typical recipes: read the repo root `pom.xml` `<version>` for the current dev version; query the
-     `sonarqube` MCP for quality/issues; use the `discourse` MCP for forum content; WebFetch the
+     `sonarqube` MCP for quality/issues; use the `discourse` MCP for forum content; `curl` the
      listed dev-wiki `sources:` for anything else that changes.
 3. The dev wiki (dev.xwiki.org) is the upstream source of truth. When a detail is missing or a file
    says the guide is evolving, **fetch the `sources:` URL and prefer it** over the OKF summary.
 4. **Optional accelerator:** if context-mode is installed, index a fetched page once and search it
-   for repeated lookups. The OKF must never *depend* on context-mode — plain Read + WebFetch always
-   works.
+   for repeated lookups. The OKF must never *depend* on context-mode.
 
 ## EXTEND — saving new knowledge (self-improvement)
 
@@ -47,13 +46,20 @@ When a session establishes a fact worth keeping, run the **gate checklist** befo
       that entry instead of adding a duplicate. A fact has exactly one home.
 - [ ] **Right home** — a convention/architecture/process *fact* → the matching `okf/` subdirectory;
       an *architectural decision* (a choice made between options, with rationale) → an **ADR** in
-      `okf/decisions/` (see below); a task procedure → a skill, not the OKF.
+      `okf/decisions/` (see below); a task procedure → a skill, not the OKF; a trap that a **shared
+      script already handles correctly** → that script's header, where it is read exactly when it
+      matters, leaving at most a routing line in the OKF ("use `<script>`, not a query of your own").
+      Two copies drift, and the prose one is the copy that goes stale.
 - [ ] **Minimal** — the OKF is read into context, so **every line costs tokens in every session that
       loads the file**. Write the rule plus the non-obvious trap and stop: no restating it in other
       words, no example the reader does not need, no rationale beyond the clause that makes it stick.
       When the new fact touches an existing bullet, **edit that bullet or cross-reference it** rather
       than stating the fact in two sections. Re-read your diff and cut whatever can go without losing
       a rule or a trap.
+- [ ] **Priced against the file's readers** — a topic file's cost is paid by every session that opens
+      it for *any* reason, so the test is "does someone doing the ordinary thing this file is for
+      need this?", not "is it about this topic?". `okf/servers/jira.md` is opened to file a bug: the
+      JQL quirks of one CI lookup failed that test and belonged next to the code that hits them.
 - [ ] **Nothing extra in the always-on file** — `instructions/xwiki-org.md` is injected into *every*
       session of every XWiki repo, so a line there is paid for by every task that never needed it.
       Its OKF map is **routing only**: the topic name, plus a clause only where the name does not say
@@ -67,7 +73,9 @@ Then:
 
 1. Create/edit the OKF file under the correct subdirectory, with frontmatter:
    `title`, `stability` (`durable`|`volatile`), `summary`, and `sources:` (the dev-wiki URL(s) it
-   derives from). For volatile facts add a `verify:` line and store the recipe, not the value.
+   derives from). An XWiki dev best practice cites **only official dev.xwiki.org pages**, in `sources:`
+   and in the body — never a devs-list or forum thread, even the one where it was decided; that history
+   goes in the PR description. For volatile facts add a `verify:` line and store the recipe, not the value.
    Cross-link related entries with `[[name]]` (the target file's basename without extension).
 2. **Update `okf/index.md`** — the topic line, described in full; this is the map that gets read.
    Then add the topic's **name** to the mirrored map in `instructions/xwiki-org.md`, and nothing
@@ -112,7 +120,7 @@ Self-improvement only happens if learnings flow back. Run the capture check when
 - **(a)** the task *relied on or fetched* a durable, generic XWiki fact — a convention, policy,
   architecture point, or a dev-wiki / xwiki.org doc page — whose topic is **absent from the OKF map,
   or contradicts it**. *Absence is itself the signal; the fact need not be new to you.* In
-  particular, **if you WebFetch an authoritative XWiki doc page to perform a task and its topic isn't
+  particular, **if you fetch an authoritative XWiki doc page to perform a task and its topic isn't
   in the OKF map, offer to capture it.** A whole topic area you needed but the map lacks is a strong
   signal.
 - **(b)** the developer **corrects** you on an XWiki convention, architecture point, or an existing
