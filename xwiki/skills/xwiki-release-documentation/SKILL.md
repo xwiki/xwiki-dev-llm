@@ -351,8 +351,10 @@ Core only: `XWIKI`, `XCOMMONS`, `XRENDERING`, `product = XWiki` — plus any oth
 Release Notes Application on xwiki.org holds (`Cristal`, `ActivityPub Application`), for which
 everything above works, **product and release-note location being parameters, not constants**.
 
-**An extension not bundled in XWiki Standard is out of scope, and owes no release-note entry at
-all**: its fixed issues take `Documentation in Release Notes = N/A`, and nothing is owed until the
-version is released. Why, and the `verify:`, are in `okf/processes/release-notes.md` ("Extensions not
-bundled in XWiki Standard"). The documentation half (§6.1) still applies to such a change, so a
+**An extension not bundled in XWiki Standard owes no entry in the Release Notes Application**: its
+release notes are its version page on extensions.xwiki.org, and once the version is released its
+issues' `Documentation in Release Notes` is that page's URL, never `N/A` (before that, nothing is
+owed). If the page is not there yet, it is imported and filled by `xwiki-contrib-release` §6–7. Why,
+and the `verify:`, are in `okf/processes/release-notes.md` ("Extensions not bundled in XWiki
+Standard"). The documentation half (§6.1) still applies to such a change, so a
 SINGLE run over one of its issues is a documentation-only run.

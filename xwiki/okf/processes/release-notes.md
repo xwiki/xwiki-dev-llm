@@ -64,8 +64,9 @@ So for a fixed issue of such an extension:
   OpenProject's **Reference Documentation** is the counterpart of the JIRA `Documentation` field.
 - **The release-notes side is owed only once the version is released** (the reference
   documentation is done before, in the `xwiki-contrib-release` preflight). The version page is
-  created by the Repository application from the Maven repository once the artifacts are deployed,
-  and the release itself is announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
+  created by the Repository application's import from the Maven repository — a nightly job, or one
+  triggered by hand (the `xwiki-contrib-release` skill) — so it can be missing for hours after the
+  deploy; until then there is no URL to write. The release itself is announced by a blog post (the `xwiki-contrib-release-blog-post` skill).
 
 `verify:` read a version page's `notes` — under
 `/xwiki/rest/wikis/extensions/spaces/Extension/spaces/<Name>/spaces/Versions/spaces/<version>`,
