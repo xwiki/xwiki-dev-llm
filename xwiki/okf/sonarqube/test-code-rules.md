@@ -113,15 +113,17 @@ and abort on any mismatch — that check is what makes the batch trustworthy. Ne
 
 **Mostly safe, but two shapes must be dropped — and both are visible in the flagged line.** A full
 sweep of the rule needs a drop on a minority of sites, so what follows is a drop list, not a reason
-to skip the rule. The **free classifier is whether either operand reads `null`**: if one does,
-drop it; otherwise the swap is a pure re-ordering. The two shapes that depend on operand order (the
-same root cause as "never flip operands" above):
+to skip the rule. The **free classifier is whether either operand reads `null` or is a value of
+another type than the object whose `equals` is under test**: if one does, drop it; otherwise the
+swap is a pure re-ordering. The two shapes that depend on operand order (the same root cause as
+"never flip operands" above):
 
 - **Asymmetric `equals`.** `RegexEntityReference.equals` does regex matching, so
   `regexRef.equals(plain)` is not `plain.equals(regexRef)`. Swapping flips the result and breaks the
   test.
-- **`assertNotEquals(obj, null)` deliberately exercises `obj.equals(null)`.** Swapping to
-  `(null, obj)` short-circuits inside `Objects.equals` and no longer tests that contract.
+- **`assertNotEquals(obj, null)` / `assertNotEquals(obj, "x")` deliberately exercise `obj.equals`.**
+  JUnit calls `unexpected.equals(actual)`, so `(null, obj)` short-circuits on `null` and `("x", obj)`
+  runs `String#equals`: neither tests `obj`'s contract any more.
 
 Swap when both operands are plain values with symmetric `equals` and neither is `null`. That covers
 most of the pool: an actual-side getter against a constant, a `List` against a `List`, a computed
