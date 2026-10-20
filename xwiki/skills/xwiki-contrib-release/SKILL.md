@@ -88,6 +88,8 @@ import creates:
 - **Multi-module project** (a Project page with an `ExtensionCode.ProjectClass`; Solr
   `property.ExtensionCode.ProjectClass.id_string:<groupId>*` on the extensions wiki): click its
   **"Update project"** button. That re-imports the Project **and all its module pages**.
+- **Multi-module repo with no Project page yet** (its modules are standalone pages): read
+  `references/project-page.md` first.
 - **Standalone extension**: open
   `https://extensions.xwiki.org/xwiki/bin/view/ExtensionCode/ImportExtension?importExtension=true&extensionId=<groupId>%3A<artifactId>&repositoryId=maven-xwiki`.
   For a first release, also check the new page's name, authors and "Installable with the Extension

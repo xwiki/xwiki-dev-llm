@@ -133,9 +133,8 @@ the fields you expect.
 
 Two further traps:
 
-- A **project** page (`ExtensionCode.ProjectClass`) has **no `id` xproperty**, so no `ExtensionLD`
-  URL and therefore no "Documentation" button is possible — point its `description` at the new pages
-  instead.
+- A **project** page (`ExtensionCode.ProjectClass`) shows **no "Documentation" button**. Point its
+  `description` at the new pages instead.
 - The `compatibility` and `installation` fields commonly carry **long-obsolete** rows (errors on
   XWiki versions no longer supported, ancient version tables). Those are content to **drop**, not to
   migrate — but confirm against the repo's real minimum version rather than trusting the field.
