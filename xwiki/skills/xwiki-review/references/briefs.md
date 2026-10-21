@@ -10,8 +10,9 @@ there via the `xwiki-knowledge` EXTEND flow and be cited from here instead.
 
 ## Conventions
 
-Load `okf/conventions/code-style.md`, `code-comments.md`, `commit-messages.md` and
-`logging.md`. Enforce exactly what they say against the changed source files and the commit
+Load `okf/conventions/code-style.md`, `code-comments.md`, `commit-messages.md`, `logging.md` and
+`naming.md`, plus `velocity-code-style.md` and `server-side-rendering.md` when a `.vm` file or a XAR
+page changes. Enforce exactly what they say against the changed source files and the commit
 messages. Note that `logging.md` is a decision table rather than a single rule — apply it as a
 table, and do not reduce it to "use placeholders".
 
@@ -19,10 +20,13 @@ table, and do not reduce it to "use placeholders".
 
 Load `okf/architecture/component-system.md`, plus `macro-refactoring.md` if a
 macro is touched, `solr-search.md` if indexing is touched, and `wiki-user-scope.md` if user or group
-visibility is touched. `okf/conventions/code-style.md` also carries component and module rules —
-read it here too. Look at: where new code was placed relative to `oldcore`, how components are
-declared and registered, how the change gets at context, and the direction of any new module
-dependency.
+visibility is touched. `okf/architecture/platform-modules.md` owns where new code goes, and
+`okf/conventions/code-style.md` also carries component and module rules — read both here too. Add
+`okf/conventions/script-services.md` when a script service is added or changed, and
+`okf/conventions/dependencies.md` when a pom adds a third-party dependency. Look at: where new code
+was placed relative to `oldcore`, how components are declared and registered, how the change gets at
+context, the direction of any new module dependency, and whether a new third-party dependency passes
+the acceptance checklist.
 
 ## Backward compatibility
 
@@ -88,7 +92,9 @@ heading structure. Cite each success criterion by number, name and URL.
 ## i18n & UX
 
 Load the `xwiki-translations` skill, which owns both the externalisation rules and
-the word-order rules for composing a translated sentence. *(skill-owned)* Also look at the UX of
+the word-order rules for composing a translated sentence, and `okf/conventions/translations.md`,
+which owns the key lifecycle (which bundle is edited, and what happens to a key that is removed or
+moved). *(skill-owned)* Also look at the UX of
 what the change adds: whether an error message tells the user what to do next, whether a new flow
 has an empty state and a failure state, and whether new labels match the vocabulary already used in
 that part of the UI.
@@ -104,7 +110,7 @@ whether the change has just made a statement in a `README` or `CLAUDE.md` false.
 ## Data & migration
 
 Load `okf/architecture/solr-search.md` when the index is touched, the
-`xwiki-xar-pages` skill when a XAR page is touched, and `okf/architecture/wiki-application-data.md`
+`xwiki-xar-pages` skill and `okf/architecture/required-rights.md` when a XAR page is touched, and `okf/architecture/wiki-application-data.md`
 when the change touches an XClass, a generated page name or a wiki-page migration — that file owns
 the list-property storage rule, page-name allocation and the idempotency rule, so cite it rather than
 reasoning from first principles. Look at: a mapping or stored format changed without a migration, a
