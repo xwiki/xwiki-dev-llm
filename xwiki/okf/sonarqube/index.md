@@ -98,9 +98,13 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S1215`** `System.gc()` — the enclosing method is sometimes a deliberately exposed API (`$xwiki.gc()`).
 - **`S2696`** writing to a static field from an instance method — usually a lazy-init needing sync.
 - **`S2157`** "add `clone()`", **`S1113`** `finalize()` — API changes, not cleanups.
-- **`S2065`** remove `transient` — **load-bearing in XWiki**: job-status classes (`IndexerJob`,
-  `PDFExportJobStatus`, …) are serialized by the job-status store with XStream, which honours
-  `transient`. Removing it changes what gets persisted.
+- **`S2065`** remove `transient` — **load-bearing in XWiki, so the rule is RETIRED rather than
+  dropped**: `JobStatusSerializer#write` serializes a job status with `SafeXStream`, whose
+  `SafeReflectionProvider` delegates to the JVM reflection provider and therefore skips `transient`
+  — without ever reading `java.io.Serializable`. So the rule's premise is false here and removing the
+  modifier changes what gets persisted. The premise is false *everywhere* in XWiki, so this one is
+  retired as a **whole-rule exclusion, not per site** — `sonar.issue.ignore.multicriteria.e3` in
+  `xwiki-commons/pom.xml` (see *Retiring an issue* below). Do not annotate the fields.
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
 - **`S5993`** reduce an abstract class's constructor to `protected` — **only outside an `internal`
   package**, where it is a real Revapi `java.method.visibilityReduced` break. Inside one it is a clean
@@ -158,10 +162,21 @@ with a JIRA issue only when that change touches public API. Those options are th
 choose, not the sweep's — the procedure for putting them up is in the `xwiki-fix-sonarqube-issue`
 skill.
 
-When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**:
-add `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
-*Accepted* in SonarCloud alone hides the reasoning from the next developer, who will try to "fix" it
-again. The full convention is in [[code-style]].
+When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**.
+Which code depends on how wide the false positive is:
+
+- **This site only** → `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why.
+  The full convention is in [[code-style]].
+- **The rule's premise is wrong everywhere in XWiki** → one
+  `sonar.issue.ignore.multicriteria` entry in **`xwiki-commons/pom.xml`**, with the reason as an XML
+  comment. Prefer this to annotating every site: it states one argument once instead of repeating a
+  paragraph on every field, and it covers **all three repos** — the two sibling repos' root poms
+  declare `xwiki-commons-pom` as their parent and define no exclusions of their own. (Measurable: the
+  `java:S1133` legacy exclusion lives only in that pom, and xwiki-platform reports 0 open
+  `java:S1133` in its `xwiki-*-legacy-*` modules.)
+
+Either way the reasoning ends up in front of the next developer, which is what an *Accepted*
+transition in SonarCloud alone does not do — see [[code-style]].
 
 *Accepted* has a second and unrelated use: **claiming** the issues an open PR already fixes, so that
 the next sweep — which discovers work with `issueStatuses=OPEN` — does not redo them. That claim says
