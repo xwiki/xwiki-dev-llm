@@ -456,10 +456,29 @@ def verify(mod):
         for a in p['attachments']:
             if a not in html:
                 problems.append(f'{ref}: image {a} is not in the rendered HTML')
-        diagrams = p['content'].count('{{plantuml')
+        diagrams = live_diagrams(p['content'])
         if diagrams:
             problems.extend(check_diagrams(ref, diagrams, html))
     return problems
+
+
+INLINE_CODE = re.compile(r'\{\{code\b[^}]*\}\}.*?\{\{/code\}\}')
+
+
+def live_diagrams(content):
+    """Count the `{{plantuml}}` macros that render: one shown as source inside a `{{code}}` block
+    never does, and counting it fails `verify` with a false "0/N plantuml diagram(s) rendered".
+    Complete inline `{{code}}` pairs are dropped from a line first, as in `strip_verbatim`."""
+    count, inside = 0, False
+    for line in content.split('\n'):
+        bare = INLINE_CODE.sub('', line)
+        if not inside:
+            count += len(re.findall(r'\{\{plantuml\b', re.split(r'\{\{code\b', bare)[0]))
+        if re.search(r'\{\{code\b', bare):
+            inside = True
+        if '{{/code}}' in bare:
+            inside = False
+    return count
 
 
 def check_diagrams(ref, expected, html):
