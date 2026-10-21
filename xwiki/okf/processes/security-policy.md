@@ -18,21 +18,21 @@ verify: |
 
 XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is officially disclosed:
 
-- **Never describe the vulnerability in anything public** — commit messages, PR titles/descriptions,
-  GitHub issues/comments, public forum/chat. Use an **obfuscated** commit message that says *what*
-  changed mechanically, not *that it closes a security hole* or *how it was exploitable*.
+- **Never describe the vulnerability in anything public** — commit messages, code comments
+  ([[code-comments]]), branch names, PR titles/descriptions, GitHub issues/comments, public
+  forum/chat. Use an **obfuscated** commit message that says *what* changed mechanically, not *that
+  it closes a security hole* or *how it was exploitable*. A pushed branch is public at once
+  (ci.xwiki.org names a job after it) and its name stays on its PR for good: name it neutrally
+  before the first push.
 - Track the real issue as a **JIRA issue with a restricted security level** (visible only to the
   security group), not as a public ticket. Security discussion happens on the
   committer-private/security mailing list (see [[index]] in `servers/`).
-- Code comments must never carry a live exploit description either — see [[code-comments]].
 - The **published advisory** carries no PoC either (no exploit request, payload or reproduction
   steps — only the affected feature, attack vector, requirements and impact), even after
   disclosure: scanners import advisories and replay their PoCs. The PoC stays in the JIRA issue.
   The Security Policy's "Security Advisory template and information" section has required this
-  since October 2026. It changes past practice (older advisories often have one), so past
-  advisories are no model for it. Drafting details: the `xwiki-security-advisory` skill.
-
-This is why a security fix's public commit looks deliberately mundane.
+  since October 2026, so past advisories (often with one) are no model for it. Drafting details:
+  the `xwiki-security-advisory` skill.
 
 ## Merging a non-committer's security pull request
 
