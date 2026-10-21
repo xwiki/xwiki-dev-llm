@@ -1,6 +1,6 @@
 ---
 name: xwiki-backport
-description: Backport any change (bug fix, feature, refactor, or test) to an older branch of an XWiki repo (xwiki-platform / xwiki-commons / xwiki-rendering / xwiki-contrib). Cherry-pick `-x` the source commit(s) into a worktree, ADAPT the result to the older branch (module pom versions, Java level, `@since` tags, style/API divergence), verify it compiles against that branch, and push / open a PR. Use whenever a commit that exists on one branch needs to be applied to an older/maintenance branch. For the `testneeded`-labelled test sweep use xwiki-backport-testneeded (which builds on this skill); for Maven commands use xwiki-build; for PR/commit conventions use xwiki-pull-request; for the versioning/`@since` conventions (the format and what carries `@since`) use xwiki-knowledge.
+description: Backport any change (bug fix, feature, refactor, or test) to an older branch of an XWiki repo (xwiki-platform / xwiki-commons / xwiki-rendering / xwiki-contrib). Cherry-pick `-x` the source commit(s) into a worktree, ADAPT the result to the older branch (module pom versions, Java level, `@since` tags, data migration versions and skip ranges, style/API divergence), verify it compiles against that branch, and push / open a PR. Use whenever a commit that exists on one branch needs to be applied to an older/maintenance branch. For the `testneeded`-labelled test sweep use xwiki-backport-testneeded (which builds on this skill); for Maven commands use xwiki-build; for PR/commit conventions use xwiki-pull-request; for the versioning/`@since` conventions (the format and what carries `@since`) use xwiki-knowledge.
 ---
 
 Apply a change that exists on one branch (the **source** — often `master`, but it can be any newer
@@ -149,6 +149,22 @@ existing order. **Never invent an `@since`** where the source code did not alrea
 For the exact format and *which elements* carry `@since` (reusable classes/members — `internal` ones
 and test tools such as page objects and test frameworks included — versus the tests themselves, which
 carry none), see the versioning convention via **xwiki-knowledge**.
+
+### 3.E — Data migrations (fires when the change adds an `R*DataMigration`)
+
+A backported data migration runs **twice** on a DB upgraded from the target branch to a newer one,
+unless the newer branches skip it — nothing fails, so no build catches the omission (XWIKI-24670 and
+XWIKI-25057 both forgot it). Two edits:
+
+- **On the target branch**, rename the class, its `@Named` hint and `getVersion()` to the target's next
+  release (`R180100000XWIKI23827` → `R171014000XWIKI23827`, `171014000`). The manager sets the DB
+  version to each migration's version, so a version above the branch's own skips that branch's later
+  migrations.
+- **On the source branch and every other newer branch holding the migration**, make `shouldExecute()`
+  return `false` for `[<backported version>, <first version of the branch after the target>)` —
+  `!(version >= 171014000 && version < 180000000)` — and test both bounds. A second backport of the
+  same migration adds a second range to every one of those copies. Like §3.D, this is a separate
+  commit/PR on each of those branches.
 
 ## 4. When a backport branch goes stale (base moved under it)
 
