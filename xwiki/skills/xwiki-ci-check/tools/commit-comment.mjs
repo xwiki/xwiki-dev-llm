@@ -98,7 +98,10 @@ function provenTarget(found, { sha, pr, proof, why }) {
   if (!suspect) {
     return `${sha} is not one of the incident's suspects — a proof picks among them, never outside the window`;
   }
-  return { repo: found.provable.repo, state: found.provable.state, sha: suspect.sha, tier: PROOFS[proof], proof, why };
+  // `covers`: a build break borrowing the window of the test that first failed in the same build
+  // answers that test too, in this one comment.
+  return { repo: found.provable.repo, state: found.provable.state, sha: suspect.sha, tier: PROOFS[proof], proof, why,
+    covers: found.provable.covers };
 }
 
 /**

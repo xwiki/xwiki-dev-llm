@@ -26,7 +26,13 @@ and stop as soon as the answers hold; every step is cheaper than the one after i
    at the suspect's parent; with several suspects, bisect over them (`git bisect run` on the module
    build). A lint, compile or enforcer failure reproduces in minutes, and so does a unit test. A
    functional test is not rerun here — that hour belongs to the stabilisation slot (§5).
-5. **The Environment Tests trap, by hand**, when only that job fails and the trace's line numbers
+5. **A test red on a stable branch and green on master** (or a newer branch): the fix may simply be
+   missing here. List the commits to the test class and its page objects on master that the branch
+   lacks — `git log <branch>..origin/master -- <paths>`, then `git log <branch> --grep <its JIRA key>`
+   for each, since a backport is a new sha. A missing one that names this test or its symptom is a
+   backport for `xwiki-backport`, said in *Next*; the latest backport someone made is not the
+   default suspect (2026-10-21: LightboxIT on 17.10.x lacked XWIKI-21734, not the retry blamed).
+6. **The Environment Tests trap, by hand**, when only that job fails and the trace's line numbers
    match the file at the commit's parent (`okf/servers/jenkins.md`). An `infra` incident carrying `snapshotGap`
    ran against jars that many commits behind its checkout: before blaming the agent, check whether
    its failing tests use what those production commits changed (page objects, a new webjar).

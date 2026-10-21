@@ -46,7 +46,7 @@ could not be read. Leave all of that as it is, and fill or delete the markers:
 | Marker | What replaces it |
 |---|---|
 | `<!-- PASTE -->` | the paste URL, if `--paste` was not given; on a silent morning it lives in the run log alone |
-| `<!-- DONE: <id> -->` | what this run did: `[commented](<comment URL>) on [<sha>](<url>) (<login>)`, `no owner found`, `[issue filed](<url>)`, `[commented on <KEY>](<url>)`, `fix in flight` once a candidate PR is confirmed, the `prove` result (`reproduced at <sha>`, `not reproduced`) — one clause; on a `commentedWith` row, the same comment as its carrier's |
+| `<!-- DONE: <id> -->` | what this run did: `[commented](<comment URL>) on [<sha>](<url>) (<login>)`, `no owner found`, `[issue filed](<url>)`, `[commented on <KEY>](<url>)`, `fix in flight` once a candidate PR is confirmed, the `prove` result (`reproduced at <sha>`, `not reproduced`) — one clause; on a `commentedWith` row, the same comment as its carrier's; on a deep row nothing was written about, the owner the paste's *Next* names (`<who> → <what>`, one clause) — `no owner found` only when it names nobody, since the room reads the digest and the paste as one story |
 | `<!-- STABILISE: … -->` | the row of the stabilisation PR §5 opened, or nothing |
 | `<!-- SILENT: … -->` | see below |
 

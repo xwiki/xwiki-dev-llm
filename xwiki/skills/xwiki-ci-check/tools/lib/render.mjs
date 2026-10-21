@@ -23,7 +23,9 @@ import { plural, settled, testName } from './util.mjs';
 // incident's *why* and *next* are one `<!-- WHY: id -->` / `<!-- NEXT: id -->` marker each, and its
 // root cause is the `<!-- ANALYSIS: id -->` line inside its block. references/paste.md says how to fill all three.
 
-const agedAs = incident => (incident.ageDays == null
+// A lower bound of 0 days says only that the first build examined is today's: "≥0d" read as an age
+// and told nobody anything (2026-10-21).
+const agedAs = incident => (incident.ageDays == null || (incident.ageIsLowerBound && !incident.ageDays)
   ? 'age unknown'
   : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`);
 
@@ -50,6 +52,8 @@ function windowOf(incident) {
 }
 
 const shortName = incident => testName(incident.id.split('/').slice(2).join('/'));
+/** A Matrix sender as the room knows them: the localpart, as the digest and the paste both name them. */
+const roomName = sender => String(sender || 'somebody').replace(/^@/, '').split(':')[0];
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
 /** How an answer is named in prose — a sha, a PR by its number, or the person who said it. */
 export const fixName = fix => (fix.kind === 'fix-in-flight' ? `PR #${fix.number}`
@@ -473,6 +477,13 @@ function nextOf(incident, { horizonDays, filing, stabilising, cause, sharing }) 
   if (incident.deep && !settled(incident)) {
     lines.push(`<!-- NEXT: ${incident.id} -->`);
   } else if (!lines.length) {
+    // Somebody who said in the room they were looking at it is the person to ask first, even when the
+    // sentence was too old or too vague to count as a claim: on 2026-10-21 two rows read "nobody →"
+    // under mhamann's own "I'm checking …" quoted in their blocks. A pointer to a person, not a blame.
+    const [last] = said(incident).slice(-1);
+    if (last && !settled(incident)) {
+      lines.push(`${roomName(last.sender)} → said in the room on ${last.at.slice(0, 10)} they were looking at it: ask first`);
+    }
     lines.push(`nobody → ${noOneOwes(incident, horizonDays)}`);
   }
   return lines.join('<br>');
@@ -909,7 +920,6 @@ export function deltaOf(report, previous) {
 
 /** Rows the table holds before the rest is left to the paste — `fromChat` rows come on top. */
 const DIGEST_ROWS = 5;
-const roomName = sender => String(sender || 'somebody').replace(/^@/, '').split(':')[0];
 const linked = (text, url) => (url ? `[${text}](${url})` : text);
 const browse = key => `${JIRA}/browse/${key}`;
 
@@ -945,7 +955,9 @@ function doneOf(incident, report) {
   if (incident.jira) {
     return `tracked: ${(incident.jiras || [jiraKey(incident)]).map(key => linked(key, browse(key))).join(', ')}`;
   }
-  return incident.deep ? 'no owner found' : 'in the paste, not analysed';
+  // A deep row's owner is the analysis's conclusion — the paste's *Next* — so the run fills it from
+  // there: on 2026-10-21 this cell said "no owner found" while the paste sent mflorea to the same row.
+  return incident.deep ? `<!-- DONE: ${incident.id} -->` : 'in the paste, not analysed';
 }
 
 /** The *What* cell: what is red, and the one fact a dashboard does not have. */
@@ -1027,13 +1039,25 @@ export function renderDigest(report, previous, { paste = null } = {}) {
     + `| ${shortRepo(incident.repo)}/${[incident.branch, ...(incident.alsoOn || [])].map(shortBranch).join('+')} `
     + `| ${cell(whatOf(incident, moves))} | ${incident.ageDays == null ? '—' : agedAs(incident)} `
     + `| ${cell(doneOf(incident, report) + citeRoom(incident))} |`;
-  // What went green is the line no dashboard shows, so it is never cut: one row per repo.
+  // What went green is the line no dashboard shows, so it is never cut: one row per repo. Each test
+  // names its own branches when the row spans several, and the branches it is still red on: on
+  // 2026-10-21 `LiveDataIT` sat in "✅ master+17.10.x+18.9.x" and in an open 18.9.x row at once.
+  const stillRed = (repo, entry) => [...new Set(incidents.filter(incident => shortRepo(incident.repo) === repo
+    && !incident.beyondHorizon && shortName(incident).split('#')[0] === entry.what
+    && (!entry.methods.size || entry.methods.has(shortName(incident).split('#')[1])))
+    .map(incident => shortBranch(incident.branch)))];
   const greenRows = [...new Set([...fixed.values()].map(entry => entry.repo))].map(repo => {
     const entries = [...fixed.values()].filter(entry => entry.repo === repo);
     const branches = [...new Set(entries.flatMap(entry => [...entry.branches]))];
+    const where = entry => {
+      const red = stillRed(repo, entry);
+      const notes = [branches.length > 1 ? [...entry.branches].join('+') : null,
+        red.length ? `still red on ${red.join('+')}` : null].filter(Boolean);
+      return notes.length ? ` (${notes.join(', ')})` : '';
+    };
     return `| ✅ | ${repo}/${branches.join('+')} | ${cell(entries.map(entry => (entry.methods.size > 1
       ? `${entry.methods.size} × \`${entry.what}\``
-      : `\`${entry.what}${entry.methods.size ? `#${[...entry.methods][0]}` : ''}\``)).join('; '))} | — | green |`;
+      : `\`${entry.what}${entry.methods.size ? `#${[...entry.methods][0]}` : ''}\``) + where(entry)).join('; '))} | — | green |`;
   });
   const shown = moved.slice(0, Math.max(1, DIGEST_ROWS - greenRows.length));
   // A suppression on a *sentence* always goes back to the room that said it, whatever else is cut:

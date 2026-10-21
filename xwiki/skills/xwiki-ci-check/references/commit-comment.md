@@ -44,6 +44,12 @@ node <skill>/tools/commit-comment.mjs --work-order work-order.json --incident "<
   --file body.md [--write]
 ```
 
+**`provable.sameBuildAs`**: a build break whose own history holds no green build borrows the window of
+the test that first failed in the same build of the same job — the break is the one cheap to
+reproduce, so it carries the comment, and that test is in `covers`, answered by the same body. When
+that test is `commentable` instead, the break is `commentedWith` it: name the break in that comment
+only if your analysis links it to the same commit.
+
 The tool refuses a sha that is not a suspect and a comment without `--proof` and `--why`, and prints
 the proof under the body — the person it names sees what it rests on. When no proof holds, the
 incident is *no owner found* and the paste says which suspects you ruled out and how.

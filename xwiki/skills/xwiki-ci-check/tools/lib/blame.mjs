@@ -106,3 +106,28 @@ export function attribute(incident, commits) {
     reason: `${commits.length} commits by ${authors.size} author(s), ${relevant.size} of them relevant`
   };
 }
+
+/**
+ * The incident whose regression window a build break with none of its own may borrow, or null.
+ *
+ * A break whose job history holds no green build gets no suspects, so neither `commentable` nor
+ * `provable` — while a test of the same job that first failed in the *same* build has a last good
+ * build and a window. On 2026-10-21 master's `xwiki-platform-rendering-macro-context` break was
+ * reproduced at 2b79fb7b and passed at its parent, its `IntegrationTests` row read "since #9045,
+ * last good #9044", and no comment went out because "the work order gave no suspects". The peer must
+ * be the one that carries the comment (`commentable` or `provable`): the break then rides on it.
+ *
+ * @param {object} incident a deep build break
+ * @param {object[]} all every incident of the run
+ * @param {function(object): string} jobOf the job an incident was seen on — build numbers are per job
+ */
+export function sameBuildPeer(incident, all, jobOf) {
+  if (!incident.deep || incident.class !== 2 || incident.commentable || incident.provable
+    || incident.commentedWith || incident.primary === false || incident.silent || incident.beyondHorizon
+    || incident.lastGoodBuild != null || incident.firstBadBuild == null
+    || /sonar-gate:failed$/.test(incident.signature || '')) return null;
+  return all.find(peer => peer !== incident && peer.class === 1 && peer.repo === incident.repo
+    && peer.branch === incident.branch && jobOf(peer) === jobOf(incident)
+    && peer.firstBadBuild === incident.firstBadBuild && peer.lastGoodBuild != null
+    && peer.primary !== false && (peer.commentable || peer.provable)) || null;
+}

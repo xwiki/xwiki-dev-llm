@@ -24,7 +24,7 @@ import { develocityFacts } from './dv-test-history.mjs';
 import { gateFacts, nameAuthors } from './sonar-gate.mjs';
 import { recallable } from './memory.mjs';
 import { readFileSync } from 'node:fs';
-import { blameKeys, names } from './lib/blame.mjs';
+import { blameKeys, names, sameBuildPeer } from './lib/blame.mjs';
 import { fixedElsewhere, forwardFix, inFlightFix, infraSnapshotGap, staleSnapshot } from './lib/fix-signals.mjs';
 import { github, priorComment, priorPrComment, token, tokenFallback } from './lib/github.mjs';
 import { basename } from './lib/logs.mjs';
@@ -33,7 +33,7 @@ import {
   FIX_HEAD, deltaOf, fixName, isGate, publicView, renderDetail, renderDigest, securityOnly, stateLine, unreleasable
 } from './lib/render.mjs';
 import { chatClaim, chatOf, issueClaim, memoryOfArgs, mentionsOf } from './lib/room.mjs';
-import { discover, incidentsOf, investigate, jobHistory, severity } from './lib/sweep.mjs';
+import { discover, incidentsOf, investigate, jobHistory, oneKindPerCause, severity } from './lib/sweep.mjs';
 import { DAY, daysSince, plural, settled } from './lib/util.mjs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
@@ -209,6 +209,7 @@ for (const group of sameCause.values()) {
   // master first, then the newest maintained branch, then whichever saw it first: a fix is written
   // where development is, so that is the branch whose commit a reader can act on.
   group.sort((a, b) => branchRank(a.branch) - branchRank(b.branch) || (b.ageDays ?? -1) - (a.ageDays ?? -1));
+  oneKindPerCause(group);
   for (const [index, incident] of group.entries()) {
     incident.alsoOn = group.filter(other => other !== incident).map(other => other.branch);
     incident.crossBranch = 'also-red';
@@ -652,6 +653,30 @@ for (const incident of incidents.filter(entry => entry.prove)) {
 }
 oneCommentPerCommit(incidents);
 for (const incident of incidents) incident.provable = provableTarget(incident);
+sameBuildComment(incidents);
+
+/**
+ * A build break with no green build of its own goes in the comment of the test that first failed in
+ * the same build of the same job (`sameBuildPeer`): one comment per commit (§4), carried by whichever
+ * incident has a window. A `provable` peer hands its suspects to the break, which becomes the carrier,
+ * because the break is the one the run reproduces.
+ */
+function sameBuildComment(all) {
+  const jobOf = incident => incident.window?.job || incident.job || 'main';
+  for (const incident of all) {
+    const peer = sameBuildPeer(incident, all, jobOf);
+    if (!peer) continue;
+    if (peer.commentable) {
+      peer.commentable.covers = [...(peer.commentable.covers || []), { id: incident.id, state: incident.state }];
+      incident.commentedWith = peer.id;
+    } else {
+      incident.provable = { ...peer.provable, state: incident.state, sameBuildAs: peer.id,
+        covers: [...(peer.provable.covers || []), { id: peer.id, state: peer.state }] };
+      peer.provable = null;
+      peer.commentedWith = incident.id;
+    }
+  }
+}
 
 /**
  * At most one comment per commit per run (§4): a gate whose PR squashed into the commit a build
@@ -929,7 +954,8 @@ if (!args.pretty) {
   console.log(`CI sweep ${report.generatedAt.slice(0, 10)} — ${summary.red}/${summary.jobs} jobs red, ` +
     `${summary.incidents} incident(s), ${summary.deep} deep-treated`);
   for (const incident of incidents) {
-    const age = incident.ageDays == null ? 'age?' : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`;
+    const age = incident.ageDays == null || (incident.ageIsLowerBound && !incident.ageDays) ? 'age?'
+      : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`;
     const who = incident.blame?.culprit
       ? `${incident.blame.tier} → ${incident.blame.culprit.short} (${incident.blame.culprit.author})`
       : incident.blame?.tier || '—';

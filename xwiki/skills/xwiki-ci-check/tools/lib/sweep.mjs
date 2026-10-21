@@ -242,6 +242,19 @@ export function cofailing(flickering) {
   });
 }
 
+/**
+ * One cause read one way on every branch it is red on. `kind` is decided per job, so one cause could
+ * be a flicker on master and a breakage on stable-18.9.x — as `SideMenuIT`'s seven tests were on
+ * 2026-10-21, failing together since the same commit on both. A breakage seen on any branch is what
+ * the cause is: the group is promoted to it, and keeps each branch's own `state`.
+ *
+ * @param {object[]} group the incidents of one repo sharing one signature
+ */
+export function oneKindPerCause(group) {
+  if (!group.some(incident => incident.kind === 'test-breakage')) return;
+  for (const incident of group) if (incident.kind === 'flicker') incident.kind = 'test-breakage';
+}
+
 export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
   const incidents = [];
   const jobs = await Promise.all(target.jobs.map(job => jobHistory(job, args.history)));
