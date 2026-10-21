@@ -7,7 +7,7 @@ the orchestrator filters on it:
 
 - **`false`** — false positive under light scrutiny, or a pre-existing issue on an untouched line.
 - **`unverified`** — might be real, could not be verified. Stylistic, and not explicitly called out
-  by any cited rule.
+  by any cited rule (a design point with no rule is judged under `suggestion` below).
 - **`nitpick`** — verified real, but rare in practice; unimportant relative to the change. A breach
   of an explicitly stated rule can still be a `nitpick` when a competent committer would not change
   the code for it.
@@ -16,6 +16,13 @@ the orchestrator filters on it:
   matters to the change. An explicit rule proves the finding is real; it does not by itself rule out
   `nitpick`.
 - **`certain`** — confirmed by direct evidence, will happen in practice.
+- **`suggestion`** — a design or maintainability point with no written rule behind it, that is
+  verified real, is about code the change adds or reshapes, names a concrete alternative, and that a
+  competent committer would plausibly act on (`okf/architecture/module-design.md` is such a lens).
+  Two questions decide a verdict — *is it real and does it matter?* and *does a written rule back
+  it?* — and only the first decides this one. It is still `nitpick` when it is style without a rule,
+  `false` when it is about pre-existing or untouched code, and `unverified` when it is a process
+  remark (JIRA status, PR hygiene) or a speculative "could also" idea.
 
 For a finding citing a rule, **open the cited file and confirm the rule actually
 says that**. A citation that does not check out is `false`. Read the finding's angle section of

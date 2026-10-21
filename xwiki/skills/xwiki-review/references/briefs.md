@@ -28,6 +28,11 @@ was placed relative to `oldcore`, how components are declared and registered, ho
 context, the direction of any new module dependency, and whether a new third-party dependency passes
 the acceptance checklist.
 
+When the change adds a class or module, or restructures one (new public methods, moved
+responsibilities, a new helper), also load `okf/architecture/module-design.md` and apply it to
+those classes only — never to code the change merely calls. What it finds is `suggestion`-grade
+(the contract says how to report it); the XWiki rules above stay the source of every other finding.
+
 ## Backward compatibility
 
 Load `okf/conventions/backward-compatibility.md` and

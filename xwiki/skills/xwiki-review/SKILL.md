@@ -5,19 +5,18 @@ description: "EXPLICIT INVOCATION ONLY — never load this skill for a plain rev
 
 # XWiki multi-angle review
 
-**This skill is opt-in.** It is never the answer to a plain "review this" — a normal review is done
-directly, without it. It runs only when the developer asks for it by name (`/xwiki-review`, "run
-xwiki-review", "the full multi-angle review") or when a CI routine invokes it. It spawns eleven
-reviewers over the same diff, so it costs an order of magnitude more tokens and wall-clock than a
-single-pass review; that price only buys something when the developer has decided they want it.
+**This skill is opt-in**, never the answer to a plain "review this": it runs only when named
+(`/xwiki-review`, "run xwiki-review") or invoked by a CI routine. Its eleven reviewers cost an order
+of magnitude more tokens and wall-clock than a single-pass review, a price worth paying only when the
+developer has decided they want it.
 
 A review that is *XWiki-aware*: every finding must trace to a rule this project actually holds —
-an OKF file, a skill, a `CLAUDE.md`, or a code fact — never to generic best-practice folklore.
+an OKF file, a skill, a `CLAUDE.md`, or a code fact — never to generic best-practice folklore. A
+design point no rule backs can only reach the author as a non-blocking suggestion (§5).
 
-The value is not "an LLM read the diff". It is that eleven narrow reviewers each read the diff
-through one lens they know deeply, and that everything they say is filtered hard before a human
-sees it. **A review nobody trusts is worse than no review**, so the whole protocol is built around
-suppressing false positives.
+The value is that eleven narrow reviewers each read the diff through one lens they know deeply, and
+that everything they say is filtered hard before a human sees it. **A review nobody trusts is worse
+than no review**, so the protocol is built around suppressing false positives.
 
 ## 0. Inputs
 
@@ -119,9 +118,9 @@ brief**. **Read the contract yourself before fanning out**, and load `okf/proces
 the contract's "Never write the word" list binds your own narration, the comment and every log from
 here on (§6b says why).
 
-The rules an angle enforces live in the OKF and in the other skills, and are never restated here or
-in the briefs: the skeptic of §5 drops any finding whose cited file does not say what was claimed,
-so a stale paraphrase would not produce wrong findings — it would silence the angle.
+The rules an angle enforces live in the OKF and the other skills, never restated here or in the
+briefs: the skeptic drops a finding whose cited file does not say what was claimed, so a stale
+paraphrase would silence the angle.
 
 The OKF ships inside this plugin at `okf/` — resolve it from this skill's directory as `../../okf/`
 (in Claude Code `${CLAUDE_PLUGIN_ROOT}/okf/`, in Kimi Code `${KIMI_SKILL_DIR}/../../okf/`, in
@@ -148,12 +147,13 @@ one whose rule citation is more specific and merge the reasoning.
 Then, for each surviving finding **in parallel**, run an independent skeptic that is given the
 finding and its angle, the diff, the `CLAUDE.md` paths, the resolved OKF path and the absolute
 paths of `references/skeptic.md`, which holds its instructions, and of `references/briefs.md`. It returns one verdict — `false`,
-`unverified`, `nitpick`, `confirmed` or `certain` — after opening the cited file to check the rule
+`unverified`, `nitpick`, `suggestion`, `confirmed` or `certain` — after opening the cited file to check the rule
 actually says what the finding claims.
 
-**Keep `confirmed` and `certain`; drop the rest.** If nothing survives, still post (§6) — that is a
-good review, not a failed one, and the comment is what lets step 1's head-SHA check stop a re-trigger
-from re-running the whole fan-out.
+**Keep `confirmed` and `certain` as findings, and at most two `suggestion`s — the two a committer
+is likeliest to act on; drop the rest.** If nothing survives, still post (§6) — that is a good review,
+not a failed one, and the comment is what lets step 1's head-SHA check stop a re-trigger from
+re-running the whole fan-out.
 
 ## 6. Post
 
@@ -177,7 +177,7 @@ Then:
 ```
 ### Automated review
 
-Reviewed <N> files across <angles run, comma-separated>. Found <M> issue(s).
+Reviewed <N> files across <angles run, comma-separated>. Found <M> issue(s), <S> suggestion(s).
 
 **Blockers**
 1. <one-sentence claim> — <rule cited, linked>
@@ -188,6 +188,10 @@ Reviewed <N> files across <angles run, comma-separated>. Found <M> issue(s).
 
 **Minor**
 3. ...
+
+**Suggestions — not blocking, take or leave**
+4. <the point and the alternative it names> — <lens cited, or "no written rule">
+   <permalink>
 
 <Angles that were skipped, and why.>
 ```
@@ -202,9 +206,9 @@ Rules for the comment body:
 - Every rule citation is a link too — to the OKF file, the skill, or the `CLAUDE.md` line. A file
   of this plugin links to `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>`,
   `<version>` being the one in `xwiki/.claude-plugin/plugin.json`.
-- Leave out a severity heading with no finding under it; write `1 issue`, not `1 issues`. With no
-  surviving finding the comment is the marker, the disclaimer, the `Reviewed … Found 0 issues.` line
-  and the skipped angles — nothing else.
+- Leave out a heading with nothing under it; write `1 issue`, not `1 issues`. With nothing
+  surviving the comment is the marker, the disclaimer, the `Reviewed … Found 0 issues, 0
+  suggestions.` line and the skipped angles — nothing else.
 - Use `gh` for all GitHub interaction. Never push, never edit files, never re-run the build.
 
 ### 6b. Never write the word
@@ -226,10 +230,9 @@ hard constraint and not a stylistic preference.
 Concretely: write the missing mechanism, never the problem it guards against — the Write / Never
 write list is in `references/reviewer-contract.md`, read before step 4.
 
-A finding phrased this way is indistinguishable from any other convention finding, which is exactly
-the goal: it is actionable for the author, and it signals nothing to anyone reading over their
-shoulder. It is the same device the policy already prescribes for a security fix's commit message —
-say what changed mechanically, never that it closes a hole.
+A finding phrased this way reads like any other convention finding — actionable for the author,
+signalling nothing to anyone reading over their shoulder: the device the policy prescribes for a
+security fix's commit message.
 
 **Out of scope, deliberately.** This routine does not hunt for novel vulnerabilities — the kind that
 require reasoning about reachability and attacker capability, which cannot be phrased mechanically
@@ -241,8 +244,8 @@ may the comment say, or hint, that a `full` review ran.
 
 ## 7. Feed what you learned back
 
-Whenever a reviewer wanted to flag something real but found **no rule in the OKF, a skill or a
-`CLAUDE.md` to cite**, it returns a *candidate convention* (the contract says how): one line, what
-the rule would say and the example that prompted it. These are not posted on the PR. They are batched and offered to a
-human through the `xwiki-knowledge` EXTEND flow — which is how the reviewer gets sharper over time
-instead of repeating the same unfounded opinions.
+Whenever a reviewer saw something real that should hold for every change but found **no rule in
+the OKF, a skill or a `CLAUDE.md` to cite**, it returns a *candidate convention* (the contract says how): one line, what
+the rule would say and the example that prompted it. They are not posted; they are batched and
+offered to a human through the `xwiki-knowledge` EXTEND flow — which is how the reviewer gets sharper
+over time instead of repeating the same unfounded opinions.
