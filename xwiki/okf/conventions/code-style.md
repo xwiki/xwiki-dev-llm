@@ -103,9 +103,10 @@ Conventions (all verifiable with `grep -rn -B4 '@SuppressWarnings("java:S'`):
 A Checkstyle suppression is a different mechanism and does not affect Sonar: a class-level
 `@SuppressWarnings("checkstyle:MultipleStringLiterals")` does **not** suppress `java:S1192`.
 
-To silence a rule across **many** classes rather than one, declare it in the `<properties>` of
-`xwiki-commons/xwiki-commons-pom/pom.xml` as a `sonar.issue.ignore.multicriteria` entry — never in the
-SonarCloud UI, where it would apply silently to every branch:
+When the same reason would be repeated at many sites, silence the rule once instead: declare it in the
+`<properties>` of the xwiki-commons **root** `pom.xml` (SonarQube only honours issue exclusions on the
+analysis root; rendering and platform inherit them) as a `sonar.issue.ignore.multicriteria` entry, with
+the reason in an XML comment — never in the SonarCloud UI, where it would apply silently to every branch:
 
 ```xml
 <sonar.issue.ignore.multicriteria>e1,e2</sonar.issue.ignore.multicriteria>
@@ -115,10 +116,9 @@ SonarCloud UI, where it would apply silently to every branch:
 </sonar.issue.ignore.multicriteria.e1.resourceKey>
 ```
 
-Both current entries cover the `-legacy` modules: `java:S1133` (deprecated-API usage) and
-`java:S1214` (constants in an interface). A legacy module exists to keep publishing an old API shape
-unchanged, so neither is actionable there. Because the exclusion now lives in the pom rather than in
-the UI, adding one has to be merged to every maintained branch or those branches keep reporting it.
+`verify:` `grep -A3 'sonar.issue.ignore' pom.xml` lists the current entries and their reasons — mostly
+rules scoped to the `-legacy` modules, which exist to keep publishing an old API shape unchanged.
+Adding an entry has to be merged to every maintained branch, or those branches keep reporting it.
 
 Which rules are worth suppressing rather than fixing is in [[index]] (the SonarQube corpus); the
 procedure is the `xwiki-fix-sonarqube-issue` skill.

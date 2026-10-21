@@ -51,9 +51,16 @@ simplification rules need no dataflow check; modernization and dead-code rules d
 Each of these is either bad ROI or a false positive against a deliberate XWiki idiom. Verify before
 "fixing" any of them:
 
-- **`S3776`** cognitive complexity — a genuine refactor, never a mechanical fix. Likewise **`S2143`**
-  (migrate to `java.time`), **`S2160`** (override `equals` in a subclass) and **`S1141`** (nested
-  try) — all real design changes that deserve a JIRA issue, not a Sonar sweep.
+- **`S3776`** cognitive complexity — not a sweep fix, and **never suppressed**: a refactoring PR per
+  module, tests passing on the original code first, then extract real, well-named methods — never
+  `step1()`/`step2()` slicing to get under 15. A Checkstyle complexity suppression on the method is
+  not a decision to hide the debt (Checkstyle breaks the build, Sonar does not): it stays OPEN.
+- **`S2143`** (migrate to `java.time`), **`S2160`** (override `equals` in a subclass) and **`S1141`**
+  (nested try) — real design changes that deserve a JIRA issue, not a Sonar sweep.
+- **`S1181`** catch `Throwable` — suppressed only at a thread boundary (a job's run) and where code
+  must never fail a whole XStream (de)serialization (`StackOverflowError` on deep graphs). Isolating
+  extension or third-party code that fails with a `LinkageError` → `catch (Exception | LinkageError e)`,
+  so an `OutOfMemoryError` is not swallowed: a behaviour change, its own PR with a test.
 - **`S1186`** empty method — the empty body is usually a deliberate no-op hook.
 - **`S2629`** "logging arguments should not require evaluation" — **read [[logging]] before touching
   a single site.** In XWiki a log argument is *stored as an object*: a job captures the `LogEvent`
@@ -75,9 +82,6 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   pool is temp-file cleanup in a `finally`, and `Files.delete` *throws*, which masks the original
   exception and creates a fresh **`S1163`**. The other S899 shape is `queue.offer()` on an unbounded
   queue (always `true`), where "doing something" with the result is a design decision.
-- **`S1948`** "make this non-static field `transient` or serializable" — the exact inverse of
-  **`S2065`** and load-bearing for the same reason: XWiki serializes job statuses and requests with
-  XStream, which honours `transient`, so adding it changes what gets persisted.
 - **`S2386`** "make this member `protected`" — reduces the visibility of a public static member →
   Revapi `java.field.visibilityReduced`, the same break as **`S5993`**.
 - **`S6213`** "rename this **method**…" (`record`, `yield`, `var`) — a rename of a public method is an
@@ -98,9 +102,13 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`S1215`** `System.gc()` — the enclosing method is sometimes a deliberately exposed API (`$xwiki.gc()`).
 - **`S2696`** writing to a static field from an instance method — usually a lazy-init needing sync.
 - **`S2157`** "add `clone()`", **`S1113`** `finalize()` — API changes, not cleanups.
-- **`S2065`** remove `transient` — **load-bearing in XWiki**: job-status classes (`IndexerJob`,
-  `PDFExportJobStatus`, …) are serialized by the job-status store with XStream, which honours
-  `transient`. Removing it changes what gets persisted.
+- **`S2065`** remove `transient` / **`S1948`** add it — **load-bearing in XWiki**: job statuses,
+  requests and all they reference are serialized with XStream, which honours `transient` whatever the
+  class implements, so either change alters what gets persisted. S2065 is excluded pom-wide for it.
+- **`S2176`** / **`S9149`** name shadowing a super type — rename an `internal` class. A deprecated
+  type kept only for its old name moves to `-legacy` (excluded there pom-wide) unless a live class
+  still extends it (then it stays OPEN). Suppress a published name or a drop-in extension of a
+  third-party class (`StringUtils`, `EscapeTool`, SLF4J `Logger`).
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
 - **`S5993`** reduce an abstract class's constructor to `protected` — **only outside an `internal`
   package**, where it is a real Revapi `java.method.visibilityReduced` break. Inside one it is a clean
@@ -157,6 +165,12 @@ into `-legacy`), encapsulating the idiom once, or deferring the change and leavi
 with a JIRA issue only when that change touches public API. Those options are the developer's to
 choose, not the sweep's — the procedure for putting them up is in the `xwiki-fix-sonarqube-issue`
 skill.
+
+A suppression is acceptable only when the flagged shape is **imposed from outside the code**: an
+external API contract (JUnit 4 `throws Throwable`, the Servlet API's `EnumSet`), a serialization
+framework, a published name, or what a test fixture exercises. "It is deliberate" is not a reason; on
+published API weigh deprecate + `-legacy` first. One reason repeated at many sites is one pom-wide
+exclusion ([[code-style]]).
 
 When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**:
 add `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
