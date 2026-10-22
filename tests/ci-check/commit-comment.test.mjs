@@ -42,3 +42,23 @@ test('a quality-gate comment is never raised', () => {
     commentable: { repo: 'xwiki-platform', state: 'sonar-gate:failed', tier: 'likely', pr: 6900, sha: B565 } }] };
   assert.match(refusal(gate, { incident: 'gate', pr: '6900', proof: 'reproduced', why: REPRODUCED }), /never more/);
 });
+
+// 2026-10-22: the tool picked a CSS change for the requiredrights ITs; the run proved 18958b0492
+// in-diff, and nobody was told because a proof could not move the target.
+const RR = 'platform/master/org.xwiki.blocknote.test.ui.AllIT$NestedCollaborationIT#restrictScriptMacroExecution';
+const CSS = '11c4871c5f0000000000000000000000000000aa';
+const WIKIMACRO = '18958b049209767b095b6e3640da9d8762873833';
+const picked = { incidents: [{ id: RR,
+  commentable: { repo: 'xwiki-platform', state: 'test-breakage', tier: 'likely', sha: CSS, author: 'Sereza5' },
+  provable: { repo: 'xwiki-platform', state: 'test-breakage', instead: CSS,
+    suspects: [{ sha: WIKIMACRO, author: 'michitux' }] } }] };
+const IN_DIFF = 'This commit adds requiredrights-default to wikimacro-store, the core extension the install error names';
+
+test("a reproducible proof replaces the tool's likely pick", () => {
+  assert.equal(refusal(picked, { incident: RR, sha: '18958b0492', proof: 'in-diff', why: IN_DIFF }), null);
+  assert.match(refusal(picked, { incident: RR, sha: '18958b0492', proof: 'diff-link', why: IN_DIFF }), /reproduced\|in-diff/);
+  assert.match(refusal(picked, { incident: RR, sha: '18958b0492' }), /reproduced\|in-diff/);
+  assert.match(refusal(picked, { incident: RR, sha: 'f221ce14b7', proof: 'in-diff', why: IN_DIFF }), /not one of/);
+  // The pick itself is still commentable as before.
+  assert.equal(refusal(picked, { incident: RR, sha: '11c4871c5f' }), null);
+});

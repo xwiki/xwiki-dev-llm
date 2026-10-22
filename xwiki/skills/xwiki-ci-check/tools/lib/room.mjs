@@ -236,7 +236,7 @@ export function chatClaim(incident, chat, want) {
     author: message.sender,
     // Quoted, and bounded: what goes in the work order is evidence of what was said, not a channel
     // through which a long message reaches a model's instructions.
-    title: `"${message.body.replace(/\s+/g, ' ').trim().slice(0, 200)}"`,
+    title: `"${excerptFor(message.body, incident)}"`,
     url: message.permalink,
     at: message.at,
     where: want === 'announced'
@@ -256,6 +256,20 @@ export function chatClaim(incident, chat, want) {
 }
 
 /**
+ * The paragraph of a message that names the incident, bounded — the whole message's start when no
+ * single paragraph does. One message often pings two people about two failures: on 2026-10-22 the
+ * first 200 characters of one were about the macro-context break, its second paragraph asked mflorea
+ * about SideMenuIT, and the run, reading only the quote, wrote the room off as unrelated.
+ */
+export function excerptFor(body, incident) {
+  const keys = chatKeys(incident);
+  const flat = text => text.replace(/\s+/g, ' ').trim();
+  const naming = String(body).split(/\n\s*\n/).map(flat).filter(Boolean)
+    .find(part => namesIncident({ body: part, names: namesIn(part) }, keys));
+  return (naming || flat(String(body))).slice(0, 200);
+}
+
+/**
  * Every message that names this incident, whatever it says about it.
  *
  * Separate from `chatClaim` on purpose: suppression needs a phrase and a timestamp to agree, but
@@ -271,7 +285,7 @@ export function mentionsOf(incident, chat) {
   return chat.messages.filter(message => namesIncident(message, keys)).map(message => ({
     at: message.at,
     sender: message.sender,
-    said: message.body.replace(/\s+/g, ' ').trim().slice(0, 200),
+    said: excerptFor(message.body, incident),
     permalink: message.permalink
   }));
 }

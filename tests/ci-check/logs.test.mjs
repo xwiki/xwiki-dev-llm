@@ -61,3 +61,15 @@ test('a Java compile error keeps its file and line', () => {
   assert.equal(result.signature, 'Build/compile:Foo.java:12');
   assert.equal(result.file, '/w/src/main/java/org/xwiki/Foo.java');
 });
+
+// master #9049 (2026-10-21): every step of "Build for TestRelease" passed and only the stage's own
+// error said why it failed. Reported as "no error line, the next build settles it"; it recurs.
+test('the withMaven XML limit on the controller is infrastructure, kept from a console line too', () => {
+  const STAGE_ERROR = 'org.jenkinsci.plugins.pipeline.maven.MavenPipelineException: Exception occured in withMaven'
+    + ' pipeline step: JAXP00010003: The length of entity "[xml]" is "100,001" that exceeds the "100,000" limit se';
+  const CONSOLE = 'org.xml.sax.SAXParseException; lineNumber: 3407380; columnNumber: 57; JAXP00010003: The length of'
+    + ' entity "[xml]" is "100,001" that exceeds the "100,000" limit set by "jdk.xml.maxGeneralEntitySizeLimit".';
+  assert.deepEqual(keep(['[INFO] BUILD SUCCESS', CONSOLE]), [CONSOLE]);
+  // Not a build break: no matcher names a module or a file in it.
+  assert.equal(classify([], STAGE_ERROR, at, 'Build for TestRelease'), null);
+});

@@ -231,6 +231,11 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   skill as part of any unit-test change: it raises the module pom's `xwiki.jacoco.instructionRatio`
   when the achieved ratio has grown, and otherwise guides adding the missing tests. (The mvn command
   lives in the skill.)
+- **A coverage check a change makes fail** — when the change only *removed* covered code and added
+  no uncovered code, the drop is arithmetic (`(c−k)/(t−k) < c/t`), not missing tests: lower
+  `xwiki.jacoco.instructionRatio` to the achieved value in that change. Tests are owed only for the
+  code it added. On a stable branch, never add a test master lacks — tests land on master first; a
+  ratio below master's means master has a test or cleanup the branch doesn't, to backport or not.
 
 ## Functional-test module layout
 

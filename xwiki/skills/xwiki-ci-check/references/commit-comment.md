@@ -56,8 +56,12 @@ incident is *no owner found* and the paste says which suspects you ruled out and
 
 **The same proofs raise the tool's own `likely` pick.** When the incident is `commentable` at
 `likely` and you reproduced the failure at its commit and not at its parent, pass `--proof` and
-`--why` with that commit's sha: the comment may then state the cause. A proof never moves the
-target to another commit, and a quality-gate comment stays `likely` whatever is proven.
+`--why` with that commit's sha: the comment may then state the cause. A quality-gate comment stays
+`likely` whatever is proven.
+
+**And they replace it.** A `likely` pick is a file match, and can be the wrong commit. When the
+incident also carries `provable` with `instead` (its pick), and a `reproduced` or `in-diff` proof
+lands on another of its suspects, comment on that one, with `--proof`; no comment goes to the pick.
 
 The tool attributes nothing to a test with an open or closed flicker issue (`jira`, `jiraClosed`),
 or to a `single env` failure that passes in some builds — unless it is now `systematic`: then treat

@@ -18,7 +18,13 @@ const INFRA_PATTERNS = [
     re: /Could not transfer artifact .* (Connection timed out|Connection reset|502|503)/
   },
   { id: 'agent-lost', re: /Agent went offline|channel is already closed|Connection was broken: java\.io\.IOException/ },
-  { id: 'disk-full', re: /No space left on device/ }
+  { id: 'disk-full', re: /No space left on device/ },
+  // The withMaven step parses Maven's event log *on the controller* once Maven has finished, and the
+  // JDK's XML entity limit rejects a large one: BUILD SUCCESS, then a red build. On 2026-10-22 this
+  // printed no `[ERROR]` line, failed no step — only the stage's own error says it — and master was
+  // reported "no error line, the next build settles it" on a failure that recurs until the
+  // controller's JVM option is raised.
+  { id: 'jenkins-xml-limit', re: /JAXP\d+: .*limit/ }
 ];
 
 export const ESLINT_PROBLEM_RE = /\[INFO\]\s+\d+:\d+\s+error\s{2,}\S.*\s{2,}\S+\s*$/;
@@ -193,6 +199,9 @@ export async function diagnose(buildUrl) {
       // the tail, and the ones that are not are worth a second request only once that is known.
       if (hasMore && consoleUrl) bag.truncated.push(consoleUrl);
     }
+    // A stage can fail with every step green: what fails it then runs on the controller, after the
+    // steps (withMaven reading Maven's event log), and only the stage's own error names it.
+    bag.nodeError ??= candidate.error?.message?.split('\n')[0].slice(0, 200) || null;
     stages.push(bag);
   }
   const stage = stages[0]?.name ?? null;

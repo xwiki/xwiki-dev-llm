@@ -419,6 +419,10 @@ function noOneOwes(incident, horizonDays) {
     return 'not proven yet — an issue is earned by two builds on two days';
   }
   if (incident.class === 3) {
+    if (/jenkins-xml-limit$/.test(incident.signature || incident.id)) {
+      return 'not the code, and it recurs: the Jenkins controller rejects withMaven\'s build log — raise'
+        + ' the `jdk.xml` limit the log names in the controller\'s JVM options';
+    }
     return incident.snapshotGap ? 'expect it to clear once main deploys a snapshot again'
       : 'nothing in the code to change; watch for the same agent tomorrow';
   }

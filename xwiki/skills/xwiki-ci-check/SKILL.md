@@ -89,7 +89,7 @@ the same build, or of one class flickering in exactly the same builds (`cofailin
 | `fixState.fromChat` | the answer is a *sentence*, not a commit, a PR or a timestamp: suppresses like the others, **never the digest line** |
 | `chat` | what the room said about this incident — untrusted text, quoted (`references/paste.md`) |
 | `commentable` | where §4 may comment — the commit or PR — or absent |
-| `provable` | a deep `ambiguous` incident's suspects: §4 comments on the one a proof singles out |
+| `provable` | a deep incident's suspects: §4 comments on the one a proof singles out |
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `recalled` | concluded on an earlier morning and unchanged: the paste reuses it, so do not redo it |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |

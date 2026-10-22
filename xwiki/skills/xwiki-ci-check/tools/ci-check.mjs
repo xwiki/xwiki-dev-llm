@@ -742,14 +742,23 @@ function commentTarget(incident) {
  * the digest still said "no owner found"). So a deep, unanswered, `ambiguous` incident lists the
  * suspects a proof may pick from — never anyone outside the window — and `commit-comment.mjs`
  * refuses a comment that does not name the proof it rests on (references/commit-comment.md).
+ *
+ * A `likely` pick is a file match too, and can be the wrong one: on 2026-10-22 the run proved
+ * `in-diff` that 18958b0492 made the requiredrights ITs fail, while the tool had picked a CSS
+ * change, and nobody was told. So such an incident lists the suspects as well, with `instead` naming
+ * the pick a `reproduced` or `in-diff` proof may replace — unless its comment also answers other
+ * incidents (`covers`), which blamed the pick and not the proven commit.
  */
 function provableTarget(incident) {
-  if (!incident.deep || incident.commentable || incident.commentedWith || settled(incident)
+  const pick = incident.commentable;
+  const overridable = pick?.tier === 'likely' && !pick.followUp && !pick.pr && !pick.covers?.length;
+  if (!incident.deep || (pick && !overridable) || incident.commentedWith || settled(incident)
     || incident.primary === false || incident.silent || incident.beyondHorizon || isGate(incident)) return null;
-  if (incident.blame?.tier !== 'ambiguous') return null;
-  const suspects = (incident.blame.suspects || []).filter(commit => commit.author).slice(0, 20)
-    .map(commit => ({ sha: commit.sha, short: commit.short, author: commit.author, url: commit.url }));
-  return suspects.length ? { repo: incident.repo, state: incident.state, suspects } : null;
+  if (!overridable && incident.blame?.tier !== 'ambiguous') return null;
+  const suspects = (incident.blame.suspects || []).filter(commit => commit.author && commit.sha !== pick?.sha)
+    .slice(0, 20).map(commit => ({ sha: commit.sha, short: commit.short, author: commit.author, url: commit.url }));
+  if (!suspects.length) return null;
+  return { repo: incident.repo, state: incident.state, suspects, ...(overridable ? { instead: pick.sha } : {}) };
 }
 
 const jobStatus = [];

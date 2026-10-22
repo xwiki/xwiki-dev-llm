@@ -107,8 +107,8 @@ function provenTarget(found, { sha, pr, proof, why }) {
 /**
  * The tool's own pick, raised by a proof. On 2026-10-18 the run reproduced master's lint break on
  * the rule b565ea607d enabled, and still had to *ask* its author, because `likely` was the tool's
- * tier and only `provable` took a proof. A proof never moves the target, and a gate's comment stays
- * `likely` whatever is proven: it names whose code is under a condition, not who broke a build.
+ * tier and only `provable` took a proof. A gate's comment stays `likely` whatever is proven: it
+ * names whose code is under a condition, not who broke a build.
  */
 function raisedTarget(found, { proof, why }) {
   const target = found.commentable;
@@ -125,6 +125,23 @@ function raisedTarget(found, { proof, why }) {
 }
 
 /**
+ * Where the comment goes: the tool's pick, raised or not, or the suspect a proof singled out — which
+ * replaces a `likely` pick only when the work order says it may (`provable.instead`) and only on a
+ * proof a reader can repeat. A reading of the diff does not overrule the tool's own reading.
+ */
+function targetOf(found, options) {
+  const { sha, proof } = options;
+  const other = found.commentable && sha && !found.commentable.sha?.startsWith(sha);
+  if (other && found.provable?.instead) {
+    if (PROOFS[proof] !== 'certain') {
+      return `replacing the work order's pick ${found.commentable.sha} needs --proof reproduced|in-diff`;
+    }
+    return provenTarget(found, options);
+  }
+  return found.commentable ? raisedTarget(found, options) : provenTarget(found, options);
+}
+
+/**
  * Why the work order does not allow this comment, or null when it does.
  *
  * @param {object} report the work order `ci-check.mjs` printed
@@ -137,7 +154,7 @@ export function refusal(report, { incident, repo, state, sha, pr, proof, why }) 
     return `one comment per commit per run (SKILL.md §4): this incident goes in the comment of ${found.commentedWith}`
       + ' — write both into that one body';
   }
-  const target = found.commentable ? raisedTarget(found, { proof, why }) : provenTarget(found, { sha, pr, proof, why });
+  const target = targetOf(found, { sha, pr, proof, why });
   if (typeof target === 'string') return target;
   if (!target) return 'the work order does not make this incident commentable (SKILL.md §4)';
   if (repo && repo !== target.repo) return `the incident is in ${target.repo}, not ${repo}`;
@@ -239,7 +256,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await exitAfterOutput(0);
   }
   const found = report.incidents.find(entry => entry.id === options.incident);
-  const target = found.commentable ? raisedTarget(found, options) : provenTarget(found, options);
+  const target = targetOf(found, options);
   options.repo ??= target.repo;
   options.state ??= target.state;
   options.covers = target.covers || [];

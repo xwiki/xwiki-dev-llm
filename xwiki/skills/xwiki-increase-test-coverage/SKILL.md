@@ -14,7 +14,8 @@ aborts and produces no coverage at all (see the ``xwiki-build`` skill).
 2. Run ``mvn jacoco:report -B -ntp``
 3. Compare the computed total instruction coverage ratio from ``./target/site/jacoco/index.html`` with ``xwiki.jacoco.instructionRatio`` property from ``pom.xml``
   * If greater, update ``pom.xml`` and stop
-  * If lower:
+  * If lower only because the change removed covered code, lower ``pom.xml`` instead (``okf/testing/strategy.md``) and stop
+  * If lower otherwise:
     1. Analyze the JaCoCo report from ``./target/site/jacoco/``
     2. Identify classes with low test coverage; prioritize classes with local changes
     3. Identify execution paths that are not covered by unit tests; prioritize main execution paths from changed code
