@@ -107,7 +107,7 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
   `xwiki-fix-sonarqube-issue`.
 - `servers/` — `index` (reaching and writing to every dev server), `jira`, `jenkins`, `develocity`.
 - `processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
-- `okf/decisions/` — ADRs (the *why* behind durable architectural choices).
+- `decisions/` — ADRs (the *why* behind durable architectural choices).
 
 **Capturing learnings:** when a task relies on or fetches a durable, generic XWiki fact whose topic
 is absent from (or contradicts) the map above, or the developer corrects you on a convention or

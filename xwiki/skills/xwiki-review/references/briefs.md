@@ -118,11 +118,12 @@ Load `okf/architecture/solr-search.md` when the index is touched, the
 `xwiki-xar-pages` skill and `okf/architecture/required-rights.md` when a XAR page is touched, and `okf/architecture/wiki-application-data.md`
 when the change touches an XClass, a generated page name or a wiki-page migration — that file owns
 the list-property storage rule, page-name allocation and the idempotency rule, so cite it rather than
-reasoning from first principles. Look at: a mapping or stored format changed without a migration, a
+reasoning from first principles; load `okf/architecture/data-migrations.md` when the change adds or
+edits an `R*XWIKI*` data migration or a `TaskConsumer`. Look at: a mapping or stored format changed without a migration, a
 migration that is not idempotent or re-runs on an already-migrated instance, a migration whose cost
 scales with table size, an XClass property whose stored type does not match the comparisons made on
-it, and an index change with no reindex path. *(skill-owned: Java store code and `*.hbm.xml` mapping
-changes still have no OKF home.)*
+it, and an index change with no reindex path. *(skill-owned: Java store code other than data migrations,
+and `*.hbm.xml` mapping changes, still have no OKF home.)*
 
 ## Spec conformance
 
