@@ -40,9 +40,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **naming** — what to call a Maven artifact, an npm package, a property, a UIX id, a skin, an icon.
 - **frontend** — client-side code: JavaScript modules and WebJars, custom vs native events, CSS as a
   skin extension, JS backward compatibility, accessibility.
-- **server-side-rendering** — what a wiki page, sheet or template emits: space gobbling and
-  `$doc.display` eat the blank lines between generated blocks (*"cannot be used inline"*), and which
-  Velocity lines need a closing `##`.
+- **server-side-rendering** — what a wiki page, sheet or template emits: the blank lines eaten
+  between generated blocks (*"cannot be used inline"*), and which Velocity lines need a closing `##`.
 - **translations** — the lifecycle of a translation key: which file a bundle lives in, the
   l10n/Weblate registration a *new* one needs, which locale committers maintain, deprecating and
   renaming.
@@ -55,8 +54,7 @@ in the topic file. Read the entry to choose, then read the file — never act on
   lifecycle, evolving an interface with default methods, and who may use `internal` packages.
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with and how to check them, injection, parsing XML.
-- **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
-  it does not return `null` for a `getLastError()` read-back) and takes arguments, and why an
+- **script-services** — how a script service reports an error and takes arguments, and why an
   existing signature cannot change.
 - **performance** — the memory rule for user-sized data: stream it, never buffer it.
 - **logging** — what to pass a log call and at which level, and why an explicit `toString()` is
@@ -86,6 +84,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **wiki-user-scope** — why a subwiki offers only main-wiki users and groups: where its user scope is
   stored (not on the descriptor) and what it defaults to.
 - **solr-search** — XWiki's Solr backend, and what running it against a remote Solr requires.
+- **data-migrations** — writing a Hibernate data migration, and why an `AbstractDocumentsMigration`
+  can succeed while changing nothing.
 - **module-design** — a general design lens, not an XWiki rule (depth, deletion test, locality,
   seams), for the classes a change adds or reshapes; what it finds is only ever a suggestion.
 

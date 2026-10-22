@@ -90,23 +90,23 @@ role holders): the relevant file gives a `verify:` recipe instead (read `pom.xml
 
 OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, read it to choose:
 
-- `okf/conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
+- `conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `script-services`, `performance`, `logging`, `naming`,
   `frontend`, `server-side-rendering`, `velocity-code-style`,
   `translations`, `dependencies`; and the xwiki.org documentation rules — `documentation`,
   `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
   `xwiki-doc-writing` / `xwiki-doc-convert`.
-- `okf/architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
-  `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`, `module-design`.
-- `okf/testing/` — `strategy`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
-- `okf/sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
+- `architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
+  `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`, `module-design`,
+  `data-migrations`.
+- `testing/` — `strategy`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
+- `sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
   rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,
   `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by
   `xwiki-fix-sonarqube-issue`.
-- `okf/servers/` — `index` (reaching and writing to every dev server),
-  `jira`, `jenkins`, `develocity`.
-- `okf/processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
+- `servers/` — `index` (reaching and writing to every dev server), `jira`, `jenkins`, `develocity`.
+- `processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
 - `okf/decisions/` — ADRs (the *why* behind durable architectural choices).
 
 **Capturing learnings:** when a task relies on or fetches a durable, generic XWiki fact whose topic
