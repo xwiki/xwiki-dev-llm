@@ -125,9 +125,9 @@ function raisedTarget(found, { proof, why }) {
 }
 
 /**
- * Where the comment goes: the tool's pick, raised or not, or the suspect a proof singled out — which
- * replaces a `likely` pick only when the work order says it may (`provable.instead`) and only on a
- * proof a reader can repeat. A reading of the diff does not overrule the tool's own reading.
+ * Where the comment goes: the tool's pick, raised or not, or the suspect a proof singled out. A
+ * proof replaces the pick only where `provable.instead` allows it (ci-check.mjs `provableTarget`),
+ * and only one a reader can repeat: a reading of the diff does not overrule the tool's.
  */
 function targetOf(found, options) {
   const { sha, proof } = options;

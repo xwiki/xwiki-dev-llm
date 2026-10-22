@@ -49,9 +49,8 @@ that an S6201 pattern-match eliminates.
 **The resolution is to drop the offending module from the change, not to fix its coverage and never to
 lower the pinned ratio.** Revert that module's files, take it out of the reactor, note the exclusion in
 the pull request description, and ship the rest. Writing tests purely to offset a mechanical cleanup is
-out of scope for a Sonar fix, and so is the threshold change [[strategy]] allows a change whose purpose
-is the removal; if the module genuinely needs coverage, that is the `xwiki-increase-test-coverage`
-skill's job as its own change.
+out of scope for a Sonar fix, and so is the ratio [[strategy]] lowers for a removal; if the module
+genuinely needs coverage, that is the `xwiki-increase-test-coverage` skill's job as its own change.
 
 Small modules with few sites are where this bites; large modules absorb it.
 

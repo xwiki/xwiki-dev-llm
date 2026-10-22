@@ -19,11 +19,9 @@ const INFRA_PATTERNS = [
   },
   { id: 'agent-lost', re: /Agent went offline|channel is already closed|Connection was broken: java\.io\.IOException/ },
   { id: 'disk-full', re: /No space left on device/ },
-  // The withMaven step parses Maven's event log *on the controller* once Maven has finished, and the
-  // JDK's XML entity limit rejects a large one: BUILD SUCCESS, then a red build. On 2026-10-22 this
-  // printed no `[ERROR]` line, failed no step — only the stage's own error says it — and master was
-  // reported "no error line, the next build settles it" on a failure that recurs until the
-  // controller's JVM option is raised.
+  // withMaven parses Maven's event log on the controller after BUILD SUCCESS, and the JDK's XML entity
+  // limit rejects a large one. It recurs until the controller's JVM option is raised; on 2026-10-22
+  // master was reported "no error line, the next build settles it".
   { id: 'jenkins-xml-limit', re: /JAXP\d+: .*limit/ }
 ];
 

@@ -14,7 +14,7 @@ when none of that is open, never instead of it. `summary.stabilise.blockers` is 
 | Tier | What | PR |
 |---|---|---|
 | **A — mechanical** | License headers, a Checkstyle violation the error localises exactly (line > 120 chars, unused import, whitespace, missing newline), a trivially broken compile after a rename | ready for review |
-| **A — coverage** | A failing coverage check whose `blame.tier` is `certain` or `likely`, fixed by `okf/testing/strategy.md`'s coverage rule: a culprit that only removed covered code gets the ratio lowered to the achieved value; otherwise the missing unit tests (`xwiki-increase-test-coverage`), on master only — a stable branch never gets a test master lacks. Never edit an existing test | **draft** — the culprit judges which case it is, and any new test |
+| **A — coverage** | A failing coverage check whose `blame.tier` is `certain` or `likely`, fixed as `okf/testing/strategy.md`'s coverage rule says — a lowered ratio or new unit tests (`xwiki-increase-test-coverage`). Never edit an existing test | **draft** — the culprit judges which |
 | **B — inferred** | A UI change renamed a selector and the page object still queries the old one; renamed or moved test resources | **draft** |
 | **B — follows the culprit** | A *unit* test still expecting a value the culprit commit's own diff changed — see below | **draft** |
 | **B — the fix itself** | The failure is the product (or the build) being wrong, and the fix is production code: code a new lint rule rejects, a null the culprit's diff lets through. The body states any behaviour change — `.then()` → `await` changes how a rejection propagates — and the culprit, assigned, is the one who judges it | **draft** if it changes behaviour, ready for review otherwise |
