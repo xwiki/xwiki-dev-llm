@@ -57,7 +57,7 @@ The `backport/<target-branch>/XWIKI-nnnnn` name mirrors the auto-backport bot's
 
 ## 3. Adapt to the branch — the part that actually matters
 
-Run **all four** checks below after every cherry-pick, clean or conflicted.
+Run **all five** checks below after every cherry-pick, clean or conflicted.
 
 ### 3.A — Module pom versions (MANDATORY, fires even on a clean cherry-pick)
 
@@ -152,19 +152,16 @@ carry none), see the versioning convention via **xwiki-knowledge**.
 
 ### 3.E — Data migrations (fires when the change adds an `R*DataMigration`)
 
-A backported data migration runs **twice** on a DB upgraded from the target branch to a newer one,
-unless the newer branches skip it — nothing fails, so no build catches the omission (XWIKI-24670 and
-XWIKI-25057 both forgot it). Two edits:
+Otherwise the migration runs again on a DB upgraded from the target branch to a newer one, and
+nothing fails to tell you:
 
-- **On the target branch**, rename the class, its `@Named` hint and `getVersion()` to the target's next
-  release (`R180100000XWIKI23827` → `R171014000XWIKI23827`, `171014000`). The manager sets the DB
-  version to each migration's version, so a version above the branch's own skips that branch's later
-  migrations.
-- **On the source branch and every other newer branch holding the migration**, make `shouldExecute()`
-  return `false` for `[<backported version>, <first version of the branch after the target>)` —
-  `!(version >= 171014000 && version < 180000000)` — and test both bounds. A second backport of the
-  same migration adds a second range to every one of those copies. Like §3.D, this is a separate
-  commit/PR on each of those branches.
+- **Target branch:** rename the class, its `@Named` hint and `getVersion()` to the target's next
+  release (`R180100000XWIKI23827` → `R171014000XWIKI23827`, `171014000`) — a higher version would push
+  the DB version past that branch's later migrations.
+- **Source and every other newer branch holding the migration:** `shouldExecute()` returns `false` for
+  `[<backported version>, <first version of the branch after the target>)`
+  (`!(version >= 171014000 && version < 180000000)`), tested on both bounds — a separate commit/PR per
+  branch, as in §3.D. A second backport adds a second range to each copy.
 
 ## 4. When a backport branch goes stale (base moved under it)
 
