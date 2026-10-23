@@ -242,7 +242,7 @@ for (const incident of incidents) {
   // the other place people write it.
   incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args)
     || chatClaim(incident, chat, 'announced')
-    || await forwardFix(incident, jobsById.get(incident.id), args)
+    || await forwardFix(incident, jobsById.get(incident.id), args, targetJobs.get(incident.id) || [])
     || await inFlightFix(incident, args)
     || chatClaim(incident, chat, 'being-handled')
     || await issueClaim(incident)

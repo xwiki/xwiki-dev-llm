@@ -76,7 +76,13 @@ export function forwardKeys(incident) {
     // `AllIT$NestedDocExtraTabsIT` is declared in `DocExtraTabsIT.java`: the `Nested` prefix names
     // the inner class the suite wraps it in, and no file carries it.
     const simple = id.split('#')[0].split(/[.$]/).pop();
-    const keys = [...new Set([`${simple}.java`, `${simple.replace(/^Nested/, '')}.java`])];
+    const names = [...new Set([simple, simple.replace(/^Nested/, '')])];
+    // And the directory named after the class, which holds that test's own fixtures: on 2026-10-23
+    // `9c03e54382` fixed `SideMenuIT` on 18.9.x by changing only
+    // `src/test/resources/screenshots/SideMenuIT/…/firefox/*.png`, and the row read "flicker".
+    // A path *segment*, never a prefix: `/SideMenuIT/` is not `/SideMenuITHelper/`. The `.java`
+    // keys stay last, since the last key is the class's name in `covers`.
+    const keys = [...names.map(name => `/${name}/`), ...names.map(name => `${name}.java`)];
     groups.set(keys.join('|'), keys);
   }
   // A dependency break names no file at all — the bump that caused it changed a pom and nothing
@@ -95,7 +101,7 @@ export function forwardKeys(incident) {
  * The newest match wins. Where several unbuilt commits touch the failing code, the last one is the
  * state of the branch now, and it is the state of the branch the next build will judge.
  */
-export async function forwardFix(incident, job, args) {
+export async function forwardFix(incident, job, args, jobs = []) {
   if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
   const { build, commits } = await unbuiltOf(job, incident.repo, incident.branch, args);
   if (!commits.length) return null;
@@ -110,6 +116,7 @@ export async function forwardFix(incident, job, args) {
   // all, so coverage is counted across *every* unbuilt commit and only a full house goes quiet.
   const covered = groups.filter(keys => commits.some(c => keys.some(key => touches(c, key))));
   const partial = groups.length > 1 && covered.length < groups.length;
+  const confirmedBy = partial ? [] : await passedWith(incident, commit, job, jobs, args);
   return {
     kind: 'fix-unbuilt',
     sha: commit.short,
@@ -117,7 +124,11 @@ export async function forwardFix(incident, job, args) {
     title: commit.title,
     url: commit.url,
     afterBuild: build,
-    where: `pushed after build #${build} and not yet built`,
+    where: confirmedBy.length
+      ? `pushed after build #${build}; main ${confirmedBy.map(number => `#${number}`).join(' and ')}`
+        + ' built it and passed these tests'
+      : `pushed after build #${build} and not yet built`,
+    confirmedBy,
     covers: covered.map(keys => keys[keys.length - 1].replace(/\.java$/, '')),
     of: groups.length,
     partial,
@@ -127,6 +138,36 @@ export async function forwardFix(incident, job, args) {
   };
 }
 
+
+/**
+ * The newest main builds of the branch that contain `commit` and passed every test of the incident,
+ * when this incident was read from another job — or none.
+ *
+ * Unbuilt is per job: the Environment Tests job runs nightly, and the main job has often built the
+ * fix by then. On 2026-10-23 18.9.x's env #12 had failed `SideMenuIT` before `9c03e54382`, while
+ * main #21 and #22 had passed it with that commit. Two consecutive passes, as for a fix on another
+ * branch (`HEALED_RUN`): one is what a flicker gives as often as a fix does.
+ */
+async function passedWith(incident, commit, job, jobs, args) {
+  const main = jobs.find(entry => entry.label === 'main');
+  if (incident.class !== 1 || !main || main === job || job?.label === 'main') return [];
+  const ids = (incident.tests || []).slice(0, 20);
+  try {
+    const passed = [];
+    for (const build of main.tested.slice(0, args.history)) {
+      const { ran, failed } = await outcomesOf(`${main.url}/${build.number}`);
+      if (!ids.every(id => ran.has(id) && !failed.has(id))) break;
+      passed.push(build.number);
+    }
+    if (passed.length < HEALED_RUN) return [];
+    // The oldest pass must already contain the fix, or the passes may predate it.
+    const oldest = await buildRevision(`${main.url}/${passed[passed.length - 1]}`, incident.repo);
+    const diff = oldest && await github(`/repos/xwiki/${incident.repo}/compare/${commit.sha}...${oldest}`);
+    return ['ahead', 'identical'].includes(diff?.status) ? passed.reverse() : [];
+  } catch {
+    return [];
+  }
+}
 
 // ---- In-flight fix ---------------------------------------------------------------------------
 // The second place the answer can already exist, after the unbuilt commits above: an open pull

@@ -932,7 +932,11 @@ function doneOf(incident, report) {
   const fix = incident.fixState;
   if (settled(incident)) {
     const sha = linked(`\`${fix.sha}\``, fix.url);
-    if (fix.kind === 'fix-unbuilt') return `likely fixed, unbuilt: ${sha}`;
+    if (fix.kind === 'fix-unbuilt') {
+      return fix.confirmedBy?.length
+        ? `fixed by ${sha}, passed in main ${fix.confirmedBy.map(number => `#${number}`).join('+')}`
+        : `likely fixed, unbuilt: ${sha}`;
+    }
     if (fix.kind === 'fix-in-flight') return `fix in flight: ${linked(`PR #${fix.number}`, fix.url)}`;
     if (fix.kind === 'stale-snapshot') return `stale snapshot, not a break: ${sha}`;
     if (fix.kind === 'fixed-elsewhere') {
