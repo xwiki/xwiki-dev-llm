@@ -42,7 +42,7 @@ test('a long-standing flicker whose fix skipped this line still names the backpo
 
 test('the footer counts each incident once', () => {
   assert.match(page, /A culprit candidate for 1 of the 1 analysed\*\*\. Not analysed: \*\*1\*\* already answered, \*\*1\*\* older/);
-  assert.match(page, /\*\*0\*\* below the deep budget/);
+  assert.match(page, /\*\*0\*\* left once the deep budget/);
 });
 
 // 2026-10-19: "18.9.0-rc-1 unreleased — comment; reopening is a human's call" was the run's

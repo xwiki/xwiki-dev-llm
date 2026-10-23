@@ -2,7 +2,7 @@
 // (2026-10-16), whose ESLint break was signed by the reactor's resume line until the eslint matcher.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { classify, eslintFile, keep } from '../../xwiki/skills/xwiki-ci-check/tools/lib/logs.mjs';
+import { alsoInfra, classify, eslintFile, keep } from '../../xwiki/skills/xwiki-ci-check/tools/lib/logs.mjs';
 
 const at = key => `Build/${key}`;
 const ROOT = '/root/workspace/XWiki_xwiki-platform_master/xwiki-platform-core/xwiki-platform-node/src/main/node';
@@ -72,4 +72,24 @@ test('the withMaven XML limit on the controller is infrastructure, kept from a c
   assert.deepEqual(keep(['[INFO] BUILD SUCCESS', CONSOLE]), [CONSOLE]);
   // Not a build break: no matcher names a module or a file in it.
   assert.equal(classify([], STAGE_ERROR, at, 'Build for TestRelease'), null);
+});
+
+// master #9055 (2026-10-23): Quality Step 1 failed on a test of activeinstalls2, and TestRelease,
+// in parallel, on the controller's XML limit — which had already failed #9053 and #9054.
+const JAXP_9055 = 'org.jenkinsci.plugins.pipeline.maven.MavenPipelineException: Exception occured in withMaven'
+  + ' pipeline step: JAXP00010004: The accumulated size of entities is "100,001" that exceeded the "100,000" limit';
+const QUALITY = { name: 'Build for Quality Step 1', lines: [], nodeError: 'script returned exit code 1' };
+const TEST_RELEASE = { name: 'Build for TestRelease', lines: [], nodeError: JAXP_9055 };
+
+test('an infrastructure failure of a parallel stage is a second cause, beside the first stage\'s', () => {
+  const cause = { kind: 'build-break', signature: 'Build/maven:xwiki-platform-activeinstalls2-api' };
+  assert.deepEqual(alsoInfra([QUALITY, TEST_RELEASE], cause), [{ kind: 'infra', signature: 'jenkins-xml-limit',
+    file: null, stage: 'Build for TestRelease', evidence: [JAXP_9055] }]);
+});
+
+test('a later stage adds nothing when the first is already infrastructure, or fails for an ordinary reason', () => {
+  assert.deepEqual(alsoInfra([TEST_RELEASE, TEST_RELEASE], { kind: 'infra', signature: 'jenkins-xml-limit' }), []);
+  assert.deepEqual(alsoInfra([QUALITY, { ...QUALITY, name: 'Build for TestRelease' }], { kind: 'unclassified' }), []);
+  // Only the first stage is the cause's: a lone stage has no second cause.
+  assert.deepEqual(alsoInfra([TEST_RELEASE], { kind: 'build-break' }), []);
 });

@@ -54,8 +54,8 @@ test('an age that is only "at least today" is not printed as ≥0d', () => {
   assert.match(digest, /age unknown/);
 });
 
-test('a test gone green on one branch says where it is still red', () => {
-  assert.match(digest, /✅ \| platform\/master \| `LiveDataIT#livedataLivetableTableLayoutWithCustomClass` \(still red on 18\.9\.x\)/);
+test('a test gone green on one branch says where it is still open', () => {
+  assert.match(digest, /✅ \| platform\/master \| `LiveDataIT#livedataLivetableTableLayoutWithCustomClass` \(still open on 18\.9\.x\)/);
 });
 
 test('whoever said in the room they were looking at it is the one to ask', () => {

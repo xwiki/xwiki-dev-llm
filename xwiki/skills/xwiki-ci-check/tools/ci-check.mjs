@@ -240,7 +240,8 @@ for (const incident of incidents) {
   // than a landed commit and weaker than an open PR — where either of those exists it should be
   // what the reader is pointed at. `issueClaim` is the same claim made on the JIRA issue, which is
   // the other place people write it.
-  incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args)
+  const peers = incident.signature ? sameCause.get(`${incident.repo}\u0000${incident.signature}`) : null;
+  incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args, peers || [incident])
     || chatClaim(incident, chat, 'announced')
     || await forwardFix(incident, jobsById.get(incident.id), args)
     || await inFlightFix(incident, args)

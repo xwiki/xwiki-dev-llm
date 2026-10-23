@@ -363,6 +363,10 @@ export async function infraSnapshotGap(incident, jobs, args) {
   }
 }
 
+/** Whether an incident fails in a job that builds the repository from source, not only on its snapshot. */
+export const builtFromSource = incident => (incident.failingJobs || [incident.window?.job || incident.job])
+  .some(job => job !== 'env-tests');
+
 /**
  * Whether this incident is the job running new test code against older production code.
  *
@@ -371,14 +375,19 @@ export async function infraSnapshotGap(incident, jobs, args) {
  * out. One commit, not two: a test change here and a production change there is an ordinary pair of
  * commits, and reading it as the trap would silence a real breakage on a coincidence.
  */
-export async function staleSnapshot(incident, jobs, args) {
+export async function staleSnapshot(incident, jobs, args, sameCause = [incident]) {
   if (![1, 2].includes(incident.class) || incident.beyondHorizon) return null;
   // Failing in the environment job and *nowhere else*. The main job builds the whole repo from
   // source, so a commit carrying a test and its production code is consistent there — a test that
   // fails on both jobs is broken, whatever the snapshot held. `window.job` names only the job that
   // saw it break first, which is why this reads the jobs it is failing in now.
-  const failing = incident.failingJobs || [incident.window?.job || incident.job];
-  if (failing.length !== 1 || failing[0] !== 'env-tests') return null;
+  //
+  // Nowhere else on *any* branch, either: the same failure built from source on another branch is
+  // the breakage itself. On 2026-10-23 `InplaceEditIT#editInplaceFromOldRevision` failed in
+  // stable-17.10.x's Environment Tests only and was read as a stale snapshot of the XWIKI-25281
+  // backport — while stable-18.4.x's main job, carrying the same backport, failed it from source,
+  // and that row went unanalysed and unowned.
+  if (sameCause.some(builtFromSource)) return null;
   try {
     const gap = await snapshotGap(incident.repo, jobs, args);
     if (!gap) return null;
@@ -557,7 +566,12 @@ async function fixingCommit(incident, peer, healed) {
     title: commit.title,
     url: commit.url,
     branch: peer.branch,
-    where: `${peer.branch} has been green again since ${peer.job.label} #${healed.firstGood.number}`,
+    // What healed, not the branch: a test passes again in a build that is red for other reasons,
+    // and on 2026-10-23 "master has been green again since main #9053" was printed while master
+    // #9053, #9054 and #9055 had all failed.
+    where: incident.class === 1
+      ? `these tests have passed on ${peer.branch} since ${peer.job.label} #${healed.firstGood.number}`
+      : `${peer.branch} has not had this break since ${peer.job.label} #${healed.firstGood.number}`,
     covers: incident.class === 1
       ? [...new Set(healed.covered.map(id => testName(id).split('#')[0]))].slice(0, 6)
       : [healed.covered[0].split('/').pop()],

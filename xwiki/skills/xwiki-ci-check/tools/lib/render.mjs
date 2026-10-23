@@ -40,7 +40,13 @@ const agedAs = incident => (incident.ageDays == null || (incident.ageIsLowerBoun
 function windowOf(incident) {
   if (incident.firstBadBuild == null) return null;
   if (incident.lastGoodBuild == null) {
-    return `failing in every build examined, back to #${incident.firstBadBuild} — start not established`;
+    // Masked, it was not failing in every build examined: the one before stopped on something else,
+    // which is why the start is unknown — and a sibling test row, which ran in that build, can show
+    // a "last good" for the very same cause (master's activeinstalls2 break, 2026-10-23).
+    return incident.maskedBy
+      ? `since #${incident.firstBadBuild} at least — #${incident.maskedBy.build} stopped earlier, on `
+        + `\`${incident.maskedBy.by}\`, and no build before it completed: start not established`
+      : `failing in every build examined, back to #${incident.firstBadBuild} — start not established`;
   }
   if (incident.unreadBack) {
     return `failing back to #${incident.firstBadBuild} at least; the broken builds before it were not read, `
@@ -691,8 +697,9 @@ export function renderDetail(report, { live, proofRan = false }) {
   // Only what the tool knows: whether a comment then goes is the run's decision, in each COMMENT cell.
   // Each incident is counted once: an analysed one already commented on has a culprit, and one
   // beyond the horizon is not also "below the budget" (2026-10-18 counted both, and said "1 are").
-  const named = deep.filter(incident => incident.commentable || incident.provable || incident.commentedWith
-    || incident.silent);
+  // A `provable` list of suspects is not a candidate: on 2026-10-23 the footer claimed one for 4 of
+  // 5 while three of the rows read "no owner found".
+  const named = deep.filter(incident => incident.commentable || incident.commentedWith || incident.silent);
   const rest = incidents.filter(incident => !incident.deep && !incident.recalled && incident.primary !== false);
   const answered = rest.filter(settled).length;
   const old = rest.filter(incident => !settled(incident) && incident.beyondHorizon).length;
@@ -700,8 +707,8 @@ export function renderDetail(report, { live, proofRan = false }) {
   notes.push(`**A culprit candidate for ${named.length} of the ${deep.length} analysed**` +
     `${deep.length > named.length ? ` — no commit to attribute the other ${deep.length - named.length} to` : ''}.` +
     ` Not analysed: **${answered}** already answered, **${old}** older than the ${report.horizonDays}-day` +
-    ` horizon, **${recalled.length}** concluded on an earlier morning and unchanged, **${below}** below the` +
-    ` deep budget of ${report.budget} — reported, by design.`);
+    ` horizon, **${recalled.length}** concluded on an earlier morning and unchanged, **${below}** left once` +
+    ` the deep budget of ${report.budget} was spent — reported, by design.`);
   out.push('', '---', '', ...notes.map(note => `_${note}_`));
   // What tomorrow's run reads back: the analysed rows keep today's date, the recalled ones the date
   // they were concluded on, so a conclusion ages out however many mornings it is carried. `proved`
@@ -1056,7 +1063,9 @@ export function renderDigest(report, previous, { paste = null } = {}) {
     const where = entry => {
       const red = stillRed(repo, entry);
       const notes = [branches.length > 1 ? [...entry.branches].join('+') : null,
-        red.length ? `still red on ${red.join('+')}` : null].filter(Boolean);
+        // "open", not "red": the row below may be a flicker whose last builds passed, as SideMenuIT
+        // was on stable-18.9.x on 2026-10-23, green on #21 and #22.
+        red.length ? `still open on ${red.join('+')}` : null].filter(Boolean);
       return notes.length ? ` (${notes.join(', ')})` : '';
     };
     return `| ✅ | ${repo}/${branches.join('+')} | ${cell(entries.map(entry => (entry.methods.size > 1

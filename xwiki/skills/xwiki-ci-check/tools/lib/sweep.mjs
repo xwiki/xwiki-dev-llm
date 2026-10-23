@@ -177,7 +177,9 @@ export async function breakWindow(job, latest, signature, maxConsole) {
       return { ...at(firstBad, lastGood, true), unread: true };
     }
     read++;
-    const { signature: older } = await diagnose(`${job.url}/${build.number}`);
+    const diagnosis = await diagnose(`${job.url}/${build.number}`);
+    const older = [diagnosis, ...(diagnosis.also || [])].some(cause => cause.signature === signature)
+      ? signature : diagnosis.signature;
     // A different cause is not where this one starts: a broken build stops at its first failure, so
     // everything after it went unbuilt and this break may have been there, hidden. On 2026-10-17 the
     // run fixed a lint error in `xwiki-platform-node`; the next build reached
@@ -285,21 +287,25 @@ export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
   for (const job of jobs) {
     const latest = job.builds[0];
     if (!latest || latest.result !== 'FAILURE') continue;
-    const diagnosis = await diagnose(`${job.url}/${latest.number}`);
-    const window = await breakWindow(job, latest, diagnosis.signature, args.maxConsole);
-    incidents.push({
-      // The job is part of the identity: the main job and the environment matrix break
-      // independently, and two incidents sharing an id would share a comment marker too, so one
-      // would silence the other for good.
-      ...base(target, CLASS_OF[diagnosis.kind], diagnosis.kind, `${job.label}:${diagnosis.signature}`),
-      job: job.label,
-      stage: diagnosis.stage,
-      state: diagnosis.kind,
-      file: diagnosis.file,
-      evidence: diagnosis.evidence,
-      ...ageOf(window),
-      window
-    });
+    const first = await diagnose(`${job.url}/${latest.number}`);
+    // One incident per cause: an infrastructure failure of a parallel stage is not the first
+    // stage's, and has its own window — it recurs while the first cause may be new.
+    for (const diagnosis of [first, ...(first.also || [])]) {
+      const window = await breakWindow(job, latest, diagnosis.signature, args.maxConsole);
+      incidents.push({
+        // The job is part of the identity: the main job and the environment matrix break
+        // independently, and two incidents sharing an id would share a comment marker too, so one
+        // would silence the other for good.
+        ...base(target, CLASS_OF[diagnosis.kind], diagnosis.kind, `${job.label}:${diagnosis.signature}`),
+        job: job.label,
+        stage: diagnosis.stage,
+        state: diagnosis.kind,
+        file: diagnosis.file,
+        evidence: diagnosis.evidence,
+        ...ageOf(window),
+        window
+      });
+    }
   }
 
   // --- Class 1: tests. Aggregated across the main job and the environment matrix, because one

@@ -175,7 +175,8 @@ const stageKey = name => (name || 'unknown stage')
  * Reading the console instead would cost more bandwidth per build than this whole sweep.
  *
  * @returns {{kind: 'infra'|'build-break'|'timeout'|'unclassified', signature: string,
- *   file: string|null, stage: string|null, evidence: string[]}}
+ *   file: string|null, stage: string|null, evidence: string[], also?: object[]}} with `also`, the
+ *   infrastructure failures of later stages, in the same shape (see `alsoInfra`)
  */
 export async function diagnose(buildUrl) {
   const broken = (await stagesOf(buildUrl))
@@ -202,6 +203,34 @@ export async function diagnose(buildUrl) {
     bag.nodeError ??= candidate.error?.message?.split('\n')[0].slice(0, 200) || null;
     stages.push(bag);
   }
+  const cause = await causeOf(stages);
+  const also = alsoInfra(stages, cause);
+  return also.length ? { ...cause, also } : cause;
+}
+
+/**
+ * The infrastructure failures of the stages after the first, when the first one failed for another
+ * reason: a second cause, not a step of the first one's cascade.
+ *
+ * Parallel stages fail independently. On 2026-10-23 master #9055 failed *Build for Quality Step 1*
+ * on a test of `xwiki-platform-activeinstalls2-api` and, beside it, *Build for TestRelease* on the
+ * controller's `JAXP` limit — which had failed #9053 and #9054 too. The first stage named the build,
+ * and the recurring controller failure was in neither the digest nor the paste. Only the stage's
+ * own error is read for it: a log line of a later stage is what the cascade prints.
+ */
+export function alsoInfra(stages, cause) {
+  if (cause.kind === 'infra') return [];
+  const found = [];
+  for (const bag of stages.slice(1)) {
+    const pattern = INFRA_PATTERNS.find(entry => entry.re.test(bag.nodeError || ''));
+    if (!pattern || found.some(entry => entry.signature === pattern.id)) continue;
+    found.push({ kind: 'infra', signature: pattern.id, file: null, stage: bag.name, evidence: [bag.nodeError] });
+  }
+  return found;
+}
+
+/** What broke a build, from the bags of its failed stages: the first stage's cause, the rest its cascade. */
+async function causeOf(stages) {
   const stage = stages[0]?.name ?? null;
   const nodeError = stages.find(bag => bag.nodeError)?.nodeError ?? null;
   const lines = stages.flatMap(bag => bag.lines);
