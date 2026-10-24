@@ -4,7 +4,9 @@
 // Before a `git commit` or `gh pr create`/`gh pr edit` runs, refuse a message whose BODY contains a
 // bare `@token` or `#123`, which GitHub autolinks into a mention of an unrelated account or a
 // reference to the wrong issue tracker. The rule, the account list and the exceptions are in
-// okf/conventions/commit-messages.md — not restated here.
+// okf/conventions/commit-messages.md — not restated here. A `#123` is only wrong in a repo whose
+// issues live in JIRA; a repo tracked in GitHub Issues (XWiki SAS's, some contrib ones) means it, so
+// usesJiraIssues() decides from the repo's own files whether to check it.
 //
 // Why a hook and not a documented convention: a pushed commit message can only be corrected by
 // rewriting history on a shared branch, which is worse than the mention. A rule has to be recalled
@@ -28,7 +30,9 @@
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-commit-text.js (tool.execute.before).
 // Kimi's hooks cannot block execution, so there the model must act on the message itself.
 //
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // A code span suppresses the autolink, so blank one out before looking for violations. Markdown
@@ -151,13 +155,56 @@ function extractMessage(command) {
 const SHELL_WRAPPER = /\b(?:ba|z|k|d)?sh\s+-[A-Za-z]*c\s+(['"])((?:[^\\]|\\[\s\S])*?)\1/g;
 const MAX_WRAPPER_DEPTH = 3;
 
+// The directory holding `.git` (a directory, or a file in a worktree) above `dir`, or null.
+function findRepoRoot(dir) {
+  for (let current = dir; current; ) {
+    if (existsSync(join(current, ".git"))) return current;
+    const parent = dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+  return null;
+}
+
+// Whether the issues of the repo containing `dir` live in JIRA, read locally so the check costs no
+// network call. The root pom.xml says it: an <issueManagement> naming JIRA (xwiki-commons,
+// -rendering, -platform) or the contrib parent's `xwiki.issueManagement.jira.id` property; any other
+// pom.xml means another tracker. Without a pom.xml, the origin remote decides: the xwiki and
+// xwiki-contrib orgs track their issues in JIRA. When none of this can be read, answer true, the
+// safe direction: a blocked command can be rewritten, a pushed message cannot.
+export function usesJiraIssues(dir) {
+  const root = dir && findRepoRoot(dir);
+  if (!root) return true;
+  let pom = null;
+  try {
+    pom = readFileSync(join(root, "pom.xml"), "utf8");
+  } catch {
+    // no pom.xml — fall back to the remote
+  }
+  if (pom !== null) {
+    const issueManagement = pom.match(/<issueManagement>([\s\S]*?)<\/issueManagement>/);
+    return /<xwiki\.issueManagement\.jira\.id>/.test(pom) || /jira/i.test(issueManagement?.[1] ?? "");
+  }
+  try {
+    const remote = execFileSync("git", ["-C", root, "remote", "get-url", "origin"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    return /github\.com[:/](?:xwiki|xwiki-contrib)\//i.test(remote);
+  } catch {
+    return true;
+  }
+}
+
 // Inspect a Bash command and return the autolink violations in the message it would write, or null
-// when there is nothing to enforce. Recurses into shell wrappers, bounded by MAX_WRAPPER_DEPTH so a
-// deeply (or maliciously) nested command cannot turn this into a long-running check.
-export function checkCommitText(command, depth = 0) {
+// when there is nothing to enforce. `cwd` is the directory the command runs in, which locates the
+// repo for usesJiraIssues(); it is only read when the message holds a `#123`. Recurses into shell
+// wrappers, bounded by MAX_WRAPPER_DEPTH so a deeply (or maliciously) nested command cannot turn
+// this into a long-running check.
+export function checkCommitText(command, { cwd = process.cwd() } = {}, depth = 0) {
   if (!command || typeof command !== "string") return null;
   const message = extractMessage(command);
-  if (!message) return checkWrappers(command, depth);
+  if (!message) return checkWrappers(command, cwd, depth);
 
   const scanned = blankCodeSpans(message.body);
   const findings = [];
@@ -169,26 +216,27 @@ export function checkCommitText(command, depth = 0) {
     seen.add(`@${m[1]}`);
     findings.push({ token: `@${m[1]}`, kind: "mention" });
   }
-  for (const m of scanned.matchAll(/(?:^|[^\w`])#(\d+)/g)) {
+  const references = [...scanned.matchAll(/(?:^|[^\w`])#(\d+)/g)];
+  for (const m of references.length && usesJiraIssues(cwd) ? references : []) {
     if (seen.has(`#${m[1]}`)) continue;
     seen.add(`#${m[1]}`);
     findings.push({ token: `#${m[1]}`, kind: "reference" });
   }
   // A clean message at this level does not settle it: the command may also carry a wrapped one.
-  return findings.length ? { findings, summary: message.summary } : checkWrappers(command, depth);
+  return findings.length ? { findings, summary: message.summary } : checkWrappers(command, cwd, depth);
 }
 
 // Parse each `sh -c "<script>"` found in a command as a command in its own right, returning the
 // first violation. Every level goes through the same structured parse, so the subject/body split
 // and the code-span blanking apply to a wrapped message exactly as to a plain one.
-function checkWrappers(command, depth) {
+function checkWrappers(command, cwd, depth) {
   if (depth >= MAX_WRAPPER_DEPTH) return null;
   SHELL_WRAPPER.lastIndex = 0; // the regex is module-level and /g — reset before each use
   for (const m of command.matchAll(SHELL_WRAPPER)) {
     // Inside a double-quoted shell string a backslash escapes the quote; inside a single-quoted one
     // it is literal. Undo only the former, so the inner script is the text the shell would run.
     const inner = m[1] === '"' ? m[2].replace(/\\(["\\$`])/g, "$1") : m[2];
-    const found = checkCommitText(inner, depth + 1);
+    const found = checkCommitText(inner, { cwd }, depth + 1);
     if (found) return found;
   }
   return null;
@@ -208,7 +256,7 @@ export function formatCommitTextMessage({ findings }) {
   if (refs.length) {
     out +=
       `${refs.join(", ")} would be resolved by GitHub as an issue/PR reference in this repo, but ` +
-      `XWiki's issues live in JIRA. To link a PR, write \`owner/repo#N\` or its URL instead.\n`;
+      `this repo's issues live in JIRA. To link a PR, write \`owner/repo#N\` or its URL instead.\n`;
   }
   out +=
     "Wrap each of them in backticks and run the command again. A pushed commit message cannot be " +
@@ -228,7 +276,8 @@ function runAsHook() {
     process.exit(0);
   }
 
-  const result = checkCommitText(payload?.tool_input?.command);
+  // Claude Code and Kimi Code both pass the session's working directory in the payload's `cwd`.
+  const result = checkCommitText(payload?.tool_input?.command, { cwd: payload?.cwd || process.cwd() });
   if (!result) process.exit(0);
 
   process.stderr.write(formatCommitTextMessage(result));

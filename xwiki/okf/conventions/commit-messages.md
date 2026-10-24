@@ -58,7 +58,7 @@ The documented format is:
   autolinks them: `@since` links to and notifies the GitHub account of that name — an unrelated
   third party, as are `param`, `deprecated`, `Inject`, `Component`, `Override`, `Deprecated`,
   `UITest` and `Nested` — and `#123` resolves against the GitHub repo, while XWiki's issues live in
-  JIRA. Java messages are full of Javadoc tags and annotations, so this is easy to hit. Backticks
+  JIRA (in a repo tracked in GitHub Issues, `#123` is the right reference and the hook allows it). Java messages are full of Javadoc tags and annotations, so this is easy to hit. Backticks
   suppress the autolink even though a commit message renders no other markup, and stay visible as
   literal characters. Get it right *before* committing: **a pushed commit message cannot be fixed**
   except by rewriting a shared branch, which is worse than the mention. The `check-commit-text` hook

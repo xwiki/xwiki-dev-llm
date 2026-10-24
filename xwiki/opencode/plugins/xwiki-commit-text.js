@@ -4,7 +4,8 @@
 // opencode: before a `git commit` or `gh pr create`/`gh pr edit` runs, refuse a message whose body
 // contains a bare `@token` or `#123`, which GitHub would autolink into a mention of an unrelated
 // account or a reference to the wrong issue tracker. It throws so the model rewrites the message
-// with backticks — a pushed commit message can no longer be corrected.
+// with backticks — a pushed commit message can no longer be corrected. The `#123` check only applies
+// to a repo whose issues live in JIRA (see usesJiraIssues() in the shared script).
 //
 // Install it by symlinking (or copying) this file into one of opencode's plugin directories:
 //   ~/.config/opencode/plugins/   (global)   or   <repo>/.opencode/plugins/   (per project)
@@ -16,7 +17,7 @@
 
 import { pathToFileURL } from "node:url";
 
-export const XWikiCommitText = async () => {
+export const XWikiCommitText = async ({ directory }) => {
   const home = process.env.XWIKI_LLM_HOME;
   if (!home) return {};
 
@@ -33,7 +34,7 @@ export const XWikiCommitText = async () => {
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool !== "bash") return;
-      const result = checkCommitText(output?.args?.command);
+      const result = checkCommitText(output?.args?.command, { cwd: directory });
       if (!result) return;
       throw new Error(formatCommitTextMessage(result));
     },

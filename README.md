@@ -105,7 +105,7 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
 | **Org conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all repos": build commands, commit format, code conventions, `@since` rules | Every session, in `xwiki/*` and `xwiki-contrib/*` repos only (scoped by git remote) | `XWIKI_LLM_ORGS` to add your own orgs. No scoping in opencode — see the install note above |
 | **Work directory** — plans, handoffs, drafts and notes go to one root instead of the repo, `/tmp` and your home | The first time a task needs a file that must outlive the session | `XWIKI_LLM_WORK` ([defaults](docs/setup.md)) |
 | **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — blocks a write whose endings contradict the repo's `.gitattributes`, so no spurious whole-file diffs | Every `Write`/`Edit`; silent unless violated | — |
-| **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name` or `#123`, which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; summary line exempt | — |
+| **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name`, or a `#123` in a repo whose issues live in JIRA (read from its `pom.xml` or remote), which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; summary line exempt | — |
 
 A pushed commit message cannot be fixed without rewriting a shared branch, and a CRLF diff hides the
 real change — which is why those two are hooks and not conventions. Both are Node (no bash, no `jq`),
