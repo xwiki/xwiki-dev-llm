@@ -16,5 +16,13 @@ export const testName = id => {
 };
 
 
+/**
+ * What two incidents on two branches share when they are one cause: the repo, and the signature —
+ * or the root cause their tests share, since those tests, and so the signature, differ by branch.
+ * The id carries the signature (`<repo>/<branch>/<signature>`), and survives the work order's digest.
+ */
+export const causeKey = incident => `${incident.repo}\u0000${incident.rootCause
+  ? `cause:${incident.rootCause}` : incident.id.split('/').slice(2).join('/')}`;
+
 /** Whether the branch already answers for the *whole* incident — the only case that goes quiet. */
 export const settled = incident => !!incident.fixState && !incident.fixState.partial && !incident.fixState.candidate;

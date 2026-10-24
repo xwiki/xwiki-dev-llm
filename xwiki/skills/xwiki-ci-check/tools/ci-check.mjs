@@ -34,7 +34,7 @@ import {
 } from './lib/render.mjs';
 import { chatClaim, chatOf, issueClaim, memoryOfArgs, mentionsOf } from './lib/room.mjs';
 import { discover, incidentsOf, investigate, jobHistory, oneKindPerCause, severity } from './lib/sweep.mjs';
-import { DAY, daysSince, plural, settled } from './lib/util.mjs';
+import { DAY, causeKey, daysSince, plural, settled } from './lib/util.mjs';
 
 const USAGE = `Usage: node ci-check.mjs [options]
 
@@ -201,7 +201,7 @@ for (const incident of incidents) {
   if (!incident.signature) continue;
   // Keyed by repo as well as by signature: `main:Build/enforcer:rule-failed` is how an enforcer
   // break signs itself in every repo there is, and commons' break is not platform's.
-  const cause = `${incident.repo}\u0000${incident.signature}`;
+  const cause = causeKey(incident);
   sameCause.set(cause, [...(sameCause.get(cause) || []), incident]);
 }
 for (const group of sameCause.values()) {
@@ -218,7 +218,7 @@ for (const group of sameCause.values()) {
       incident.blame ??= {
         tier: 'none',
         suspects: [],
-        reason: `the same signature is red on ${group[0].branch} and analysed there — one cause, one analysis`
+        reason: `the same cause is red on ${group[0].branch} and analysed there — one cause, one analysis`
       };
     }
   }
@@ -240,7 +240,7 @@ for (const incident of incidents) {
   // than a landed commit and weaker than an open PR — where either of those exists it should be
   // what the reader is pointed at. `issueClaim` is the same claim made on the JIRA issue, which is
   // the other place people write it.
-  const peers = incident.signature ? sameCause.get(`${incident.repo}\u0000${incident.signature}`) : null;
+  const peers = incident.signature ? sameCause.get(causeKey(incident)) : null;
   incident.fixState = await staleSnapshot(incident, targetJobs.get(incident.id) || [], args, peers || [incident])
     || chatClaim(incident, chat, 'announced')
     || await forwardFix(incident, jobsById.get(incident.id), args, targetJobs.get(incident.id) || [])
@@ -355,6 +355,8 @@ for (const incident of deep) {
   // A class-level failure (`@AfterAll`, `@BeforeAll`) has no method to look up: SubWikiIT's teardown
   // came back "null failures in null executions" on 2026-10-19.
   if (incident.tests[0].endsWith('#')) continue;
+  // Tests grouped by a root cause they share: no one test's history is that cause's.
+  if (incident.rootCause) continue;
   // The test that names the incident, and the incident's own error line so that a test failing two
   // different ways is described by the failure *this* incident is about.
   const facts = develocityFacts(incident.tests[0], { match: incident.evidence?.[0] });
@@ -857,6 +859,8 @@ function digest(incident, keys) {
     // flicker filed on "0d" reads as a contradiction until both numbers are there.
     failedIn: incident.class === 1 ? incident.failedIn : undefined,
     alsoOn: incident.alsoOn,
+    // What joins this incident to its peers on other branches when its tests do not (`causeKey`).
+    rootCause: incident.rootCause,
     // The same cause on several branches: `also-red` on each of them, and `primary` false on all
     // but the one it is analysed and commented on — the others are that one's branch list, not
     // incidents of their own.
@@ -871,7 +875,9 @@ function digest(incident, keys) {
     // named by its signature and by nothing else, so below the deep line it would otherwise be
     // reported as an untitled heading with an age under it.
     signature: incident.class === 1 ? undefined : incident.signature,
-    buildUrl: incident.class === 1 ? undefined : incident.buildUrl
+    buildUrl: incident.class === 1 ? undefined : incident.buildUrl,
+    // Its error line, for the same reason: the *Why* of a break and the property a `JAXP` limit names.
+    evidence: incident.class === 1 ? undefined : incident.evidence?.slice(0, 1)
   };
   if (!incident.deep && !incident.stabilise) return compact;
   return {

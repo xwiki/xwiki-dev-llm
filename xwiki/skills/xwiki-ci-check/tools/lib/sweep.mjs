@@ -92,6 +92,7 @@ async function testHistory(job, args) {
       failedEnvs: new Set([...test.failed].map(env => `${job.label}/${env}`)),
       ranEnvs: new Set([...test.ran].map(env => `${job.label}/${env}`)),
       detail: test.detail,
+      cause: test.cause,
       failedBuilds: [latest],
       seenBuilds: [latest]
     });
@@ -314,12 +315,15 @@ export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
   const rows = new Map();
   for (const job of jobs) {
     for (const [id, row] of await testHistory(job, args)) {
-      if (!rows.has(id)) rows.set(id, { id, perJob: [], failedEnvs: new Set(), ranEnvs: new Set(), detail: '' });
+      if (!rows.has(id)) rows.set(id, { id, perJob: [], failedEnvs: new Set(), ranEnvs: new Set(), detail: '', cause: null });
       const aggregate = rows.get(id);
       aggregate.perJob.push(row);
       for (const env of row.failedEnvs) aggregate.failedEnvs.add(env);
       for (const env of row.ranEnvs) aggregate.ranEnvs.add(env);
-      if (!aggregate.detail) aggregate.detail = row.detail;
+      if (!aggregate.detail) {
+        aggregate.detail = row.detail;
+        aggregate.cause = row.cause;
+      }
     }
   }
 
@@ -370,19 +374,10 @@ export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
 
   incidents.push(...cofailing(flickering));
 
-  // Tests that started failing in the same build broke together, and one cause deserves one
-  // incident and one comment — never forty.
-  const groups = new Map();
-  for (const entry of breakages) {
-    // Namespaced by job, since the two jobs number their builds independently.
-    const key = `${entry.window.job}#${entry.window.firstBad.number}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(entry);
-  }
-  for (const [, group] of groups) {
+  for (const { entries: group, rootCause, infra } of breakageGroups(breakages)) {
     const ids = group.map(entry => entry.id).sort();
-    const window = group[0].window;
-    const infra = infraInDetail(group.map(entry => entry.row.detail));
+    const window = group.map(entry => entry.window)
+      .reduce((oldest, current) => (current.firstBad.timestamp < oldest.firstBad.timestamp ? current : oldest));
     if (infra) {
       // Reclassified, not just relabelled: an infra event has no culprit commit, so this also
       // stops the whole deep-treatment budget being spent looking for one.
@@ -398,7 +393,9 @@ export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
       });
       continue;
     }
-    const groupJira = flickerFor(ids[0]);
+    // A flicker issue is about one test; a root cause twelve tests share is not that test's flicker
+    // (2026-10-24: the WebDriverManager failure read "tracked as XWIKI-25301", a MacroIT flicker).
+    const groupJira = rootCause ? null : flickerFor(ids[0]);
     incidents.push({
       // The smallest test id names the group: stable from day to day, unlike a count or a hash,
       // which would change the moment the breakage spreads by one test and re-ping everybody.
@@ -413,12 +410,58 @@ export async function incidentsOf(target, args, flickerFor, closedFlickerFor) {
       evidence: group.slice(0, 3).map(entry => `${entry.id}: ${entry.row.detail || '(no error detail)'}`),
       failingJobs: [...new Set(group.flatMap(entry => entry.row.perJob.map(row => row.job)))],
       jira: groupJira,
-      jiraClosed: groupJira ? null : closedFlickerFor(ids[0]),
+      jiraClosed: groupJira || rootCause ? null : closedFlickerFor(ids[0]),
+      // The cause the group is made of, which is also what joins it to the same group on another
+      // branch (`causeKey`): its tests, and so its name, differ from branch to branch.
+      rootCause: rootCause || undefined,
       ...ageOf(window),
       window
     });
   }
   return incidents;
+}
+
+/** Tests sharing one root cause, at least this many and in two classes at least, are that cause. */
+const CAUSE_CLUSTER = 3;
+
+/**
+ * The breakages of one branch, as one group per cause.
+ *
+ * Tests that started failing in the same build broke together, and one cause deserves one incident
+ * and one comment — never forty. But "the same build" is often only the oldest one examined, which
+ * says nothing: on 2026-10-24 a lost-write failure of `RealtimeWYSIWYGEditorIT` and twelve
+ * `Upgrade*Test`s that WebDriverManager could not start were one "13 tests" incident on master,
+ * while the same WebDriverManager failure was three more incidents on two other branches. So tests
+ * whose stack traces end on the same root cause (`rootCauseOf`) — at least `CAUSE_CLUSTER`, from two
+ * classes at least, so that no single class's chained exception becomes a "cause" — are grouped by
+ * it first, whatever build they started in; the rest by their first failing build.
+ *
+ * Before either, each test whose own error is an environment that never came up (`infraInDetail`)
+ * goes to that infra group: one such test in a build group used to make every test of it infra —
+ * stable-17.10.x's twelve WebDriverManager failures were "agent-environment" for one SkinVisualIT.
+ *
+ * @param {object[]} breakages `{id, row: {cause, detail}, window: {job, firstBad}}`
+ * @returns {{entries: object[], rootCause: string|null, infra: string|null}[]}
+ */
+export function breakageGroups(breakages) {
+  const infraOf = entry => infraInDetail([entry.row.detail]);
+  const byCause = new Map();
+  for (const entry of breakages) {
+    if (entry.row.cause && !infraOf(entry)) byCause.set(entry.row.cause, [...(byCause.get(entry.row.cause) || []), entry]);
+  }
+  const shared = new Set([...byCause].filter(([, entries]) => entries.length >= CAUSE_CLUSTER
+    && new Set(entries.map(entry => entry.id.split('#')[0])).size >= 2).map(([cause]) => cause));
+  const groups = new Map();
+  for (const entry of breakages) {
+    const infra = infraOf(entry);
+    const rootCause = !infra && shared.has(entry.row.cause) ? entry.row.cause : null;
+    // Namespaced by job, since the two jobs number their builds independently.
+    const key = infra ? `infra\u0000${entry.window.job}\u0000${infra}`
+      : rootCause ? `cause\u0000${rootCause}` : `${entry.window.job}#${entry.window.firstBad.number}`;
+    if (!groups.has(key)) groups.set(key, { entries: [], rootCause, infra });
+    groups.get(key).entries.push(entry);
+  }
+  return [...groups.values()];
 }
 
 // Which numbered failure class each diagnosis belongs to (see SKILL.md).

@@ -6,7 +6,7 @@
 import { JIRA } from '../../../../scripts/jira-flickers.mjs';
 import { memoryBlock } from '../memory.mjs';
 import { branchRank, classifyBranch } from './policy.mjs';
-import { plural, settled, testName } from './util.mjs';
+import { causeKey, plural, settled, testName } from './util.mjs';
 
 // ---- The paste ---------------------------------------------------------------------------------
 // Rendered here, not by the model, for one reason: the paste is read every morning, and a document
@@ -25,9 +25,23 @@ import { plural, settled, testName } from './util.mjs';
 
 // A lower bound of 0 days says only that the first build examined is today's: "≥0d" read as an age
 // and told nobody anything (2026-10-21).
-const agedAs = incident => (incident.ageDays == null || (incident.ageIsLowerBound && !incident.ageDays)
-  ? 'age unknown'
-  : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`);
+const agedAs = incident => {
+  if (dvOlder(incident)) {
+    const { firstSeenDays, windowDays } = incident.develocity;
+    return `${firstSeenDays >= windowDays - 1 ? '≥' : ''}${firstSeenDays}d`;
+  }
+  return incident.ageDays == null || (incident.ageIsLowerBound && !incident.ageDays)
+    ? 'age unknown'
+    : `${incident.ageIsLowerBound ? '≥' : ''}${incident.ageDays}d`;
+};
+
+/**
+ * Whether Develocity saw this test fail before the streak Jenkins retains began: then its first
+ * failure is the age. On 2026-10-24 `RealtimeWYSIWYGEditorIT` read "🆕 · age unknown" over a block
+ * saying "first failed 2026-09-27".
+ */
+const dvOlder = incident => incident.develocity?.firstSeenDays != null
+  && incident.develocity.firstSeenDays > (incident.ageDays ?? -1);
 
 /**
  * When the failure started — or, honestly, that it is not known.
@@ -58,6 +72,13 @@ function windowOf(incident) {
 }
 
 const shortName = incident => testName(incident.id.split('/').slice(2).join('/'));
+/**
+ * What a test incident is called: its test, or — for tests grouped by the root cause they share —
+ * that cause, the exception's simple name and its message, which says more than whichever test
+ * happens to sort first (`Upgrade1011Test` on stable-18.4.x, 2026-10-24).
+ */
+const testSubject = incident => (incident.rootCause
+  ? incident.rootCause.replace(/^(?:[\w$]+\.)+(?=[\w$]+(?::|$))/, '') : shortName(incident));
 /** A Matrix sender as the room knows them: the localpart, as the digest and the paste both name them. */
 const roomName = sender => String(sender || 'somebody').replace(/^@/, '').split(':')[0];
 const analysis = incident => (incident.deep ? [``, `<!-- ANALYSIS: ${incident.id} -->`] : []);
@@ -198,8 +219,9 @@ function develocityBlock(incident) {
     `${incident.testCount > 1 ? ', the test naming this incident' : ''}): ` +
     `${facts.failures} failures in ${facts.runs} executions (${facts.failRate}), ${started}.`,
     // The one line that reconciles the two ages, because they look like a contradiction otherwise.
-    `_The age above is the current streak in the builds Jenkins retains; this is when the failure ` +
-    `started._`];
+    dvOlder(incident)
+      ? '_The age above is this first failure; the window above is the current streak in the builds Jenkins retains._'
+      : '_The age above is the current streak in the builds Jenkins retains; this is when the failure started._'];
   // Only where it disambiguates: with one distinct failure the findings below say so in a sentence,
   // and a line repeating it in numbers is the kind of padding that makes a paste stop being read.
   if (facts.group && facts.distinct > 1) {
@@ -287,8 +309,6 @@ function blameBlock(incident) {
   return out;
 }
 
-/** What two incidents on two branches share when they are one break: the repo, and the signature. */
-const causeKey = incident => `${incident.repo}\u0000${incident.id.split('/').slice(2).join('/')}`;
 
 /** Whether this incident is the red quality gate, which is a build break with its own vocabulary. */
 export const isGate = incident => /sonar-gate:failed$/.test(incident.signature || '');
@@ -304,8 +324,11 @@ const blocking = incident => incident.branchClass !== 'transient' && incident.pr
 /** What a reader calls the thing that is red, as plain text — the table and the summary style it. */
 function subjectOf(incident) {
   if (isGate(incident)) return 'Sonar quality gate';
-  if (incident.class === 1) return shortName(incident);
-  if (incident.class === 3) return incident.state || 'infrastructure';
+  if (incident.class === 1) return testSubject(incident);
+  // A main-job infra failure's state is its kind, `infra`, which named row 4 of 2026-10-24 `infra`.
+  if (incident.class === 3) {
+    return (incident.state !== 'infra' && incident.state) || incident.signature?.split(/[/:]/).pop() || 'infrastructure';
+  }
   return incident.signature ? incident.signature.split('/').pop() : incident.kind;
 }
 
@@ -322,7 +345,9 @@ function kindOf(incident) {
 }
 
 const STATE_WORDS = {
-  systematic: 'fails every run', 'single env': 'one environment, every build',
+  // `single env` is one environment that passed in some builds (`verdictOf`): failing in all of
+  // them is `systematic`. "every build" sat beside "2/6 builds" on 2026-10-24.
+  systematic: 'fails every run', 'single env': 'one environment, not every build',
   'first seen': 'seen once', intermittent: 'intermittent'
 };
 
@@ -406,6 +431,17 @@ export function missingLine(closed, branch) {
   return closed.fixVersions.some(version => version.startsWith(`${line}.`)) ? null : `${line}.x`;
 }
 
+/**
+ * The JDK property behind a `JAXP000100NN` limit, or null. The message names it only when the limit
+ * came from a system property; set from `jaxp.properties` — master #9059 — it names that file, and
+ * the code is what says which limit it was.
+ */
+const JAXP_LIMITS = { JAXP00010003: 'jdk.xml.maxGeneralEntitySizeLimit', JAXP00010004: 'jdk.xml.totalEntitySizeLimit' };
+export function xmlLimitProperty(evidence) {
+  const text = (evidence || []).join('\n');
+  return text.match(/"(jdk\.xml\.\w+)"/)?.[1] || JAXP_LIMITS[text.match(/JAXP\d{8}/)?.[0]] || null;
+}
+
 /** Why nobody is asked to do anything — always a reason, never an empty cell. */
 function noOneOwes(incident, horizonDays) {
   if (incident.beyondHorizon) return `older than the ${horizonDays}-day horizon — counted, not written about`;
@@ -426,8 +462,9 @@ function noOneOwes(incident, horizonDays) {
   }
   if (incident.class === 3) {
     if (/jenkins-xml-limit$/.test(incident.signature || incident.id)) {
+      const property = xmlLimitProperty(incident.evidence);
       return 'not the code, and it recurs: the Jenkins controller rejects withMaven\'s build log — raise'
-        + ' the `jdk.xml` limit the log names in the controller\'s JVM options';
+        + ` ${property ? `\`${property}\`` : 'the `jdk.xml` limit the log names'} in the controller's JVM options`;
     }
     return incident.snapshotGap ? 'expect it to clear once main deploys a snapshot again'
       : 'nothing in the code to change; watch for the same agent tomorrow';
@@ -934,8 +971,18 @@ const DIGEST_ROWS = 5;
 const linked = (text, url) => (url ? `[${text}](${url})` : text);
 const browse = key => `${JIRA}/browse/${key}`;
 
-/** The *Done* cell: what is already known, or a marker for what this run did about it. */
+/**
+ * The *Done* cell, and the issue tracking it whatever else the cell says: on 2026-10-24 a fix PR in
+ * flight hid that `RealtimeWYSIWYGEditorIT` was XWIKI-22619.
+ */
 function doneOf(incident, report) {
+  const done = doneCell(incident, report);
+  if (!incident.jira || done.startsWith('tracked: ')) return done;
+  return `${done} · tracked: ${(incident.jiras || [jiraKey(incident)]).map(key => linked(key, browse(key))).join(', ')}`;
+}
+
+/** The *Done* cell: what is already known, or a marker for what this run did about it. */
+function doneCell(incident, report) {
   const fix = incident.fixState;
   if (settled(incident)) {
     const sha = linked(`\`${fix.sha}\``, fix.url);
@@ -975,6 +1022,25 @@ function doneOf(incident, report) {
   return incident.deep ? `<!-- DONE: ${incident.id} -->` : 'in the paste, not analysed';
 }
 
+/** The kinds of incident that are not a test, as yesterday's state line names them (`stateLine`). */
+const NOT_TESTS = new Set(['build-break', 'unclassified', 'timeout', 'infra', 'absence']);
+
+/**
+ * A gone-green incident that was not a test, in words: the ✅ line has only yesterday's id and
+ * state, and printed `maven:xwiki-platform-activeinstalls2-api` and `unclassified:java.util.…`.
+ * The signature is `<job>:<stage>/<tool>:<where>` (logs.mjs), or `<job>:<infra pattern>`.
+ */
+function signatureLabel(signature, was) {
+  const bare = signature.replace(/^[\w-]+:/, '');
+  const [tool, ...where] = bare.split('/').pop().split(':');
+  const at = where.join(':');
+  if (String(was).startsWith('infra')) return `infrastructure \`${bare}\``;
+  if (tool === 'sonar-gate') return 'the Sonar quality gate';
+  if (tool === 'maven') return `the build of \`${at}\``;
+  if (tool === 'unclassified') return `an unexplained build failure (\`${at}\`)`;
+  return at ? `the ${tool} failure in \`${at}\`` : `the ${tool} failure`;
+}
+
 /** The *What* cell: what is red, and the one fact a dashboard does not have. */
 function whatOf(incident, moves = []) {
   const sonar = incident.sonar;
@@ -986,8 +1052,9 @@ function whatOf(incident, moves = []) {
       + (sonar?.culprits?.length ? `: ${sonar.culprits.map(c => `${plural(c.issues, 'issue')} in `
         + `${c.files.map(file => `\`${file}\``).join(', ')} (${c.who})`).join(', ')}` : '');
   } else if (incident.class === 1) {
-    const name = shortName(incident);
-    what = `\`${name.length > 60 ? `${name.slice(0, 59)}…` : name}\` ${kindOf(incident)}`;
+    const name = testSubject(incident);
+    const room = incident.rootCause ? 80 : 60;
+    what = `\`${name.length > room ? `${name.slice(0, room - 1)}…` : name}\` ${kindOf(incident)}`;
   } else {
     what = `${kindOf(incident)} \`${subjectOf(incident)}\``;
   }
@@ -1026,7 +1093,9 @@ export function renderDigest(report, previous, { paste = null } = {}) {
     const own = primary === incident;
     const known = rows.get(primary.id);
     if (known && (known.own || !own)) return;
-    rows.set(primary.id, { incident: primary, own, mark: own ? mark : '🔄', moves: own ? moves : [] });
+    // New to the digest is not new: a test Develocity saw failing before today is back, not new.
+    const back = mark === '🆕' && primary.develocity?.news === 'known';
+    rows.set(primary.id, { incident: primary, own, mark: own ? (back ? '🔁' : mark) : '🔄', moves: own ? moves : [] });
   };
   if (delta.previous.available) {
     for (const entry of delta.new) put(byId.get(entry.id), '🆕');
@@ -1040,19 +1109,23 @@ export function renderDigest(report, previous, { paste = null } = {}) {
 
   // Gone green: one row per test class or signature, whatever the branch count.
   const fixed = new Map();
-  for (const { id } of delta.fixed) {
+  for (const { id, was } of delta.fixed) {
     const [repo, branch, ...rest] = id.split('/');
     const signature = rest.join('/');
-    const [what, method] = testName(signature).split('#');
+    const test = !NOT_TESTS.has(String(was).split('/')[0]);
+    const [what, method] = test ? testName(signature).split('#') : [signature];
+    // A JUnit engine reporting itself (`JUnit Jupiter#JUnit Jupiter`) names no test at all.
+    if (test && what === method) continue;
     const key = `${repo}\u0000${method ? what : signature}`;
-    const entry = fixed.get(key) || { repo, what: method ? what : signature.split('/').pop(), branches: new Set(), methods: new Set() };
+    const entry = fixed.get(key) || { repo, what: method ? what : signature.split('/').pop(),
+      label: test ? null : signatureLabel(signature, was), branches: new Set(), methods: new Set() };
     entry.branches.add(shortBranch(branch));
     if (method) entry.methods.add(method);
     fixed.set(key, entry);
   }
   const line = (mark, incident, moves) => `| ${mark}${incident ? DOTS[unreleasable(incident) ? 'red' : 'orange'] : ''} `
     + `| ${shortRepo(incident.repo)}/${[incident.branch, ...(incident.alsoOn || [])].map(shortBranch).join('+')} `
-    + `| ${cell(whatOf(incident, moves))} | ${incident.ageDays == null ? '—' : agedAs(incident)} `
+    + `| ${cell(whatOf(incident, moves))} | ${incident.ageDays == null && !dvOlder(incident) ? '—' : agedAs(incident)} `
     + `| ${cell(doneOf(incident, report) + citeRoom(incident))} |`;
   // What went green is the line no dashboard shows, so it is never cut: one row per repo. Each test
   // names its own branches when the row spans several, and the branches it is still red on: on
@@ -1072,9 +1145,9 @@ export function renderDigest(report, previous, { paste = null } = {}) {
         red.length ? `still open on ${red.join('+')}` : null].filter(Boolean);
       return notes.length ? ` (${notes.join(', ')})` : '';
     };
-    return `| ✅ | ${repo}/${branches.join('+')} | ${cell(entries.map(entry => (entry.methods.size > 1
+    return `| ✅ | ${repo}/${branches.join('+')} | ${cell(entries.map(entry => (entry.label || (entry.methods.size > 1
       ? `${entry.methods.size} × \`${entry.what}\``
-      : `\`${entry.what}${entry.methods.size ? `#${[...entry.methods][0]}` : ''}\``) + where(entry)).join('; '))} | — | green |`;
+      : `\`${entry.what}${entry.methods.size ? `#${[...entry.methods][0]}` : ''}\``)) + where(entry)).join('; '))} | — | green |`;
   });
   const shown = moved.slice(0, Math.max(1, DIGEST_ROWS - greenRows.length));
   // A suppression on a *sentence* always goes back to the room that said it, whatever else is cut:

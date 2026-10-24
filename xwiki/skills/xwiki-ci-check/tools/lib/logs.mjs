@@ -203,43 +203,76 @@ export async function diagnose(buildUrl) {
     bag.nodeError ??= candidate.error?.message?.split('\n')[0].slice(0, 200) || null;
     stages.push(bag);
   }
+  return diagnoseStages(stages);
+}
+
+/** `diagnose` past the network: the cause of a build's failed-stage bags, and the infra beside it. */
+export async function diagnoseStages(stages) {
   const cause = await causeOf(stages);
   const also = alsoInfra(stages, cause);
   return also.length ? { ...cause, also } : cause;
 }
 
+/** The infrastructure failure one stage names, in its own log or its own error, or null. */
+export function infraOf(bag, { ownErrorOnly = false } = {}) {
+  for (const pattern of INFRA_PATTERNS) {
+    const hit = (ownErrorOnly ? null : bag.lines.find(line => pattern.re.test(line)))
+      || (pattern.re.test(bag.nodeError || '') ? bag.nodeError : null);
+    if (hit) return { kind: 'infra', signature: pattern.id, file: null, stage: bag.name, evidence: [hit] };
+  }
+  return null;
+}
+
 /**
- * The infrastructure failures of the stages after the first, when the first one failed for another
- * reason: a second cause, not a step of the first one's cascade.
+ * The infrastructure failures of the stages other than the cause's: a second cause, not a step of
+ * the first one's cascade.
  *
  * Parallel stages fail independently. On 2026-10-23 master #9055 failed *Build for Quality Step 1*
  * on a test of `xwiki-platform-activeinstalls2-api` and, beside it, *Build for TestRelease* on the
  * controller's `JAXP` limit — which had failed #9053 and #9054 too. The first stage named the build,
- * and the recurring controller failure was in neither the digest nor the paste. Only the stage's
- * own error is read for it: a log line of a later stage is what the cascade prints.
+ * and the recurring controller failure was in neither the digest nor the paste. A stage *before*
+ * the cause's is read whole — it cannot be that cause's cascade (#9060: TestRelease's `JAXP` limit,
+ * then Quality Step 2's red gate) — while a stage after it is read by its own error only, since a
+ * log line there is what the cascade prints.
  */
 export function alsoInfra(stages, cause) {
   if (cause.kind === 'infra') return [];
+  const causeAt = Math.max(0, stages.findIndex(bag => bag.name === cause.stage));
   const found = [];
-  for (const bag of stages.slice(1)) {
-    const pattern = INFRA_PATTERNS.find(entry => entry.re.test(bag.nodeError || ''));
-    if (!pattern || found.some(entry => entry.signature === pattern.id)) continue;
-    found.push({ kind: 'infra', signature: pattern.id, file: null, stage: bag.name, evidence: [bag.nodeError] });
+  for (const [index, bag] of stages.entries()) {
+    if (index === causeAt) continue;
+    const infra = infraOf(bag, { ownErrorOnly: index > causeAt });
+    if (!infra || found.some(entry => entry.signature === infra.signature)) continue;
+    found.push(infra);
   }
   return found;
 }
 
-/** What broke a build, from the bags of its failed stages: the first stage's cause, the rest its cascade. */
+/**
+ * What broke a build, from the bags of its failed stages.
+ *
+ * A stage's infrastructure failure explains *that stage*, and is tried on it first — a VM crash on
+ * a full disk is the disk. It never explains another stage: master #9059 and #9060 failed
+ * *Build for TestRelease* on the controller's `JAXP` limit and *Build for Quality Step 2* on a red
+ * SonarCloud gate, and reading the infra patterns over every stage first made the build "infra —
+ * not the code" and the gate, the run's first fix, vanished. So the cause is the first stage's
+ * own failure that is the code's, found among the stages no infra pattern explains, and the infra
+ * failures beside it come back as `also`; a build only the infrastructure broke is infra.
+ */
 async function causeOf(stages) {
+  const infra = stages.map(bag => infraOf(bag));
+  const code = stages.filter((bag, index) => !infra[index]);
+  const fromCode = code.length ? await codeCauseOf(code) : null;
+  if (fromCode && fromCode.kind !== 'unclassified') return fromCode;
+  return infra.find(Boolean) || fromCode;
+}
+
+/** The code's cause among stages no infrastructure failure explains: the first one's, the rest its cascade. */
+async function codeCauseOf(stages) {
   const stage = stages[0]?.name ?? null;
   const nodeError = stages.find(bag => bag.nodeError)?.nodeError ?? null;
-  const lines = stages.flatMap(bag => bag.lines);
   const at = key => (stage ? `${stageKey(stage)}/${key}` : key);
 
-  for (const pattern of INFRA_PATTERNS) {
-    const hit = lines.find(line => pattern.re.test(line)) || (nodeError?.match(pattern.re) ? nodeError : null);
-    if (hit) return { kind: 'infra', signature: pattern.id, file: null, stage, evidence: [hit] };
-  }
   // A stage that ran out of time is neither a broken build nor an infra blip, and pretending it is
   // one of those is worse than saying so. v1 reports it and stops there — no blame, no fix.
   if (/Timeout has been exceeded|script returned exit code 143/i.test(nodeError || '')) {

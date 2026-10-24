@@ -50,13 +50,18 @@ const search = async (jql, fields) => {
  */
 export async function knownFlickers(jql = FLICKER_JQL) {
   const data = await search(jql, `summary,status,resolution,fixVersions,${FLICKER_FIELD}`);
+  return flickerLookup(data?.issues || []);
+}
+
+/** `knownFlickers` past the network: the lookup over a page of JIRA issues. */
+export function flickerLookup(issues) {
   const byTest = new Map();
   const all = [];
   // Newest first, so that when a test has been filed more than once the *current* issue wins. JIRA
   // returns an unordered page, and a Map keyed by test keeps whichever arrived last — which on
   // `NavigationPanelAdministrationIT` meant answering with a 2024 issue whose fix shipped on every
   // line instead of the 2026 one that did not, i.e. reporting a live backport gap as settled.
-  const byNewest = [...(data?.issues || [])]
+  const byNewest = [...issues]
     .sort((a, b) => Number(b.key.split("-")[1]) - Number(a.key.split("-")[1]));
   for (const issue of byNewest) {
     // `earlier` is on every entry, including the ones the summary fallback below returns, so a
@@ -89,6 +94,9 @@ export async function knownFlickers(jql = FLICKER_JQL) {
     const exact = byTest.get(id);
     if (exact) return exact;
     const [className, method] = id.split("#");
+    // A class-level failure (`AllIT#`, Jenkins' `(?)`) has no method, and every summary "includes"
+    // the empty string: `cluster.test.AllIT#` was "tracked as" a MacroIT flicker (2026-10-24).
+    if (!method) return null;
     const simpleName = className.split(/[.$]/).pop().replace(/^Nested/, "");
     return all.find(issue => issue.summary.includes(simpleName) && issue.summary.includes(method)) || null;
   };

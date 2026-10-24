@@ -1,7 +1,7 @@
 // What the paste and the digest say about a row, from the 2026-10-18 morning.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deltaOf, missingLine, renderDetail, stateLine } from '../../xwiki/skills/xwiki-ci-check/tools/lib/render.mjs';
+import { deltaOf, missingLine, renderDetail, renderDigest, stateLine, xmlLimitProperty } from '../../xwiki/skills/xwiki-ci-check/tools/lib/render.mjs';
 
 const XWIKI_25242 = { key: 'XWIKI-25242', resolution: 'Fixed', fixVersions: ['17.10.14', '18.9.0-rc-1', '18.4.7'] };
 
@@ -63,4 +63,66 @@ test('a break older than the log budget says the builds before were not read', (
   const rendered = renderDetail({ generatedAt: '2026-10-19T06:00:00Z', horizonDays: 7, budget: 5,
     summary: { jobs: 1, red: 1, incidents: 1 }, jobs: [], incidents: [ESLINT] }, { live: true });
   assert.match(rendered, /failing back to #9036 at least; the broken builds before it were not read, and #9030 is the last that completed/);
+});
+
+// ---- 2026-10-24 -------------------------------------------------------------------------------
+const order24 = incidents => ({ generatedAt: '2026-10-24T06:00:00Z', horizonDays: 7, budget: 5,
+  summary: { jobs: 1, red: 1, incidents: incidents.length }, jobs: [], incidents });
+const NOBODY_YESTERDAY = { available: true, at: '2026-10-23T06:00:00Z', state: {} };
+
+test('the JAXP limit to raise is named, from the message or from its code', () => {
+  // master #9059: the limit came from jaxp.properties, so only the code says which one it is.
+  assert.equal(xmlLimitProperty(['… JAXP00010004: The accumulated size of entities is "100,001" that exceeded the'
+    + ' "100,000" limit set by "jaxp.properties".']), 'jdk.xml.totalEntitySizeLimit');
+  assert.equal(xmlLimitProperty(['JAXP00010003: The length of entity "[xml]" is "100,001" that exceeds the "100,000"'
+    + ' limit set by "jdk.xml.maxGeneralEntitySizeLimit".']), 'jdk.xml.maxGeneralEntitySizeLimit');
+  assert.equal(xmlLimitProperty([]), null);
+  const JAXP = { id: 'platform/master/main:jenkins-xml-limit', repo: 'xwiki-platform', branch: 'master', class: 3,
+    kind: 'infra', state: 'infra', signature: 'main:jenkins-xml-limit', primary: true, ageDays: 1,
+    evidence: ['MavenPipelineException: … JAXP00010004: The accumulated size of entities is "100,001" …'] };
+  const page = renderDetail(order24([JAXP]), { live: true });
+  assert.match(page, /raise `jdk\.xml\.totalEntitySizeLimit` in the controller's JVM options/);
+  // Named by its pattern, not by its kind: row 4 read `infra`.
+  assert.match(page, /\*\*1\.\*\* `jenkins-xml-limit`/);
+});
+
+const DRAG = { id: 'platform/master/org.xwiki.realtime.wysiwyg.test.ui.AllIT$NestedRealtimeWYSIWYGEditorIT'
+  + '#dragAndDropFilesAtTheSameTime', repo: 'xwiki-platform', branch: 'master', class: 1, kind: 'test-breakage',
+  state: 'first seen', primary: true, ageDays: 0, ageIsLowerBound: true, jira: 'XWIKI-22619',
+  fixState: { kind: 'fix-in-flight', number: 6687, url: 'https://github.com/xwiki/xwiki-platform/pull/6687', author: 'michitux',
+    title: 'XWIKI-22643: Documents can be saved at the same time', where: 'it changes FileUploader' },
+  develocity: { failures: 55, runs: 667, windowDays: 28, firstSeen: '2026-09-27', firstSeenDays: 27, news: 'known' } };
+
+test('a failure Develocity saw weeks ago is aged from it, not new, and keeps its issue on Matrix', () => {
+  const digest = renderDigest(order24([DRAG]), NOBODY_YESTERDAY);
+  const row = digest.split('\n').find(line => line.includes('dragAndDropFilesAtTheSameTime'));
+  assert.match(row, /^\| 🔁/);
+  // At the edge of Develocity's 28 days, so a lower bound.
+  assert.match(row, /\| ≥27d \|/);
+  assert.match(renderDigest(order24([{ ...DRAG, develocity: { ...DRAG.develocity, firstSeenDays: 12 } }]),
+    NOBODY_YESTERDAY), /\| 12d \|/);
+  assert.match(row, /fix in flight: \[PR #6687\].* · tracked: \[XWIKI-22619\]/);
+  assert.doesNotMatch(renderDetail(order24([DRAG]), { live: true }), /age unknown/);
+  // Develocity's first failure today is still new.
+  const fresh = { ...DRAG, develocity: { ...DRAG.develocity, firstSeenDays: 0, news: 'new' } };
+  assert.match(renderDigest(order24([fresh]), NOBODY_YESTERDAY), /\| 🆕/);
+});
+
+test('what went green is said in words, and a JUnit engine reporting itself is not a test', () => {
+  const previous = { available: true, at: '2026-10-23T06:00:00Z', state: {
+    'platform/master/main:Build/maven:xwiki-platform-activeinstalls2-api': 'build-break/build-break//',
+    'platform/stable-18.4.x/main:Build/unclassified:java.util.LinkedHashMap$Entry': 'unclassified/unclassified//',
+    'platform/master/JUnit Jupiter#JUnit Jupiter': 'test-breakage/first seen//',
+    'platform/master/org.xwiki.dashboard.test.ui.DashboardIT#editDashboard': 'flicker/intermittent//' } };
+  const green = renderDigest(order24([]), previous).split('\n').find(line => line.startsWith('| ✅'));
+  assert.match(green, /the build of `xwiki-platform-activeinstalls2-api`/);
+  assert.match(green, /an unexplained build failure \(`java\.util\.LinkedHashMap\$Entry`\)/);
+  assert.match(green, /`DashboardIT#editDashboard`/);
+  assert.doesNotMatch(green, /JUnit Jupiter|maven:|unclassified:/);
+});
+
+test('a test failing in one environment, but not in every build, says so', () => {
+  const single = { ...TOGGLE, kind: 'flicker', state: 'single env', failedIn: '2/6 builds, 1/1 envs', jira: 'XWIKI-23305' };
+  const page = renderDetail(order24([single]), { live: true });
+  assert.match(page, /one environment, not every build · 2\/6 builds/);
 });

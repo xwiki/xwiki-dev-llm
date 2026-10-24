@@ -2,7 +2,7 @@
 // (2026-10-16), whose ESLint break was signed by the reactor's resume line until the eslint matcher.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { alsoInfra, classify, eslintFile, keep } from '../../xwiki/skills/xwiki-ci-check/tools/lib/logs.mjs';
+import { alsoInfra, classify, diagnoseStages, eslintFile, keep } from '../../xwiki/skills/xwiki-ci-check/tools/lib/logs.mjs';
 
 const at = key => `Build/${key}`;
 const ROOT = '/root/workspace/XWiki_xwiki-platform_master/xwiki-platform-core/xwiki-platform-node/src/main/node';
@@ -92,4 +92,44 @@ test('a later stage adds nothing when the first is already infrastructure, or fa
   assert.deepEqual(alsoInfra([QUALITY, { ...QUALITY, name: 'Build for TestRelease' }], { kind: 'unclassified' }), []);
   // Only the first stage is the cause's: a lone stage has no second cause.
   assert.deepEqual(alsoInfra([TEST_RELEASE], { kind: 'build-break' }), []);
+});
+
+// master #9059 and #9060 (2026-10-24): TestRelease failed on the controller's JAXP limit and, in
+// parallel, Quality Step 2 on a really red SonarCloud gate. Reading the infra patterns over every
+// stage first made the build "infra — not the code", and the gate never got its first-fix treatment.
+const JAXP_9060 = 'org.jenkinsci.plugins.pipeline.maven.MavenPipelineException: Exception occured in withMaven'
+  + ' pipeline step: JAXP00010004: The accumulated size of entities is "100,001" that exceeded the "100,000" limit'
+  + ' set by "jaxp.properties".';
+const GATE = 'Pipeline aborted due to quality gate failure: ERROR';
+const bag = (name, nodeError, lines = []) => ({ name, lines, truncated: [], nodeError });
+
+test('a red quality gate is never masked by an infrastructure failure beside it, in either order', async () => {
+  for (const stages of [
+    [bag('Build for TestRelease', JAXP_9060), bag('Build for Quality Step 2', GATE)],
+    [bag('Build for Quality Step 2', GATE), bag('Build for TestRelease', JAXP_9060)]
+  ]) {
+    const diagnosis = await diagnoseStages(stages);
+    assert.equal(diagnosis.kind, 'build-break');
+    assert.equal(diagnosis.signature, 'Build/sonar-gate:failed');
+    assert.equal(diagnosis.stage, 'Build for Quality Step 2');
+    assert.deepEqual(diagnosis.also?.map(also => [also.signature, also.stage]),
+      [['jenkins-xml-limit', 'Build for TestRelease']]);
+  }
+});
+
+test('a stage\'s own infrastructure failure still explains that stage', async () => {
+  // A full disk crashes the forked VM: the disk is the cause, not a test-infrastructure break.
+  const lines = ['12:00:00 No space left on device',
+    '12:00:01 [ERROR] There are test failures. surefire ... The forked VM terminated without saying goodbye. VM crashed?'];
+  const diagnosis = await diagnoseStages([bag('Build for Main', 'script returned exit code 1', lines)]);
+  assert.equal(diagnosis.kind, 'infra');
+  assert.equal(diagnosis.signature, 'disk-full');
+});
+
+test('a build only the infrastructure broke is infrastructure, even beside an unexplained stage', async () => {
+  const diagnosis = await diagnoseStages([bag('Build for Main', 'script returned exit code 1'),
+    bag('Build for TestRelease', JAXP_9060)]);
+  assert.equal(diagnosis.kind, 'infra');
+  assert.equal(diagnosis.signature, 'jenkins-xml-limit');
+  assert.equal(diagnosis.also, undefined);
 });

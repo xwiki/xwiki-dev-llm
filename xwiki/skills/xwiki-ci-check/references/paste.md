@@ -22,6 +22,10 @@ cannot reach:
 
 A cell you leave unfilled renders **empty**, which is how the document says you skipped it.
 
+Its readers see the paste and the room, never the run's terminal or work order: say what you would
+send them there for (*"this run did not open that PR: the budget was spent"*), never "see the
+terminal report".
+
 **What you fill is also tomorrow's memory.** The paste ends with a folded *Run memory* block mapping
 its rows to incidents; the next run reads your *Why*, *Next* and root cause back through it, and
 reuses them for an incident that has not changed instead of analysing it again (`recalled`). So

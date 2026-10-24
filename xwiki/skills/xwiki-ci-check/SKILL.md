@@ -97,7 +97,7 @@ the same build, or of one class flickering in exactly the same builds (`cofailin
 | `jira` | the open flicker issue, if the test already has one |
 | `jiraClosed` | a **closed** flicker issue naming this exact test, fixed or not (`resolution`). Never suppresses anything (`references/fix-signals.md`) |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |
-| `alsoOn` / `crossBranch` | the other branches the same signature is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
+| `alsoOn` / `crossBranch` | the other branches the same signature or `rootCause` is red on (`crossBranch: 'also-red'`) — one cause, not one incident per branch |
 | `primary` | `false` ⇒ this is that same cause seen on another branch: it is named on the primary's line and gets **no analysis, no comment and no entry of its own** |
 | `flickerGroup` | proven, unfiled flickers of one test class, on any branch, carry the same value: **one** issue per value (§5) |
 | `sonar` | on a quality-gate incident: the failing conditions, the issues under them, `culprits` (`references/quality-gate.md`) |

@@ -35,7 +35,8 @@ node <skill>/tools/ci-check.mjs --render-digest work-order.json --previous previ
 
 The tool writes the shape, because a digest re-invented every morning drifts from the dashboard it
 summarises: the grid pasted from `status.grid` (🔴 cannot be released as it stands, 🟠 red of any
-other kind, 🟢, ⚪ no build), `new`, `changed` and `fixed` one row each with its age and its links,
+other kind, 🟢, ⚪ no build), `new`, `changed` and `fixed` one row each with its age and its links (a `new` row whose test
+Develocity saw failing before today is marked 🔁, not 🆕, and aged from that first failure),
 one row per cause whatever its branch count, rows chosen as a break with an owner first, then a
 break without one, then what moved, then what went green — **the line the dashboard can never show**
 — with `same` and `beyondHorizon` collapsed to counts, except a release blocker that has not moved,

@@ -274,22 +274,42 @@ export const idOf = (className, name) => `${className}#${name.replace(/\([^)]*\)
 /** A whole-class setup failure or a forbidden-log assertion, not a test method. */
 export const isPseudoTest = id => /#(initializationError|executionError)$/.test(id);
 
+/**
+ * The innermost `Caused by:` of a stack trace, its standalone numbers normalised (`[500]`, a port),
+ * or null when it has none.
+ *
+ * What a failure *is*, as against what the test says about it: on 2026-10-24 twelve `Upgrade*Test`s
+ * reported `MessageConstraintException: Maximum line length limit exceeded` and eight legacy `AllIT`s
+ * `Failed to initialize PO suite`, and both were WebDriverManager failing to resolve a driver — which
+ * only the chain's last link says. A failure with no chain (an assertion) has no root cause to share.
+ */
+export function rootCauseOf(stackTrace) {
+  const causes = String(stackTrace || "").split("\n").filter(line => line.startsWith("Caused by: "));
+  const last = causes[causes.length - 1];
+  return last ? last.slice("Caused by: ".length).trim().replace(/\b\d+\b/g, "N").slice(0, 200) : null;
+}
+
 /** Every test of one build, with the environments it ran, failed and was skipped in. */
 export async function testResults(buildUrl) {
-  const fields = tree("suites[enclosingBlockNames,cases[className,name,status,errorDetails]]");
+  const fields = tree("suites[enclosingBlockNames,cases[className,name,status,errorDetails,errorStackTrace]]");
   const data = await getJSON(`${buildUrl}/testReport/api/json?tree=${fields}`);
   const byTest = new Map();
   for (const suite of data?.suites || []) {
     const env = environmentOf(suite);
     for (const testCase of suite.cases || []) {
       const id = idOf(testCase.className, testCase.name);
-      if (!byTest.has(id)) byTest.set(id, { id, failed: new Set(), ran: new Set(), skipped: new Set(), detail: "" });
+      if (!byTest.has(id)) {
+        byTest.set(id, { id, failed: new Set(), ran: new Set(), skipped: new Set(), detail: "", cause: null });
+      }
       const test = byTest.get(id);
       if (testCase.status === "SKIPPED") test.skipped.add(env);
       else test.ran.add(env);
       if (testCase.status === "FAILED" || testCase.status === "REGRESSION") {
         test.failed.add(env);
-        if (!test.detail) test.detail = (testCase.errorDetails || "").split("\n")[0].slice(0, 200);
+        if (!test.detail) {
+          test.detail = (testCase.errorDetails || "").split("\n")[0].slice(0, 200);
+          test.cause = rootCauseOf(testCase.errorStackTrace);
+        }
       }
     }
   }
