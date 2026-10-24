@@ -1,172 +1,111 @@
 ---
 name: xwiki-review
-description: "EXPLICIT INVOCATION ONLY — never load this skill for a plain review request. A deliberately expensive multi-angle, XWiki-aware review of a change set (pull request, commit range, or working tree): it fans out one specialist reviewer per angle (conventions, architecture, backward compatibility, security, performance, tests, accessibility, i18n/UX, documentation, data & migration, spec conformance) — the security angle either quick (the public secure-coding conventions) or, when the private xwiki-security-review skill is available, full, at the developer's choice — puts every finding through an independent skeptic, drops the ones that do not survive, and posts one grouped comment. Use ONLY when the user names it — `/xwiki-review`, \"run xwiki-review\", \"do the multi-angle/full/deep review\" — or when a CI routine invokes it by name. Do NOT use it for \"review this PR\", \"review my changes\", \"review the working tree\" or any other unqualified review request: those are answered directly, without this skill, because it costs far more tokens and time than a normal review. For opening the PR itself use xwiki-pull-request; for the conventions it enforces use xwiki-knowledge; for Sonar findings use xwiki-fix-sonarqube-issue."
+description: "EXPLICIT INVOCATION ONLY — never load this skill for a plain review request. A deliberately expensive, XWiki-aware review of a change set (pull request, commit range, or working tree): a few senior-reviewer agents — correctness, design, tests, history of the touched code and its past reviews, conventions, and defensive conventions — each reading the code around the change with both general engineering judgement and XWiki's knowledge base, then an independent verifier per finding that re-checks it against the code, and one grouped comment. The defensive-conventions pass is either quick (the public secure-coding conventions) or, when the private xwiki-security-review skill is available, full, at the developer's choice. Use ONLY when the user names it — `/xwiki-review`, \"run xwiki-review\", \"do the deep/full review\" — or when a CI routine invokes it by name. Do NOT use it for \"review this PR\", \"review my changes\", \"review the working tree\" or any other unqualified review request: those are answered directly, without this skill, because it costs far more tokens and time than a normal review. For opening the PR itself use xwiki-pull-request; for the conventions it enforces use xwiki-knowledge; for Sonar findings use xwiki-fix-sonarqube-issue."
 ---
 
-# XWiki multi-angle review
+# XWiki review
 
 **This skill is opt-in**, never the answer to a plain "review this": it runs only when named
-(`/xwiki-review`, "run xwiki-review") or invoked by a CI routine. Its eleven reviewers cost an order
-of magnitude more tokens and wall-clock than a single-pass review, a price worth paying only when the
-developer has decided they want it.
+(`/xwiki-review`, "run xwiki-review") or invoked by a CI routine. It costs several times a
+single-pass review.
 
-A review that is *XWiki-aware*: every finding must trace to a rule this project actually holds —
-an OKF file, a skill, a `CLAUDE.md`, or a code fact — never to generic best-practice folklore. A
-design point no rule backs can only reach the author as a non-blocking suggestion (§5).
-
-The value is that eleven narrow reviewers each read the diff through one lens they know deeply, and
-that everything they say is filtered hard before a human sees it. **A review nobody trusts is worse
-than no review**, so the protocol is built around suppressing false positives.
+What it must do better than a single pass: find the problems a strong XWiki committer would find —
+bugs, a better existing tool or place for new code, tests that prove nothing, a point the project's
+reviewers have raised before — **and** apply XWiki's written conventions, without the noise. Each
+reviewer therefore brings general engineering judgement *and* XWiki's knowledge; neither limits the
+other. Every finding is then re-checked against the code by someone who did not write it, because
+**a review nobody trusts is worse than no review**.
 
 ## 0. Inputs
 
 The caller supplies one of:
 
-- `PR <number>` — review `gh pr diff <number>`, base = merge-base with the target branch.
-- `COMMITS <sha>..<sha>` — review that range (used by the daily sweep over direct pushes).
-- nothing — review the working tree against `HEAD` (local pre-PR use), new untracked files included:
-  `git diff HEAD` alone leaves them out, so a brand-new class would go unreviewed.
+- `PR <number>` — the checkout must be at the PR's head (`gh pr checkout`).
+- `COMMITS <base>..<head>` — that range (the daily sweep over direct pushes).
+- nothing — the working tree against `HEAD`, untracked files included (local pre-PR use).
 
-Where the review goes follows from the input (§6): a PR comment, a commit comment on the range's last
-commit, or — for the working tree — the terminal only, posted nowhere.
+The review goes to a PR comment, a commit comment on the range's last commit, or — for the working
+tree — the terminal only (§4).
 
-Also resolve, once, up front:
+Decide the **security depth** before any work starts, so the run never stalls on it later:
 
-- `REPO` and the head SHA, full 40 chars — needed for permalinks and for step 1's re-review check: the
-  PR's `headRefOid` (the local checkout may be another commit), the range's end for `COMMITS`. The
-  working tree has none.
-- The JIRA key(s) in the commit subjects (`XWIKI-`, `XCOMMONS-`, `XRENDERING-`, contrib keys).
-- The list of changed files, with their extensions and modules.
-- The **security depth**, `quick` or `full`, decided before any work starts so the run never stalls
-  on it later:
-  - **`quick`** — the defensive-conventions angle of §4, on the public secure-coding conventions its
-    brief loads. The only depth when a CI routine invokes this skill, or when the session has no
-    `xwiki-security-review` skill (the private `xwiki-security` plugin) — then do not ask.
-  - **`full`** — run `xwiki-security-review` on the same change set in place of that angle (§4b).
-    Only offered when that skill is available and a developer is at the keyboard: ask whether they
-    want the full security review — it proves each finding on a disposable local instance and
-    costs far more time — or the quick one.
+- **`quick`** — the Defensive conventions reviewer (§2). The only depth when a CI routine invokes
+  this skill, or when the session has no `xwiki-security-review` skill (the private `xwiki-security`
+  plugin) — then do not ask.
+- **`full`** — run `xwiki-security-review` on the same change set in its place (§2b). Only offered
+  when that skill is available and a developer is at the keyboard: ask whether they want the full
+  security review — it proves each finding on a disposable local instance and costs far more time —
+  or the quick one.
 
-## 1. Eligibility gate — the deterministic checks first
+## 1. Context pack and gate — in code, once
 
-These are shell checks: run them in the orchestrator before spending a model call. Stop
-immediately — post nothing — if any holds:
+From the checkout, write the pack into a new directory under the work directory:
 
-- The PR is closed, merged or a draft (`gh pr view --json state,isDraft`).
-- A review comment from this routine already exists **for the current head SHA** — found by grepping
-  the PR's (or the commit's) comments for the marker `<!-- xwiki-review sha=<head-sha> -->` that §6
-  puts on the comment's first line. The comment text itself carries no SHA, so nothing else matches.
-- The diff exceeds the sanity ceiling — more than 3000 changed lines **or** more than 150 files,
-  either one alone, from `git diff --shortstat` — post a single line saying the change was too large
-  to review automatically, and stop.
-- The author is Renovate or Dependabot and the diff is only version bumps.
+```bash
+node <skill>/tools/pack.mjs --out <dir> [--pr <n> | --range <base>..<head>]
+```
 
-One judgement call is left, and it is the only model call in this step: decide from the diff alone
-whether the change carries human judgement worth reviewing. A `mvn license:format` header-only
-diff, pure `xar:format` reformatting, an l10n translation sync, or a trivially safe change (a typo
-in a comment, a single `@since` fix) all stop the routine here.
+It writes `pack.md` (commits, changed files and their module profile, applicable `CLAUDE.md` files,
+the JIRA issues), `diff.patch` and `prior-reviews.md` (what committers said on earlier pull requests
+touching the same files), and prints the gate. **If `stop` is set, stop** — post nothing, except that
+a change too large to review gets a one-line comment saying so.
 
-## 2. Context pack — assembled in code, once, shared by every reviewer
+One judgement call is left, from the diff alone: stop if the change carries no human judgement worth
+reviewing — `mvn license:format` or `xar:format` output, a translation sync, a typo in a comment, a
+single `@since` fix.
 
-Every item below comes from `git`, `gh`, the poms or the JIRA API, so assemble it with commands
-rather than a model call. Every reviewer receives exactly this and nothing else, so that eleven
-agents do not each re-derive it:
+## 2. Reviewers — in parallel, one agent each
 
-- The diff, and the commit subjects/bodies from `git log` over the range — never from `gh pr view
-  --json commits`, whose `messageHeadline` is truncated.
-- The **paths** (not contents) of every `CLAUDE.md` that applies: repo root plus any in the
-  directories touched.
-- The JIRA issue title and description for each key found (via the `xwiki-jira` skill) — the
-  conventions angle needs both to judge the commit messages against
-  `okf/conventions/commit-messages.md`.
-- For each touched module: whether it is `-legacy`, `oldcore`, a `xar`-packaging module, a
-  `-test-docker` module, or frontend (`.js`/`.vue`/`.less`/`.vm`).
-- The `xwiki.jacoco.instructionRatio` currently declared in each touched module's pom.
-
-Write the pack to one file in the work directory and hand every agent its absolute path; the
-contract has them read it in full.
-
-## 3. Routing — pick the angles that apply
-
-Do not run all eleven on every change. Route from the changed-file profile:
-
-| Angle | Runs when |
+| Reviewer | Runs when |
 |---|---|
-| **Conventions** | any source file |
-| **Architecture** | any `.java`, or a `pom.xml` adding a dependency |
-| **Backward compatibility** | any `.java` under `src/main/java` outside `-legacy` modules (page objects and test helpers included) |
-| **Defensive conventions** | always — at `full` depth, replaced by §4b |
-| **Performance** | always |
-| **Tests** | always (a change with no test is itself the finding) |
-| **Accessibility** | `.vm`, `.html`, `.vue`, `.js`, `.less`, `.css`, UI `.xml` |
-| **i18n & UX** | any user-facing string, `.properties`, `.vm`, any XAR `.xml` page |
-| **Documentation** | new/changed public API, or user-visible behaviour |
-| **Data & migration** | `*.hbm.xml`, `R*XWIKI*.java`, Solr schema, store code, any XAR page; an XClass definition, a generated page name or a wiki-page migration |
-| **Spec conformance** | a JIRA key was found |
+| **Correctness** | the change touches code (anything but docs or translations) |
+| **Design** | the change adds or reshapes code |
+| **Tests** | the change touches code or tests |
+| **History** | always |
+| **Conventions** | always |
+| **Defensive conventions** | always — at `full` depth, replaced by §2b |
 
-Announce the routing decision in one line before fanning out, so a human can see what was and was
-not looked at. **Never silently skip an angle** — if you drop one, say so.
+Say in one line which ran and which did not, and why. Give each agent its role name, the pack
+directory, the plugin's absolute root (in Claude Code `${CLAUDE_PLUGIN_ROOT}`, in Kimi Code
+`${KIMI_SKILL_DIR}/../..`, in opencode `$XWIKI_LLM_HOME/xwiki`; the OKF is its `okf/`) and the absolute
+path of `references/reviewers.md`, which it reads — the shared part and its own role only. Run every
+reviewer and verifier **on the session's model**: Correctness and Design are where a weaker model
+loses most. They are read-only: never edit, build, push or post.
 
-## 4. Fan out — one agent per angle, in parallel
+**Read `references/reviewers.md`'s "Never write the word" yourself before fanning out**, and load
+`okf/processes/security-policy.md`: that section binds your own narration, the comment and every log
+from here on (§5 says why).
 
-All selected angles run **concurrently**, each in its own agent so they cannot contaminate each
-other's context. Give each agent the context pack, its angle's name, the resolved OKF path below and
-the absolute paths of two files next to this skill: `references/reviewer-contract.md` (the bar every
-reviewer meets, how to read its sources, what it must never write) and `references/briefs.md` (one
-section per angle: what to load and what to look at). It reads the contract and **only its own
-brief**. **Read the contract yourself before fanning out**, and load `okf/processes/security-policy.md`:
-the contract's "Never write the word" list binds your own narration, the comment and every log from
-here on (§6b says why).
+### 2b. Full security depth — delegate to `xwiki-security-review`
 
-The rules an angle enforces live in the OKF and the other skills, never restated here or in the
-briefs: the skeptic drops a finding whose cited file does not say what was claimed, so a stale
-paraphrase would silence the angle.
+At `full` depth the Defensive conventions reviewer does not run: `xwiki-security-review` does its
+work and more. Invoke it on the same change set, concurrently with the reviewers, and let it follow
+its own procedure and gate unchanged.
 
-The OKF ships inside this plugin at `okf/` — resolve it from this skill's directory as `../../okf/`
-(in Claude Code `${CLAUDE_PLUGIN_ROOT}/okf/`, in Kimi Code `${KIMI_SKILL_DIR}/../../okf/`, in
-opencode `$XWIKI_LLM_HOME/xwiki/okf/`), and give every agent the resolved absolute path.
+Its output **never joins this pipeline**: not §3's verifiers (it proves its own findings), not §4's
+comment, not any log. It stays in that skill's report in the work directory and in the terminal;
+§4's comment leaves the role out of both its run and its skipped lists. Should the developer then ask
+to tell the author about one of its findings, that skill's gate says how — phrased as §5 prescribes,
+as one more finding of the comment.
 
-### 4b. Full security depth — delegate to `xwiki-security-review`
+## 3. Verify — every finding, independently
 
-At `full` depth the defensive-conventions angle does not run: `xwiki-security-review` does its work
-and more, loading the same `okf/conventions/security.md` plus the private mechanism knowledge base.
-Invoke it on the same change set (PR, range or working tree) as the other angles, concurrently with
-them, and let it follow its own procedure and gate unchanged.
+Merge findings that make the same point about the same code, keeping the best evidence and the most
+specific source. Then run one verifier per finding, **in parallel**, each given the finding, the pack
+directory, the plugin root and the absolute path of `references/verifier.md`, which holds its
+instructions. Keep the findings it returns as `keep`, at the severity it gives; drop the rest.
 
-Its output **never joins this pipeline**: not §5's skeptics (it refutes and proves its own
-findings), not §6's comment, not any log. It stays in that skill's report in the work directory and
-in the terminal; §6's comment leaves the angle out of both its run and its skipped lists. Should
-the developer then ask to tell the author about one of its findings, that skill's gate says how —
-phrased as §6b prescribes, as one more finding of the comment.
+## 4. Post
 
-## 5. Verification — every finding is challenged before it survives
-
-Collect every finding from every angle. Deduplicate: when two angles report the same line, keep the
-one whose rule citation is more specific and merge the reasoning.
-
-Then, for each surviving finding **in parallel**, run an independent skeptic that is given the
-finding and its angle, the diff, the `CLAUDE.md` paths, the resolved OKF path and the absolute
-paths of `references/skeptic.md`, which holds its instructions, and of `references/briefs.md`. It returns one verdict — `false`,
-`unverified`, `nitpick`, `suggestion`, `confirmed` or `certain` — after opening the cited file to check the rule
-actually says what the finding claims.
-
-**Keep `confirmed` and `certain` as findings, and at most two `suggestion`s — the two a committer
-is likeliest to act on; drop the rest.** If nothing survives, still post (§6) — that is a good review,
-not a failed one, and the comment is what lets step 1's head-SHA check stop a re-trigger from
-re-running the whole fan-out.
-
-## 6. Post
-
-Re-run the eligibility gate from step 1 (the PR may have been merged or closed while you worked),
-and check the comment against the Write / Never-write list in `references/reviewer-contract.md` (§6b
-says why it binds the comment). Then post **one** comment — on the PR for `PR`, as a commit comment
-on the range's last commit for `COMMITS` (`gh api repos/<repo>/commits/<sha>/comments`). For the
-working tree post nothing: print the same body in the terminal, without the marker, citing code as
-`path:line` since there is no SHA to permalink. Never split a review across many comments; never post inline comments
-for anything below `major`.
+Re-run `pack.mjs` (the PR may have been merged or closed, or reviewed by another run, while you
+worked; `stop` must still be unset), and check the comment against "Never write the word" in
+`references/reviewers.md`. Then post **one** comment — on the PR for `PR`, as a commit comment on the
+range's last commit for `COMMITS` (`gh api repos/<repo>/commits/<sha>/comments`). For the working
+tree post nothing: print the same body in the terminal, without the marker, citing code as
+`path:line`. Never split a review across several comments.
 
 The comment's first line is the marker `<!-- xwiki-review sha=<full-head-sha> -->` (invisible once
-rendered, and the only thing step 1 matches on); then this disclaimer, verbatim, always:
+rendered, and what `pack.mjs` looks for); then this disclaimer, verbatim, always:
 
 > **Automated review — generated by Claude Code.** It can be wrong. Treat every point below as a
 > question, not a verdict: verify the claim against the code before acting on it, and dismiss
@@ -177,75 +116,66 @@ Then:
 ```
 ### Automated review
 
-Reviewed <N> files across <angles run, comma-separated>. Found <M> issue(s), <S> suggestion(s).
+Reviewed <N> files: <reviewers run>. <M> issue(s), <S> suggestion(s), <K> nit(s).
 
 **Blockers**
-1. <one-sentence claim> — <rule cited, linked>
+1. <one-sentence claim> <why, one sentence>. <what to do instead> — <source, linked>
    <permalink>
 
-**Major**
-2. ...
-
-**Minor**
-3. ...
+**Major** / **Minor**  (same shape)
 
 **Suggestions — not blocking, take or leave**
-4. <the point and the alternative it names> — <lens cited, or "no written rule">
-   <permalink>
+4. ...
 
-<Angles that were skipped, and why.>
+<details><summary>Nits</summary>
+
+5. ...
+</details>
+
+<Reviewers that did not run, and why.>
 ```
 
-Rules for the comment body:
+Rules for the body:
 
-- Brief. No emojis in the findings themselves. No praise section, no summary of what the PR does —
-  the author knows.
-- Every finding links to the code with a **full-SHA permalink** covering at least one line of
-  context either side: `https://github.com/<repo>/blob/<full-40-char-sha>/<path>#L<start>-L<end>`.
-  Compute the SHA up front (step 0); a `$(git rev-parse HEAD)` inside the URL will not render.
-- Every rule citation is a link too — to the OKF file, the skill, or the `CLAUDE.md` line. A file
-  of this plugin links to `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>`,
-  `<version>` being the one in `xwiki/.claude-plugin/plugin.json`.
-- Leave out a heading with nothing under it; write `1 issue`, not `1 issues`. With nothing
-  surviving the comment is the marker, the disclaimer, the `Reviewed … Found 0 issues, 0
-  suggestions.` line and the skipped angles — nothing else.
-- Use `gh` for all GitHub interaction. Never push, never edit files, never re-run the build.
+- Brief. No emojis in the findings, no praise, no summary of what the change does.
+- At most three suggestions and five nits — the ones a committer is likeliest to act on.
+- Every finding links the code with a **full-SHA permalink** covering a line of context either side:
+  `https://github.com/<repo>/blob/<full-40-char-sha>/<path>#L<start>-L<end>` (the head from the gate
+  output; a `$(git rev-parse HEAD)` inside the URL will not render).
+- A source is a link: an OKF file or skill of this plugin to
+  `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>` (`<version>` from
+  `xwiki/.claude-plugin/plugin.json`), a past review to its PR. "Engineering judgement" needs no link.
+- Leave out a heading with nothing under it; write `1 issue`, not `1 issues`. With nothing kept the
+  comment is the marker, the disclaimer and the `Reviewed …` line — post it anyway: the marker is what
+  stops a re-trigger from re-running the whole review.
+- Use `gh` for all GitHub interaction.
 
-### 6b. Never write the word
+## 5. Why "Never write the word"
 
-`okf/processes/security-policy.md`, loaded before step 4, holds the non-disclosure rule this section
-exists to satisfy; what follows is only its consequence for *review output*, which the policy does
-not itself cover. This repo is public, and so is more than the comment:
+`okf/processes/security-policy.md` holds the non-disclosure rule; what follows is only its
+consequence for *review output*, which the policy does not itself cover. This repo is public, and so
+is more than the comment:
 
 > **GitHub Actions logs on a public repository are public.** Everything the run prints — the
 > narration, an agent's returned text, a job summary — is world-readable at a stable URL and stays
 > in the log archive. Reasoning that never reaches the comment is published anyway.
 
 There is therefore no safe place in this pipeline to *say* that something is a vulnerability. The
-resolution is not to hide the finding but to **never form it as one**. The defensive-conventions
-angle checks mechanisms, not attacks, so no stage of the pipeline — reviewer, skeptic, comment,
-log — ever holds a sentence worth suppressing. This is why that angle's framing in its brief is a
-hard constraint and not a stylistic preference.
+resolution is not to hide the finding but to **never form it as one**: the Defensive conventions
+reviewer checks mechanisms, not attacks, so no stage — reviewer, verifier, comment, log — ever holds a
+sentence worth suppressing. A finding phrased that way reads like any other convention finding —
+actionable for the author, signalling nothing to anyone reading over their shoulder: the device the
+policy prescribes for a security fix's commit message.
 
-Concretely: write the missing mechanism, never the problem it guards against — the Write / Never
-write list is in `references/reviewer-contract.md`, read before step 4.
+**Out of scope, deliberately.** This routine does not hunt for novel vulnerabilities, which need
+reasoning about reachability and attacker capability that cannot be phrased mechanically. That work
+stays with humans, on the security list, and with committers running the `full` depth locally, where
+nothing is published. The routine must never be described as a security review — nor may the comment
+say, or hint, that a `full` review ran.
 
-A finding phrased this way reads like any other convention finding — actionable for the author,
-signalling nothing to anyone reading over their shoulder: the device the policy prescribes for a
-security fix's commit message.
+## 6. Feed what you learned back
 
-**Out of scope, deliberately.** This routine does not hunt for novel vulnerabilities — the kind that
-require reasoning about reachability and attacker capability, which cannot be phrased mechanically
-and therefore cannot run here at all. That work stays with humans, on the security list, and with
-committers running the `full` depth (§4b) locally, where nothing is published. The routine covers
-the conventions; it does not replace a security review, and it must never be described as one — nor
-may the comment say, or hint, that a `full` review ran.
-
-
-## 7. Feed what you learned back
-
-Whenever a reviewer saw something real that should hold for every change but found **no rule in
-the OKF, a skill or a `CLAUDE.md` to cite**, it returns a *candidate convention* (the contract says how): one line, what
-the rule would say and the example that prompted it. They are not posted; they are batched and
-offered to a human through the `xwiki-knowledge` EXTEND flow — which is how the reviewer gets sharper
-over time instead of repeating the same unfounded opinions.
+Reviewers return *candidate conventions* — something that should hold for every change and that no
+OKF topic says. They are not posted: batch them and offer them to a human through the
+`xwiki-knowledge` EXTEND flow, which is how the review gets sharper instead of repeating unwritten
+opinions.
