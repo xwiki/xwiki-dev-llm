@@ -5,9 +5,9 @@ behaviour lives in `SKILL.md`, its `references/` and `tools/`, which are version
 reviewed. **Changing what the routine does is a pull request to `xwiki-dev-llm`, not an edit to an
 unreviewed routine config** — and going live changes one word.
 
-**Schedule: 06:00 Europe/Paris, daily.** After the overnight builds finish (a platform build takes
-3.4–6.5 h) and before anyone starts work. Monday's run covers the weekend on its own; the 7-day
-blame horizon already handles the backlog that accumulates over one.
+**Schedule: 06:00 Europe/Paris, weekdays.** After the overnight builds finish (a platform
+build takes 3.4–6.5 h) and before anyone starts work. Not on weekends: the digest's names notify
+people. Monday's run covers them: the blame horizon is 7 days.
 
 **Model: Opus 5** for the dry-run period, to establish what a good diagnosis looks like. Only then
 try a cheaper model and compare the two runs' logs side by side — choosing cheap up front means

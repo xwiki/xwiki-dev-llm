@@ -20,7 +20,7 @@ identity. Three things keep that safe, and none of them may be skipped:
 
 ## 0. Mode
 
-| | **Local** — a developer, any time | **Routine** — the daily 06:00 run |
+| | **Local** — a developer, any time | **Routine** — the 06:00 weekday run |
 |---|---|---|
 | Invocation | `/xwiki-ci-check`, no flag | `--write` |
 | The analysis, to the terminal | always | always |
