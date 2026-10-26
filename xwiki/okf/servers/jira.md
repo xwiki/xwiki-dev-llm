@@ -164,12 +164,10 @@ Choose the **resolution** that matches reality and **assign the issue to yoursel
 ### Fill the two documentation fields when closing
 
 Closing an issue is also where its documentation is accounted for, so that release notes are built
-progressively instead of being reconstructed on release day. Fill **both** JIRA fields on the issue:
-the **documentation** field (the xwiki.org reference page documenting it) and the **release note**
-field (for the version(s) in Fix Version/s).
+progressively instead of being reconstructed on release day. Fill **both** fields (see *The
+documentation fields* above), the release-note one for the version(s) in Fix Version/s, with **`N/A`**
+in one that genuinely does not apply — never leave it empty.
 
-- Put the literal string **`N/A`** in a field that genuinely does not apply — never leave it empty:
-  emptiness is what a JQL query looks for to find undocumented issues.
 - A bug fix gets a release-note entry only when it is **noteworthy** to someone deciding whether to
   upgrade — not merely because it is user-visible, which nearly every bug fix is. One that just
   restores the documented behaviour is `N/A`: the release note already lists it among the issues
