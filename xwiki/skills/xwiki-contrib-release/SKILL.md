@@ -1,6 +1,6 @@
 ---
 name: xwiki-contrib-release
-description: Release an xwiki-contrib extension (groupId org.xwiki.contrib) end to end — preflight, `mvn release:prepare`/`release:perform` to nexus.xwiki.org, the issue-tracker version (JIRA or OpenProject), the extensions.xwiki.org import and release notes, then the hand-off to the announcement. Use when asked to release or publish a version of a contrib extension ("release v1.15 of the doc app"). Not for xwiki-commons/rendering/platform releases. For the blog post use xwiki-contrib-release-blog-post; for Maven/JDK use xwiki-build; for tracker calls use xwiki-jira or xwiki-openproject.
+description: Release an xwiki-contrib extension (groupId org.xwiki.contrib) end to end — preflight, `mvn release:prepare`/`release:perform` to nexus.xwiki.org, the issue-tracker version (JIRA or OpenProject), the extensions.xwiki.org import and release notes, then the hand-off to the announcement. Use when asked to release or publish a version of a contrib extension ("release v1.15 of the doc app"). Not for xwiki-commons/rendering/platform releases (use xwiki-xs-release). For the blog post use xwiki-contrib-release-blog-post; for Maven/JDK use xwiki-build; for tracker calls use xwiki-jira or xwiki-openproject.
 ---
 
 # Release an xwiki-contrib extension
