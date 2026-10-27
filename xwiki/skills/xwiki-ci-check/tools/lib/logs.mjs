@@ -264,7 +264,8 @@ async function causeOf(stages) {
   const code = stages.filter((bag, index) => !infra[index]);
   const fromCode = code.length ? await codeCauseOf(code) : null;
   if (fromCode && fromCode.kind !== 'unclassified') return fromCode;
-  return infra.find(Boolean) || fromCode;
+  // A red build with no failed stage at all still needs a cause: `unclassified`, not null.
+  return infra.find(Boolean) || fromCode || codeCauseOf([]);
 }
 
 /** The code's cause among stages no infrastructure failure explains: the first one's, the rest its cascade. */
