@@ -276,18 +276,17 @@ If the assertions differ and the pixels do not, the *fixture* is the problem: fi
 state where the two diverge — keyboard focus is the reliable one — and say so in the caption rather
 than implying a visual regression that was never there.
 
-## 5. Deliver: attach to the JIRA issue, reference from the PR body
+## 5. Deliver: attach to the JIRA issue and the PR body
 
-The images go on the **JIRA issue** first, then the PR body links them from there. `gh` cannot
-upload an image, so the JIRA attachment URL is what the PR references — see `okf/servers/jira.md`
-(under the plugin root, `$XWIKI_CAPTURE_SKILL/../..`) for the REST call (jira-cli has no `attach` command; Atlassian needs `X-Atlassian-Token: no-check`)
-and `xwiki-pull-request` for the PR-body convention. When each state is legible on its own, post
-them at native resolution, side by side:
+The images go on the **JIRA issue** and in the **PR body** — see `okf/servers/jira.md` (under the
+plugin root, `$XWIKI_CAPTURE_SKILL/../..`) for the REST call (jira-cli has no `attach` command;
+Atlassian needs `X-Atlassian-Token: no-check`) and `xwiki-pull-request` for uploading to the PR.
+When each state is legible on its own, post them at native resolution, side by side:
 
 ```markdown
 | Before | After |
 | --- | --- |
-| ![before](https://jira.xwiki.org/secure/attachment/<id>/before.png) | ![after](…/after.png) |
+| ![before](before.png) | ![after](after.png) |
 ```
 
 When the point is a pixel comparison (a radius, a 2px shift, a colour), post **one composite**

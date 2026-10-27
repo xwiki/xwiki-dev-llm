@@ -211,8 +211,8 @@ curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" -H "X-Atlassian-Token: no-che
 
 The response gives the attachment's `content` URL
 (`https://jira.xwiki.org/secure/attachment/<id>/<name>`), public for a public project and stable.
-That URL is also how an image reaches a **GitHub PR body**, which can only reference an already
-hosted one since `gh` cannot upload: attach to the issue first, then link it from the PR.
+A **GitHub PR body** gets its own upload (`xwiki-pull-request`), and links this URL only when it
+cannot.
 
 ## Wiki-markup gotchas (descriptions and comments)
 
