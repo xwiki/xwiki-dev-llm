@@ -75,7 +75,9 @@ not the repository one.
   tag of the first affected release (`git ls-tree -r --name-only <tag> | grep '/<artifactId>/pom.xml$'`)
   and follow the vulnerable file back (`git log --follow --name-status -- <file>`). When the code
   lived in another module before, add **Affected product** entries for the old `artifactId` too,
-  covering the releases up to the move, e.g. `>= 3.1-milestone-2, < 13.4-rc-1` → `13.4-rc-1`; and
+  up to the last release shipping the code, with `<=` and no patched version (a rename patches
+  nothing), e.g. `>= 3.1-milestone-1, <= 13.3` — not its last version on Nexus: `xwiki-platform-web`
+  lives on as a parent POM, so check the packaging of the releases around the move; and
   start the new module's first band at the release that introduced it. Example: templates of
   `xwiki-platform-web-templates` were in the WAR `xwiki-platform-web` until 13.4-rc-1 split it into
   `xwiki-platform-web-templates` and `xwiki-platform-web-war` (and in `xwiki-web-standard` before
