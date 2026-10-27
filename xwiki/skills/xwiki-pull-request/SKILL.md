@@ -51,8 +51,11 @@ complete every section meaningfully:
 - **Changes → Clarifications** — choices made, links to forum proposals / dependent issues.
 - **Screenshots & Video** — whenever the change has a visible result, show it: a reviewer should be
   able to judge the result without building the branch. The same images belong on the JIRA issue,
-  which is where `okf/servers/jira.md` states the rule and the how — and its attachment URL is what
-  the PR body must reference, `gh` being unable to upload an image.
+  which is where `okf/servers/jira.md` states the rule and the how.
+  - Upload them with `gh pr create --attach <file>` (gh ≥ 2.99, push access to the repo): a body
+    reference to the local path (`![after](after.png)`, relative to the `--body-file`) becomes the
+    uploaded URL. A failed upload still creates the PR, exiting non-zero — check for the printed URL
+    before retrying. Without push access (a fork) or that `gh`, link the JIRA attachment URL instead.
   - One screenshot of the result is the norm, and is all a new feature or a redesign needs.
   - Add a **"before"** when the change is a fix to *existing* UI, so the reader can see what was
     wrong. Usually you can just screenshot the bug on a running instance before applying the fix.
@@ -60,7 +63,8 @@ complete every section meaningfully:
     tree), **propose** the `xwiki-capture-ui-change` skill and run it only on the user's explicit
     yes. If they decline, ship the "after" alone and say in the PR what the before looked like.
   - When the PR is **already merged**, attach the images to the JIRA issue and edit the merged PR
-    body's Screenshots & Video section rather than commenting: an edit notifies nobody.
+    body's Screenshots & Video section rather than commenting: an edit notifies nobody. Pass
+    `gh pr edit --attach` the whole updated body as `--body-file`; without one it only appends.
 - **Executed Tests** — how the change was validated: the `mvn` commands running its automated test
   (`okf/testing/strategy.md` says when one is needed), plus any manual check. Especially important
   for regression fixes.
