@@ -27,6 +27,13 @@ assumed. When the user asks for that step:
 - **Read the advisory before changing it.** Others can edit a draft in the GitHub UI, and a PATCH of
   the `description` replaces the whole text. Fetch the current version, compare it with what you sent,
   and merge their changes into yours rather than overwriting them.
+- **An advisory has a comment thread, reachable over the API** even though GitHub's REST reference
+  and `gh` do not list it: `gh api repos/<owner>/<repo>/security-advisories/<ghsa_id>/comments`
+  reads it, and the same path with `--method POST --input -` and `{"body": "..."}` adds a comment.
+  The thread is not published with the advisory, so reproduction steps, replies to maintainers and
+  the reason for closing a draft (`{"state": "closed"}` in a PATCH) go there, never into the
+  description. Read the thread before changing or closing an advisory: a maintainer may already
+  have answered there.
 - Link the advisory on each JIRA issue as a `Security Advisory` web link, as `okf/servers/jira.md`
   ("The documentation fields") describes.
 - Do **not** merge any fix through the advisory's temporary private fork via the GitHub UI — that
