@@ -262,7 +262,9 @@ export function alsoInfra(stages, cause) {
 async function causeOf(stages) {
   const infra = stages.map(bag => infraOf(bag));
   const code = stages.filter((bag, index) => !infra[index]);
-  const fromCode = code.length ? await codeCauseOf(code) : null;
+  // A red build with no failed stage (it broke before any, or Jenkins kept none) is unclassified,
+  // never null: one such build used to crash the whole sweep.
+  const fromCode = code.length || !stages.length ? await codeCauseOf(code) : null;
   if (fromCode && fromCode.kind !== 'unclassified') return fromCode;
   return infra.find(Boolean) || fromCode;
 }
