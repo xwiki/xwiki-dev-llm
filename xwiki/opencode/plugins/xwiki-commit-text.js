@@ -17,26 +17,45 @@
 
 import { pathToFileURL } from "node:url";
 
-export const XWikiCommitText = async ({ directory }) => {
+// Returns the shared check as (command, cwd) => message | undefined, or undefined when it cannot load.
+const loadCheck = async () => {
   const home = process.env.XWIKI_LLM_HOME;
-  if (!home) return {};
-
-  let checkCommitText;
-  let formatCommitTextMessage;
+  if (!home) return undefined;
   try {
-    ({ checkCommitText, formatCommitTextMessage } = await import(
+    const { checkCommitText, formatCommitTextMessage } = await import(
       pathToFileURL(`${home}/xwiki/scripts/check-commit-text.mjs`).href
-    ));
+    );
+    return (command, cwd) => {
+      const result = checkCommitText(command, { cwd });
+      return result ? formatCommitTextMessage(result) : undefined;
+    };
   } catch {
-    return {}; // shared script not found — nothing to enforce
+    return undefined; // shared script not found — nothing to enforce
   }
+};
 
+// opencode 1.x plugin API.
+const server = async ({ directory }) => {
+  const check = await loadCheck();
+  if (!check) return {};
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool !== "bash") return;
-      const result = checkCommitText(output?.args?.command, { cwd: directory });
-      if (!result) return;
-      throw new Error(formatCommitTextMessage(result));
+      const message = check(output?.args?.command, directory);
+      if (message) throw new Error(message);
     },
   };
 };
+
+// opencode 2.x plugin API: throwing from `execute.before` refuses the tool call.
+const setup = async (ctx) => {
+  const check = await loadCheck();
+  if (!check) return;
+  await ctx.tool.hook("execute.before", (event) => {
+    if (event.tool !== "bash") return;
+    const message = check(event.input?.command, event.input?.workdir ?? ctx.location?.directory);
+    if (message) throw new Error(message);
+  });
+};
+
+export default { id: "xwiki-commit-text", server, setup };
