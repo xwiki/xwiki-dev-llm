@@ -15,27 +15,51 @@
 
 import { pathToFileURL } from "node:url";
 
-export const XWikiLineEndings = async () => {
+// Returns the shared check as (filePath) => message | undefined, or undefined when it cannot load.
+const loadCheck = async () => {
   const home = process.env.XWIKI_LLM_HOME;
-  if (!home) return {};
-
-  let checkLineEndings;
-  let formatLineEndingMessage;
+  if (!home) return undefined;
   try {
-    ({ checkLineEndings, formatLineEndingMessage } = await import(
+    const { checkLineEndings, formatLineEndingMessage } = await import(
       pathToFileURL(`${home}/xwiki/scripts/check-line-endings.mjs`).href
-    ));
+    );
+    return (filePath) => {
+      const result = checkLineEndings(filePath);
+      return result ? formatLineEndingMessage(filePath, result) : undefined;
+    };
   } catch {
-    return {}; // shared script not found — nothing to enforce
+    return undefined; // shared script not found — nothing to enforce
   }
+};
 
+const isFileWrite = (tool) => tool === "write" || tool === "edit";
+
+// opencode 1.x plugin API.
+const server = async () => {
+  const check = await loadCheck();
+  if (!check) return {};
   return {
     "tool.execute.after": async (input, output) => {
-      if (input.tool !== "write" && input.tool !== "edit") return;
-      const filePath = output?.args?.filePath;
-      const result = checkLineEndings(filePath);
-      if (!result) return;
-      throw new Error(formatLineEndingMessage(filePath, result));
+      if (!isFileWrite(input.tool)) return;
+      const message = check(output?.args?.filePath);
+      if (message) throw new Error(message);
     },
   };
 };
+
+// opencode 2.x plugin API. An `execute.after` hook cannot fail the call there, so the message is
+// appended to the tool result instead, where the model reads it and rewrites the file.
+const setup = async (ctx) => {
+  const check = await loadCheck();
+  if (!check) return;
+  await ctx.tool.hook("execute.after", (event) => {
+    if (event.status !== "completed" || !isFileWrite(event.tool)) return;
+    const message = check(event.input?.filePath);
+    if (!message) return;
+    const result = event.result;
+    if (typeof result.output === "string") result.output += `\n\n${message}`;
+    if (Array.isArray(result.content)) result.content.push({ type: "text", text: message });
+  });
+};
+
+export default { id: "xwiki-line-endings", server, setup };

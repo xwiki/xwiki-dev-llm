@@ -106,9 +106,11 @@ Inside `xwiki/`:
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
-  `xwiki-line-endings.js`, which ports the line-ending guard to opencode's `tool.execute.after` hook
-  and reuses `scripts/check-line-endings.mjs` (that script exports a shared `checkLineEndings()`
-  function; run directly it is still the Claude/Kimi CLI hook). opencode resolves the shared assets
+  `xwiki-line-endings.js` and `xwiki-commit-text.js`, which port the line-ending and commit/PR text
+  guards to opencode and reuse `scripts/check-line-endings.mjs` and `scripts/check-commit-text.mjs`
+  (each exports a shared check function; run directly it is still the Claude/Kimi CLI hook). Each
+  plugin's default export carries both APIs: `server` for opencode 1.x (`tool.execute.*` hooks) and
+  `setup` for opencode 2.x (`ctx.tool.hook("execute.*")`), which refuses a module without it. opencode resolves the shared assets
   through the `XWIKI_LLM_HOME` env var (which points at the checkout), since it has no plugin
   marketplace — see `opencode.jsonc` and README.md.
 
