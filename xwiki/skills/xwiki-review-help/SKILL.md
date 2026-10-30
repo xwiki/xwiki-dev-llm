@@ -1,9 +1,9 @@
 ---
-name: xwiki-change-review-guide
+name: xwiki-review-help
 description: Build a local, interactive HTML page that walks a maintainer through every user-facing change of a set of changes (open PRs, a branch, a batch of fixes before a release, security fixes before disclosure) - one card per change with before/after, screenshots that enlarge on click, who is affected and how likely, what admins must do, why, alternatives, a recommendation and the release-notes line - plus the open decisions, each with Accept/Change/Discuss and notes, exported as Markdown to paste back into the chat. Use when the developer asks to "help me review the changes / decide on the user-facing changes" of several PRs or a release as a page, or for "the HTML page like last time". Not a code review (use xwiki-review), not the release notes themselves (use xwiki-release-documentation), not a screenshot capture (use xwiki-capture-ui-change).
 ---
 
-# Change review guide
+# Review help
 
 ## What it is for
 
@@ -18,8 +18,8 @@ The page is a fixed template plus one data file. Copy the template; write only t
 - `assets/guide-data.example.js`: the data format, every field commented. Write yours as
   `guide-data.js` next to the page.
 
-The skill directory is `${CLAUDE_PLUGIN_ROOT}/skills/xwiki-change-review-guide` (Kimi Code:
-`${KIMI_SKILL_DIR}`; opencode: `$XWIKI_LLM_HOME/xwiki/skills/xwiki-change-review-guide`).
+The skill directory is `${CLAUDE_PLUGIN_ROOT}/skills/xwiki-review-help` (Kimi Code:
+`${KIMI_SKILL_DIR}`; opencode: `$XWIKI_LLM_HOME/xwiki/skills/xwiki-review-help`).
 
 ## Where it lives, and who may see it
 
