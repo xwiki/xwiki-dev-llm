@@ -62,8 +62,9 @@ from the release notes.
 These field conventions are **durable**; the version *values* they resolve to are volatile (see
 below). When filing/curating an issue — Bug, Improvement, New Feature **or Task** — set:
 
-- **Component/s** — always set at least one (e.g. `REST`, `Rendering`, `Platform - …`). Required for
-  triage; do not leave empty.
+- **Component/s** — in `XWIKI`, `XCOMMONS` and `XRENDERING`, always set at least one (e.g. `REST`,
+  `Rendering`, `Platform - …`): required for triage. Other projects (contrib extensions) do not
+  always require one; set it when the project defines a fitting component.
 - **Affects Version/s** — always set, per [[versioning]].
 - **Fix Version/s** — the version the fix ships in: normally the next release of the current dev
   version. Note the naming: JIRA version names use dashes (e.g. `18.7.0-rc-1`), whereas the source
