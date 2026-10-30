@@ -90,14 +90,15 @@ in the topic file. Read the entry to choose, then read the file — never act on
   seams), for the classes a change adds or reshapes; what it finds is only ever a suggestion.
 
 ### testing/
-- **strategy** — when a change needs a test, the kinds of test XWiki has, how they are named, the
-  rules a test must satisfy, and the layout of a feature's functional-test modules.
-  Procedures live in the test skills.
-- **running-docker-its** — running the Docker functional tests on a developer machine: container
+- **strategy** — when a change needs a test, the kinds of test and their naming, the rules a test
+  must satisfy, the functional-test module layout (procedures: the test skills).
+- **test-value** — a test worth having: its level, outcomes over calls, when to `verify()`, what a
+  hard test says.
+- **running-docker-its** — running the Docker functional tests locally: container
   networking, setup failures, a run not testing your build, leftover containers (ryuk), parallel
   runs. Commands in `xwiki-build`.
 - **ci-watch** — proving a merged or backported functional test on CI: what counts as "it ran and
-  passed", and the in-session watch (state file per PR × branch, recurring check).
+  passed", and the in-session watch.
 - **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
   mechanics most flickers turn out to be, forcing a race to prove a fix, the realtime debug dump.
 - **manual-tests** — the manual tests on test.xwiki.org: where a test's steps, runs and automation
