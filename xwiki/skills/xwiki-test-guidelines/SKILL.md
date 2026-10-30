@@ -30,7 +30,7 @@ When writing a test:
 * After writing a test, use Maven to verify that any test written works fine. However, if the test is a functional test, ask before executing Maven since there could be an already running XWiki instance locally on the developer's machine, and the test is supposed to start one too. The `xwiki-build` skill has the pre-run checks (port 8080, JDK on `PATH`).
 * Once the PR adding or modifying a functional test (or a backport of it) is merged, ask the user whether to set up the CI watch in this session for every branch it landed on (`okf/testing/ci-watch.md`).
 * Apply XWiki's general code best practices and code style when writing tests.
-* Don't use @OldcoreTest when @ComponentTest is enough.
+* Before writing a unit test, choose its level by the kind of code changed and assert outcomes, not calls (`okf/testing/test-value.md`). A test needing many stubs, a captor to reach the result, a `doAnswer` faking a side effect, `InOrder` or reflection is design feedback: extract the logic or test higher up (same file). Use `@OldcoreTest` only when needed — code saving documents needs it.
 * Verify if the jacoco coverage threshold cannot be increased after tests have been added, by running maven with `-Pquality -Dxwiki.jacoco.instructionRatio=1.00` which should fail but provide the current threshold value that can then be used to replace the current value.
 
 For where each XWiki test framework lives in the source tree (commons/rendering/platform), see `okf/testing/strategy.md`.

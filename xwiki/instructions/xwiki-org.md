@@ -50,8 +50,7 @@ follows.
 - **A change comes with an automated test failing without it**, templates, wiki pages and JS
   included (exceptions: `okf/testing/strategy.md`). **Load the `xwiki-test-guidelines` skill before
   creating or changing any test**, even a single `@Test`/`@UITest` method.
-- After adding or changing unit tests in a module, run **`xwiki-increase-test-coverage`** in that
-  same change.
+- After changing a module's unit tests, run **`xwiki-increase-test-coverage`** in that same change.
 
 ## Code conventions
 
@@ -99,7 +98,7 @@ OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, rea
 - `architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
   `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`, `module-design`,
   `data-migrations`.
-- `testing/` — `strategy`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
+- `testing/` — `strategy`, `test-value`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
 - `sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
   silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
   rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,

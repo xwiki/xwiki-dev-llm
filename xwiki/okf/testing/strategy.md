@@ -48,9 +48,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   lacks the fix and that what you restore is your own fix: other sessions' worktrees share the stash
   list. Screenshots, a screen reader or the rendered page come on top of the test, never instead. A
   change already covered by existing tests (refactoring, dependency upgrade, Sonar cleanup, a
-  backport carrying its test) needs no new one — name the covering tests in the commit or PR. A
-  security fix's test follows [[security-policy]]: nothing in it may describe the vulnerability
-  before disclosure.
+  backport carrying its test) needs no new one — name the covering tests in the commit or PR. The
+  test sits at the level that observes the behaviour and asserts outcomes, not calls; trivial code
+  needs none of its own: [[test-value]]. A security fix's test follows [[security-policy]]: nothing
+  in it may describe the vulnerability before disclosure.
 - **No stdout/stderr in tests** — enforced by Surefire's `CaptureConsole` listener. Skip per-module
   with `-Dxwiki.surefire.captureconsole.skip=true` only when justified. A functional test's console
   is validated too: output it provokes on purpose is declared with `registerExpected(...)` on an
@@ -58,7 +59,7 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   technical debt.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HStdout2Fstderrvalidationerrors)
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
-  oldcore is not required.
+  oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
 - **Assertions: the JUnit 5 one where it fits, Hamcrest `assertThat` where it reports better** —
   JUnit 5 has no substring or collection matcher, and `assertTrue(content.contains(x))` fails with
   `expected: <true> but was: <false>`, never showing `content`, where
@@ -229,8 +230,8 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   which has the context; whether it gets its own issue is decided as in [[jira]].
 - **Coverage** — keep a module's coverage current by running the `xwiki-increase-test-coverage`
   skill as part of any unit-test change: it raises the module pom's `xwiki.jacoco.instructionRatio`
-  when the achieved ratio has grown, and otherwise guides adding the missing tests. (The mvn command
-  lives in the skill.)
+  when the achieved ratio has grown, and otherwise guides adding the missing tests — never a test
+  whose only purpose is the ratio ([[test-value]]). (The mvn command lives in the skill.)
 - **A coverage check a change makes fail** — if the change only *removed* covered code, the drop is
   arithmetic ([[verification]]), not missing tests: lower `xwiki.jacoco.instructionRatio` to the
   achieved value in that change. Tests are owed only for code it added, and never on a stable branch
