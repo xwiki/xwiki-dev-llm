@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<!-- Review help page: copy this file unchanged next to a guide-data.js (format: guide-data.example.js) and an img/ folder. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Change Review Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; sticky decision bar; cards grouped by tier with a coloured tier chip. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --sunk: #eceff4; --ink: #1a2130; --muted: #576173; --line: #d7dce5;
+  --accent: #2c5a86; --accent-ink: #ffffff;
+  --tA: #b23a30; --tA-bg: #fbe9e7; --tB: #9a640f; --tB-bg: #fbf1df; --tC: #2f7350; --tC-bg: #e4f3ea;
+  --warn-bg: #fff6dd; --warn-line: #e7c86a;
+  --f-display: "Literata", Georgia, "Times New Roman", serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141b; --surface: #171d26; --sunk: #1d2430; --ink: #e5e9f0; --muted: #9ca6b7; --line: #2b3442;
+    --accent: #86b0dc; --accent-ink: #0f1520;
+    --tA: #f08c80; --tA-bg: #3a1f1d; --tB: #e6b363; --tB-bg: #362a15; --tC: #82c9a0; --tC-bg: #17321f;
+    --warn-bg: #2f2814; --warn-line: #7a6424;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141b; --surface: #171d26; --sunk: #1d2430; --ink: #e5e9f0; --muted: #9ca6b7; --line: #2b3442;
+  --accent: #86b0dc; --accent-ink: #0f1520;
+  --tA: #f08c80; --tA-bg: #3a1f1d; --tB: #e6b363; --tB-bg: #362a15; --tC: #82c9a0; --tC-bg: #17321f;
+  --warn-bg: #2f2814; --warn-line: #7a6424;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2rem; font-weight: 650; }
+h2 { font-size: 1.55rem; font-weight: 650; margin-top: 8px; }
+h3 { font-size: 1.15rem; font-weight: 650; }
+p { margin: 0; }
+code { font-family: var(--f-mono); font-size: .84em; background: var(--sunk); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 10px; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .92rem; flex: 1 1 auto; min-width: 0; }
+.bar nav a { text-decoration: none; color: var(--muted); }
+.bar nav a:hover { color: var(--ink); }
+.progress { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--muted); }
+.btn { font: inherit; font-weight: 600; font-size: .92rem; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+
+header.top { padding-block: 32px 8px; display: grid; gap: 10px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: .76rem; font-weight: 700; color: var(--muted); }
+.lede { max-width: 68ch; color: var(--muted); }
+.confidential { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tA); border: 1px solid var(--tA); border-radius: 4px; padding: 1px 6px; }
+
+section.block { padding-block: 28px; border-top: 1px solid var(--line); display: grid; gap: 16px; }
+section.block:first-of-type { border-top: 0; }
+.prose { max-width: 72ch; display: grid; gap: 10px; }
+
+.primer { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.primer > div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.primer h3 { font-size: 1rem; }
+.where { font-size: .86rem; color: var(--muted); }
+.glossary { display: grid; gap: 8px; background: var(--sunk); border-radius: var(--r); padding: 14px; }
+.glossary dt { font-weight: 700; }
+.glossary dd { margin: 0 0 6px; color: var(--ink); }
+
+.diagram { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px; }
+.diagram svg { display: block; min-width: 680px; width: 100%; height: auto; }
+.diagram text { font-family: var(--f-body); fill: var(--ink); }
+.diagram .sub { fill: var(--muted); font-size: 11px; }
+
+.counts { display: flex; flex-wrap: wrap; gap: 10px; }
+.count { display: flex; gap: 8px; align-items: baseline; padding: 8px 12px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.count b { font-family: var(--f-display); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--sunk); position: sticky; top: 0; }
+tr.grp td { background: var(--sunk); font-weight: 700; font-family: var(--f-display); }
+td a { text-decoration: none; font-weight: 600; }
+
+.chip { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; font-weight: 700; font-size: .78rem; padding: 1px 7px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.chip.A { color: var(--tA); background: var(--tA-bg); }
+.chip.B { color: var(--tB); background: var(--tB-bg); }
+.chip.C { color: var(--tC); background: var(--tC-bg); }
+.chip.done { color: var(--accent); background: var(--sunk); }
+.tag { font-family: var(--f-mono); font-size: .74rem; color: var(--muted); }
+.guess { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--tB); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-right: 4px; }
+
+.cards { display: grid; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.card.A { border-top: 3px solid var(--tA); }
+.card.B { border-top: 3px solid var(--tB); }
+.card.C { border-top: 3px solid var(--tC); }
+.card.D { border-top: 3px solid var(--accent); }
+.card-head { display: grid; gap: 4px; }
+.card-head .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.card .summary { color: var(--muted); }
+.fields { display: grid; grid-template-columns: 170px 1fr; gap: 8px 16px; margin: 0; }
+.fields dt { font-weight: 700; font-size: .86rem; color: var(--muted); padding-top: 2px; }
+.fields dd { margin: 0; min-width: 0; display: grid; gap: 6px; }
+.fields ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ba > div { background: var(--sunk); border-radius: 6px; padding: 10px; min-width: 0; display: grid; gap: 4px; align-content: start; }
+.ba .lbl { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.rn { border-left: 3px solid var(--accent); padding: 6px 10px; background: var(--sunk); border-radius: 0 6px 6px 0; font-style: italic; }
+.rec { font-weight: 600; }
+.decide { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 8px; }
+.radios { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.radios label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; font-weight: 600; font-size: .92rem; }
+textarea { font: inherit; font-size: .92rem; width: 100%; min-height: 44px; resize: vertical; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.opts { display: grid; gap: 8px; }
+.opt { background: var(--sunk); border-radius: 6px; padding: 8px 10px; display: grid; gap: 2px; }
+.opt b { font-size: .92rem; }
+.status-decided { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 5px; }
+.status-open { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--tA); border: 1px solid var(--tA); border-radius: 4px; padding: 0 5px; }
+.note { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; }
+ol.check { display: grid; gap: 10px; padding-left: 22px; margin: 0; max-width: 76ch; }
+.exportbox { display: grid; gap: 6px; }
+.toast { font-size: .9rem; color: var(--tC); font-weight: 600; }
+footer { padding-block: 24px 48px; color: var(--muted); font-size: .86rem; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.6rem; }
+  .fields { grid-template-columns: 1fr; gap: 2px; }
+  .fields dd { margin-bottom: 8px; }
+  .ba { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+.shot { display:grid; gap:6px; margin:0; justify-items:start; }
+.shot button { padding:0; border:1px solid var(--line); border-radius:6px; background:var(--surface); cursor:zoom-in; line-height:0; max-width:100%; }
+.shot img { display:block; max-width:100%; max-height:200px; width:auto; border-radius:6px; }
+.shot button:hover { border-color: var(--accent); }
+.shots { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:10px; }
+dialog.lightbox { padding:0; border:0; background:transparent; max-width:96vw; max-height:96vh; }
+dialog.lightbox::backdrop { background: rgba(0,0,0,.8); }
+dialog.lightbox .lb-body { display:grid; gap:8px; max-height:96vh; overflow:auto; }
+dialog.lightbox img { display:block; max-width:none; cursor:zoom-out; background:#fff; }
+dialog.lightbox img.fit { max-width:94vw; max-height:88vh; }
+dialog.lightbox .lb-bar { display:flex; gap:12px; align-items:center; color:#fff; font-size:.9rem; position:sticky; top:0; background:rgba(0,0,0,.6); padding:6px 10px; }
+dialog.lightbox .lb-bar button { font:inherit; color:#fff; background:transparent; border:1px solid #fff8; border-radius:4px; padding:2px 8px; cursor:pointer; }
+</style>
+
+<div class="bar">
+  <div class="wrap">
+    <nav aria-label="Sections" id="nav"></nav>
+    <span class="progress" id="progress">0 / 0 decided</span>
+    <button class="btn" id="export-top" type="button">Export my decisions</button>
+  </div>
+</div>
+
+<main class="wrap">
+<header class="top">
+  <span class="eyebrow"><span id="eyebrow"></span><span class="confidential" id="confidential" hidden>Confidential, local only</span></span>
+  <h1 id="title"></h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<section class="block" id="intro" hidden></section>
+
+<section class="block" id="triage">
+  <span class="eyebrow">Overview</span>
+  <h2>Triage of all changes</h2>
+  <div class="counts" id="counts"></div>
+  <div class="prose"><p id="tier-legend"></p></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Id</th><th>Ref</th><th>Change</th><th>Who is affected</th><th>How likely</th><th>Admin action</th><th>Release notes</th></tr></thead>
+      <tbody id="triage-body"></tbody>
+    </table>
+  </div>
+  <div class="radios" style="align-items:center">
+    <button class="btn ghost" id="bulk-last" type="button"></button>
+  </div>
+</section>
+
+<div id="tiers"></div>
+
+<section class="block" id="decisions" hidden>
+  <span class="eyebrow">Decisions</span>
+  <h2>Open decisions</h2>
+  <div class="prose"><p><span class="status-decided">decided, confirm?</span> means the change already implements it; <span class="status-open">open</span> means it waits for you.</p></div>
+  <div class="cards" id="list-D"></div>
+</section>
+
+<section class="block" id="outro" hidden></section>
+
+<section class="block" id="export">
+  <h2>Export</h2>
+  <div class="exportbox">
+    <div class="radios"><button class="btn" id="export-bottom" type="button">Export my decisions</button><span class="toast" id="toast" aria-live="polite"></span></div>
+    <label for="export-out" class="where">If copying is blocked, select the text below and copy it yourself.</label>
+    <textarea id="export-out" rows="8" readonly></textarea>
+  </div>
+</section>
+</main>
+<footer class="wrap" id="footer"></footer>
+
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
+  <div class="lb-body">
+    <div class="lb-bar"><span id="lb-cap"></span><button type="button" id="lb-size">Actual size</button><button type="button" id="lb-close">Close (Esc)</button></div>
+    <img id="lb-img" class="fit" alt="">
+  </div>
+</dialog>
+
+<!-- The content: written for each guide, next to this file. See guide-data.example.js for the format. -->
+<script src="guide-data.js"></script>
+<script>
+const G = window.GUIDE;
+const CARDS = G.cards || [], DECISIONS = G.decisions || [], TIERS = G.tiers;
+const IMG_DIR = G.imgDir || "img";
+
+/* Screenshots: small clickable thumbnails, enlarged in the lightbox. Used from the data as img("file.png", "caption"). */
+function img(f, cap) {
+  return `<figure class="shot"><button type="button" class="zoom" aria-label="Enlarge: ${cap}"><img src="${IMG_DIR}/${f}" alt="${cap}" loading="lazy"></button><figcaption class="where">${cap} · click to enlarge</figcaption></figure>`;
+}
+function imgs(...pairs) { return `<div class="shots">${pairs.map(p => img(p[0], p[1])).join("")}</div>`; }
+
+function resolve(v) { return typeof v === "function" ? v({ img, imgs }) : v; }
+
+/* ---------- state ---------- */
+const KEY = G.storageKey;
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} updateProgress(); }
+
+function decideBlock(id) {
+  const opts = [["accept","Accept"],["change","Change"],["discuss","Discuss"]];
+  return `<div class="decide" data-id="${id}">
+    <div class="radios" role="radiogroup" aria-label="Decision for ${id}">
+      ${opts.map(([v,l]) => `<label><input type="radio" name="dec-${id}" id="dec-${id}-${v}" value="${v}"> ${l}</label>`).join("")}
+    </div>
+    <label class="where" for="notes-${id}">Notes</label>
+    <textarea id="notes-${id}" rows="2" placeholder="What to change, or what to discuss"></textarea>
+  </div>`;
+}
+
+function renderCard(c) {
+  const f = (k, v) => v ? `<dt>${k}</dt><dd>${v}</dd>` : "";
+  const shots = c.shots ? imgs(...c.shots) : "";
+  return `<article class="card ${c.tier}" id="${c.id}">
+    <div class="card-head">
+      <div class="meta"><span class="chip ${c.tier}">${c.id}</span><span class="tag">${c.ref || ""}</span></div>
+      <h3>${c.title}</h3>
+      <p class="summary">${c.summary}</p>
+    </div>
+    <dl class="fields">
+      ${f("What the feature is", c.feature)}
+      <dt>Before → after</dt><dd><div class="ba"><div><span class="lbl">${G.beforeLabel || "Before"}</span><div>${c.before}</div></div><div><span class="lbl">${G.afterLabel || "After"}</span><div>${c.after}</div></div></div>${shots}</dd>
+      ${f("Who hits it, how likely", `<p><b>${c.who}.</b> ${c.likely}.</p>${c.whoDetail ? `<div>${c.whoDetail}</div>` : ""}`)}
+      ${f("What the admin must do", c.adminDo)}
+      ${f("Why it is needed", c.why)}
+      ${f("Alternatives", c.alts)}
+      ${f("Recommendation", c.rec && `<p class="rec">${c.rec}</p>`)}
+      ${f("Release notes", c.rn && `<p class="rn">${c.rn}</p>`)}
+    </dl>
+    ${decideBlock(c.id)}
+  </article>`;
+}
+
+function renderDecision(d) {
+  return `<article class="card D" id="${d.id}">
+    <div class="card-head">
+      <div class="meta"><span class="chip done">${d.id}</span>${d.decided ? '<span class="status-decided">decided, confirm?</span>' : '<span class="status-open">open</span>'}${d.ref ? `<span class="tag">${d.ref}</span>` : ""}</div>
+      <h3>${d.title}</h3>
+      <p class="summary">${d.q}</p>
+    </div>
+    <div class="opts">${d.opts.map(o => `<div class="opt"><b>${o[0]}</b><span>${o[1]}</span></div>`).join("")}</div>
+    <dl class="fields">${d.reviewer ? `<dt>Reviewer</dt><dd>${d.reviewer}</dd>` : ""}<dt>My recommendation</dt><dd class="rec">${d.mine}</dd></dl>
+    ${decideBlock(d.id)}
+  </article>`;
+}
+
+function renderPage() {
+  document.title = G.pageTitle;
+  document.getElementById("eyebrow").innerHTML = G.eyebrow + (G.confidential ? " · " : "");
+  document.getElementById("confidential").hidden = !G.confidential;
+  document.getElementById("title").innerHTML = G.title;
+  document.getElementById("lede").innerHTML = G.lede;
+  document.getElementById("footer").innerHTML = G.footer || "";
+  document.getElementById("tier-legend").innerHTML = TIERS.map(t => `<b>${t.id}</b>: ${t.legend}`).join(" ") + " Click an id to jump to its card.";
+  for (const k of ["intro", "outro"]) {
+    if (G[k]) { const s = document.getElementById(k); s.innerHTML = resolve(G[k]); s.hidden = false; }
+  }
+  document.getElementById("tiers").innerHTML = TIERS.map(t =>
+    `<section class="block" id="cards-${t.id}"><h2>${t.id} · ${t.name}</h2><div class="cards">${CARDS.filter(c => c.tier === t.id).map(renderCard).join("")}</div></section>`).join("");
+  if (DECISIONS.length) { document.getElementById("decisions").hidden = false; document.getElementById("list-D").innerHTML = DECISIONS.map(renderDecision).join(""); }
+
+  const nav = [];
+  if (G.intro) nav.push(["intro", G.introNav || "Intro"]);
+  nav.push(["triage", "Triage"]);
+  TIERS.forEach(t => nav.push([`cards-${t.id}`, `${t.id} cards`]));
+  if (DECISIONS.length) nav.push(["decisions", "Decisions"]);
+  if (G.outro) nav.push(["outro", G.outroNav || "Notes"]);
+  document.getElementById("nav").innerHTML = nav.map(([h, l]) => `<a href="#${h}">${l}</a>`).join("");
+
+  let html = "";
+  TIERS.forEach(t => {
+    html += `<tr class="grp"><td colspan="7">${t.id} · ${t.name}</td></tr>`;
+    CARDS.filter(c => c.tier === t.id).forEach(c => {
+      html += `<tr><td><a href="#${c.id}"><span class="chip ${t.id}">${c.id}</span></a></td><td class="tag">${c.ref || ""}</td><td><b>${c.title}</b></td><td>${c.who}</td><td>${c.likely}</td><td>${c.adminShort || ""}</td><td>${c.rnNeed || ""}</td></tr>`;
+    });
+  });
+  document.getElementById("triage-body").innerHTML = html;
+  document.getElementById("counts").innerHTML = TIERS.map(t =>
+    `<div class="count"><span class="chip ${t.id}">${t.id}</span><b>${CARDS.filter(c => c.tier === t.id).length}</b><span>${t.short}</span></div>`).join("") +
+    (DECISIONS.length ? `<div class="count"><span class="chip done">D</span><b>${DECISIONS.length}</b><span>decisions (${DECISIONS.filter(d => !d.decided).length} open)</span></div>` : "");
+  const last = TIERS[TIERS.length - 1];
+  document.getElementById("bulk-last").textContent = `Accept all ${last.id} cards that have no choice yet`;
+}
+
+function bindDecisions() {
+  document.querySelectorAll(".decide").forEach(box => {
+    const id = box.dataset.id;
+    const s = state[id] || {};
+    if (s.choice) { const r = document.getElementById(`dec-${id}-${s.choice}`); if (r) r.checked = true; }
+    const ta = document.getElementById(`notes-${id}`);
+    if (s.notes) ta.value = s.notes;
+    box.querySelectorAll("input[type=radio]").forEach(r => r.addEventListener("change", () => {
+      state[id] = Object.assign({}, state[id], { choice: r.value }); save();
+    }));
+    ta.addEventListener("input", () => { state[id] = Object.assign({}, state[id], { notes: ta.value }); save(); });
+  });
+}
+
+function updateProgress() {
+  const all = CARDS.length + DECISIONS.length;
+  const done = [...CARDS, ...DECISIONS].filter(x => state[x.id] && state[x.id].choice).length;
+  document.getElementById("progress").textContent = `${done} / ${all} decided`;
+}
+
+function plain(html) { const d = document.createElement("div"); d.innerHTML = html; return d.textContent.replace(/\s+/g, " ").trim(); }
+
+function buildMarkdown() {
+  const lines = [`# ${plain(G.exportTitle || G.title)}: my decisions`, ""];
+  const label = { accept:"ACCEPT", change:"CHANGE", discuss:"DISCUSS" };
+  const line = (id, title) => {
+    const s = state[id] || {};
+    let l = `- **${id}** ${plain(title)}: ${s.choice ? label[s.choice] : "(no decision)"}`;
+    if (s.notes && s.notes.trim()) l += `\n  - Notes: ${s.notes.trim().replace(/\n+/g, " / ")}`;
+    return l;
+  };
+  TIERS.forEach(t => {
+    lines.push(`## Tier ${t.id}`);
+    CARDS.filter(c => c.tier === t.id).forEach(c => lines.push(line(c.id, c.title)));
+    lines.push("");
+  });
+  if (DECISIONS.length) { lines.push("## Decisions"); DECISIONS.forEach(d => lines.push(line(d.id, d.title))); }
+  return lines.join("\n");
+}
+
+function doExport() {
+  const md = buildMarkdown();
+  const out = document.getElementById("export-out");
+  const toast = document.getElementById("toast");
+  out.value = md;
+  const fallback = () => { out.focus(); out.select(); toast.textContent = "Copying is blocked here: the text is selected below, copy it with your keyboard."; document.getElementById("export").scrollIntoView(); };
+  try {
+    navigator.clipboard.writeText(md).then(() => { toast.textContent = "Copied to the clipboard. Paste it into the chat."; }, fallback);
+  } catch (e) { fallback(); }
+}
+
+renderPage();
+bindDecisions();
+updateProgress();
+document.getElementById("export-top").addEventListener("click", doExport);
+document.getElementById("export-bottom").addEventListener("click", doExport);
+document.getElementById("bulk-last").addEventListener("click", () => {
+  const last = TIERS[TIERS.length - 1].id;
+  CARDS.filter(c => c.tier === last).forEach(c => {
+    if (!(state[c.id] && state[c.id].choice)) {
+      state[c.id] = Object.assign({}, state[c.id], { choice: "accept" });
+      const r = document.getElementById(`dec-${c.id}-accept`); if (r) r.checked = true;
+    }
+  });
+  save();
+});
+
+/* ---------- lightbox ---------- */
+const lb = document.getElementById("lightbox"), lbImg = document.getElementById("lb-img"), lbSize = document.getElementById("lb-size");
+document.addEventListener("click", e => {
+  const b = e.target.closest("button.zoom"); if (!b) return;
+  const i = b.querySelector("img");
+  lbImg.src = i.src; lbImg.alt = i.alt; lbImg.className = "fit"; lbSize.textContent = "Actual size";
+  document.getElementById("lb-cap").textContent = i.alt;
+  lb.showModal();
+});
+lbSize.addEventListener("click", () => { const fit = lbImg.classList.toggle("fit"); lbSize.textContent = fit ? "Actual size" : "Fit to screen"; });
+lbImg.addEventListener("click", () => lb.close());
+document.getElementById("lb-close").addEventListener("click", () => lb.close());
+lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
+</script>

@@ -11,7 +11,7 @@ The **OKF** is the curated, LLM-oriented knowledge base for developing XWiki pla
 xwiki-contrib extensions. It holds **declarative** knowledge (conventions, architecture, the dev
 server ecosystem, processes). **Procedures** ("how to do task X") live in the `xwiki-*` skills, not
 here. A slimmed copy of this map is injected into every XWiki session via
-`instructions/xwiki-org.md`; this file is the navigable, full version.
+`instructions/xwiki-org.md`; this is the full map.
 
 ## How to use the OKF (READ)
 
@@ -148,7 +148,7 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 
 `xwiki-build`, `xwiki-pull-request`, `xwiki-javadoc`, `xwiki-test-guidelines`, `xwiki-convert-tests`,
 `xwiki-convert-tests-docker`, `xwiki-fix-flickering-docker-test`, `xwiki-increase-test-coverage`,
-`xwiki-legacy`, `xwiki-fix-deprecation`, `xwiki-deploy-extension`, `xwiki-capture-ui-change`, `xwiki-rest-api`, `xwiki-xar-pages`, `xwiki-doc-writing`, `xwiki-doc-convert`, `xwiki-doc-export`, `xwiki-translations`,
+`xwiki-legacy`, `xwiki-fix-deprecation`, `xwiki-deploy-extension`, `xwiki-capture-ui-change`, `xwiki-review-help`, `xwiki-rest-api`, `xwiki-xar-pages`, `xwiki-doc-writing`, `xwiki-doc-convert`, `xwiki-doc-export`, `xwiki-translations`,
 `xwiki-xs-release`, `xwiki-contrib-release`, `xwiki-contrib-release-blog-post`, `xwiki-fix-sonarqube-issue`, `xwiki-backport`,
 `xwiki-backport-testneeded`, `xwiki-jira`, `xwiki-jira-bfd`, `xwiki-daily-close`, `xwiki-forum`, `xwiki-security-advisory`, `xwiki-openproject`,
 `xwiki-release-test-triage`, `xwiki-ci-check`, `xwiki-release-documentation`, `xwiki-review`,
@@ -157,5 +157,5 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 ## How to extend the OKF (EXTEND)
 
 New knowledge enters **only through a reviewed git PR** — never silent local writes. Use the
-`xwiki-knowledge` skill, which holds the gate checklist and drafts a correctly-formatted entry.
+`xwiki-knowledge` skill, which holds the gate checklist and drafts the entry.
 When you add a topic, **update this map and the mirror in `instructions/xwiki-org.md`**.
