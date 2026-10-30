@@ -3,7 +3,8 @@ title: Secure-coding conventions (escaping, untrusted input, right checks)
 stability: durable
 summary: How to escape user input and other untrusted values for each output context, why
   translation values are untrusted, which right each scripting language requires, the context-author
-  and pass-the-entity right-check rules, saving as author in script services and serializing a
+  and pass-the-entity right-check rules, not keying a guard on the context-document identity (the
+  ?sheet bypass), saving as author in script services and serializing a
   possibly-null author, displaying rather than parsing XObject properties, safe XML parsing, and
   never interpolating identifiers or references into queries and include/display targets.
 sources:
@@ -132,6 +133,22 @@ the same check.
 `null` user reference into the **current user**, so an author that may be missing becomes whoever
 the code runs for — check for `null` first. Guest needs no special case: it serializes to `null`,
 the only `DocumentReference` for guest (`XWiki.XWikiGuest` is deprecated).
+
+## Do not key a guard on the context document being the page itself
+
+A wiki page or template must not assume that the context document (`$doc`, `$xcontext.getDoc()`) is
+the page currently running. A caller chooses it: the **`?sheet=` request parameter** displays any
+document as the sheet of another page, and an `{{include}}` renders one page inside another; in both
+cases the included/sheet document runs with *its own* content author's rights while the context
+document is the other page. So a guard written as "if the context document is me, drop my rights /
+enforce this check" is bypassed by requesting the page as the sheet of a page the attacker can view
+— the guard does not fire and the page keeps its (often Programming) author rights. This is a common
+way to turn a page meant to run de-privileged into one running with its author's rights.
+
+Base such a guard on something the caller cannot change: compare against a reference resolved from a
+constant (`$services.model.resolveDocument($documentName)`), or gate on an explicit flag the trusted
+includer sets, not on the context-document identity. Reaching a page through `?sheet=` is itself a
+useful probe when auditing any page whose security depends on the rights it runs with.
 
 ## Rendering an XObject property — display it, never parse its raw value
 
