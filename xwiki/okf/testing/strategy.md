@@ -86,7 +86,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   on its own when debugging.
   Whatever is fixture rather than subject is built with `TestUtils` (`createPage`, `createUser`,
   `loginAsSuperAdmin`, REST), never by driving the UI as a user would.
-  A page the test needs is named by an injected `TestReference` parameter, not hardcoded.
+  A page the test needs is named by an injected `TestReference` parameter, not hardcoded — nor
+  built from the class name (`MyIT.class.getSimpleName()`): `TestReference` takes the *running*
+  class's simple name, `NestedMyIT` once the test runs inside an `AllIT` as CI runs it, so a page
+  meant to sit beside it is derived from it (`testReference.getLastSpaceReference()`…).
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios,
   https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HTestReference)
 - **A test knows nothing of the HTML or JavaScript — the page-object boundary** — a functional test
@@ -179,9 +182,8 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   `@UITest(properties = {"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MySpace\\.MyPage"})`.
   The regex must match the **whole** serialized reference, wiki included (`xwiki:Space.Page`); the
   patterns of several merged `@UITest`s are OR-ed together. A pattern anchored on the test class's
-  own name must allow a prefix (`.*:.*MyIT\..*`), because `TestReference` names the page after the
-  *running* class's simple name — `NestedMyIT` once the test runs inside an `AllIT`, which is how CI
-  runs it.
+  own name must allow a prefix (`.*:.*MyIT\..*`), the page being `NestedMyIT…` inside an `AllIT`
+  (see `TestReference` above).
 - **Asserting whose rights code runs with — use Script Right, not Programming Right** — to check
   in a functional test that some stored code runs with the rights of the right author (not a more
   privileged author's), have the unprivileged author's code output a value that only executed
