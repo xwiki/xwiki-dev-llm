@@ -29,7 +29,7 @@ the declarative half it relies on.
 | **Documentation in Release Notes** | `customfield_10273` | the absolute URL of the release-note entry |
 
 Both are plain strings, on `XWIKI`, `XCOMMONS` and `XRENDERING` alike. The rules for their *values*
-— bare `N/A` and why, space separation, never an anchor, and the `!=` JQL trap — live with the other
+— bare `N/A` and why, space separation, which anchors, and the `!=` JQL trap — live with the other
 issue-field conventions in [[../servers/jira]]. What is specific to release notes:
 
 - **The two are independent.** `Documentation = N/A` alongside a real `Documentation in Release
@@ -194,10 +194,9 @@ them.
 - **`title` is a user-facing rephrasing, not the JIRA summary.** JIRA summaries are written to a
   developer ("NPE in FooResolver when the reference is nested"); a release note is read by someone
   deciding whether to upgrade.
-- **`summary`** is XWiki syntax, one to three short paragraphs: what changed and why it matters,
-  with the documentation link woven into the prose as an interwiki link
-  (`[[the macro>>doc:extensions:Extension.Foo Macro.WebHome||anchor="HParameters"]]`), the way the
-  existing entries do it. Existing summaries run roughly 80–1000 characters.
+- **`summary`** is XWiki syntax and a summary: what changed and why it matters in a sentence or two,
+  then a link to the documentation for the details, which stay there
+  (`[[the macro>>doc:extensions:Extension.Foo Macro.WebHome||anchor="HParameters"]]`).
 - **`description` is dead in practice** — it was empty in every one of the 81 entries of the
   18.1→18.8 RC release notes. Leave it out.
 - **No JIRA key inside an entry**: the release note lists the issues separately.

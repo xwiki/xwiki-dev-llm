@@ -258,11 +258,10 @@ nothing covers it                       → create, in /documentation only
 *recorded* as a candidate for a later `xwiki-doc-convert` run — converting it inside a
 documentation sweep buries a large refactor inside an unrelated change.
 
-**dev.xwiki.org has no written conventions** — no skill and no OKF file governs writing there. Edit
-it under a narrower mandate: **additive only** (extend a section, never restructure), mirror the
-page's own structure and voice, and do **not** apply Diataxis re-typing. The claim-verification pass
-of §2 still applies in full. Record in the report that dev.xwiki.org's conventions are unwritten, as
-an `xwiki-knowledge` EXTEND candidate.
+**dev.xwiki.org has no written conventions** beyond the developer-documentation style of
+`okf/conventions/documentation.md` (short sentences, few in a row). Edit it under a narrower mandate:
+**additive only** (extend a section, never restructure), mirror the page's own structure, and do
+**not** apply Diataxis re-typing. The claim-verification pass of §2 still applies in full.
 
 Everything else about the prose — Diataxis type, titles, page structure fields, style, versioning —
 is `xwiki-doc-writing`'s. Delegate to it rather than restating it.
@@ -313,7 +312,7 @@ another author.
 Only once the artefacts exist. `Documentation` = `customfield_10270`, `Documentation in Release
 Notes` = `customfield_10273`; write them over REST (`xwiki-jira`). Their values follow
 `okf/servers/jira.md`: absolute URLs, space-separated when there are several, exactly bare **`N/A`**
-when there is nothing, never an anchor.
+when there is nothing, the anchors as that file says.
 
 Bare `N/A` **changes current team habit** — `N/A (internal class)` is on real issues — and is
 deliberate. Where a reason is worth keeping, it goes in the run report and, if it matters beyond

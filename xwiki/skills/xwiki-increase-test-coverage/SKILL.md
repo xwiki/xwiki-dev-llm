@@ -19,4 +19,5 @@ aborts and produces no coverage at all (see the ``xwiki-build`` skill).
     1. Analyze the JaCoCo report from ``./target/site/jacoco/``
     2. Identify classes with low test coverage; prioritize classes with local changes
     3. Identify execution paths that are not covered by unit tests; prioritize main execution paths from changed code
-    4. Implement a single unit test, then go back to first step and iterate until you reach or exceed the expected coverage
+    4. Implement a single unit test of a behaviour worth protecting (``okf/testing/test-value.md``), then go back to first step and iterate until you reach or exceed the expected coverage
+  * A test written only to raise the ratio — on trivial code, or replaying calls with mocks — is never the answer: when the remaining gap is such code, say so to the developer

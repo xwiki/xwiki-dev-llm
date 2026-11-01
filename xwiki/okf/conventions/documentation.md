@@ -409,6 +409,9 @@ Use the guide for the authoring rules, and that page for what each structure fie
 - **Macros** — use the **code macro with an explicit `language` parameter** for code snippets
   (omitting it is slower and mis-colors). Use the **display macro** to avoid duplicated content: put
   repeated text/steps/images on a single hidden page and display it where needed.
+- **Developer documentation is short** — short sentences, and not many of them in a row: developers
+  scan, they don't read. Use bullet points when there are several items to explain, not by default.
+  This holds on dev.xwiki.org and for any developer-facing text (a release-note entry included).
 - **Never hard-wrap prose** — each paragraph and list item is one line; only `{{code}}` blocks keep
   their line structure.
 - **Do not overuse the em dash (`—`)** — it is not a substitute for a comma, a period, a colon or
