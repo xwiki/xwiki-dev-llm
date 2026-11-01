@@ -86,10 +86,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   on its own when debugging.
   Whatever is fixture rather than subject is built with `TestUtils` (`createPage`, `createUser`,
   `loginAsSuperAdmin`, REST), never by driving the UI as a user would.
-  A page the test needs is named by an injected `TestReference` parameter, not hardcoded — nor
-  built from the class name (`MyIT.class.getSimpleName()`): `TestReference` takes the *running*
-  class's simple name, `NestedMyIT` once the test runs inside an `AllIT` as CI runs it, so a page
-  meant to sit beside it is derived from it (`testReference.getLastSpaceReference()`…).
+  A page the test needs is named by an injected `TestReference` parameter, not hardcoded; one placed
+  relative to it is derived from it (`getLastSpaceReference().getParent()` for a sibling), never from
+  `MyIT.class.getSimpleName()`: `TestReference` uses the *running* class, `NestedMyIT` inside an
+  `AllIT`, which is how CI runs it.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios,
   https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HTestReference)
 - **A test knows nothing of the HTML or JavaScript — the page-object boundary** — a functional test
