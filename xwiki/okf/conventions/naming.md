@@ -6,6 +6,7 @@ summary: How XWiki names Maven groupIds/artifactIds and their qualifiers (and th
   Extensions, skins (bird names) and icons.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
+  - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
 ---
 
 # Naming conventions
@@ -68,5 +69,6 @@ Qualifier meanings:
 
 - Official XWiki skins are named after **birds** (Colibri, Flamingo, …). Any new skin must use a bird
   name; propose it on the forum.
-- Icons used in content must come from the **XWiki icon set**; new icons follow the icon naming
-  conventions on the dev wiki.
+- Icons in content come from the **XWiki icon set**; a composite name puts the main noun first
+  (`file-pdf`). Propose a new icon on the forum with its Silk and Font Awesome mappings; deprecate a
+  retired one, never remove it.
