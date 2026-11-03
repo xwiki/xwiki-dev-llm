@@ -70,5 +70,5 @@ Qualifier meanings:
 - Official XWiki skins are named after **birds** (Colibri, Flamingo, …). Any new skin must use a bird
   name; propose it on the forum.
 - Icons in content come from the **XWiki icon set**; a composite name puts the main noun first
-  (`file-pdf`). Propose a new icon on the forum with its Silk and Font Awesome mappings; deprecate a
-  retired one, never remove it.
+  (`file-pdf`). Propose a new icon on the forum, mapped to Silk, Font Awesome, Glyphicons and Material
+  Icons; deprecate a retired one (or a renamed one's old name), never remove it.

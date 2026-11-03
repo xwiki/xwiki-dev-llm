@@ -10,7 +10,8 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFrontendDevelopmentPractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/
-  - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/
+  - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
+  - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/use-css-properties/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
 ---
 
@@ -23,9 +24,9 @@ sources:
   external module.
 - Store/load modules from a **WebJar** installable by the Extension Manager, a **JSX** (JavaScript
   Skin Extension, usually packaged in a XAR), or the skin via `$xwiki.getSkinFile(…)`. External
-  JavaScript libraries are integrated **only** through WebJars — never a CDN, which fails behind a
-  firewall. Reuse what XWiki ships — jQuery, jQuery UI, Bootstrap 3 (the skin's base) and the
-  components on Front-end Resources (Live Data, pickers, suggest, modal, …) — never a second copy.
+  JavaScript libraries are integrated **only** through WebJars (a CDN fails behind a firewall). Reuse
+  what XWiki ships — jQuery, jQuery UI, Bootstrap 3 (the skin's base), Live Data, pickers, suggest,
+  modal, … — never a second copy.
 - Inject the entry-point module either with `$xwiki.jsx.use(…)` server-side or by declaring it a
   dependency of another module. Set a JSX to **"On demand only"**, not "On this wiki".
 - **No inline `<script>` and no inline handlers** (`onclick`, …): they break event handling and are
@@ -72,13 +73,14 @@ XWiki Standard distribution — **XWiki Standard must keep working with `compati
 ## HTML, CSS, accessibility
 
 - HTML and CSS follow the HTML & CSS code style on the dev wiki. Render an icon with the Icon macro
-  or `$services.icon.renderHTML(…)`, carets included — never `image:icon:` or a CSS background
-  image, which ignore the icon theme ([[naming]] has the icon set's rules).
+  or `$services.icon.renderHTML(…)`, carets too (`caret-down`, not Bootstrap's `.caret`) — never
+  `image:icon:` or a CSS background image, which ignore the icon theme ([[naming]] has the icon
+  set's rules).
 - Ship CSS as a **Skin Extension** (`XWiki.StyleSheetExtension`, "On demand only", injected with
   `$xwiki.ssx.use(…)`) — the CSS counterpart of a JSX.
-- **Colours and other themed values must come from style variables**, never be hard-coded. Prefer
-  the CSS properties (`var(--brand-primary)`, since 17.3.0) in plain CSS: LESS is costlier to
-  compile. In LESS write `~"var(--x)"`; no property works in a media query; XWiki Standard declares
+- **Colours and font weights must come from style variables**, never be hard-coded. Prefer the CSS
+  properties (`var(--brand-primary)`, since 17.3.0) in plain CSS: LESS is costlier to compile. In
+  LESS write `~"var(--x)"`; `var()` does not work in a media query; XWiki Standard declares
   its own in `variablelist.vm`. LESS variables (`@xwiki-border-color`, …) need a **LESS**-typed SSX.
   `$theme` is *not* bound in wiki-page Velocity, a Velocity-parsed (`parse=1`) SSX included, so
   reaching for it there fails silently: the stylesheet compiles and emits only whatever fallbacks
