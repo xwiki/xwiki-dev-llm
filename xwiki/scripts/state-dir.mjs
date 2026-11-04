@@ -1,6 +1,6 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
-// (plans, handoffs, drafts, extracted source), the Docker IT slot files and the knowledge-base
-// search index cache. Both are computed here
+// (plans, handoffs, drafts, extracted source), the Docker IT slot files, the knowledge-base
+// search index cache and the KB pointer hooks' per-session state. All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
 
@@ -35,6 +35,11 @@ export function itSlotDir() {
 /** Directory holding kb-search.mjs's index cache, rebuilt from the KB whenever it is missing. */
 export function kbIndexDir() {
   return join(stateRoot(), "kb-index");
+}
+
+/** Directory holding the KB pointer hooks' per-session files: which pointers a session was given. */
+export function kbHookStateDir() {
+  return join(stateRoot(), "kb-hooks");
 }
 
 /**

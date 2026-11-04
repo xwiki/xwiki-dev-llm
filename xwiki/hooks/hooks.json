@@ -10,6 +10,17 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" prompt",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -38,6 +49,16 @@
             "type": "command",
             "if": "Bash(zsh *)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" edit",
+            "timeout": 10
           }
         ]
       }
