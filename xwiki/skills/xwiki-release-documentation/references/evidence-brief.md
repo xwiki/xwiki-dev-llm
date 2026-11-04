@@ -16,7 +16,7 @@ user-visible : yes|no   — what a user or admin would notice, in one line
 api-visible  : yes|no   — public API added/changed/removed, with the signature and file:line
 config       : any new/changed configuration key, with file:line
 facts        : the claims a doc page or an entry would need, each with file:line
-images       : the before/after attachments already on the issue (okf/servers/jira.md requires them)
+images       : the before/after attachments already on the issue (kb/servers/jira.md requires them)
 existing     : the current values of customfield_10270 / customfield_10273
 verdict      : doc = yes|no  ·  rn = yes|no  ·  why, in one sentence each
 ```

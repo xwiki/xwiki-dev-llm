@@ -33,7 +33,7 @@ and stop as soon as the answers hold; every step is cheaper than the one after i
    backport for `xwiki-backport`, said in *Next*; the latest backport someone made is not the
    default suspect (2026-10-21: LightboxIT on 17.10.x lacked XWIKI-21734, not the retry blamed).
 6. **The Environment Tests trap, by hand**, when only that job fails and the trace's line numbers
-   match the file at the commit's parent (`okf/servers/jenkins.md`). An `infra` incident carrying `snapshotGap`
+   match the file at the commit's parent (`kb/servers/jenkins.md`). An `infra` incident carrying `snapshotGap`
    ran against jars that many commits behind its checkout: before blaming the agent, check whether
    its failing tests use what those production commits changed (page objects, a new webjar).
 

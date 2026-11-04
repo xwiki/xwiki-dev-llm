@@ -54,7 +54,7 @@ Session habits that keep that budget:
 
 - **`scan`** walks the tree through the DocumentTree service (the navigation panel's own order).
   - It skips `WebPreferences` and the **type landing pages** (tutorial / howto / reference / explanation). Those are query listings of pages the tree already contains, so keeping them would duplicate pages.
-  - It cross-checks the walk against Solr, per `okf/conventions/documentation-mechanics.md`:
+  - It cross-checks the walk against Solr, per `kb/conventions/documentation-mechanics.md`:
     - A page Solr knows but the tree does not show **stops the scan**. Exporting the tree would drop it silently. Fix it upstream, `--exclude` it, or pass `--ignore-mismatch`.
     - A page missing from Solr only means a stale index. It is dated from REST instead.
   - It compares versions and attachment versions with the last fetch, and reports what is new, changed, deleted and reordered.
@@ -107,5 +107,5 @@ It also writes `out/changes-<date>.md` (what is new, changed or removed since th
 
 - `references/export-plan.md`: the state directory, PLAN.md and task layout, and the incremental rules.
 - `references/print-rules.md`: the browser-to-print transform, block by block, and how to extend it.
-- `okf/conventions/documentation.md`: the structure of documentation pages (types, sheet sections, landing pages) that the print rules are built on.
+- `kb/conventions/documentation.md`: the structure of documentation pages (types, sheet sections, landing pages) that the print rules are built on.
 - `xwiki-doc-writing/tools/`: `xwikidoc.py` (the REST client this tool imports) and `docplan.py` (the plan bookkeeping it reuses).

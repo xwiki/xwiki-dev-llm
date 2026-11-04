@@ -67,13 +67,13 @@ single `@since` fix.
 
 Say in one line which ran and which did not, and why. Give each agent its role name, the pack
 directory, the plugin's absolute root (in Claude Code `${CLAUDE_PLUGIN_ROOT}`, in Kimi Code
-`${KIMI_SKILL_DIR}/../..`, in opencode `$XWIKI_LLM_HOME/xwiki`; the OKF is its `okf/`) and the absolute
+`${KIMI_SKILL_DIR}/../..`, in opencode `$XWIKI_LLM_HOME/xwiki`; the KB is its `kb/`) and the absolute
 path of `references/reviewers.md`, which it reads — the shared part and its own role only. Run every
 reviewer and verifier **on the session's model**: Correctness and Design are where a weaker model
 loses most. They are read-only: never edit, build, push or post.
 
 **Read `references/reviewers.md`'s "Never write the word" yourself before fanning out**, and load
-`okf/processes/security-policy.md`: that section binds your own narration, the comment and every log
+`kb/processes/security-policy.md`: that section binds your own narration, the comment and every log
 from here on (§5 says why).
 
 ### 2b. Full security depth — delegate to `xwiki-security-review`
@@ -142,7 +142,7 @@ Rules for the body:
 - Every finding links the code with a **full-SHA permalink** covering a line of context either side:
   `https://github.com/<repo>/blob/<full-40-char-sha>/<path>#L<start>-L<end>` (the head from the gate
   output; a `$(git rev-parse HEAD)` inside the URL will not render).
-- A source is a link: an OKF file or skill of this plugin to
+- A source is a link: a KB file or skill of this plugin to
   `https://github.com/xwiki/xwiki-dev-llm/blob/v<version>/xwiki/<path>` (`<version>` from
   `xwiki/.claude-plugin/plugin.json`), a past review to its PR. "Engineering judgement" needs no link.
 - Leave out a heading with nothing under it; write `1 issue`, not `1 issues`. With nothing kept the
@@ -152,7 +152,7 @@ Rules for the body:
 
 ## 5. Why "Never write the word"
 
-`okf/processes/security-policy.md` holds the non-disclosure rule; what follows is only its
+`kb/processes/security-policy.md` holds the non-disclosure rule; what follows is only its
 consequence for *review output*, which the policy does not itself cover. This repo is public, and so
 is more than the comment:
 
@@ -176,6 +176,6 @@ say, or hint, that a `full` review ran.
 ## 6. Feed what you learned back
 
 Reviewers return *candidate conventions* — something that should hold for every change and that no
-OKF topic says. They are not posted: batch them and offer them to a human through the
+KB topic says. They are not posted: batch them and offer them to a human through the
 `xwiki-knowledge` EXTEND flow, which is how the review gets sharper instead of repeating unwritten
 opinions.

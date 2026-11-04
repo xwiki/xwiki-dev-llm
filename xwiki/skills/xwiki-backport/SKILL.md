@@ -8,7 +8,7 @@ branch) to an **older branch**, **adapt it to that branch**, verify it compiles,
 
 Related skills: **xwiki-backport-testneeded** (the `testneeded` sweep + `@since` layer — it delegates
 the mechanics here), **xwiki-build** (Maven), **xwiki-pull-request** (PR/commit conventions),
-**xwiki-knowledge** (versioning / `@since` in the OKF).
+**xwiki-knowledge** (versioning / `@since` in the KB).
 
 > A cherry-pick copies file bytes **verbatim**. That is exactly why backports break: the source
 > content assumes the source branch's module versions, Java level, and surrounding code. §3 (Adapt to
@@ -25,11 +25,11 @@ the mechanics here), **xwiki-build** (Maven), **xwiki-pull-request** (PR/commit 
   landed **after** B was cut **and** is **not** already released on B's line. (Do not hardcode which
   branches are supported — that changes every release; ask or infer from the last patch release of
   each active line.) For a bug fix, B also needs it only if B has the faulty code — which may have
-  reached B as a cherry-pick, so check per "Affected version of an issue" in `okf/conventions/versioning.md`,
+  reached B as a cherry-pick, so check per "Affected version of an issue" in `kb/conventions/versioning.md`,
   never by commit ancestry.
 - **The target branch's version**, read from its root `pom.xml` `<version>` on `origin/<branch>`
   after a fetch (e.g. `17.10.10-SNAPSHOT`) — never derived from local tags, which go stale; see
-  `okf/conventions/versioning.md`. Needed for the pom-version check (§3.A) and the `@since` adjustment
+  `kb/conventions/versioning.md`. Needed for the pom-version check (§3.A) and the `@since` adjustment
   (§3.D).
 - **The target branch's Java level.** It depends on the XWiki version and differs across lines (newer
   lines use newer JDKs). Do NOT hardcode — resolve it from the version via the Java Support Strategy
@@ -190,7 +190,7 @@ mvn -B -ntp -Plegacy -DskipTests test-compile
   test when the sibling `*-test-pageobjects` (holding a newly-added page-object API) is pulled as a
   *published* dependency without the new class. The same staleness makes a Docker IT fail at XWiki
   startup — not a backport defect; see "Mixed SNAPSHOT jars after the branch moved" in
-  `okf/testing/running-docker-its.md`. First `install` the changed sibling module(s) from the branch
+  `kb/testing/running-docker-its.md`. First `install` the changed sibling module(s) from the branch
   (or build from the reactor root with `-pl <module> -am`). CI builds the full reactor so it doesn't
   hit this.
 - **CI on each PR is authoritative** for functional runs on real infrastructure. To run a Docker IT

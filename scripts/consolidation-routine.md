@@ -42,8 +42,8 @@ node scripts/consolidation-candidates.mjs --exclude <files of open PRs, comma-se
 ```
 
 It lists near-duplicate paragraphs (25–50% shared, below the validator's 50%), files at ≥95% of
-their size budget, similar skill descriptions, one-way skill pointers, OKF text restated in skills,
-orphan OKF topics and `references/` files, and split candidates. **It narrows, it does not decide**:
+their size budget, similar skill descriptions, one-way skill pointers, KB text restated in skills,
+orphan KB topics and `references/` files, and split candidates. **It narrows, it does not decide**:
 open both sides of every candidate you consider and judge whether they really state the same rule.
 These overlaps are intended and stay:
 
@@ -53,7 +53,7 @@ These overlaps are intended and stay:
 - the same practice in two skills that never load together (e.g. "pipe REST output through `jq`" in
   the JIRA and the OpenProject references), and a file's one-line boilerplate header;
 - a skill that already points to the topic in another form ("see `xwiki-knowledge` → versioning")
-  although `okf-restated` says "does not cite it".
+  although `kb-restated` says "does not cite it".
 
 ### 3. Pick this week's batch
 
@@ -63,7 +63,7 @@ common theme only breaks ties: it never displaces a higher-value fix the finder 
 A fix is one of:
 
 - **Move a rule to its one home and point to it.** The home is the narrowest file every reader of
-  the rule already opens: an OKF topic for an XWiki fact, the skill for a procedure step,
+  the rule already opens: a KB topic for an XWiki fact, the skill for a procedure step,
   `xwiki-org.md` only for what must be obeyed without opening anything. The other place keeps a
   pointer naming the file (and the section, when the file is long) — never a summary of the rule.
 - **Tighten wording** — same facts, fewer words. No new facts, no softened or hardened "must".
@@ -76,7 +76,7 @@ A fix is one of:
   is below the current entry. Never raise one.
 
 Never: change a version field; edit a manifest, `.mcp.json`, a hook, a `.mjs`/`.js`/`.sh` script, a
-validator threshold or this file; rename or delete a skill, OKF topic or `references/` file; change a
+validator threshold or this file; rename or delete a skill, KB topic or `references/` file; change a
 skill's `name`; change what a description routes to; add a "changed on…" note — records state
 current facts, not history. A skill description is edited only to complete a pointer.
 
@@ -86,17 +86,17 @@ A split moves a large share of a file, and the earlier ones (PRs 257, 259–263)
 check and old-vs-new trial runs, so it is a committer's change, not part of this batch. Take at most
 **2** split candidates, highest value first, that survive these questions:
 
-- Is the file near the 20,000-byte `SKILL.md` cap or far above the 12,000-byte OKF default, or
+- Is the file near the 20,000-byte `SKILL.md` cap or far above the 12,000-byte KB default, or
   growing fast (`growth4w`)?
 - **Skill:** which `##` sections only one branch of a run, one mode or one sub-agent reads? Those
   move to `references/`, handed over by path; `SKILL.md` keeps the decision flow.
-- **OKF topic:** do its sections belong to different topics of `okf/index.md`
+- **KB topic:** do its sections belong to different topics of `kb/index.md`
   (`foreignSections`), or do different skills each read only one part (`sectionReaders`)?
-- **Global fit:** does the content belong in an *existing* OKF topic or reference file? Reuse it
+- **Global fit:** does the content belong in an *existing* KB topic or reference file? Reuse it
   before creating a file — but not one whose readers differ (a topic on *running* tests is not the
   home of rules for *writing* them), and not where `foreignSections` merely echoes a deliberate
   rules-vs-storage split. Check a new name against its siblings, and list what must follow: the
-  `okf/index.md` entry (≤240 bytes each); the topic name in the OKF map of
+  `kb/index.md` entry (≤240 bytes each); the topic name in the KB map of
   `xwiki/instructions/xwiki-org.md`, whose remaining byte headroom you state (the finder's
   `budget-pressure` shows it); the skill pointers; the README row; and any open PR on those files.
 - **How much would really move?** `conditionalSections` is a keyword match on titles and openings
@@ -104,7 +104,7 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   runs read is the main path, whatever its title. Subtract what must stay in `SKILL.md` (the
   decision flow, a rule needed at a write, the call that rule guards). Under about 10% of the file
   left is not a split.
-- **Is it a duplicate instead?** A file near its cap often restates its own `references/` or an OKF
+- **Is it a duplicate instead?** A file near its cap often restates its own `references/` or a KB
   topic. Removing that is a fix for step 3: cheaper than a split, and done this week.
 
 Follow the finder's ranking; for each higher-ranked candidate you pass over, say why in the run log.

@@ -1,6 +1,6 @@
 ---
 name: xwiki-jira
-description: Interact with XWiki's self-hosted JIRA (jira.xwiki.org) — view, search, create, update, comment on and transition issues. Use when the user mentions a JIRA issue key (e.g. XWIKI-12345, XCOMMONS-123, XRENDERING-45), asks to file/triage/update a bug or task, or wants issue/sprint status. Writes descriptions and comments over the REST API (jira-cli mangles text bodies) and uses jira-cli, when installed, for everything else. For the issue-field conventions (Component, Affects/Fix Version) it relies on okf/servers/jira.md; for commit/PR conventions use xwiki-pull-request; for drafting a GitHub Security Advisory from a security-restricted issue use xwiki-security-advisory; for filling the Documentation / Documentation in Release Notes fields of fixed issues use xwiki-release-documentation; for a Bug Fixing Day sweep of the old backlog (scoring bugs and closing many at once) use xwiki-jira-bfd.
+description: Interact with XWiki's self-hosted JIRA (jira.xwiki.org) — view, search, create, update, comment on and transition issues. Use when the user mentions a JIRA issue key (e.g. XWIKI-12345, XCOMMONS-123, XRENDERING-45), asks to file/triage/update a bug or task, or wants issue/sprint status. Writes descriptions and comments over the REST API (jira-cli mangles text bodies) and uses jira-cli, when installed, for everything else. For the issue-field conventions (Component, Affects/Fix Version) it relies on kb/servers/jira.md; for commit/PR conventions use xwiki-pull-request; for drafting a GitHub Security Advisory from a security-restricted issue use xwiki-security-advisory; for filling the Documentation / Documentation in Release Notes fields of fixed issues use xwiki-release-documentation; for a Bug Fixing Day sweep of the old backlog (scoring bugs and closing many at once) use xwiki-jira-bfd.
 ---
 
 # XWiki JIRA
@@ -30,7 +30,7 @@ Both backends need `JIRA_API_TOKEN` in the environment.
 | **REST API** | any description/comment text; no `jira-cli` | `references/rest-api.md` |
 | **jira-cli** | reads, searches, field/status changes | Quick reference below |
 
-**Field conventions are not in this skill — they live in `okf/servers/jira.md`** (which Component to
+**Field conventions are not in this skill — they live in `kb/servers/jira.md`** (which Component to
 set, how to choose Affects Version/s and Fix Version/s). Read it before creating or curating an
 issue, so the same rules apply whichever backend you use.
 
@@ -55,7 +55,7 @@ issue, so the same rules apply whichever backend you use.
 | Who am I | `jira me` |
 
 Set **Affects/Fix Version** with `--affects-version`/`--fix-version` and **Component** with `-C`,
-per `okf/servers/jira.md`. Pass `--no-input` only when every required field is supplied.
+per `kb/servers/jira.md`. Pass `--no-input` only when every required field is supplied.
 
 **jira-cli gotchas:**
 - **Write any body through REST, not jira-cli.** jira-cli runs comment/description text (including
@@ -75,19 +75,19 @@ per `okf/servers/jira.md`. Pass `--no-input` only when every required field is s
 1. Gather context (the code/PR/commit it concerns; whether a similar issue already exists — search first).
    **Then establish that a new issue is the right answer at all:** a defect in code the *unreleased*
    dev version introduced belongs on the issue that introduced it, reopened — see "Whether to file an
-   issue at all" in `okf/servers/jira.md`. Reaching for the dev version as the Affects Version is the
+   issue at all" in `kb/servers/jira.md`. Reaching for the dev version as the Affects Version is the
    signal you are in that case. The same section covers a follow-up to a fix that turns out
    incomplete: reopen only while **none** of its Fix Version/s is released.
-2. Read `okf/servers/jira.md` and resolve the fields: issue type, **Component/s**, **Affects
+2. Read `kb/servers/jira.md` and resolve the fields: issue type, **Component/s**, **Affects
    Version/s** (oldest affected, else last LTS — verify the version values, don't cache them),
    **Fix Version/s**. Write the description in JIRA wiki markup, explaining the *user-visible* problem,
    following "Wiki-markup gotchas" in that file, preview it with the render endpoint described there,
    and send it over REST (see the gotcha above).
 3. Show the user the drafted summary + description + fields, then create.
-4. Read the description back rendered, link the related issues (see `okf/servers/jira.md`), then
+4. Read the description back rendered, link the related issues (see `kb/servers/jira.md`), then
    report the created key and URL.
 
-**Starting work on an issue:** assign it as "Starting work on an issue" in `okf/servers/jira.md`
+**Starting work on an issue:** assign it as "Starting work on an issue" in `kb/servers/jira.md`
 says — `jira issue assign KEY $(jira me)`, or REST `PUT /issue/KEY/assignee` with the `name` from
 `/myself`.
 
@@ -104,9 +104,9 @@ Each of these guards an operation that cannot be undone or that reaches other pe
 - **List the available transitions before moving an issue** — transition and status names vary
   between projects and are not universal, and a workflow may require an intermediate state, so a
   blind move can fail or misfire.
-- **Get explicit approval before a bulk modification** — see "Bulk edits" in `okf/servers/jira.md`.
+- **Get explicit approval before a bulk modification** — see "Bulk edits" in `kb/servers/jira.md`.
 - **Component is never left empty in `XWIKI`/`XCOMMONS`/`XRENDERING`, and Affects Version is not
-  merely the latest release** — follow `okf/servers/jira.md`.
+  merely the latest release** — follow `kb/servers/jira.md`.
 - **Never print the token value.** `JIRA_API_TOKEN` is a secret; reference it by name only, never
   echo it or pass it where it would be logged.
 

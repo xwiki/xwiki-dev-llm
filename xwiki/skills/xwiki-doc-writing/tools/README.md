@@ -2,7 +2,7 @@
 
 Five scripts for the mechanical half of writing or converting a documentation tree: draft the pages
 as data, check them offline, publish them, prove what landed. The rules they enforce are the subset
-of `okf/conventions/documentation.md` a regex can decide — they replace the tedium, not the review
+of `kb/conventions/documentation.md` a regex can decide — they replace the tedium, not the review
 checklist in `references/review-checklist.md`.
 
 They exist because each of these steps has a failure mode that **passes silently**. Every rule below
@@ -37,7 +37,7 @@ set. Two habits matter as much as the scripts:
 
 Requirements: Python 3 (standard library only), `agent-browser` for the screenshot pair — plus macOS
 `sips` whenever a shot is resampled, i.e. unless it is an `x,y,w,h` region at the target width — and
-`~/.xwiki-credentials` (see `okf/servers/index.md`), which `xwikidoc.py` parses itself when
+`~/.xwiki-credentials` (see `kb/servers/index.md`), which `xwikidoc.py` parses itself when
 `XWIKI_USER`/`XWIKI_PASSWORD` are not in the environment — never `source` it.
 
 ## The page set
@@ -182,7 +182,7 @@ you never have to open the PNG to find out.
 
 - The **form token is session-bound**. `xwikidoc.py` keeps a cookie jar for that reason; without one,
   object writes fail intermittently with `403 Invalid or missing form token.`
-- The tools send `curl/8.0` as User-Agent, the one Cloudflare lets through (`okf/servers/index.md`).
+- The tools send `curl/8.0` as User-Agent, the one Cloudflare lets through (`kb/servers/index.md`).
 - Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
   the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
 - **A Change Request is created through the application's `/changerequest/` form endpoint — it has no
@@ -193,5 +193,5 @@ you never have to open the PNG to find out.
   `crTitle` and `crDescription` (`crDraft=1` for a draft) to `/xwiki/changerequest/<wiki>/create`: the
   302's `Location` is the Change Request.
 - A conversion also has to finish the **original** page — strip its prose, wire its "Documentation"
-  button, delete its attachments, triage its backlinks. That is `okf/conventions/documentation-migration.md`
+  button, delete its attachments, triage its backlinks. That is `kb/conventions/documentation-migration.md`
   and the `xwiki-doc-convert` skill; these tools do not do it for you.

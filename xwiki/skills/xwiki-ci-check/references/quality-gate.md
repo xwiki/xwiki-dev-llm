@@ -11,7 +11,7 @@ numbers are those of SKILL.md.
 **Sonar quality-gate failures (`sonar-gate:failed`): the build is red for everyone, so this is the
 run's *first* fix, not a line in a report.** It blocks every release on that branch until it is
 cleared, which is why it outranks any flicker (§5). Hand the fixing itself to
-**`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `okf/sonarqube/` and a mechanical
+**`xwiki-fix-sonarqube-issue`** — per-rule correctness lives in `kb/sonarqube/` and a mechanical
 "fix" there silently breaks things — but in a routine, open its PR with `pull-request.mjs --kind
 fix` like every other (§5), never with the `gh` that skill names. It is a fix PR, so it takes one of
 the run's two slots: the brake is the reviewers' load, whatever the PR fixes.

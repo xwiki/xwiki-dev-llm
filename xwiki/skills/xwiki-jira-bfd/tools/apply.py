@@ -11,7 +11,7 @@ For every row with disposition == "close" it, per the xwiki-jira workflow:
      project's history: 1175 Duplicate, 874 Cannot Reproduce, 746 Won't Fix, 324 Invalid,
      322 Solved By — and 6 Inactive). Rows with disposition `suggest` are report-only and
      are never written here, whatever their resolution says. The same transition sets
-     Fix Version/s as okf/servers/jira.md requires: the target's for Solved By, else none;
+     Fix Version/s as kb/servers/jira.md requires: the target's for Solved By, else none;
   4. for Duplicate/Solved By, best-effort adds an issue link to the target (a Duplicate
      link, or a Related link for Solved By — there is no dedicated "Solved By" link type).
      A failed link never undoes the close.

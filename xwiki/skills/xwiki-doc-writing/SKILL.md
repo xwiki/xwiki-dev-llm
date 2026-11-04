@@ -7,8 +7,8 @@ description: Write, update or review a page of XWiki documentation on xwiki.org,
 
 This skill is the **procedure** for producing and reviewing a page in the new `/documentation` tree.
 The **rules** it applies (Diataxis types, titles/page-names, page-structure fields, style, location,
-versioning) are declarative knowledge and live in the OKF: read
-**`okf/conventions/documentation.md`** first — it is the working summary, and it points to the live
+versioning) are declarative knowledge and live in the KB: read
+**`kb/conventions/documentation.md`** first — it is the working summary, and it points to the live
 XWiki Documentation Guide, which is the evolving source of truth. When a detail is borderline or
 missing, consult the live guide and prefer it.
 
@@ -29,7 +29,7 @@ cannot be taken without a running instance). Ask for authoring, updating **and**
 
 **First look for `~/.xwiki-credentials`** (`test -f`, **never print it**) — when that file exists it
 answers question 2, so drop that question. Its format, and how to use it without pulling the password
-into the conversation, are in `okf/servers/index.md`.
+into the conversation, are in `kb/servers/index.md`.
 
 Ask the remaining questions in a **single `AskUserQuestion` call** so the developer clicks options
 instead of typing answers back (fall back to a numbered list in a message only on a host without that
@@ -37,7 +37,7 @@ tool). Question headers and options:
 
 1. **`Save mode`** — Change Request or direct save? **Change Request (Recommended)** for anything but
    a genuine minor fix, **Save directly** for a typo / broken link / small rephrasing (see step "Save"
-   below and `okf/conventions/documentation.md`) — but let the developer decide.
+   below and `kb/conventions/documentation.md`) — but let the developer decide.
 2. **`Credentials`** — which xwiki.org account to write with, and where to find its credentials?
    **Create `~/.xwiki-credentials` (Recommended)** (you re-read the file afterwards), **They are
    elsewhere** (environment variable, password manager entry, `~/.netrc`…), **Don't save** (you
@@ -45,11 +45,11 @@ tool). Question headers and options:
    step, so it is not a question to leave for the end.
 3. **`Screenshots`** — is a local XWiki instance running for the screenshots? **Yes**, **I will start
    one**, **No — skip the screenshots**. Suggest the [Documentation Resources](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/)
-   XARs to get realistic content in it. Pages need images (see `okf/conventions/documentation.md`),
+   XARs to get realistic content in it. Pages need images (see `kb/conventions/documentation.md`),
    and xwiki.org itself is **not** the place to capture them. Don't *ask* which **version** it runs —
    read it from the `xwiki-version` header of any `/rest` response, and check it is recent enough for
    the screenshots to show the latest skin. The version is **not** recorded on the page: putting it in
-   an image `caption` is a misuse the guide names explicitly (`okf/conventions/documentation.md`).
+   an image `caption` is a misuse the guide names explicitly (`kb/conventions/documentation.md`).
 4. **`Local login`** — credentials for the local instance: **`Admin`/`admin` (Recommended)**, the
    default, or **Other**. These are never the xwiki.org credentials.
 
@@ -59,7 +59,7 @@ than shipping a page with none.
 **Placement is a fifth question, asked separately** — once you know what pages there will be, and
 before the first one is created. It is not a yes/no: propose two or three **written-out page trees**
 with their costs and your recommendation, per "Choose the right location" in
-`okf/conventions/documentation.md`. Getting it wrong is a rename/move with backlink handling, not an
+`kb/conventions/documentation.md`. Getting it wrong is a rename/move with backlink handling, not an
 edit.
 
 ## Tooling — `tools/`
@@ -85,13 +85,13 @@ applies to everything a regex cannot decide.
 
 1. **Check it doesn't already exist** elsewhere in `/documentation` (avoid duplication).
 2. **Classify** the content: pick the single Diataxis type and the audience
-   (see `okf/conventions/documentation.md`). If it mixes types, split it into several pages. Before
+   (see `kb/conventions/documentation.md`). If it mixes types, split it into several pages. Before
    drafting a type you have not written in this session, read the real pages for it listed in
    `references/live-examples.md` to calibrate structure, title style and voice.
 3. **Choose the location** — first, **bundled vs not**: a bundled extension's page goes under
    `documentation.xs`, a non-bundled one under `documentation.extensions`; then the most relevant
    existing topic/subtopic for that audience and type; create a new top-level topic only when nothing
-   fits. A new topic is a page of its own, an **Explanation** (`okf/conventions/documentation.md`), so
+   fits. A new topic is a page of its own, an **Explanation** (`kb/conventions/documentation.md`), so
    a How-to that opens one brings that topic page with it: put both in the placement proposal.
 4. **Write the title and page name** per the type's rules (verb-led for How-to/Tutorial; noun phrase
    for Reference/Explanation; kebab-case page name, stop words removed, no parent/child repetition, even of
@@ -102,13 +102,13 @@ applies to everything a regex cannot decide.
    the value to the developer (from the module's `pom.xml`) and save it only on their yes.
    **Leave Highlights empty unless the page has many children**: it is a two-level list of the most
    important *child* pages, not a "key points" summary, and the automatic "More" table already lists
-   every child — see `okf/conventions/documentation.md`.
+   every child — see `kb/conventions/documentation.md`.
 6. **End a How-to / Tutorial with a result step** — the last numbered item shows the reader *what they
-   should now see*; its form is in `okf/conventions/documentation.md` → *Content rules per type*.
+   should now see*; its form is in `kb/conventions/documentation.md` → *Content rules per type*.
 7. **Put a Reference's members in one table** (`|=Member |=Returns |=Default |=What it does`), never
    with a `Since` / `Version` column — version information is a `{{version}}` badge on the rows that
    need one, and only for versions at or after the LTS (step 11). The rule and its exceptions are in
-   `okf/conventions/documentation.md` → *Content rules per type*.
+   `kb/conventions/documentation.md` → *Content rules per type*.
 8. **Apply the style rules** — `"quotes"` for UI elements, uppercase-first XWiki terminology,
    `##literals##`, link-reference syntax (never hardcoded URLs), `{{scm}}` for GitHub files, the
    code macro with an explicit `language`, the display macro to avoid duplication, and **no overused
@@ -134,13 +134,13 @@ applies to everything a regex cannot decide.
    landmark that locates it** and cropped to exactly that size's pixel width, with a red
    (`255, 0, 0`) box around the element concerned, **videos in `webm` displayed with the
    `{{embed}}` macro and never as a link**, Gallery for several images, PlantUML (`bluegray`) for
-   diagrams. See `okf/conventions/documentation.md`.
+   diagrams. See `kb/conventions/documentation.md`.
 11. **Respect version perspective** — write for the latest version; use `{{version}}` (with `before`
     for changed behavior) only for genuine new/changed behavior. A version is **only ever** a
     `{{version}}` badge, never bare text and never a table column; and only versions **at or after the
     current LTS** appear at all — anything older is deleted, not badged. The macro strips the
     qualifier (`since="18.8.0RC1"` renders `XWiki 18.8.0+`), so a Java `@since` value can be passed to
-    it verbatim. See `okf/conventions/documentation.md`.
+    it verbatim. See `kb/conventions/documentation.md`.
 12. **Run the de-duplication *and trimming* pass before saving** — this is a separate step because every
     page reads fine on its own and both defects are invisible while writing. Start with the two that need
     no judgement and that `lint` decides for you — **the sibling How-tos' step 1** and **an attachment
@@ -157,7 +157,7 @@ applies to everything a regex cannot decide.
     rewritten page is a **major** change: save it via a **Change Request**, adding to an existing open
     one on that page if there is one. A pure typo, broken-link
     or small-rephrasing fix is a **minor** change: save it **directly**, ticked "minor", with a short
-    summary — do **not** open a Change Request for it. See `okf/conventions/documentation.md`.
+    summary — do **not** open a Change Request for it. See `kb/conventions/documentation.md`.
     Then read any automatic documentation-check violations the save reports.
 
 ## Flow — update an existing page
@@ -174,7 +174,7 @@ saving.
 
 **Never delete a page on xwiki.org before listing and handling its backlinks** — including a page you
 created yourself earlier in the task and then decided to remove. The breakage lands on *other* pages and
-nothing in the delete flow names them for you. Follow `okf/conventions/page-deletion.md`, which holds
+nothing in the delete flow names them for you. Follow `kb/conventions/page-deletion.md`, which holds
 the procedure, what the deletion wizard does and does not repoint, and the triage.
 
 ## Review

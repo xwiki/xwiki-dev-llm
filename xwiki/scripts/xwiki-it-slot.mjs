@@ -5,7 +5,7 @@
  * A `-Pdocker,integration-tests` run holds a servlet engine, a browser container of a couple of
  * gigabytes and a ryuk, and it writes SNAPSHOT artifacts into the shared `~/.m2`. Several agents
  * launching one at the same time starve the Docker daemon, and starvation surfaces as a failure in
- * `beforeAll` that reads like a product bug (see okf/testing/running-docker-its.md). Nothing in
+ * `beforeAll` that reads like a product bug (see kb/testing/running-docker-its.md). Nothing in
  * Maven or testcontainers serialises this, so this wrapper does: it takes one of N slots, runs the
  * command, and releases the slot however the command ends.
  *

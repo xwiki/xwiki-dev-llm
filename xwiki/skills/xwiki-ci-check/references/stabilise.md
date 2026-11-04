@@ -18,7 +18,7 @@ never promote a second candidate because the first looked hard.
 
 The candidate is a flicker that is `proven`, already **filed** (it has a `jira`), answered by
 nothing (`fixState` null), inside the horizon, not `systematic`, and not on the security-only line,
-which takes no ordinary fix (`okf/processes/release.md`) — and, among those, the one that
+which takes no ordinary fix (`kb/processes/release.md`) — and, among those, the one that
 fails most often: it costs the most re-runs, and its recent failures are the ones whose screenshot,
 video and logs Jenkins still holds.
 

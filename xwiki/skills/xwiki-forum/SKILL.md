@@ -4,7 +4,7 @@ description: Draft, post or edit a topic or reply on forum.xwiki.org — brainst
 ---
 
 The forum is reached through the plugin's `discourse` MCP. Its write tools exist only when a forum
-credential is set (see `okf/servers/index.md`); without one, give the developer the draft to paste.
+credential is set (see `kb/servers/index.md`); without one, give the developer the draft to paste.
 
 ## Category, tag and title
 
@@ -24,7 +24,7 @@ credential is set (see `okf/servers/index.md`); without one, give the developer 
 - **Short**: the idea, why, what could go wrong, the options — bullets over paragraphs. End with the
   question you want answered (`WDYT?`).
 - A vote states what is voted and when it closes.
-- Nothing about an undisclosed vulnerability, ever: `okf/processes/security-policy.md`.
+- Nothing about an undisclosed vulnerability, ever: `kb/processes/security-policy.md`.
 
 ## Confirm, then post
 

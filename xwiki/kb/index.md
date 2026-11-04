@@ -1,19 +1,19 @@
 ---
-title: XWiki OKF — index / map
+title: XWiki KB — index / map
 stability: durable
 summary: Entry map of the XWiki LLM knowledge base. Lists every topic with a one-line summary and
   says how to read and how to extend the corpus.
 ---
 
-# XWiki OKF — index / map
+# XWiki KB — index / map
 
-The **OKF** is the curated, LLM-oriented knowledge base for developing XWiki platform code and
+The **KB** is the curated, LLM-oriented knowledge base for developing XWiki platform code and
 xwiki-contrib extensions. It holds **declarative** knowledge (conventions, architecture, the dev
 server ecosystem, processes). **Procedures** ("how to do task X") live in the `xwiki-*` skills, not
 here. A slimmed copy of this map is injected into every XWiki session via
 `instructions/xwiki-org.md`; this is the full map.
 
-## How to use the OKF (READ)
+## How to use the KB (READ)
 
 1. Find the relevant topic in the map below and **Read that file**.
 2. Check the file's `stability:` frontmatter:
@@ -155,7 +155,7 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 `xwiki-release-test-triage`, `xwiki-ci-check`, `xwiki-release-documentation`, `xwiki-review`,
 `xwiki-presentation`.
 
-## How to extend the OKF (EXTEND)
+## How to extend the KB (EXTEND)
 
 New knowledge enters **only through a reviewed git PR** — never silent local writes. Use the
 `xwiki-knowledge` skill, which holds the gate checklist and drafts the entry.

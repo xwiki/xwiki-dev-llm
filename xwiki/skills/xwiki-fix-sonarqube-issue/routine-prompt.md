@@ -5,7 +5,7 @@ a config box in the Claude web UI, which nobody else can read, review or restore
 here, where a change to it is a pull request. **If you edit one, edit the other in the same
 sitting**, or this becomes a plausible-looking record of something that no longer exists.
 
-The behaviour itself lives in the `xwiki-fix-sonarqube-issue` skill and in `okf/sonarqube/`, both
+The behaviour itself lives in the `xwiki-fix-sonarqube-issue` skill and in `kb/sonarqube/`, both
 versioned and reviewed. Only what cannot live there is below.
 
 **Schedule: 03:00 Europe/Paris, daily. Model: Opus 5.**

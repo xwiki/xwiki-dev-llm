@@ -26,7 +26,7 @@ What you cannot guess:
 - **Build what the culprit changed, at each revision.** A Docker test resolves the production
   modules it does not build from the local repository or the last deployed snapshot, so running
   only the test module at the parent tests the culprit's code twice — the Environment Tests trap in
-  reverse (`okf/servers/jenkins.md`). How to run one test: `okf/testing/running-docker-its.md`.
+  reverse (`kb/servers/jenkins.md`). How to run one test: `kb/testing/running-docker-its.md`.
 - **A breakage that is not 100% needs repeats.** A clean parent means something only after
   `prove.parentRuns` clean runs (`n ≥ ln(0.05) / ln(1 − r)` at `prove.rate`; 27% → 10). Repeating
   the test may need a local harness change; it is never committed.

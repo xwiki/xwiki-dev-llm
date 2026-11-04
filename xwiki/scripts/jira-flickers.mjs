@@ -2,7 +2,7 @@
 //
 // Shared because two skills join a CI failure to its issue and must agree on what "known flicker"
 // means: xwiki-release-test-triage reports the join, xwiki-ci-check decides from it whether a
-// flicker still needs filing. The field and label conventions are in okf/servers/jira.md.
+// flicker still needs filing. The field and label conventions are in kb/servers/jira.md.
 //
 // Read access is anonymous — no token.
 //
@@ -72,7 +72,7 @@ export function flickerLookup(issues) {
       resolution: issue.fields.resolution?.name || null,
       fixVersions: (issue.fields.fixVersions || []).map(version => version.name),
       // A Fix Version not yet released is one whose fix may still be finished under this key — the
-      // one case a human may reopen it (okf/servers/jira.md). Kept apart so nobody has to ask JIRA.
+      // one case a human may reopen it (kb/servers/jira.md). Kept apart so nobody has to ask JIRA.
       unreleased: (issue.fields.fixVersions || []).filter(version => version.released === false)
         .map(version => version.name),
       earlier: []

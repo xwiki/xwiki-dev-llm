@@ -301,7 +301,7 @@ export async function inFlightFix(incident, args) {
 // The third way a red test is nobody's defect, and the only one where the *job* is what is wrong.
 //
 // Environment Tests builds only the test modules it was given; the rest of its WAR — oldcore, the
-// web resources, the XARs — is the last snapshot deployed to Nexus (`okf/servers/jenkins.md`). A
+// web resources, the XARs — is the last snapshot deployed to Nexus (`kb/servers/jenkins.md`). A
 // commit that adds a test *and* the production code that test needs is therefore red there until
 // the next deployment, transiently and through no defect, with stack-trace line numbers that come
 // from the *old* file. It looks exactly like a defect in the new test, and on 2026-09-17 it was

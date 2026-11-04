@@ -14,14 +14,14 @@ either a URL or `N/A`, each *proven* from the change itself, and each written in
 field once the artefact it points at actually exists.
 
 The declarative half — the release-note data model, the REST contract and the entry conventions —
-is `okf/processes/release-notes.md`. **Read it before running this skill**; this file is the
+is `kb/processes/release-notes.md`. **Read it before running this skill**; this file is the
 procedure and does not restate it. The two JIRA field ids and the rules for their values are in
-`okf/servers/jira.md`, and the xwiki.org REST access rules (Cloudflare User-Agent, `/xwiki/rest`,
-`~/.xwiki-credentials`) in `okf/servers/index.md`.
+`kb/servers/jira.md`, and the xwiki.org REST access rules (Cloudflare User-Agent, `/xwiki/rest`,
+`~/.xwiki-credentials`) in `kb/servers/index.md`.
 
-Resolve `okf/` from this skill's directory as `../../okf/`; in Claude Code
-`${CLAUDE_PLUGIN_ROOT}/okf/`, in Kimi Code `${KIMI_SKILL_DIR}/../../okf/`, in opencode
-`$XWIKI_LLM_HOME/xwiki/okf/`.
+Resolve `kb/` from this skill's directory as `../../kb/`; in Claude Code
+`${CLAUDE_PLUGIN_ROOT}/kb/`, in Kimi Code `${KIMI_SKILL_DIR}/../../kb/`, in opencode
+`$XWIKI_LLM_HOME/xwiki/kb/`.
 
 ## 0. Two modes
 
@@ -82,7 +82,7 @@ progress — see §6.2.
 
 **A bugfix release stores no entries of its own.** For an `X.Y.Z` with `Z > 0` the release-note page
 renders `{{jira}}` — the list of issues fixed, queried from JIRA — *instead of*
-`{{releasenotechanges/}}` (the page branches on this itself, and `okf/processes/release-notes.md`
+`{{releasenotechanges/}}` (the page branches on this itself, and `kb/processes/release-notes.md`
 says so). An entry posted against that version is stored and never rendered, so **never post one
 there**. Say this at triage rather than discovering it afterwards.
 
@@ -219,9 +219,9 @@ XCOMMONS-3752  Task         N/A                               N/A            —
 - **Category and importance are always put to the developer**, per entry. Category because the
   existing vocabulary must win over the JIRA component spelling and a new value must be proposed
   rather than invented — the drift, and the recipe that harvests the vocabulary actually in use,
-  are in the OKF; importance because a non-zero one is an editorial claim and must be justified in
+  are in the KB; importance because a non-zero one is an editorial claim and must be justified in
   the plan. `audience` and `screenshots` are derived without asking — except a UI-visible change
-  with no documentation page, whose missing screenshot is **flagged**, never substituted (OKF).
+  with no documentation page, whose missing screenshot is **flagged**, never substituted (KB).
 
 - **Existing state** — never silently overwritten:
 
@@ -259,7 +259,7 @@ nothing covers it                       → create, in /documentation only
 documentation sweep buries a large refactor inside an unrelated change.
 
 **dev.xwiki.org has no written conventions** beyond the developer-documentation style of
-`okf/conventions/documentation.md` (short sentences, few in a row). Edit it under a narrower mandate:
+`kb/conventions/documentation.md` (short sentences, few in a row). Edit it under a narrower mandate:
 **additive only** (extend a section, never restructure), mirror the page's own structure, and do
 **not** apply Diataxis re-typing. The claim-verification pass of §2 still applies in full.
 
@@ -267,12 +267,12 @@ Everything else about the prose — Diataxis type, titles, page structure fields
 is `xwiki-doc-writing`'s. Delegate to it rather than restating it.
 
 **A UI-visible change gets its screenshot here, not in §6.2** — it is produced for the
-documentation page and the entry reuses that exact image (OKF), which is why this step runs first.
+documentation page and the entry reuses that exact image (KB), which is why this step runs first.
 
 ### 6.2 The release-note entry
 
 All writes go through the **Release Notes Application REST endpoints**; the contract, the
-representations and the traps are in `okf/processes/release-notes.md`. Never create an entry page by
+representations and the traps are in `kb/processes/release-notes.md`. Never create an entry page by
 generic page creation: an entry needs two objects and an `Entry###` number allocated without racing
 another author.
 
@@ -297,7 +297,7 @@ another author.
    ```
 
    What goes in each field — the user-facing `title`, the shape of `summary`, why `description` is
-   omitted, no JIRA key in an entry, the `low`/`medium`/`high` spelling — is the OKF's **Writing an
+   omitted, no JIRA key in an entry, the `low`/`medium`/`high` spelling — is the KB's **Writing an
    entry**. Two things are procedural and belong here:
 
    - **Read the URL back out of the response**, never construct it from an assumed entry number:
@@ -311,7 +311,7 @@ another author.
 
 Only once the artefacts exist. `Documentation` = `customfield_10270`, `Documentation in Release
 Notes` = `customfield_10273`; write them over REST (`xwiki-jira`). Their values follow
-`okf/servers/jira.md`: absolute URLs, space-separated when there are several, exactly bare **`N/A`**
+`kb/servers/jira.md`: absolute URLs, space-separated when there are several, exactly bare **`N/A`**
 when there is nothing, the anchors as that file says.
 
 Bare `N/A` **changes current team habit** — `N/A (internal class)` is on real issues — and is
@@ -352,6 +352,6 @@ everything above works, **product and release-note location being parameters, no
 
 **An extension not bundled in XWiki Standard owes no entry in the Release Notes Application**: its
 issues' `Documentation in Release Notes` is its version page, not `N/A`, which
-`okf/processes/release-notes.md` ("Extensions not bundled in XWiki Standard") explains and
+`kb/processes/release-notes.md` ("Extensions not bundled in XWiki Standard") explains and
 `xwiki-contrib-release` §6–7 fills. The documentation half (§6.1) still applies to such a change, so a
 SINGLE run over one of its issues is a documentation-only run.

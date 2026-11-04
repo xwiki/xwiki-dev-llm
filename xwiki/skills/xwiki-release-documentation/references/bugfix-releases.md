@@ -20,4 +20,4 @@ bugfix version>/changes` returns an empty list for every bugfix release; and the
 new features shipped in recent bugfix releases (`issuetype in (Improvement, "New Feature") AND
 fixVersion in (…)`) mostly hold an entry URL, every one of them pointing at the feature release's
 note. **A field pointing at the bugfix note's `#HNewandNoteworthy…` anchor is not an entry** —
-it is a link into the JIRA list, and `okf/servers/jira.md` forbids anchors in the field regardless.
+it is a link into the JIRA list, and `kb/servers/jira.md` forbids anchors in the field regardless.
