@@ -6,6 +6,10 @@ summary: Code moved between XWiki repos must keep its git history (git subtree s
   a VOTE and the Attic (unsupported); top-level extensions are VOTEd per case.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HExtractingoutamodule
+provenance: official
+last-confirmed: 2026-08-13
+related: [processes/release.md, conventions/naming.md, architecture/platform-modules.md, conventions/versioning.md]
+applies-to: ["**/pom.xml"]
 ---
 
 # Module lifecycle

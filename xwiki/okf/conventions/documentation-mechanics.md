@@ -13,6 +13,9 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/create-documentation-page/page-structure/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationNavigationPanel/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/LandingPages/
+provenance: official
+last-confirmed: 2026-08-23
+related: [conventions/documentation.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
 # Programming against the xwiki.org documentation tree

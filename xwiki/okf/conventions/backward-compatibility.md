@@ -7,6 +7,10 @@ summary: Revapi enforces binary/semantic compatibility of public APIs, though no
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HBackwardCompatibility
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HPackagenames
+provenance: official
+last-confirmed: 2026-10-17
+related: [conventions/versioning.md, conventions/code-style.md, processes/release-notes.md, decisions/check-binary-not-source-compatibility.md]
+applies-to: ["**/pom.xml", "**/src/main/java/**/*.java"]
 ---
 
 # Backward compatibility policy

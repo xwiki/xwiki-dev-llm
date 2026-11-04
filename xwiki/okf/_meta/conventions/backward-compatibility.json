@@ -1,0 +1,117 @@
+{
+  "file": {
+    "questions": [
+      "What are the backward compatibility rules for changing public APIs in XWiki?",
+      "How do I know if my change breaks binary or semantic compatibility in XWiki?",
+      "Can I use internal packages from another XWiki project in my code?",
+      "How do I deprecate a method in XWiki without breaking callers?",
+      "Revapi fails my build, what criticality should the ignore have?"
+    ],
+    "aliases": [
+      "API compatibility",
+      "Revapi",
+      "binary compatibility",
+      "breaking changes",
+      "xwiki-legacy"
+    ]
+  },
+  "sections": {
+    "Backward compatibility policy": {
+      "questions": [
+        "Does my change to a public XWiki class break existing extensions?",
+        "Why did the build fail with a Revapi error after I changed a public method?",
+        "What kinds of API changes does XWiki's build check for compatibility?"
+      ],
+      "aliases": [
+        "API compatibility policy",
+        "binary and semantic compatibility",
+        "Revapi check"
+      ]
+    },
+    "Who may use `internal` packages": {
+      "questions": [
+        "Can my extension import classes from the internal package of xwiki-platform?",
+        "Can xwiki-rendering code call internal classes from xwiki-commons?",
+        "Is it safe to use an internal class from another project in my contrib code?"
+      ],
+      "aliases": [
+        "internal API",
+        "non-public package",
+        "private package"
+      ]
+    },
+    "`@Unstable` annotation": {
+      "questions": [
+        "How do I mark a new API as experimental so it can change later?",
+        "How long can a method stay annotated @Unstable before it must become stable?",
+        "What happens if I forget the @since tag on an unstable API?"
+      ],
+      "aliases": [
+        "experimental API annotation",
+        "unstable API",
+        "provisional API"
+      ]
+    },
+    "Evolving an interface without breaking it": {
+      "questions": [
+        "How do I add a method to an interface without breaking implementations?",
+        "Should I create a new interface or add a default method to add functionality?",
+        "What should a default method throw when it is not implemented in every class?"
+      ],
+      "aliases": [
+        "default methods",
+        "interface evolution",
+        "adding interface methods"
+      ]
+    },
+    "Deprecation": {
+      "questions": [
+        "How do I deprecate an XWiki API and move it to the legacy module?",
+        "Can I remove a deprecated method right away, or do I have to wait?",
+        "How do I move a removed class into a -legacy module without breaking extensions?"
+      ],
+      "aliases": [
+        "deprecating APIs",
+        "legacy module",
+        "removing deprecated code"
+      ]
+    },
+    "Choosing the `<criticality>` of a Revapi ignore": {
+      "questions": [
+        "Which criticality should I pick for a Revapi ignore that is a real API break?",
+        "When is a Revapi difference allowed rather than highlighted in release notes?",
+        "Why does my Revapi ignore not take effect in the pom.xml?"
+      ],
+      "aliases": [
+        "revapi criticality",
+        "revapi ignore",
+        "allowed highlight documented"
+      ]
+    },
+    "Where Revapi does and does not look": {
+      "questions": [
+        "Why does a downstream module fail Revapi even though my module's build is green?",
+        "Which modules does Revapi skip, and why is my legacy module's check on the woven jar?",
+        "How far does Revapi analyse transitive dependencies of my module?"
+      ],
+      "aliases": [
+        "Revapi coverage",
+        "revapi transitive dependencies",
+        "revapi scope"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/code-style.md",
+      "processes/release-notes.md",
+      "decisions/check-binary-not-source-compatibility.md"
+    ],
+    "applies-to": [
+      "**/pom.xml",
+      "**/src/main/java/**/*.java"
+    ]
+  },
+  "source_hash": "a018b5d764a1fa1b67353d5098f66142b95c52dcf1f73dc46f71101d39a498c4"
+}

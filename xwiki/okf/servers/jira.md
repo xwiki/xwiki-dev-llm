@@ -8,6 +8,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
+provenance: official
+last-confirmed: 2026-11-01
+related: [conventions/versioning.md, conventions/commit-messages.md, processes/release-notes.md, testing/flickers.md]
 ---
 
 # JIRA (`jira.xwiki.org`)

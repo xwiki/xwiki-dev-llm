@@ -6,6 +6,10 @@ summary: XWiki's dependency-injection model — roles (@Role interfaces), implem
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ComponentsTutorial
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Component+Module
+provenance: official
+last-confirmed: 2026-09-12
+related: [architecture/platform-modules.md, architecture/module-design.md, conventions/code-style.md]
+applies-to: ["**/src/main/java/**/*.java", "**/src/main/resources/META-INF/components.txt"]
 ---
 
 # The XWiki component system

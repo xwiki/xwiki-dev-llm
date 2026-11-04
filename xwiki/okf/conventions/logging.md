@@ -6,6 +6,10 @@ summary: In XWiki a log argument is stored as an object, XStream-serialized into
   cases. The decision table, the mechanism behind it, and the java:S2629 interaction.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HLoggingBestPractices
+provenance: official
+last-confirmed: 2026-08-03
+related: [conventions/code-comments.md, conventions/code-style.md]
+applies-to: ["**/*.java"]
 ---
 
 # Logging — a log argument is an object, not text

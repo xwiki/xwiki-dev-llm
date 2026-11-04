@@ -6,6 +6,10 @@ summary: Entry map for "what makes a SonarCloud fix correct in XWiki". Maps each
   and states the drop conditions that apply to every rule.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/
+provenance: official
+last-confirmed: 2026-10-22
+related: [sonarqube/verification.md, conventions/code-style.md, conventions/backward-compatibility.md, conventions/logging.md]
+applies-to: ["**/*.java"]
 ---
 
 # SonarQube rule fixes — index / map

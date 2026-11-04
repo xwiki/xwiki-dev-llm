@@ -1,0 +1,109 @@
+{
+  "file": {
+    "questions": [
+      "How do I script changes to xwiki.org documentation pages instead of editing each one by hand?",
+      "Where does the xwiki.org documentation site keep its metadata, like type, target, and the technical ID?",
+      "Why does a documentation page show a red warning banner, and how do I find out what is actually wrong?",
+      "How is the order of pages in the documentation navigation menu decided and stored?",
+      "How do I reuse one block of text across several documentation pages without copying it?"
+    ],
+    "aliases": [
+      "DocApp",
+      "Documentation application",
+      "xwiki.org docs internals",
+      "doc quality checker",
+      "doc linter"
+    ]
+  },
+  "sections": {
+    "Programming against the xwiki.org documentation tree": {
+      "questions": [
+        "Where does the xwiki.org documentation app store its data when I want to edit pages through the API?",
+        "What do I need to know before scripting changes to the xwiki.org docs or debugging a warning on a page?"
+      ],
+      "aliases": [
+        "xwiki.org docs data model",
+        "documentation app storage"
+      ]
+    },
+    "The DocApp xobjects on a documentation page": {
+      "questions": [
+        "Which class objects does a documentation page need besides its content, and what is the Technical ID?",
+        "My new documentation page looks fine but something is missing. Which objects must it carry?",
+        "When is the DocumentationExtensionClass object empty, and what does it hold?"
+      ],
+      "aliases": [
+        "DocumentationClass",
+        "DocumentationExtensionClass",
+        "Technical ID",
+        "doc page xobjects",
+        "Diataxis type field"
+      ]
+    },
+    "Landing pages carry a different class": {
+      "questions": [
+        "Why does my script skip some documentation pages when it looks for DocumentationClass?",
+        "How are landing pages stored differently from normal documentation pages, and who can change their highlights?",
+        "Why does my sweep for highlights or type fields miss the landing pages?"
+      ],
+      "aliases": [
+        "LandingPageClass",
+        "landing page highlights",
+        "type landing page",
+        "target landing page",
+        "documentation.xs landing pages"
+      ]
+    },
+    "Reading the doc-quality checker's actual findings": {
+      "questions": [
+        "Why does a documentation page show a generic red banner that never says what the problem is?",
+        "How do I see the specific violations the doc checker recorded on a page?",
+        "My docs fix didn't clear the warning. How do I check the rendered page for errors that have no stored object?"
+      ],
+      "aliases": [
+        "DocumentationViolationClass",
+        "best practice warning",
+        "red banner on docs page",
+        "doc validation errors",
+        "inline error box"
+      ]
+    },
+    "How navigation order is pinned": {
+      "questions": [
+        "How do I change the order of child pages in the documentation navigation tree?",
+        "Why does an old branch still show in the docs navigation after I renamed or moved a space?",
+        "Where is the pinned child page ordering stored, and how do I confirm the tree really shows it?"
+      ],
+      "aliases": [
+        "PinnedChildPagesClass",
+        "WebPreferences page",
+        "sort order of child pages",
+        "Document Tree macro",
+        "navigation panel order"
+      ]
+    },
+    "Hidden fragment pages (the `{{display}}` pattern)": {
+      "questions": [
+        "How do I hide a helper page from the page tree while still showing its content elsewhere?",
+        "How do I reuse one shared text block on several documentation pages without copying it?",
+        "Why does my display macro reference fail to resolve when I add a doc: prefix?"
+      ],
+      "aliases": [
+        "display macro",
+        "content transclusion",
+        "hidden page",
+        "shared fragment",
+        "include page content"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/documentation.md",
+      "conventions/documentation-migration.md",
+      "conventions/page-deletion.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "63d8b5031059712d6cb796ff34d465bceaa259e0060229460f9106e8cb18e01b"
+}

@@ -1,0 +1,93 @@
+{
+  "file": {
+    "questions": [
+      "how do I debug a functional test that fails randomly on CI but passes locally?",
+      "my docker UI test is flaky in Jenkins, where do I start investigating?",
+      "how do I find the real cause of an intermittent Selenium test failure?",
+      "what usually causes a flickering XWiki functional test?"
+    ],
+    "aliases": [
+      "flaky test",
+      "flickering test",
+      "intermittent UI test failure",
+      "flaky selenium test"
+    ]
+  },
+  "sections": {
+    "Diagnosing a flickering functional test — evidence, Selenium traps, forcing the race": {
+      "questions": [
+        "how do I debug a Selenium test that fails only sometimes on CI?",
+        "what evidence should I collect before fixing a flaky functional test?",
+        "why does my docker test pass on my machine but fail in the Jenkins build?"
+      ],
+      "aliases": [
+        "flaky test debugging",
+        "intermittent functional test",
+        "race condition in UI test"
+      ]
+    },
+    "Reading the video": {
+      "questions": [
+        "how do I find the moment a failed Selenium test went wrong in the flv recording?",
+        "how can I extract frames from a failed test video with ffmpeg?",
+        "the failure screenshot shows a frozen page, how do I see what happened before it?"
+      ],
+      "aliases": [
+        "ffmpeg scene detection",
+        "test video recording",
+        "contact sheet of frames"
+      ]
+    },
+    "Causes that look like something else": {
+      "questions": [
+        "why does a Selenium click work in Chrome but fail in Firefox?",
+        "my test times out finding an element that is clearly on screen, why?",
+        "a test shows the result page of an earlier action after a form submit, what is wrong?",
+        "why does a UI test fail only when a browser tab is in the background?"
+      ],
+      "aliases": [
+        "selenium click flaky",
+        "background tab timer throttling",
+        "implicit wait after navigation",
+        "browser version regression"
+      ]
+    },
+    "Forcing the race": {
+      "questions": [
+        "how do I reproduce a race condition that only happens on CI?",
+        "how can I make a flaky test fail every time to confirm my hypothesis?",
+        "where should I add a temporary sleep to expose a timing bug in a test?"
+      ],
+      "aliases": [
+        "reproduce flaky test",
+        "deterministic race reproduction",
+        "temporary Thread.sleep"
+      ]
+    },
+    "Realtime WYSIWYG: `REALTIME_DEBUG`": {
+      "questions": [
+        "where do I find the realtime editing sync log when a WYSIWYG functional test fails on Jenkins?",
+        "why is there no browser console output for my Firefox realtime test?",
+        "how do I trace why co-edited content was not saved after a realtime test failure?"
+      ],
+      "aliases": [
+        "REALTIME_DEBUG",
+        "RealtimeTestDebugger",
+        "realtime editing debug log",
+        "chrome console log selenium"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jenkins.md",
+      "servers/develocity.md",
+      "testing/strategy.md",
+      "testing/running-docker-its.md"
+    ],
+    "applies-to": [
+      "**/src/test/java/**/*.java"
+    ]
+  },
+  "source_hash": "528789910d31531648f1ea38cd628932cf7a859ede94ebeb7b23bfc062c2f8ae"
+}

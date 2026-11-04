@@ -1,0 +1,69 @@
+{
+  "file": {
+    "questions": [
+      "How does XWiki version and release its projects, and do commons, rendering and platform ship together?",
+      "Which stable branches should I backport my bug fix to in XWiki?",
+      "Can a non-security fix go into an older LTS line, or only security fixes?",
+      "What is the high-level overview of XWiki's release cadence and long-term support branches?"
+    ],
+    "aliases": [
+      "release train",
+      "LTS branches",
+      "backport policy",
+      "maintenance branch",
+      "version numbering"
+    ]
+  },
+  "sections": {
+    "Release and versioning process (outline)": {
+      "questions": [
+        "What is the high-level overview of how XWiki cuts and versions its releases?",
+        "Where do I start to understand XWiki's release process before I prepare a release?",
+        "How often does XWiki ship new stable versions?"
+      ],
+      "aliases": [
+        "release process overview",
+        "release cycle",
+        "release management"
+      ]
+    },
+    "Durable facts": {
+      "questions": [
+        "Which LTS branches should a bug fix be backported to in XWiki?",
+        "Do I need to backport my fix to the latest monthly stable release, or will it ship in the next one?",
+        "Are commons, rendering and platform always released with the same version number?",
+        "Can I backport a small non-security fix to an older LTS line?"
+      ],
+      "aliases": [
+        "LTS targets",
+        "backport targets",
+        "stable branch",
+        "cherry-pick to stable"
+      ]
+    },
+    "Volatile — follow the pointer, do not cache": {
+      "questions": [
+        "Where do I find the current XWiki release steps to follow when I release?",
+        "Where can I see the current XWiki release plans and planned dates?",
+        "What is the current development version of XWiki, and where is it defined?",
+        "Who is the release manager for the current XWiki cycle?"
+      ],
+      "aliases": [
+        "release runbook",
+        "release plan",
+        "release manager",
+        "dev version"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/backward-compatibility.md",
+      "processes/security-policy.md",
+      "processes/release-notes.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "0f2323703b1ee7b413058221921aaddbec24b73551ed7d3f10a8961aefbae949"
+}

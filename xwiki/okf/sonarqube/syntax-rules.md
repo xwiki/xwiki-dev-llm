@@ -5,6 +5,10 @@ summary: Correct fixes and XWiki-specific drop conditions for the pure syntax an
   the safest family, zero dataflow. Holds the varargs-array infinite-recursion trap, the
   static-access pair (instance-reference and declaring-class), modifier order, and the
   @Deprecated(since) move.
+provenance: official
+last-confirmed: 2026-09-09
+related: [sonarqube/index.md, conventions/versioning.md, sonarqube/simplification-rules.md, sonarqube/verification.md]
+applies-to: ["**/*.java"]
 ---
 
 # SonarQube syntax and annotation rules

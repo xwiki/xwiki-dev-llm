@@ -7,6 +7,10 @@ summary: Committers maintain only the en_US bundle (US spelling); translations s
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HTranslationBestPractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions/
+provenance: official
+last-confirmed: 2026-08-13
+related: [conventions/documentation.md, conventions/naming.md, conventions/backward-compatibility.md, conventions/server-side-rendering.md]
+applies-to: ["**/ApplicationResources.properties", "**/Translations.xml", "**/*Translations.xml", "**/src/main/resources/**/*.properties"]
 ---
 
 # Translation key lifecycle

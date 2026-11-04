@@ -9,6 +9,9 @@ sources:
   - https://github.com/xwiki-contrib/application-releasenotes
   - https://www.xwiki.org/xwiki/bin/view/ReleaseNotes/
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Release%20Notes%20Application
+provenance: official
+last-confirmed: 2026-10-30
+related: [servers/jira.md, servers/index.md, processes/release.md]
 ---
 
 # Release notes and the documentation fields of an issue

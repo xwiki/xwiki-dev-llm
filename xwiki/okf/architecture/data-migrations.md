@@ -6,6 +6,10 @@ summary: A Hibernate data migration runs once per wiki at startup; AbstractDocum
   keep such a pair from being a silent no-op, and only a real cross-engine upgrade proves it works.
 sources:
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-oldcore/src/main/java/org/xwiki/internal/migration/AbstractDocumentsMigration.java
+provenance: official
+last-confirmed: 2026-10-22
+related: [architecture/wiki-application-data.md, architecture/component-system.md, testing/strategy.md]
+applies-to: ["**/src/main/java/**/*Migration*.java", "**/src/test/**/*Migration*.java"]
 ---
 
 # Data migrations and the document-queueing pattern

@@ -9,6 +9,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
+provenance: official
+last-confirmed: 2026-10-19
+related: [conventions/versioning.md, conventions/backward-compatibility.md, processes/security-policy.md, processes/release-notes.md]
 ---
 
 # Release and versioning process (outline)

@@ -11,6 +11,10 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/rights/required-rights/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/rights/required-rights/enforce/
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Include%20Macro
+provenance: official
+last-confirmed: 2026-10-14
+related: [conventions/security.md, architecture/wiki-application-data.md, testing/test-value.md]
+applies-to: ["**/src/main/resources/**/*.xml", "**/src/test/**/*.java"]
 ---
 
 # Required rights on a page an extension ships

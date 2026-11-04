@@ -9,6 +9,9 @@ summary: How the browser container reaches XWiki under each servlet engine and w
   machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
+provenance: official
+last-confirmed: 2026-10-17
+related: [testing/strategy.md, servers/jenkins.md, testing/ci-watch.md, testing/flickers.md]
 ---
 
 # Running Docker functional tests on a developer machine

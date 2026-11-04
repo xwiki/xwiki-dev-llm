@@ -1,0 +1,115 @@
+{
+  "file": {
+    "questions": [
+      "how should I write Velocity code in an XWiki template or wiki page so the output stays clean",
+      "what is the Velocity style guide for XWiki .vm files",
+      "how do I format Velocity macros and directives consistently",
+      "how do I name variables and macros in Velocity templates",
+      "how do I stop a Velocity method call from printing its return value into the page"
+    ],
+    "aliases": [
+      "Velocity style guide",
+      "VTL coding conventions",
+      "Velocity template formatting",
+      "vm file conventions",
+      "Velocity comments syntax"
+    ]
+  },
+  "sections": {
+    "Velocity code style": {
+      "questions": [
+        "what are the basic Velocity coding style rules for XWiki templates",
+        "how do I keep my .vm skin file tidy and consistent with the rest of the project",
+        "what style rules apply to Velocity inside wiki pages"
+      ],
+      "aliases": [
+        "VTL style",
+        "Velocity conventions"
+      ]
+    },
+    "Capture unused return values in `$discard`": {
+      "questions": [
+        "how do I call a Java method in Velocity without its return value showing up in the output",
+        "why is an empty line appearing in my Velocity page after calling a method",
+        "how do I use $discard in Velocity to ignore a return value"
+      ],
+      "aliases": [
+        "discard variable Velocity",
+        "suppress Velocity output",
+        "#set discard"
+      ]
+    },
+    "Formatting": {
+      "questions": [
+        "should there be a space between #if and the parenthesis in Velocity",
+        "how do I indent Velocity code and arrange macro arguments",
+        "why does #template need no space before the parenthesis but #set does"
+      ],
+      "aliases": [
+        "Velocity indentation",
+        "Velocity whitespace rules"
+      ]
+    },
+    "Naming and references": {
+      "questions": [
+        "what naming should I use for Velocity variables and macros in XWiki",
+        "when do I write ${variable} instead of $variable in Velocity",
+        "how do I mark a Velocity macro as private or internal and document an API macro",
+        "can I rename an existing Velocity macro that predates 15.10"
+      ],
+      "aliases": [
+        "Velocity macro naming",
+        "underscore macro prefix",
+        "private macro Velocity"
+      ]
+    },
+    "A macro declares the variables it writes": {
+      "questions": [
+        "how do I make a Velocity macro return a value to the caller",
+        "why can't the caller see the change my Velocity macro makes to a variable",
+        "how should I pass a variable into a Velocity macro so it can be modified"
+      ],
+      "aliases": [
+        "Velocity macro output variable",
+        "macro side effects Velocity"
+      ]
+    },
+    "Comments": {
+      "questions": [
+        "how do I write a multi-line comment in Velocity",
+        "is #* *# allowed for block comments in .vm files",
+        "what should the header comment of a long Velocity script say"
+      ],
+      "aliases": [
+        "Velocity comment syntax",
+        "## comments Velocity"
+      ]
+    },
+    "Related — the Velocity rules that live in another topic": {
+      "questions": [
+        "where are the rules for whitespace gobbling and blank lines in Velocity templates",
+        "how do I call a script service from Velocity without checking for errors",
+        "how do I escape a translated string when rendering it in Velocity",
+        "how do I put Velocity inside JavaScript without breaking the minifier"
+      ],
+      "aliases": [
+        "Velocity escaping",
+        "Velocity space gobbling"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/server-side-rendering.md",
+      "conventions/script-services.md",
+      "conventions/security.md",
+      "conventions/code-style.md"
+    ],
+    "applies-to": [
+      "**/*.vm",
+      "**/src/main/resources/**/*.vm",
+      "**/src/main/webapp/**/*.vm"
+    ]
+  },
+  "source_hash": "29d26f3e1d6b91ff6ec094959cf4ab2510e9530664ce9c623875a08c71e3aae0"
+}

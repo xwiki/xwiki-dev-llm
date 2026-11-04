@@ -6,6 +6,10 @@ summary: The checklist a third-party project must pass before it can be added to
   contributors, documentation, security; a VOTE can waive everything but the license.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HAddinganewDependency
+provenance: official
+last-confirmed: 2026-09-01
+related: [conventions/commit-messages.md, servers/jira.md]
+applies-to: ["**/pom.xml", "**/package.json", "**/pnpm-lock.yaml"]
 ---
 
 # Accepting a new third-party dependency

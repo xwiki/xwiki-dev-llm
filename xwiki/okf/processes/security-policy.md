@@ -10,6 +10,9 @@ verify: |
   the community. Do not score from this file: read the Security Policy's "Best practices for
   computing CVSS" section (linked in the scoring section) and take each metric from it. What is kept
   below is XWiki's *interpretation* — how its rights map onto the scale, and the traps — not values.
+provenance: official
+last-confirmed: 2026-10-21
+related: [conventions/security.md, conventions/commit-messages.md, servers/jira.md, servers/index.md]
 ---
 
 # Security severity & disclosure process

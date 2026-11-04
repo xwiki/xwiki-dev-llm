@@ -4,6 +4,10 @@ stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the behaviour-preserving simplification
   rules — collapsible ifs, boolean and ternary reductions, isEmpty(), method references, lambda
   bodies, regex character classes, redundant casts and library copy calls.
+provenance: official
+last-confirmed: 2026-08-27
+related: [sonarqube/index.md, sonarqube/syntax-rules.md, sonarqube/verification.md]
+applies-to: ["**/*.java"]
 ---
 
 # SonarQube simplification rules

@@ -8,6 +8,10 @@ summary: The org.xwiki.rendering.macro.MacroRefactoring role (keyed by macro id)
 sources:
   - https://rendering.xwiki.org/xwiki/bin/view/Main/ExtendingMacro#HBacklinksandlinksrefactoringinmacros
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-rendering/xwiki-platform-rendering-xwiki/src/main/java/org/xwiki/rendering/macro/MacroRefactoring.java
+provenance: official
+last-confirmed: 2026-07-01
+related: [architecture/component-system.md, conventions/backward-compatibility.md, architecture/platform-modules.md]
+applies-to: ["**/src/main/java/**/*MacroRefactoring*.java", "**/src/main/resources/META-INF/components.txt"]
 ---
 
 # Macro reference refactoring and backlinks

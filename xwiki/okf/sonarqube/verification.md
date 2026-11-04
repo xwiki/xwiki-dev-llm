@@ -6,6 +6,10 @@ summary: What makes a SonarCloud fix verified rather than merely compiling — t
   which pre-existing failures recur on a Sonar fix.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Building/
+provenance: official
+last-confirmed: 2026-10-22
+related: [sonarqube/index.md, testing/strategy.md, sonarqube/dead-code-rules.md, sonarqube/modernization-rules.md]
+applies-to: ["**/src/main/java/**/*.java", "**/src/test/java/**/*.java"]
 ---
 
 # Verifying a SonarQube fix

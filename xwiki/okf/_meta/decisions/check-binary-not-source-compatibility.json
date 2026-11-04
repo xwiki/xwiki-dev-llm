@@ -1,0 +1,67 @@
+{
+  "file": {
+    "questions": [
+      "Does XWiki's build fail if I change a public Java method signature in a way that compiled callers can still use?",
+      "Which kinds of API compatibility does XWiki's Revapi check enforce, and which does it skip?",
+      "Can I add generics to a public method's return type without breaking the build?",
+      "Why did the Revapi check fail on my public API change, and is there a way to avoid it?"
+    ],
+    "aliases": [
+      "revapi",
+      "binary compatibility",
+      "source compatibility",
+      "API breaking change check",
+      "semantic compatibility"
+    ]
+  },
+  "sections": {
+    "Context": {
+      "questions": [
+        "Why does XWiki care so much about not breaking its public Java APIs for extensions and other applications?",
+        "What tool in the xwiki-platform Maven build detects incompatible changes to public APIs?",
+        "How does the build catch an accidental API break before it gets merged?"
+      ],
+      "aliases": [
+        "Revapi Maven plugin",
+        "public API stability",
+        "API breakage detection",
+        "downstream extensions"
+      ]
+    },
+    "Decision": {
+      "questions": [
+        "Should I expect the build to fail if I only change a method's generics but compiled callers keep working?",
+        "Does XWiki require binary and semantic compatibility, or also source compatibility, for public APIs?",
+        "What is the rule for source-only changes to XWiki public Java interfaces and classes?"
+      ],
+      "aliases": [
+        "binary-only API check",
+        "source-level API change policy"
+      ]
+    },
+    "Consequences": {
+      "questions": [
+        "What do I get from XWiki not enforcing source compatibility, and what risk remains for downstream users?",
+        "How do I mark a new public API as not yet stable so it can change later without a Revapi failure?",
+        "How do I evolve a public interface by adding a method without breaking existing implementations?"
+      ],
+      "aliases": [
+        "@Unstable annotation",
+        "revapi ignore configuration",
+        "experimental API",
+        "default methods in interfaces"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/backward-compatibility.md",
+      "conventions/versioning.md",
+      "architecture/module-design.md"
+    ],
+    "applies-to": [
+      "**/src/main/java/**/*.java"
+    ]
+  },
+  "source_hash": "d774bbf21f5ba2567a017c38041598184caf7232290787e68fbf6a219f4fc0c9"
+}

@@ -1,0 +1,86 @@
+{
+  "file": {
+    "questions": [
+      "How do I make links inside my macro's parameters update when a page is renamed or moved?",
+      "Why doesn't renaming a page update the image or include reference stored in my macro?",
+      "How does XWiki build backlinks for references that live inside a macro?",
+      "Do I need a custom Java component for my macro to handle page rename link updates?"
+    ],
+    "aliases": [
+      "link refactoring",
+      "backlink extraction",
+      "rename page macro links",
+      "reference rewriting in macros",
+      "MacroRefactoring"
+    ]
+  },
+  "sections": {
+    "Macro reference refactoring and backlinks": {
+      "questions": [
+        "How does XWiki update references inside a macro when I rename or move a page or attachment?",
+        "Where do backlinks come from for links written inside macros?",
+        "How do I control what a macro does when its references get renamed?"
+      ],
+      "aliases": [
+        "backlinks in macros",
+        "macro link update on move"
+      ]
+    },
+    "Keyed by macro id": {
+      "questions": [
+        "How do I register a component so my macro's references get refactored on rename?",
+        "Which @Named hint must the refactoring component use for my macro to be picked up?",
+        "Does the macro reference refactoring work for wiki macros as well as Java macros?"
+      ],
+      "aliases": [
+        "macro id hint",
+        "@Named macro refactoring component"
+      ]
+    },
+    "The methods": {
+      "questions": [
+        "What should replaceReference return when the macro's reference did not match the renamed entity?",
+        "How do I implement extractReferences so the links my macro uses show up as backlinks?",
+        "Which overload do I need to override to handle the updatedEntities map, and do I have to implement all of them?"
+      ],
+      "aliases": [
+        "replaceReference",
+        "extractReferences"
+      ]
+    },
+    "The DefaultMacroRefactoring fallback (content only)": {
+      "questions": [
+        "Why isn't the parameter of my macro updated when a page is renamed, even though the content links are?",
+        "Do links inside wiki macro content get refactored on rename automatically without extra code?",
+        "When does XWiki fall back to the default refactoring and what does it skip?"
+      ],
+      "aliases": [
+        "default macro refactoring",
+        "content-only link refactoring"
+      ]
+    },
+    "Where to go deeper": {
+      "questions": [
+        "Where is the official tutorial section on backlinks and link refactoring in macros?",
+        "Which existing macro refactoring implementation can I copy as an example for a parameter-based reference?",
+        "Where is the MacroRefactoring interface Javadoc I should read?"
+      ],
+      "aliases": [
+        "IncludeMacroRefactoring example",
+        "writing a macro tutorial"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/component-system.md",
+      "conventions/backward-compatibility.md",
+      "architecture/platform-modules.md"
+    ],
+    "applies-to": [
+      "**/src/main/java/**/*MacroRefactoring*.java",
+      "**/src/main/resources/META-INF/components.txt"
+    ]
+  },
+  "source_hash": "982edae31949cedb82f299e6e14df3efea3e2c854bc6bbc8777b18b9af84a78a"
+}

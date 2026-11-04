@@ -4,6 +4,10 @@ stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the language-modernization rules —
   instanceof patterns, .toList()/.toSet(), EnumMap, lambdas, StringBuilder, text blocks and the
   collection factory methods. Holds the .toList() escape analysis and the EnumMap null-key break.
+provenance: official
+last-confirmed: 2026-08-27
+related: [sonarqube/index.md, sonarqube/verification.md, conventions/backward-compatibility.md, conventions/code-style.md]
+applies-to: ["**/*.java"]
 ---
 
 # SonarQube modernization rules

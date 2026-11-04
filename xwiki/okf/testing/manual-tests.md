@@ -6,6 +6,9 @@ summary: Where a manual test's steps, results and automation status are stored o
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy
   - https://github.com/xwiki-contrib/application-testreporting
+provenance: official
+last-confirmed: 2026-10-17
+related: [testing/strategy.md, testing/test-value.md, servers/jira.md]
 ---
 
 # Manual tests on test.xwiki.org

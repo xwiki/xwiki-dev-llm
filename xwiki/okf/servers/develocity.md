@@ -6,6 +6,9 @@ summary: Analyse a test's failures across CI builds with `dv-test-history` (xwik
   finding candidates with `--recent-failures`, and why a `flaky` outcome is a plain failure in XWiki.
 sources:
   - https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history
+provenance: official
+last-confirmed: 2026-10-17
+related: [servers/jenkins.md, testing/flickers.md, testing/ci-watch.md, servers/index.md]
 ---
 
 # Develocity: a test's failure history

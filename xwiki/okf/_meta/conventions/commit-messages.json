@@ -1,0 +1,42 @@
+{
+  "file": {
+    "questions": [
+      "What format should my git commit message follow for XWiki, and what goes in the subject line versus the body?",
+      "Do I need a JIRA issue for a small change, or can I commit it as [Misc]?",
+      "Why does my commit summary have to be the JIRA issue title word for word instead of my own wording?",
+      "How do I write the commit message for a security fix before the issue is publicly disclosed?",
+      "Does a dependency upgrade need a JIRA issue, or is it fine as [Misc]?"
+    ],
+    "aliases": [
+      "commit subject line",
+      "commit title format",
+      "git commit message guidelines",
+      "JIRA key in commit message",
+      "commit message template"
+    ]
+  },
+  "sections": {
+    "Commit message convention": {
+      "questions": [
+        "How should I word the summary line of a commit that references a JIRA issue?",
+        "My umbrella issue has many commits with the same summary line; how do I tell them apart?",
+        "How do I stop GitHub from linking @since or #123 in my commit message to an unrelated account or repo?"
+      ],
+      "aliases": [
+        "commit message format",
+        "commit summary rules",
+        "JIRA issue key in commit"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jira.md",
+      "processes/security-policy.md",
+      "processes/release-notes.md",
+      "conventions/dependencies.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "25b0f16695396f9d8799d96963a83e30f651798f3d538e353537cfa26f19c0ae"
+}

@@ -1,0 +1,133 @@
+{
+  "file": {
+    "questions": [
+      "How do I safely apply SonarQube's Java modernization suggestions like instanceof patterns and toList?",
+      "Which Sonar Java language-upgrade fixes can break runtime behaviour, not just compile?",
+      "What Java version do I need for Sonar's pattern matching, text block and factory method suggestions?",
+      "What checks must I run before accepting a Sonar fix that changes collections or string building?"
+    ],
+    "aliases": [
+      "SonarLint modernization",
+      "Sonar modern Java syntax",
+      "Java language upgrade Sonar rules"
+    ]
+  },
+  "sections": {
+    "SonarQube modernization rules": {
+      "questions": [
+        "Sonar wants me to modernize Java code, is it safe to just apply all the suggested fixes?",
+        "Why can a Sonar Java modernization fix compile fine but change runtime behaviour?",
+        "Which Java version do I need before applying these Sonar suggestions?"
+      ],
+      "aliases": [
+        "Sonar modern Java rules",
+        "Java syntax modernization",
+        "Sonar quick fixes Java"
+      ]
+    },
+    "S6201 — instanceof pattern matching": {
+      "questions": [
+        "How do I replace an instanceof check followed by a cast with a pattern variable in Java?",
+        "Sonar flags my instanceof and cast, when must I leave the cast alone?",
+        "Why does my pattern variable clash with another declaration after an early return?"
+      ],
+      "aliases": [
+        "instanceof pattern matching",
+        "Java 16 pattern variable",
+        "redundant cast Sonar"
+      ]
+    },
+    "S6204 / S6211 — `collect(Collectors.toList()/toSet())` → `.toList()` / `.toSet()`": {
+      "questions": [
+        "Sonar says use Stream.toList instead of collect(Collectors.toList), when is that safe?",
+        "After switching to toList my list is immutable and add() throws, what should I do?",
+        "Why does the build fail with an unused Collectors import after I changed to toList?"
+      ],
+      "aliases": [
+        "Stream.toList",
+        "Stream.toSet",
+        "unmodifiable list from stream"
+      ]
+    },
+    "S6485 — use the collection factory method instead of the sizing constructor": {
+      "questions": [
+        "How do I create a HashMap with an expected size without rehashing in Java 19 or later?",
+        "Sonar says to replace new HashSet with the newHashSet method, does that change behaviour?",
+        "Should I convert new LinkedHashMap(otherMap) to a factory method too?"
+      ],
+      "aliases": [
+        "newHashMap",
+        "HashSet.newHashSet",
+        "initial capacity constructor"
+      ]
+    },
+    "S1640 — convert a `Map` with enum keys to `EnumMap`": {
+      "questions": [
+        "Can I switch a HashMap keyed by an enum to EnumMap without breaking anything?",
+        "My tests throw NullPointerException after converting a map to EnumMap, why?",
+        "Does EnumMap change the iteration order of entries compared to HashMap?"
+      ],
+      "aliases": [
+        "EnumMap conversion",
+        "enum-keyed map",
+        "null key EnumMap"
+      ]
+    },
+    "S1604 — make an anonymous inner class a lambda": {
+      "questions": [
+        "How do I turn an anonymous Comparator or Runnable into a lambda in Java?",
+        "My lambda no longer compiles because a parameter name clashes, why?",
+        "Why can't I convert AccessController.doPrivileged anonymous classes to lambdas?"
+      ],
+      "aliases": [
+        "anonymous class to lambda",
+        "lambda conversion",
+        "doPrivileged lambda"
+      ]
+    },
+    "S1643 — use a `StringBuilder` instead of `+=` in a loop": {
+      "questions": [
+        "Sonar warns about string += in a loop, how do I switch to StringBuilder safely?",
+        "When is StringBuilder not a drop-in replacement for concatenation in a loop?",
+        "My Mockito verify fails after I changed string accumulation to StringBuilder, why?"
+      ],
+      "aliases": [
+        "string concatenation in loop",
+        "StringBuilder refactor",
+        "+= string performance"
+      ]
+    },
+    "S6126 — replace String concatenation with a text block": {
+      "questions": [
+        "How do I convert a multi-line string concatenation to a Java text block without changing its content?",
+        "Can I use a text block for expected test output that has trailing spaces or CRLF line endings?",
+        "Why does my text block conversion push lines past the 120-character limit?"
+      ],
+      "aliases": [
+        "text block",
+        "multiline string literal",
+        "Java 15 text blocks"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which other Sonar rule docs should I read after the modernization rules?",
+        "How do I verify that a Sonar fix did not break the build or coverage?",
+        "What backward compatibility concerns apply when a Sonar fix changes a public Java signature?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "sonarqube/verification.md",
+      "conventions/backward-compatibility.md",
+      "conventions/code-style.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "945574fa49708e119a8505d4169b873d05415a388eb81e97fabd96911fc40ce2"
+}

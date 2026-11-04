@@ -6,6 +6,10 @@ summary: Revapi gates public-API changes on binary/semantic compatibility only; 
   incompatibility is intentionally not enforced because it is too strict for normal API evolution.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HBackwardCompatibility
+provenance: official
+last-confirmed: 2026-10-17
+related: [conventions/backward-compatibility.md, conventions/versioning.md, architecture/module-design.md]
+applies-to: ["**/src/main/java/**/*.java"]
 ---
 
 # Check binary and semantic compatibility, but not source compatibility

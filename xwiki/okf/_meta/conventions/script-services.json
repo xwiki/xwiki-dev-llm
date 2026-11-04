@@ -1,0 +1,73 @@
+{
+  "file": {
+    "questions": [
+      "How should a new Velocity script service report errors to templates?",
+      "How do I pass a map literal from a wiki page to a Java method on a script service?",
+      "Why does my script service need its own rights check when the Script Right is already required?",
+      "Should my script service method throw an exception or return null on failure?"
+    ],
+    "aliases": [
+      "script service conventions",
+      "scripting API guidelines",
+      "Velocity service design rules",
+      "XWiki script API conventions"
+    ]
+  },
+  "sections": {
+    "Errors: throw, do not stash": {
+      "questions": [
+        "Should my new script service method throw or return null when something fails?",
+        "How do I catch an exception from a script service call in a Velocity template?",
+        "Why is getLastError() discouraged in new script service code?"
+      ],
+      "aliases": [
+        "getLastError",
+        "#try directive",
+        "exception handling in Velocity",
+        "error stashing in xcontext",
+        "script service exceptions"
+      ]
+    },
+    "Arguments: no bean factories": {
+      "questions": [
+        "How do I pass a map from Velocity to a Java method that takes a bean object?",
+        "Do I need to add a factory method to my script service to create a parameter object?",
+        "How do I make a Velocity map argument convert into a Java bean automatically?"
+      ],
+      "aliases": [
+        "Method Arguments Uberspector",
+        "Velocity map to Java object conversion",
+        "Converter for script arguments",
+        "Properties module mandatory property",
+        "bean factory method"
+      ]
+    },
+    "Rights": {
+      "questions": [
+        "Why does my script service perform a right check for the page author as well as the current user?",
+        "Which user's rights should a script service method check when called from a wiki page?",
+        "How do I make sure a script service cannot be abused through a script with programming rights?"
+      ],
+      "aliases": [
+        "script right",
+        "context user vs author rights",
+        "programming rights check",
+        "checkRight in script service",
+        "author privilege escalation"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/security.md",
+      "conventions/backward-compatibility.md",
+      "conventions/velocity-code-style.md",
+      "conventions/server-side-rendering.md"
+    ],
+    "applies-to": [
+      "**/*ScriptService.java",
+      "**/*.vm"
+    ]
+  },
+  "source_hash": "85531ebd99d87a8f224db881df275287eeb797a624638c30aee58d0c942b713d"
+}

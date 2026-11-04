@@ -7,6 +7,10 @@ summary: A new script service throws instead of returning null and stashing the 
 sources:
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Script%20Module/#HBestPractices
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Velocity%20Module
+provenance: official
+last-confirmed: 2026-09-15
+related: [conventions/security.md, conventions/backward-compatibility.md, conventions/velocity-code-style.md, conventions/server-side-rendering.md]
+applies-to: ["**/*ScriptService.java", "**/*.vm"]
 ---
 
 # Script service conventions

@@ -8,6 +8,10 @@ sources:
   - John Ousterhout, "A Philosophy of Software Design" (deep and shallow modules)
   - Michael Feathers, "Working Effectively with Legacy Code" (seams)
   - https://github.com/mattpocock/skills (codebase-design skill, MIT) — the ideas, reworded here
+provenance: official
+last-confirmed: 2026-10-21
+related: [architecture/component-system.md, architecture/platform-modules.md, conventions/code-style.md]
+applies-to: ["**/src/main/java/**/*.java"]
 ---
 
 # Module design

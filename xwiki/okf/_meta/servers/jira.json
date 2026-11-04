@@ -1,0 +1,237 @@
+{
+  "file": {
+    "questions": [
+      "How do I access the XWiki issue tracker from the terminal or with a script?",
+      "Where do I file a bug for XWiki, and which JIRA project and fields should I use?",
+      "When should I open a new JIRA ticket instead of reusing or reopening an existing one?",
+      "What fields do I need to fill in on an XWiki JIRA issue, and what version values go in them?"
+    ],
+    "aliases": [
+      "jira.xwiki.org",
+      "XWiki issue tracker",
+      "Atlassian JIRA",
+      "JIRA REST API",
+      "issue fields"
+    ]
+  },
+  "sections": {
+    "JIRA (jira.xwiki.org) — access and issue-field conventions": {
+      "questions": [
+        "How do I connect to jira.xwiki.org from my terminal with a personal access token?",
+        "Can I call the JIRA REST API with a bearer token instead of using the web UI?",
+        "How do I set up jira-cli against XWiki's self-hosted JIRA server?"
+      ],
+      "aliases": [
+        "jira-cli",
+        "JIRA personal access token",
+        "Atlassian Data Center",
+        "JIRA bearer auth",
+        "XWiki JIRA API"
+      ]
+    },
+    "Project keys": {
+      "questions": [
+        "What JIRA project key do I use for XWiki platform, commons or rendering issues?",
+        "Which issue key should I reference for an xwiki-contrib extension or the Docker image?",
+        "What prefix does my commit message need so it links to the JIRA issue?"
+      ],
+      "aliases": [
+        "issue key",
+        "project prefix",
+        "XWIKI-",
+        "XCOMMONS",
+        "XRENDERING"
+      ]
+    },
+    "Whether to file an issue at all": {
+      "questions": [
+        "I found a bug in code added earlier in this unreleased dev cycle, so should I open a new issue?",
+        "Do I need a JIRA ticket for a pure refactoring or a build-only change?",
+        "My fix was merged but turned out incomplete, so should I reopen the issue or file a follow-up?"
+      ],
+      "aliases": [
+        "reopen issue",
+        "new ticket or existing ticket",
+        "Development Issue Only component",
+        "affected version",
+        "release notes exclusion"
+      ]
+    },
+    "Issue-field conventions (every issue type)": {
+      "questions": [
+        "Which Component, Affects Version and Fix Version should I set on a new bug, task or improvement?",
+        "How do I name a fix version for a backport to a stable branch?",
+        "How do I link a related issue so it appears in both tickets?",
+        "Do I have to set component or version fields in the XDOCKER project?"
+      ],
+      "aliases": [
+        "Fix Version/s",
+        "Affects Version/s",
+        "Component/s",
+        "issue links",
+        "Related link type"
+      ]
+    },
+    "Dependency-upgrade issues": {
+      "questions": [
+        "How do I file a JIRA issue for bumping a third-party library version?",
+        "What belongs in the description of a dependency upgrade ticket?",
+        "Why do I need release-note links for every intermediate version when upgrading a library?"
+      ],
+      "aliases": [
+        "library upgrade",
+        "dependency bump",
+        "Upgrade to ticket",
+        "Dependency Upgrades component",
+        "release notes URL"
+      ]
+    },
+    "Flickering tests": {
+      "questions": [
+        "A functional test passes sometimes and fails other times, so how do I track it in JIRA?",
+        "How do I make a flaky test findable so CI failures can be matched to its ticket?",
+        "What exact test name should I enter in the Flickering Test field?"
+      ],
+      "aliases": [
+        "flaky test",
+        "intermittent test failure",
+        "flickering label",
+        "Flickering Test field",
+        "random test failure"
+      ]
+    },
+    "The documentation fields": {
+      "questions": [
+        "Where do I record the documentation URL and release-note link for a fixed JIRA issue?",
+        "What do I put in the documentation fields when a change needs no documentation?",
+        "Why does my JQL filter on the Documentation field fail with a 400 error?",
+        "How long can a value in the documentation fields be?"
+      ],
+      "aliases": [
+        "customfield_10270",
+        "customfield_10273",
+        "Documentation custom field",
+        "release note link field",
+        "N/A documentation"
+      ]
+    },
+    "Starting work on an issue": {
+      "questions": [
+        "Should I assign the JIRA ticket to myself before I start writing the fix?",
+        "Someone else is already assigned to this issue, so can I take it over?"
+      ],
+      "aliases": [
+        "assign issue",
+        "claim ticket",
+        "take ownership of issue",
+        "OpenProject work package"
+      ]
+    },
+    "Linking the pull request": {
+      "questions": [
+        "How do I link my GitHub pull request to the work package when the GitHub tab is empty?",
+        "Where should I post the PR URL so the issue shows which change fixes it?"
+      ],
+      "aliases": [
+        "PR link",
+        "pull request URL",
+        "GitHub tab",
+        "OpenProject work package"
+      ]
+    },
+    "Resolving / closing an issue": {
+      "questions": [
+        "Which resolution should I choose when closing a JIRA issue: Fixed, Duplicate or Cannot Reproduce?",
+        "My bug disappeared because of another change, so how do I close it without a Fixed resolution?",
+        "How do I list the available transitions and close an issue through the REST API?",
+        "What should I fill in the documentation fields when I close an issue?"
+      ],
+      "aliases": [
+        "close ticket",
+        "resolution",
+        "Solved By",
+        "workflow transition",
+        "Won't Fix"
+      ]
+    },
+    "Bulk edits": {
+      "questions": [
+        "How do I update many JIRA issues at once without emailing every watcher?",
+        "Can I turn off notifications with notifyUsers=false when I edit a lot of tickets?"
+      ],
+      "aliases": [
+        "mass edit",
+        "batch update",
+        "silent update",
+        "notifications off",
+        "bulk update"
+      ]
+    },
+    "Attachments (screenshots)": {
+      "questions": [
+        "How do I attach a screenshot to a JIRA issue from the command line?",
+        "Do I need before and after screenshots on an issue that fixes a UI bug?",
+        "Why doesn't jira-cli have a command to attach files?"
+      ],
+      "aliases": [
+        "upload image",
+        "attach file",
+        "X-Atlassian-Token header",
+        "multipart upload",
+        "screenshot"
+      ]
+    },
+    "Wiki-markup gotchas (descriptions and comments)": {
+      "questions": [
+        "Why does a backslash show up in my JIRA code block when I escaped the text?",
+        "Why doesn't my issue key become a link when I wrap it in monospace?",
+        "How do I preview JIRA wiki markup before posting a comment or description?",
+        "How do I write a REST path with braces in a JIRA description without breaking the list?"
+      ],
+      "aliases": [
+        "JIRA wiki markup",
+        "Atlassian wiki renderer",
+        "JIRA formatting",
+        "monospace text",
+        "noformat block"
+      ]
+    },
+    "Identifying the current LTS (for the Affects-Version fallback)": {
+      "questions": [
+        "Which XWiki version is the current LTS, so I know which Affects Version to use?",
+        "How do I work out the current long-term support release from the dev version number?"
+      ],
+      "aliases": [
+        "LTS version",
+        "long term support release",
+        "stable line",
+        "support branch",
+        "Affects Version fallback"
+      ]
+    },
+    "Verifying the volatile values": {
+      "questions": [
+        "How do I check the current XWiki dev version before I set a fix version?",
+        "How can I list which JIRA versions are released using the API?",
+        "Where do I confirm which XWiki release lines are still supported?"
+      ],
+      "aliases": [
+        "current version",
+        "released versions",
+        "pom.xml version",
+        "SNAPSHOT version",
+        "support strategy"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/commit-messages.md",
+      "processes/release-notes.md",
+      "testing/flickers.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "16140469ffd4a0e9a3959bf0f00a91d9a44a666d3ed5ba2f7092dc2770bcd1c7"
+}

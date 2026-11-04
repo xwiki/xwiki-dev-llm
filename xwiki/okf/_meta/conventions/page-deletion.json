@@ -1,0 +1,82 @@
+{
+  "file": {
+    "questions": [
+      "How do I delete a page on xwiki.org without breaking links to it from other pages?",
+      "What should I check for backlinks before removing a documentation or extension page?",
+      "Does the delete wizard automatically update links to a deleted page?",
+      "How do I find every page that links to a page I want to delete, including absolute URL links?"
+    ],
+    "aliases": [
+      "page deletion checklist",
+      "delete wiki page backlinks",
+      "broken links after deleting page",
+      "deletion wizard new target update links",
+      "xwiki.org delete doc page"
+    ]
+  },
+  "sections": {
+    "Deleting a page on xwiki.org — handle its backlinks first": {
+      "questions": [
+        "Why do links break when I delete a page on xwiki.org and how do I avoid it?",
+        "I created a temporary intermediate page during a task and want to remove it; do I still need to check what links to it?",
+        "What must I do before deleting a documentation page so that hubs and related fields don't point to nothing?"
+      ],
+      "aliases": [
+        "backlinks before delete",
+        "dangling links after deletion",
+        "xwiki.org page removal"
+      ]
+    },
+    "What the deletion wizard does and does not repoint": {
+      "questions": [
+        "Does the delete wizard rewrite links to the page I'm deleting, and when does it do so?",
+        "Why are absolute URL links to my page not updated when I delete it through the wizard?",
+        "Can I delete a page over the REST API and still have its links fixed automatically?",
+        "How do I keep external links working after deleting a page on xwiki.org?"
+      ],
+      "aliases": [
+        "update links checkbox",
+        "new target delete",
+        "redirect on delete",
+        "RedirectClass",
+        "deletion wizard limits"
+      ]
+    },
+    "Procedure": {
+      "questions": [
+        "What are the steps to safely delete a page on xwiki.org, from listing backlinks to verifying the result?",
+        "How do I read the Backlinks list in the Information tab and complete it with a farm-wide search?",
+        "How should I decide whether to repoint, remove, or leave each link found before deleting?"
+      ],
+      "aliases": [
+        "page deletion steps",
+        "information tab backlinks",
+        "farm-wide search links",
+        "triage backlinks"
+      ]
+    },
+    "If a page was already deleted": {
+      "questions": [
+        "I already deleted a page on xwiki.org by mistake; how do I recover its backlinks and fix the broken links?",
+        "How do I restore a deleted page from the trash to see what linked to it?",
+        "After restoring a deleted page, how should I delete it correctly this time?"
+      ],
+      "aliases": [
+        "restore deleted page",
+        "trash recovery xwiki",
+        "undo page deletion",
+        "recover deleted doc page"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/documentation-migration.md",
+      "conventions/documentation-mechanics.md",
+      "conventions/documentation.md",
+      "architecture/macro-refactoring.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "4694e5e2b749552fb4fbf58197c1cc7dc660803aac6165a80fbeb8f88cdaaf1a"
+}

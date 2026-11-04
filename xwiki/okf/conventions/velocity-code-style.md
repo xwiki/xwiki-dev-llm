@@ -5,6 +5,10 @@ summary: Formatting, naming, the $discard idiom for unused return values, macro 
   comment rules for Velocity in templates, skin resources and wiki pages.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VelocityCodeStyle
+provenance: official
+last-confirmed: 2026-10-15
+related: [conventions/server-side-rendering.md, conventions/script-services.md, conventions/security.md, conventions/code-style.md]
+applies-to: ["**/*.vm", "**/src/main/resources/**/*.vm", "**/src/main/webapp/**/*.vm"]
 ---
 
 # Velocity code style

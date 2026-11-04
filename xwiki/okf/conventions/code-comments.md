@@ -6,6 +6,10 @@ summary: A comment explains the code as it is now and stands on its own once its
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle
   - https://dev.xwiki.org/xwiki/bin/view/Community/VelocityCodeStyle
+provenance: official
+last-confirmed: 2026-09-15
+related: [conventions/commit-messages.md, conventions/code-style.md, conventions/velocity-code-style.md]
+applies-to: ["**/*.java", "**/*.js", "**/*.vm", "**/*.xml", "**/*.properties", "**/*.sh"]
 ---
 
 # Code comment policy

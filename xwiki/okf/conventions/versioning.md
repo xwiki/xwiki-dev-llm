@@ -12,6 +12,10 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/#HRule:Non-codeissuesareallowed
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HDeprecation
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HUseone40sinceperversion
+provenance: official
+last-confirmed: 2026-10-17
+related: [conventions/backward-compatibility.md, servers/jira.md, processes/release.md]
+applies-to: ["**/*.java"]
 ---
 
 # API versioning (`@since` / `@Deprecated`)

@@ -1,0 +1,55 @@
+{
+  "file": {
+    "questions": [
+      "Where are the manual test steps and results stored on test.xwiki.org?",
+      "How do I find the manual test runs for a specific XWiki release?",
+      "How can I tell whether a manual test has already been automated?",
+      "Which automation flag on a manual test should I trust?",
+      "How do I search Solr for a release's manual test executions?"
+    ],
+    "aliases": [
+      "manual test strategy",
+      "test reporting application",
+      "QA.TestClass",
+      "manual test cases",
+      "test.xwiki.org test reports"
+    ]
+  },
+  "sections": {
+    "Manual tests on test.xwiki.org — data model and automation status": {
+      "questions": [
+        "Where does the manual test data live on test.xwiki.org?",
+        "How do I find every run of one manual test for a given major version?",
+        "Which object holds the expected result and the deprecated flag of a manual test?"
+      ],
+      "aliases": [
+        "TestReportingExecutions",
+        "QA.ExecutionClass",
+        "test reporting app data model",
+        "manual test execution records"
+      ]
+    },
+    "Automation status": {
+      "questions": [
+        "How do I record that a manual test has been automated on test.xwiki.org?",
+        "What do the Automated, Not Automatable and Needs Automated Test statuses mean?",
+        "Does a manual test with no automation status still need automating?",
+        "Should I search for an existing automated test before writing one for a manual test?"
+      ],
+      "aliases": [
+        "QA.AutomatedTestStatusClass",
+        "automated test flag",
+        "manual test automation tracking"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "testing/test-value.md",
+      "servers/jira.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "387d59e67822e49aae4222c939391f911053f6a043cf10d63898931cd53227d8"
+}

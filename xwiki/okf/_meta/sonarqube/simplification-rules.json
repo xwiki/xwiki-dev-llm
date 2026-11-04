@@ -1,0 +1,265 @@
+{
+  "file": {
+    "questions": [
+      "How do I fix SonarQube simplification issues in XWiki Java code without changing behaviour?",
+      "Which SonarQube rules can I fix mechanically without dataflow analysis?",
+      "When should I not apply a Sonar suggestion like merging nested ifs or replacing a lambda with a method reference?",
+      "Is it safe to just apply Sonar's suggested simplification, like isEmpty() or removing a cast?"
+    ],
+    "aliases": [
+      "Sonar code smells",
+      "SonarQube quick fixes",
+      "SonarLint simplifications",
+      "Sonar refactoring rules"
+    ]
+  },
+  "sections": {
+    "SonarQube simplification rules": {
+      "questions": [
+        "What is the general approach for fixing Sonar simplification issues safely?",
+        "Which Sonar simplification rules are behaviour-preserving and easy to batch-fix?"
+      ],
+      "aliases": [
+        "simplification family",
+        "Sonar mechanical fixes"
+      ]
+    },
+    "S6397 — redundant single-character regex character class": {
+      "questions": [
+        "Sonar says replace this character class by the character itself in my replaceAll regex, how do I fix it without changing matching?",
+        "Why does my regex break when I replace [\\.] with a plain dot?",
+        "How do I edit the accent-stripping unicode tables safely when Sonar flags them?"
+      ],
+      "aliases": [
+        "regex redundant character class",
+        "single-character character class",
+        "S6397 fix"
+      ]
+    },
+    "S1125 — redundant boolean literal": {
+      "questions": [
+        "How do I remove == true or == false comparisons in a boolean expression?",
+        "How do I simplify a ternary that returns a boolean literal like cond ? x : true?"
+      ],
+      "aliases": [
+        "comparison with true",
+        "boolean literal comparison",
+        "ternary with boolean literal"
+      ]
+    },
+    "S1488 — inline an immediately-returned local": {
+      "questions": [
+        "Sonar says a local variable is immediately returned, how do I inline it?",
+        "How do I remove a temporary variable that is only used on the next line as the return value?"
+      ],
+      "aliases": [
+        "inline temporary variable",
+        "unnecessary local variable",
+        "return expression directly"
+      ]
+    },
+    "S1264 — a `for` with neither initializer nor update is a `while`": {
+      "questions": [
+        "Sonar says this for loop should be a while loop, how do I convert a for with no init or update?",
+        "How do I turn for (; cond; ) into a while loop in Java?"
+      ],
+      "aliases": [
+        "for loop to while loop",
+        "empty for loop header"
+      ]
+    },
+    "S3012 — replace a manual array/collection copy loop with a library call": {
+      "questions": [
+        "How do I replace a manual loop that copies an array into a list with a library call?",
+        "When is it safe to drop the new ArrayList wrapper around Arrays.asList(...).subList?"
+      ],
+      "aliases": [
+        "array copy loop",
+        "Collections.addAll",
+        "manual arraycopy"
+      ]
+    },
+    "S3024 — do not concatenate inside a `StringBuilder.append`": {
+      "questions": [
+        "Sonar says do not concatenate inside append, how do I split the string building into chained appends?",
+        "Why should I use a char literal instead of a string for a single-character append?"
+      ],
+      "aliases": [
+        "string concatenation in StringBuilder",
+        "append chaining",
+        "StringBuilder concatenation"
+      ]
+    },
+    "S1858 — pointless `toString()` on a `String`": {
+      "questions": [
+        "Sonar says toString on a String is pointless, is it safe to delete the call?",
+        "How do I remove a redundant toString call on a string variable?"
+      ],
+      "aliases": [
+        "redundant toString",
+        "useless toString call"
+      ]
+    },
+    "S1155 / S7158 — use `isEmpty()`": {
+      "questions": [
+        "Sonar says use isEmpty instead of size() == 0 or length() == 0, how do I fix it?",
+        "Does isEmpty exist on String, and why does Sonar flag a String length check when its message mentions StringBuilder?"
+      ],
+      "aliases": [
+        "size() == 0",
+        "length() == 0 check",
+        "isEmpty instead of length"
+      ]
+    },
+    "S2864 — iterate `entrySet()` rather than `keySet()` + `get(k)`": {
+      "questions": [
+        "Sonar says iterate entrySet instead of keySet and get, how do I rewrite a map loop?",
+        "When must I keep the keySet loop instead of switching to entrySet or values().forEach?"
+      ],
+      "aliases": [
+        "keySet get map iteration",
+        "Map.Entry loop",
+        "map iteration pattern"
+      ]
+    },
+    "S1612 — replace a lambda with a method reference": {
+      "questions": [
+        "Sonar says replace this lambda with a method reference, how do I do it without a compile error?",
+        "Why does my method reference fail with cannot find symbol after a Sonar fix?"
+      ],
+      "aliases": [
+        "lambda to method reference",
+        "method ref",
+        "Type::method"
+      ]
+    },
+    "S1602 — useless curly braces around a single-statement lambda body": {
+      "questions": [
+        "Sonar says useless curly braces around a lambda body, how do I remove them?",
+        "How do I drop the return keyword in a single-statement lambda block?"
+      ],
+      "aliases": [
+        "lambda braces",
+        "redundant braces in lambda",
+        "lambda block body"
+      ]
+    },
+    "S1126 — replace an if-then-else returning booleans with a single return": {
+      "questions": [
+        "How do I simplify an if that returns true in one branch and false in the other?",
+        "How do I negate a multi-part condition when collapsing an if-else into one boolean return?"
+      ],
+      "aliases": [
+        "return boolean if else",
+        "redundant if return true false",
+        "boolean return simplification"
+      ]
+    },
+    "S3706 — `.stream().forEach()` → `.forEach()`": {
+      "questions": [
+        "Sonar says stream().forEach is redundant, how do I remove the stream call?",
+        "Is it safe to call forEach directly on a collection instead of stream().forEach?"
+      ],
+      "aliases": [
+        "stream forEach",
+        "redundant stream call"
+      ]
+    },
+    "S2130 — parse instead of boxing then unboxing": {
+      "questions": [
+        "Sonar says parse instead of valueOf then unboxing, how do I fix Boolean.valueOf or Integer.valueOf?",
+        "What replaces new Boolean(s).booleanValue() in a primitive context?"
+      ],
+      "aliases": [
+        "Integer.valueOf to parseInt",
+        "boxing and unboxing",
+        "deprecated new Boolean"
+      ]
+    },
+    "S1066 — merge collapsible nested `if`": {
+      "questions": [
+        "How do I combine two nested if statements into one with &&?",
+        "When should I leave nested ifs alone because of an else or a comment between them?",
+        "How do I check brace balance after merging nested ifs?"
+      ],
+      "aliases": [
+        "collapsible if",
+        "nested if merge",
+        "combine if statements"
+      ]
+    },
+    "S6353 — use the concise character class": {
+      "questions": [
+        "Sonar says use the concise character class, can I replace [0-9] with \\d safely?",
+        "Does replacing [a-zA-Z0-9_] with \\w change how Java regex matches?"
+      ],
+      "aliases": [
+        "regex shorthand class",
+        "digit character class",
+        "\\d instead of [0-9]"
+      ]
+    },
+    "S1905 — remove an unnecessary cast": {
+      "questions": [
+        "Sonar says this cast is unnecessary, when can I safely remove it?",
+        "Why can removing a cast passed to an overloaded method break behaviour without a compile error?"
+      ],
+      "aliases": [
+        "redundant cast",
+        "unnecessary cast removal",
+        "overload cast"
+      ]
+    },
+    "S4201 — remove a null check made redundant by `instanceof`": {
+      "questions": [
+        "Sonar says this null check is redundant with instanceof, how do I remove it?",
+        "Is x != null && x instanceof T ever different from x instanceof T?"
+      ],
+      "aliases": [
+        "null check before instanceof",
+        "redundant null check"
+      ]
+    },
+    "S1596 — `Collections.EMPTY_LIST` → `Collections.emptyList()`": {
+      "questions": [
+        "Sonar says Collections.EMPTY_LIST should be replaced, what should I use instead?",
+        "How do I replace Collections.EMPTY_MAP or EMPTY_SET with a typed empty collection?"
+      ],
+      "aliases": [
+        "EMPTY_LIST",
+        "raw empty list",
+        "Collections.EMPTY_MAP"
+      ]
+    },
+    "S3358 — extract a nested ternary into its own statement": {
+      "questions": [
+        "Sonar flags a nested ternary, how do I rewrite it into a named local and a simpler expression?",
+        "When is it acceptable to name an inner ternary result with a local variable?"
+      ],
+      "aliases": [
+        "nested ternary operator",
+        "nested conditional expression",
+        "ternary readability"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which other notes should I read after a Sonar simplification fix?",
+        "Where is the Sonar rule map and the universal drop conditions for skipping a fix?",
+        "What build checks confirm a Sonar fix did not break anything?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "sonarqube/syntax-rules.md",
+      "sonarqube/verification.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "70b575ee89c59ce3bc0bc174afba85863d11963e9b296bf5bdf07ae8ef1c7c0b"
+}
