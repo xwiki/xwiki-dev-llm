@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -383,4 +383,102 @@ test('applies-when on the shipped KB: a content match points at the section its 
   assert.deepEqual(at('core/pom.xml', '      <groupId>com.fasterxml.jackson.core</groupId>'),
     ['conventions/dependencies.md#Accepting a new third-party dependency']);
   assert.equal(at('core/src/main/java/org/xwiki/A.java', '@Unstable')[0], 'conventions/backward-compatibility.md#`@Unstable` annotation');
+});
+
+// ---------------------------------------------------------------------------------------------
+// Skills as pointer targets
+
+const { SKILL_K, namedSkills } = await import('../../xwiki/scripts/kb-hooks.mjs');
+const { defaultSkillsRoot, readSkills, search } = await import('../../xwiki/scripts/kb-search.mjs');
+
+const skill = (name, description) => [`${name}/SKILL.md`, `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`];
+const SKILLS = fixtureKb(Object.fromEntries([
+  skill('xwiki-legacy', 'Move a deprecated API into its legacy module. Use when retiring a deprecated method. For the build use xwiki-build.'),
+  skill('xwiki-build', 'Build and test XWiki Maven modules with mvn.'),
+  skill('xwiki-review', '"EXPLICIT INVOCATION ONLY. A deep review of a deprecated legacy change."'),
+]));
+const SKILL_KB = fixtureKb({
+  'conventions/compat.md': topic('Backward compatibility', ['**/*.java'],
+    '## Deprecation\n\nDeprecate first, then retire the deprecated method to the legacy module later.'),
+  '_meta/skills.json': JSON.stringify({ 'xwiki-legacy': { 'applies-to': ['**/*.java'], 'applies-when': ['@Deprecated\\b'] } }),
+});
+const skillIndex = buildIndex(SKILL_KB, { skillsRoot: SKILLS });
+
+test('skills: indexed by name and own description; sibling routing and explicit-only skills left out', () => {
+  const byName = Object.fromEntries(readSkills(SKILLS).map((s) => [s.name, s]));
+  assert.deepEqual(Object.keys(byName), ['xwiki-build', 'xwiki-legacy']);
+  assert.doesNotMatch(byName['xwiki-legacy'].text, /build/);
+  assert.equal(byName['xwiki-legacy'].first, 'Move a deprecated API into its legacy module.');
+  // Only asked-for searches return skills; a KB index built without them has none.
+  assert.ok(search(skillIndex, 'retire deprecated legacy').every((h) => h.tag !== '[skill]'));
+  const [hit] = search(skillIndex, 'retire deprecated legacy', { skills: true }).filter((h) => h.tag === '[skill]');
+  assert.equal(hit.id, 'skill:xwiki-legacy');
+  assert.equal(Object.keys(buildIndex(SKILL_KB).files).some((f) => f.startsWith('skill:')), false);
+});
+
+test('skills: a prompt pointer reads "[skill] load <name> — <first sentence>", on top of the KB pointers', () => {
+  const hits = promptPointers(skillIndex, 'how do I retire a deprecated method to the legacy module', { minScore: 0 });
+  assert.equal(hits[0].id, 'skill:xwiki-legacy');
+  assert.ok(hits.some((h) => h.id === 'conventions/compat.md#Deprecation'));
+  assert.ok(promptPointers(skillIndex, 'retire deprecated legacy module', { minScore: 0, k: 0 }).every((h) => h.tag === '[skill]'));
+  const { text } = formatPointers(hits, 'KB');
+  assert.match(text, /A `\[skill\]` line names a skill to load/);
+  assert.match(text, /\n\[skill\] load xwiki-legacy — Move a deprecated API into its legacy module\.\n/);
+  assert.doesNotMatch(formatPointers(hits.filter((h) => h.tag !== '[skill]'), 'KB').text, /\[skill\]/);
+});
+
+test('skills: the edit hook matches a skill by applies-to and applies-when, apart from the KB slots', () => {
+  const ids = (added) => editPointers(skillIndex, 'core/src/main/java/A.java', { added }).map((h) => h.id);
+  assert.deepEqual(ids('    @Deprecated\n    void old();'), ['skill:xwiki-legacy', 'conventions/compat.md#Deprecation']);
+  assert.deepEqual(ids('void neu();'), ['conventions/compat.md#Deprecation']);
+  assert.equal(editPointers(skillIndex, 'core/src/main/java/A.java', { added: '@Deprecated', k: 0 }).length, 1);
+  assert.ok(SKILL_K >= 1);
+});
+
+test('skills: a loaded skill (Skill tool, or named in the prompt) is not pointed at again', () => {
+  const stateDir = mkdtempSync(join(tmpdir(), 'kb-hooks-seen-'));
+  const opts = { root: SKILL_KB, skillsRoot: SKILLS, cacheDir: null, stateDir, env: {} };
+  const load = { session_id: 's', cwd: scoped, hook_event_name: 'PreToolUse', tool_name: 'Skill',
+    tool_input: { skill: 'xwiki:xwiki-legacy' } };
+  assert.equal(runHook('skill', load, opts), '');
+  assert.ok(loadSeen('s', stateDir).has('skill:xwiki-legacy'));
+  const edit = claudeEdit(scoped, join(scoped, 'core/src/main/java/A.java'), '@Deprecated\nvoid old();', 's');
+  assert.doesNotMatch(runHook('edit', edit, opts), /\[skill\]/);
+  assert.deepEqual(namedSkills(skillIndex, '/xwiki:xwiki-legacy then xwiki-build, not xwiki-platform'),
+    ['skill:xwiki-legacy', 'skill:xwiki-build']);
+  runHook('prompt', claudePrompt(scoped, '/xwiki-build the core module please', 't'), opts);
+  assert.ok(loadSeen('t', stateDir).has('skill:xwiki-build'));
+});
+
+const fullIndex = loadIndex(defaultRoot(), { skillsRoot: defaultSkillsRoot() });
+
+test('skills on the shipped plugin: off-topic probes still get nothing; a task names its skill', () => {
+  for (const prompt of OFF_TOPIC) assert.deepEqual(promptPointers(fullIndex, prompt), [], prompt);
+  const ids = (p) => promptPointers(fullIndex, p).map((h) => h.id);
+  assert.ok(ids('remove the deprecated method from the main module and move it to the legacy module')
+    .includes('skill:xwiki-legacy'));
+  assert.ok(ids('write javadoc for the new public interface').includes('skill:xwiki-javadoc'));
+  const skills = Object.values(fullIndex.files).filter((f) => f.kind === 'skill');
+  assert.ok(skills.length > 20 && !fullIndex.files['skill:xwiki-review'], 'explicit-only skills are left out');
+});
+
+test('skills on the shipped plugin: _meta/skills.json names real skills and its regexes compile', () => {
+  const meta = JSON.parse(readFileSync(join(defaultRoot(), '_meta/skills.json'), 'utf8'));
+  for (const [name, m] of Object.entries(meta)) {
+    assert.ok(existsSync(join(defaultSkillsRoot(), name, 'SKILL.md')), name);
+    for (const re of m['applies-when'] ?? []) assert.doesNotThrow(() => new RegExp(re, 'm'), re);
+  }
+  const at = (path, added) => editPointers(fullIndex, path, { added }).filter((h) => h.tag === '[skill]').map((h) => h.id);
+  assert.ok(at('core/src/test/java/org/xwiki/ATest.java', '@Test void a() {}').includes('skill:xwiki-test-guidelines'));
+  assert.deepEqual(at('core/src/main/resources/ApplicationResources.properties', 'core.a.label=A'),
+    ['skill:xwiki-translations']);
+});
+
+test('opencode: a skill loaded through the skill tool is recorded for the session', async () => {
+  process.env.XWIKI_LLM_HOME = join(dirname(fileURLToPath(import.meta.url)), '../..');
+  const plugin = (await import('../../xwiki/opencode/plugins/xwiki-kb-pointers.js')).default;
+  const hooks = await plugin.server({ directory: scoped });
+  await hooks['tool.execute.after']({ tool: 'skill', sessionID: 'oc-skill', callID: 'c', args: { name: 'xwiki-legacy' } },
+    { title: 'skill', output: 'loaded', metadata: {} });
+  assert.ok(loadSeen('oc-skill').has('skill:xwiki-legacy'));
 });

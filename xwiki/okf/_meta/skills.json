@@ -1,0 +1,35 @@
+{
+  "xwiki-test-guidelines": {
+    "applies-to": ["**/src/test/**"]
+  },
+  "xwiki-increase-test-coverage": {
+    "applies-to": ["**/src/test/java/**/*.java"]
+  },
+  "xwiki-convert-tests": {
+    "applies-to": ["**/src/test/java/**/*.java"],
+    "applies-when": [
+      "^import org\\.junit\\.(Test|Before|After|BeforeClass|AfterClass|Rule|Assert)\\b",
+      "\\borg\\.jmock\\.",
+      "\\bMockitoComponentMockingRule\\b"
+    ]
+  },
+  "xwiki-legacy": {
+    "applies-to": ["**/*-legacy/**", "**/src/main/java/**/*.java", "**/*.aj"],
+    "applies-when": ["@Deprecated\\b"]
+  },
+  "xwiki-javadoc": {
+    "applies-to": ["**/src/main/java/**/*.java"],
+    "applies-when": ["^\\s*/\\*\\*", "^\\s*\\*\\s*@(param|return|throws|since)\\b"]
+  },
+  "xwiki-translations": {
+    "applies-to": ["**/*.properties", "**/*.vm", "**/src/main/resources/**/*.xml"],
+    "applies-when": [
+      "^\\s*[A-Za-z][\\w.-]*\\s*=",
+      "\\$services\\.localization\\.render\\b",
+      "\\{\\{translation\\b"
+    ]
+  },
+  "xwiki-xar-pages": {
+    "applies-to": ["**/src/main/resources/**/*.xml"]
+  }
+}

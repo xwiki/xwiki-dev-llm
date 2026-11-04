@@ -98,7 +98,8 @@ Inside `xwiki/`:
   which a static MCP manifest cannot express; the credential goes into a temporary 0600 profile
   file rather than on the command line, keeping it out of the process list.
 - **`skills/*/SKILL.md`** — one skill per directory; the `name`/`description` frontmatter is what
-  Claude matches against. Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
+  Claude matches against, and what the KB pointer hooks search to name a skill (the files an edit
+  points at a skill for are in `okf/_meta/skills.json`). Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
   cross-reference each other (e.g. `xwiki-convert-tests` vs `xwiki-convert-tests-docker`,
   `xwiki-test-guidelines` building on the others), so when editing one, check the others' "use X
   instead" pointers stay accurate. What only one branch of a run needs — or only a sub-agent reads —

@@ -61,6 +61,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" skill",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [

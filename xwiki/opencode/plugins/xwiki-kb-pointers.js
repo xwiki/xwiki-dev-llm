@@ -6,6 +6,7 @@
 //     text part. opencode 2.x has no documented hook on a submitted prompt, so there it is absent.
 //   - edit pointers: after an edit/write, appended to the tool result (opencode has no way to add
 //     context *before* a tool runs without refusing it, and these are advice, never a refusal).
+//   - a skill the session loads (the `skill` tool) is recorded, so no pointer names it again.
 //
 // Install it by symlinking (or copying) this file into one of opencode's plugin directories:
 //   ~/.config/opencode/plugins/   (global)   or   <repo>/.opencode/plugins/   (per project)
@@ -36,6 +37,8 @@ const loadHook = async () => {
 };
 
 const isFileWrite = (tool) => tool === "write" || tool === "edit";
+
+const skillPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { name: args?.name } });
 
 // The Claude Code Edit/Write tool input the shared hook reads, built from opencode's edit/write args
 // (edit: filePath, oldString, newString; write: filePath, content). Without `hook_event_name` the
@@ -68,6 +71,7 @@ const server = async ({ directory }) => {
       });
     },
     "tool.execute.after": async (input, output) => {
+      if (input.tool === "skill") hook("skill", skillPayload(input.sessionID, directory, input.args ?? output?.args));
       if (!isFileWrite(input.tool) || typeof output?.output !== "string") return;
       const text = hook("edit", editPayload(input.sessionID, directory, input.args ?? output?.args));
       if (text) output.output += `\n\n${text}`;
@@ -75,12 +79,16 @@ const server = async ({ directory }) => {
   };
 };
 
-// opencode 2.x plugin API: edit pointers only (see the header).
+// opencode 2.x plugin API: edit pointers and skill loads only (see the header).
 const setup = async (ctx) => {
   const hook = await loadHook();
   if (!hook) return;
   await ctx.tool.hook("execute.after", (event) => {
-    if (event.status !== "completed" || !isFileWrite(event.tool)) return;
+    if (event.status !== "completed") return;
+    if (event.tool === "skill") {
+      hook("skill", skillPayload(event.sessionID, event.input?.workdir ?? ctx.location?.directory, event.input));
+    }
+    if (!isFileWrite(event.tool)) return;
     const text = hook("edit", editPayload(event.sessionID, event.input?.workdir ?? ctx.location?.directory,
       event.input));
     if (!text) return;

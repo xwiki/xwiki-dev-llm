@@ -14,6 +14,11 @@
 // lives in a sidecar, `_meta/<topic path>.json` (`.md` → `.json`), so a model reading a topic never
 // pays for it. A sidecar whose `source_hash` no longer matches its topic's body is ignored.
 //
+// The pointer hooks (kb-hooks.mjs) also index the plugin's skills, each as one section — its name
+// and its description — tagged `[skill]`; their `applies-to`/`applies-when` live in `_meta/skills.json`
+// (`{ "<skill name>": { "applies-to": [...], "applies-when": [...] } }`), SKILL.md's frontmatter being
+// the hosts'. `search` returns skills only when asked (`skills: true`); the CLI never indexes them.
+//
 // Node built-ins only, so it runs unchanged under Claude Code, Kimi Code and opencode (Bun).
 
 import { createHash } from "node:crypto";
@@ -23,7 +28,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { kbIndexDir } from "./state-dir.mjs";
 
 // Bump whenever the index's shape or anything feeding it (tokenizer, fields, weights) changes.
-export const INDEX_FORMAT = 3;
+export const INDEX_FORMAT = 4;
 
 const FIELD_WEIGHTS = { heading: 3, questions: 2, context: 1, body: 1 };
 const K1 = 1.2;
@@ -35,12 +40,19 @@ const DEFAULT_K = 5;
 const FIRST_LINE_MAX = 160;
 const QUERY_MAX = 500;
 const META_DIR = "_meta";
+const SKILLS_META = `${META_DIR}/skills.json`;
+const SKILL_PREFIX = "skill:";
 
 /** The KB root shipped with the plugin: `xwiki/kb`, or `xwiki/okf` before the rename. */
 export function defaultRoot() {
   const plugin = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const kb = join(plugin, "kb");
   return existsSync(kb) ? kb : join(plugin, "okf");
+}
+
+/** The skills shipped with the plugin, beside the KB: `xwiki/skills`. */
+export function defaultSkillsRoot() {
+  return resolve(dirname(fileURLToPath(import.meta.url)), "..", "skills");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -247,14 +259,47 @@ export function isCorpusFile(rel) {
 }
 
 /** Cache key of a KB root: the index format plus every Markdown file's and sidecar's path, size and mtime. */
-export function indexKey(root) {
+export function indexKey(root, skillsRoot = null) {
   const h = createHash("sha256").update(`kb-search/${INDEX_FORMAT}\n`);
   const meta = listFiles(join(root, META_DIR), ".json", { skipMeta: false }).map((r) => `${META_DIR}/${r}`);
-  for (const rel of [...listMarkdown(root), ...meta]) {
-    const s = statSync(join(root, rel));
+  const stat = (base, rel) => {
+    const s = statSync(join(base, rel));
     h.update(`${rel}\t${s.size}\t${s.mtimeMs}\n`);
+  };
+  for (const rel of [...listMarkdown(root), ...meta]) stat(root, rel);
+  if (skillsRoot) {
+    h.update(`skills ${skillsRoot}\n`);
+    for (const { dir } of skillFiles(skillsRoot)) stat(skillsRoot, `${dir}/SKILL.md`);
   }
   return h.digest("hex");
+}
+
+function skillFiles(skillsRoot) {
+  if (!skillsRoot || !existsSync(skillsRoot)) return [];
+  return readdirSync(skillsRoot, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && existsSync(join(skillsRoot, e.name, "SKILL.md")))
+    .map((e) => ({ dir: e.name })).sort((a, b) => a.dir.localeCompare(b.dir));
+}
+
+/**
+ * The skills a pointer may name: per `<skillsRoot>/<dir>/SKILL.md`, its `name` and its `description`
+ * minus the sentences naming another `xwiki-*` skill (the "for X use Y" routing is about the sibling).
+ * A skill that only the developer may start (EXPLICIT INVOCATION ONLY, `disable-model-invocation`)
+ * is left out. Returns `[{ name, text, first }]`, `first` being the description's first sentence.
+ */
+export function readSkills(skillsRoot) {
+  const skills = [];
+  for (const { dir } of skillFiles(skillsRoot)) {
+    const { data } = parseFrontmatter(readFileSync(join(skillsRoot, dir, "SKILL.md"), "utf8"));
+    const name = String(data.name || dir);
+    const description = data.description ? String(data.description) : "";
+    if (!description || /EXPLICIT INVOCATION ONLY/i.test(description)
+      || String(data["disable-model-invocation"]) === "true") continue;
+    const sentences = description.split(/(?<=[.!?])\s+/);
+    const own = sentences.filter((x) => !(x.match(/\bxwiki-[a-z][\w-]*/g) || []).some((n) => n !== name));
+    skills.push({ name, text: own.join(" "), first: sentences[0] });
+  }
+  return skills;
 }
 
 function countInto(map, tokens, weight) {
@@ -263,7 +308,7 @@ function countInto(map, tokens, weight) {
 }
 
 /** Builds the index of a KB root (no cache involved). */
-export function buildIndex(root) {
+export function buildIndex(root, { skillsRoot = null } = {}) {
   const files = {};
   const sections = [];
   const postings = Object.create(null);
@@ -307,6 +352,26 @@ export function buildIndex(root) {
       for (const [t, w] of tf) (postings[t] ??= []).push(idx, w);
     }
   }
+  if (skillsRoot) {
+    let applies = {};
+    try {
+      applies = JSON.parse(readFileSync(join(root, SKILLS_META), "utf8")) || {};
+    } catch { /* no skill metadata: skills match prompts only */ }
+    for (const { name, text, first } of readSkills(skillsRoot)) {
+      const file = `${SKILL_PREFIX}${name}`;
+      const a = Object.hasOwn(applies, name) ? applies[name] : {};
+      files[file] = { title: name, kind: "skill", status: null, stability: null, versions: null, lastConfirmed: null,
+        provenance: null, related: [], appliesTo: asList(a["applies-to"]).map(String),
+        appliesWhen: asList(a["applies-when"]).map(String) };
+      const tf = new Map();
+      let length = countInto(tf, tokenize(name), FIELD_WEIGHTS.heading);
+      length += countInto(tf, tokenize(text), FIELD_WEIGHTS.body);
+      const idx = sections.length;
+      sections.push({ file, section: name, first: firstLine(first), length });
+      totalLength += length;
+      for (const [t, w] of tf) (postings[t] ??= []).push(idx, w);
+    }
+  }
   const glossaryPath = join(root, "glossary.md");
   const glossary = existsSync(glossaryPath) ? parseGlossary(readFileSync(glossaryPath, "utf8")) : [];
   return {
@@ -323,17 +388,19 @@ export function buildIndex(root) {
  * The index of a KB root, from the cache when its key still matches, else rebuilt and cached.
  * A cache that cannot be read or written is ignored. `cacheDir: null` disables the cache.
  */
-export function loadIndex(root = defaultRoot(), { cacheDir = kbIndexDir() } = {}) {
+export function loadIndex(root = defaultRoot(), { cacheDir = kbIndexDir(), skillsRoot = null } = {}) {
   const abs = resolve(root);
-  const key = indexKey(abs);
-  const file = cacheDir && join(cacheDir, `${createHash("sha256").update(abs).digest("hex").slice(0, 16)}.json`);
+  const skills = skillsRoot ? resolve(skillsRoot) : null;
+  const key = indexKey(abs, skills);
+  const name = createHash("sha256").update(skills ? `${abs}\n${skills}` : abs).digest("hex").slice(0, 16);
+  const file = cacheDir && join(cacheDir, `${name}.json`);
   if (file) {
     try {
       const cached = JSON.parse(readFileSync(file, "utf8"));
       if (cached.key === key) return cached.index;
     } catch { /* missing or unreadable: rebuild */ }
   }
-  const index = buildIndex(abs);
+  const index = buildIndex(abs, { skillsRoot: skills });
   if (file) {
     try {
       mkdirSync(cacheDir, { recursive: true });
@@ -404,6 +471,7 @@ export function versionMatches(constraint, version) {
 
 /** Tag shown with a hit: how much authority the section carries (a superseded ADR carries none). */
 export function tagOf(fileMeta, file) {
+  if (fileMeta.kind === "skill") return "[skill]";
   if (fileMeta.status === "proposed") return "[proposed: under discussion]";
   if (fileMeta.status === "superseded" || fileMeta.status === "deprecated") return "[superseded]";
   if (file.startsWith("decisions/") && fileMeta.status === "accepted") return "[ADR]";
@@ -420,10 +488,10 @@ function resolveRelated(index, ref) {
 
 /**
  * Searches an index. Options: `k` (default 5), `version` (drops sections whose file's `versions`
- * excludes it). Returns `[{ id, file, section, title, first, score, tag, related }]`, where
+ * excludes it), `skills` (also return the skills of an index built with them; id `skill:<name>`). Returns `[{ id, file, section, title, first, score, tag, related }]`, where
  * `related` lists `{ file, title }` one-hop pointers not already among the results.
  */
-export function search(index, query, { k = DEFAULT_K, version } = {}) {
+export function search(index, query, { k = DEFAULT_K, version, skills = false } = {}) {
   const N = index.sections.length;
   const scores = new Map();
   for (const [term, qw] of queryTerms(query, index.glossary)) {
@@ -439,6 +507,7 @@ export function search(index, query, { k = DEFAULT_K, version } = {}) {
     }
   }
   let ranked = [...scores]
+    .filter(([s]) => skills || index.files[index.sections[s].file].kind !== "skill")
     .filter(([s]) => !version || versionMatches(index.files[index.sections[s].file].versions, version))
     .sort((a, b) => b[1] - a[1] || a[0] - b[0]);
 
@@ -461,16 +530,7 @@ export function search(index, query, { k = DEFAULT_K, version } = {}) {
     const n = perFile.get(sec.file) || 0;
     if (n >= PER_FILE) continue;
     perFile.set(sec.file, n + 1);
-    const meta = index.files[sec.file];
-    hits.push({
-      id: `${sec.file}#${sec.section}`,
-      file: sec.file,
-      section: sec.section,
-      title: meta.title,
-      first: sec.first,
-      score: Math.round(score * 1000) / 1000,
-      tag: tagOf(meta, sec.file),
-    });
+    hits.push(sectionHit(index, sec, Math.round(score * 1000) / 1000));
   }
   const seen = new Set(hits.map((h) => h.file));
   for (const h of hits) {
@@ -483,6 +543,13 @@ export function search(index, query, { k = DEFAULT_K, version } = {}) {
     }
   }
   return hits;
+}
+
+/** The hit of one indexed section: `file#Section`, or `skill:<name>` for a skill. */
+export function sectionHit(index, sec, score = 0) {
+  const meta = index.files[sec.file];
+  return { id: meta.kind === "skill" ? sec.file : `${sec.file}#${sec.section}`, file: sec.file, section: sec.section,
+    title: meta.title, first: sec.first, score, tag: tagOf(meta, sec.file) };
 }
 
 /** Searches a KB root, through the index cache. */

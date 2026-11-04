@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 // Knowledge-base pointer hooks: they inject *pointers* into the KB (`[tag] file#Section — Title: first
-// line`), never section bodies, so the model reads only the section it needs. Two of them:
+// line`) and to the plugin's skills (`[skill] load xwiki-legacy — first sentence`), never bodies, so the
+// model reads only the section, or loads only the skill, it needs. Skills are searched by their name and
+// description and matched by `_meta/skills.json` (see kb-search.mjs); up to SKILL_K of them come on top
+// of a hook's KB pointers. The hooks:
 //
 //   node kb-hooks.mjs prompt   UserPromptSubmit — searches the KB with the prompt; ≤5 pointers, and
 //                              only those whose BM25 score clears MIN_SCORE.
 //   node kb-hooks.mjs edit     PreToolUse on Edit/Write — matches the target path against the topics'
 //                              `applies-to:` globs and the text the edit adds against their
 //                              `applies-when:` regexes; ≤3 pointers. Advice only: it never blocks.
+//   node kb-hooks.mjs skill    PreToolUse on Skill — records the loaded skill, so it is not pointed at.
+//                              A skill named in a prompt (`/xwiki-legacy`) counts as loaded too.
 //
 // `applies-when:` narrows a topic to edits that add matching text: a block list (`  - '<regex>'`,
 // single-quoted, no YAML escaping — an inline `[a, b]` list would split a regex on its commas) of
@@ -30,12 +35,16 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync,
 import { isAbsolute, join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { defaultRoot, loadIndex, promptToQuery, search, tagOf, tokenize } from "./kb-search.mjs";
+import { defaultRoot, defaultSkillsRoot, loadIndex, promptToQuery, search, sectionHit, tagOf, tokenize }
+  from "./kb-search.mjs";
 import { isScopedRepo } from "./repo-scope.mjs";
 import { kbHookStateDir } from "./state-dir.mjs";
 
 export const PROMPT_K = 5;
 export const EDIT_K = 3;
+// Skill pointers a hook may add on top of its KB ones: a skill is a task's whole procedure, so it is
+// not made to compete with the sections for the same few slots.
+export const SKILL_K = 2;
 // Minimum BM25 score of a prompt-hook pointer. Probes (tests/kb-hooks/): chat that is not about XWiki
 // tops out below 7 ("what's the weather" 0, "make this function faster" 6.8); a question the KB does
 // answer gets its right section at 8.1 and above ("where do I put a data migration" 8.1, "which JIRA
@@ -92,14 +101,17 @@ export function saveSeen(sessionId, seen, dir = kbHookStateDir(), now = Date.now
 
 /** A pointer is skipped for a superseded/deprecated entry, which carries no authority. */
 const usable = (hit) => hit.tag !== "[superseded]";
+const isSkill = (hit) => hit.tag === "[skill]";
+
+/** Up to SKILL_K skills, then up to `k` KB pointers, each in rank order. */
+const capKinds = (hits, k) => [...hits.filter(isSkill).slice(0, SKILL_K), ...hits.filter((h) => !isSkill(h)).slice(0, k)];
 
 /** Prompt hook: the KB sections worth pointing at for a prompt, minus those already given. */
 export function promptPointers(index, prompt, { seen = new Set(), k = PROMPT_K, minScore = MIN_SCORE } = {}) {
   const query = promptToQuery(prompt);
   if (new Set(tokenize(query)).size < MIN_PROMPT_TERMS) return [];
-  return search(index, query, { k: k * 3 })
-    .filter((h) => h.score >= minScore && usable(h) && !seen.has(h.id))
-    .slice(0, k);
+  return capKinds(search(index, query, { k: (k + SKILL_K) * 3, skills: true })
+    .filter((h) => h.score >= minScore && usable(h) && !seen.has(h.id)), k);
 }
 
 /** A glob (`**`, `*`, `?`) as an anchored RegExp over `/`-separated paths. */
@@ -211,7 +223,7 @@ export function editPointers(index, filePath, { projectDir, seen = new Set(), k 
   const words = tokenize(path.replace(/\.[^./]+$/, "")).filter((t) => !GENERIC_PATH_TERMS.has(t));
   const best = new Map();
   if (words.length) {
-    for (const h of search(index, words.join(" "), { k: index.sections.length })) {
+    for (const h of search(index, words.join(" "), { k: index.sections.length, skills: true })) {
       if (!best.has(h.file)) best.set(h.file, h);
     }
   }
@@ -227,27 +239,20 @@ export function editPointers(index, filePath, { projectDir, seen = new Set(), k 
     if (!matched) return best.get(file) ?? firstSectionHit(index, file);
     const terms = new Set(tokenize(matched));
     const named = index.sections.find((s) => s.file === file && tokenize(s.section).some((t) => terms.has(t)));
-    if (!named) return firstSectionHit(index, file);
-    const meta = index.files[file];
-    return { id: `${file}#${named.section}`, file, section: named.section, title: meta.title, first: named.first,
-      score: 0, tag: tagOf(meta, file) };
+    return named ? sectionHit(index, named) : firstSectionHit(index, file);
   };
   const hits = [];
   for (const { file, matched } of candidates) {
-    if (hits.length >= k) break;
     const meta = index.files[file];
     const hit = sectionFor(file, matched);
-    if (hit && usable({ tag: tagOf(meta, file) })) hits.push(hit);
+    if (hit && usable({ tag: tagOf(meta, file) })) hits.push({ ...hit, content: Boolean(matched) });
   }
-  return hits;
+  return capKinds(hits, k);
 }
 
 function firstSectionHit(index, file) {
   const sec = index.sections.find((s) => s.file === file);
-  if (!sec) return null;
-  const meta = index.files[file];
-  return { id: `${file}#${sec.section}`, file, section: sec.section, title: meta.title, first: sec.first,
-    score: 0, tag: tagOf(meta, file) };
+  return sec ? sectionHit(index, sec) : null;
 }
 
 /**
@@ -257,13 +262,12 @@ function firstSectionHit(index, file) {
 export function formatPointers(hits, kbRoot, { subject } = {}) {
   const header = `XWiki KB pointers${subject ? ` for ${subject}` : ""} — candidates, not answers. If one `
     + `looks relevant, Read only its named \`## Section\` of the file under ${kbRoot}/; `
-    + "`[proposed: under discussion]` entries are not rules.";
+    + "`[proposed: under discussion]` entries are not rules."
+    + (hits.some(isSkill) ? " A `[skill]` line names a skill to load before doing that work." : "");
   let text = header;
   const ids = [];
   for (const h of hits) {
-    const first = h.first.length > FIRST_LINE_MAX ? `${h.first.slice(0, FIRST_LINE_MAX - 1)}…` : h.first;
-    const title = h.title === h.section ? "" : ` — ${h.title}`;
-    const line = `\n${h.tag} ${h.id}${title}${first ? `: ${first}` : ""}`;
+    const line = `\n${pointerLine(h)}`;
     if (text.length + line.length > MAX_CHARS) break;
     text += line;
     ids.push(h.id);
@@ -271,24 +275,56 @@ export function formatPointers(hits, kbRoot, { subject } = {}) {
   return { text: ids.length ? text : "", ids };
 }
 
+/** One pointer line: `[tag] file#Section — Title: first line`, or `[skill] load <name> — first sentence`. */
+function pointerLine(h) {
+  const first = h.first.length > FIRST_LINE_MAX ? `${h.first.slice(0, FIRST_LINE_MAX - 1)}…` : h.first;
+  if (isSkill(h)) return `[skill] load ${h.title}${first ? ` — ${first}` : ""}`;
+  const title = h.title === h.section ? "" : ` — ${h.title}`;
+  return `${h.tag} ${h.id}${title}${first ? `: ${first}` : ""}`;
+}
+
+/** The ids of the indexed skills a text names (`/xwiki-legacy`, `xwiki:xwiki-legacy`, `xwiki-legacy`). */
+export function namedSkills(index, text) {
+  const ids = (String(text).match(/xwiki-[a-z][\w-]*/g) || []).map((n) => `skill:${n}`);
+  return [...new Set(ids)].filter((id) => index.files[id]?.kind === "skill");
+}
+
 // ---------------------------------------------------------------------------------------------
 // Hook entry points
 
 /**
  * Runs a hook on its stdin payload. Returns the text to inject, or "" for nothing. Options exist for
- * the tests: `root` (KB), `cacheDir` (index cache, `null` disables), `stateDir`, `env`.
+ * the tests: `root` (KB), `skillsRoot` (the skills; by default the plugin's with the shipped KB, none
+ * with another), `cacheDir` (index cache, `null` disables), `stateDir`, `env`.
  */
-export function runHook(kind, payload, { root = defaultRoot(), cacheDir, stateDir = kbHookStateDir(),
+export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cacheDir, stateDir = kbHookStateDir(),
   env = process.env } = {}) {
   const projectDir = payload.cwd || env.CLAUDE_PROJECT_DIR || process.cwd();
   if (!isScopedRepo(projectDir, env)) return "";
-  const index = loadIndex(root, cacheDir === undefined ? {} : { cacheDir });
+  const skills = skillsRoot === undefined ? (root === defaultRoot() ? defaultSkillsRoot() : null) : skillsRoot;
+  const index = loadIndex(root, { ...(cacheDir === undefined ? {} : { cacheDir }), skillsRoot: skills });
   const seen = loadSeen(payload.session_id, stateDir);
+  const save = () => {
+    try {
+      saveSeen(payload.session_id, seen, stateDir);
+    } catch { /* an unwritable state dir costs the dedupe, not the pointers */ }
+  };
   let hits;
   let subject;
-  if (kind === "prompt") {
+  if (kind === "skill") {
+    const ids = namedSkills(index, `xwiki-${String(payload.tool_input?.skill ?? payload.tool_input?.name ?? "")
+      .replace(/^(?:.*:)?xwiki-/, "")}`);
+    if (ids.some((id) => !seen.has(id))) {
+      for (const id of ids) seen.add(id);
+      save();
+    }
+    return "";
+  } else if (kind === "prompt") {
     if (typeof payload.prompt !== "string") return "";
+    const loaded = namedSkills(index, payload.prompt);
+    for (const id of loaded) seen.add(id);
     hits = promptPointers(index, payload.prompt, { seen });
+    if (!hits.length && loaded.length) save();
   } else if (kind === "edit") {
     const input = payload.tool_input || {};
     if (!input.file_path) return "";
@@ -309,9 +345,7 @@ export function runHook(kind, payload, { root = defaultRoot(), cacheDir, stateDi
   const { text, ids } = formatPointers(hits, root.split(sep).join("/"), { subject });
   if (!ids.length) return "";
   for (const id of ids) seen.add(id);
-  try {
-    saveSeen(payload.session_id, seen, stateDir);
-  } catch { /* an unwritable state dir costs the dedupe, not the pointers */ }
+  save();
   return text;
 }
 
