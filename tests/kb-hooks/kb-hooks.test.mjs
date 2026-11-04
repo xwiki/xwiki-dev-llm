@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 process.env.XDG_STATE_HOME = mkdtempSync(join(tmpdir(), 'kb-hooks-state-'));
 const {
-  MAX_CHARS, MIN_SCORE, editPointers, formatPointers, globSpecificity, globToRegExp, hookOutput, loadSeen,
+  MAX_CHARS, MIN_SCORE, addedText, editPointers, formatPointers, globSpecificity, globToRegExp, hookOutput, loadSeen,
   promptPointers, runHook, saveSeen,
 } = await import('../../xwiki/scripts/kb-hooks.mjs');
 const { buildIndex, defaultRoot, loadIndex } = await import('../../xwiki/scripts/kb-search.mjs');
@@ -164,6 +164,101 @@ test('edit: the hook on a real Write payload, in a scoped repo', () => {
   assert.match(text, /\n\[rule\] conventions\/frontend\.md#Bundling — Front-end: Use webjars\.$/);
 });
 
+// applies-when: topics that matter only when the edit adds a given kind of text. Block-list
+// regexes, single-quoted, as a topic writes them; one does not compile and must be ignored.
+const whenTopic = (title, appliesTo, when, body) => `---\ntitle: ${title}\nstability: durable\n`
+  + (appliesTo ? `applies-to: [${appliesTo.map((g) => `"${g}"`).join(', ')}]\n` : '')
+  + `applies-when:\n${when.map((w) => `  - '${w}'`).join('\n')}\n---\n\n# ${title}\n\n${body}\n`;
+const WHEN_KB = fixtureKb({
+  'conventions/dependencies.md': whenTopic('Dependencies', ['**/pom.xml'],
+    ['<groupId>(?!org\\.xwiki\\b|\\$\\{)[^<]+</groupId>'], '## Third-party dependencies\n\nAsk first.'),
+  'conventions/logging.md': whenTopic('Logging', ['**/*.java'],
+    ['\\b(?:LOGGER|logger)\\.(?:trace|debug|info|warn|error)\\(', '\\bLoggerFactory\\.getLogger\\('],
+    '## Levels\n\nUse debug for internals.'),
+  'conventions/versioning.md': whenTopic('Versioning', null, ['@since\\s', '([unclosed'],
+    '## Since\n\nUse the next version.'),
+  'architecture/component-system.md': topic('Component system', ['**/*.java'], '## Components\n\nUse @Component.'),
+});
+const whenIndex = buildIndex(WHEN_KB);
+const POM_DEPS = `    <dependency>
+      <groupId>org.xwiki.commons</groupId>
+      <artifactId>xwiki-commons-component-api</artifactId>
+      <version>\${commons.version}</version>
+    </dependency>`;
+const pomEdit = (newDeps) => claudeEdit(scoped, join(scoped, 'xwiki-platform-core/xwiki-platform-mail/pom.xml'),
+  newDeps).tool_input;
+const pointedFiles = (input, path = input.file_path) =>
+  editPointers(whenIndex, path, { projectDir: scoped, added: addedText(input) }).map((h) => h.file);
+
+test('applies-when: a third-party dependency added to a pom points at the dependency rules', () => {
+  const input = { ...pomEdit(`${POM_DEPS}
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>`), old_string: POM_DEPS };
+  assert.deepEqual(pointedFiles(input), ['conventions/dependencies.md']);
+});
+
+test('applies-when: a version bump or an org.xwiki dependency in a pom points at nothing', () => {
+  const bump = { ...pomEdit(POM_DEPS.replace('${commons.version}', '17.10.0')), old_string: POM_DEPS };
+  assert.deepEqual(pointedFiles(bump), []);
+  const xwikiDep = { ...pomEdit(`${POM_DEPS}
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-oldcore</artifactId>
+      <version>\${project.version}</version>
+    </dependency>`), old_string: POM_DEPS };
+  assert.deepEqual(pointedFiles(xwikiDep), []);
+  const sameModule = { ...pomEdit('<groupId>${project.groupId}</groupId>'), old_string: '' };
+  assert.deepEqual(pointedFiles(sameModule), []);
+});
+
+test('applies-when: logging added to Java ranks above the path-only topic; context lines do not count', () => {
+  const path = join(scoped, 'core/src/main/java/org/xwiki/mail/internal/DefaultMailSender.java');
+  const old = '    public void send(Mail mail)\n    {\n        this.queue.add(mail);';
+  const logged = { file_path: path, old_string: old,
+    new_string: `${old}\n        this.logger.debug("Queued mail [{}]", mail);`, replace_all: false };
+  assert.deepEqual(pointedFiles(logged), ['conventions/logging.md', 'architecture/component-system.md']);
+  // The logger call was already there: moving a line next to it adds no logging.
+  const context = { file_path: path, old_string: `${old}\n        this.logger.debug("Queued");`,
+    new_string: `    public void send(Mail mail)\n    {\n        this.logger.debug("Queued");\n        this.queue.add(mail);`,
+    replace_all: false };
+  assert.deepEqual(pointedFiles(context), ['architecture/component-system.md']);
+});
+
+test('applies-when: no applies-to means any path; an invalid regex is ignored, the valid one still matches', () => {
+  const input = { file_path: join(scoped, 'ui/src/main/resources/Main/WebHome.xml'), old_string: 'x',
+    new_string: ' * @since 18.0.0RC1' };
+  assert.deepEqual(pointedFiles(input), ['conventions/versioning.md']);
+  assert.deepEqual(pointedFiles({ ...input, new_string: 'no tag here' }), []);
+});
+
+test('applies-when: MultiEdit edits, Write against the file it replaces, unknown text', () => {
+  const multi = { file_path: 'X.java', edits: [
+    { old_string: 'a', new_string: 'b', replace_all: false },
+    { old_string: 'c', new_string: 'c\n * @since 18.0.0', replace_all: false }] };
+  assert.equal(addedText(multi), 'b\n * @since 18.0.0');
+  const write = { file_path: 'X.java', content: 'class X\n{\n    /** @since 1.0 */\n}\n' };
+  assert.equal(addedText(write, 'class X\n{\n    /** @since 1.0 */\n}\n'), '');
+  assert.match(addedText(write, null), /@since/);
+  assert.equal(addedText({ file_path: 'X.java' }), null);
+  // Without the added text (an opencode edit with no args), a content-conditioned topic stays out.
+  assert.deepEqual(editPointers(whenIndex, 'Foo.java', {}).map((h) => h.file), ['architecture/component-system.md']);
+});
+
+test('applies-when: the hook reads the file a Claude Code Write overwrites, so unchanged text is not added', () => {
+  const stateDir = mkdtempSync(join(tmpdir(), 'kb-hooks-seen-'));
+  const file = join(scoped, 'src/main/java/Old.java');
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, 'class Old\n{\n    /** @since 1.0 */\n    void a() {}\n}\n');
+  const opts = { root: WHEN_KB, cacheDir: null, stateDir, env: {} };
+  const rewrite = (session, content) => runHook('edit', claudeEdit(scoped, file, content, session, 'Write'), opts);
+  assert.doesNotMatch(rewrite('w1', 'class Old\n{\n    /** @since 1.0 */\n    void a() { b(); }\n}\n'),
+    /versioning/);
+  assert.match(rewrite('w2', 'class Old\n{\n    /** @since 1.0 */\n    void a() {}\n    /** @since 2.0 */\n}\n'),
+    /versioning\.md#Since/);
+});
+
 test('globs: `**/` spans any depth, `*` stays within a segment', () => {
   assert.ok(globToRegExp('**/src/main/java/**/*.java').test('a/b/src/main/java/org/X.java'));
   assert.ok(globToRegExp('**/pom.xml').test('pom.xml'));
@@ -281,4 +376,11 @@ test('opencode: 1.x appends prompt pointers as a synthetic part and edit pointer
   const quiet = { message: { id: 'm' }, parts: [{ type: 'text', text: 'how do I add a translation key' }] };
   await off['chat.message']({ sessionID: 'oc-2' }, quiet);
   assert.equal(quiet.parts.length, 1);
+});
+
+test('applies-when on the shipped KB: a content match points at the section its matched line names', () => {
+  const at = (path, added) => editPointers(realIndex, path, { added }).map((h) => h.id);
+  assert.deepEqual(at('core/pom.xml', '      <groupId>com.fasterxml.jackson.core</groupId>'),
+    ['conventions/dependencies.md#Accepting a new third-party dependency']);
+  assert.equal(at('core/src/main/java/org/xwiki/A.java', '@Unstable')[0], 'conventions/backward-compatibility.md#`@Unstable` annotation');
 });

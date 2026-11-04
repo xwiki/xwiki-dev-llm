@@ -13,6 +13,10 @@ sources:
 provenance: official
 last-confirmed: 2026-07-22
 related: [architecture/component-system.md, servers/index.md]
+applies-to: ["**/xwiki.properties*", "**/*.java"]
+applies-when:
+  - '^#?\s*solr\.'
+  - '\bSolrCoreInitializer\b'
 ---
 
 # Solr search backend

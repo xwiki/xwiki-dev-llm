@@ -9,7 +9,11 @@ sources:
 provenance: official
 last-confirmed: 2026-09-12
 related: [architecture/platform-modules.md, architecture/module-design.md, conventions/code-style.md]
-applies-to: ["**/META-INF/components.txt"]
+applies-to: ["**/META-INF/components.txt", "**/src/main/java/**/*.java"]
+applies-when:
+  - '^\s*@(?:Component|Role|InstantiationStrategy)\b'
+  - '\bextends\s+Abstract(?:Local)?EventListener\b'
+  - '^(?:\d+:)?[a-z]\w*(?:\.\w+)*\.[A-Z]\w*\s*$'
 ---
 
 # The XWiki component system

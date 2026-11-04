@@ -10,7 +10,12 @@ sources:
 provenance: official
 last-confirmed: 2026-10-22
 related: [conventions/backward-compatibility.md, architecture/component-system.md, conventions/code-comments.md, sonarqube/index.md]
-applies-to: ["**/*-legacy/**"]
+applies-to: ["**/*.java", "**/pom.xml"]
+applies-when:
+  - '^import\s+javax\.(?:inject|annotation|servlet|ws\.rs|validation)\.'
+  - '@SuppressWarnings\(\s*"java:'
+  - '^\s*/\*\*\s*\S.*\*/\s*$'
+  - '\bsonar\.issue\.ignore\b'
 ---
 
 # Code style and structural conventions

@@ -37,11 +37,15 @@ const loadHook = async () => {
 
 const isFileWrite = (tool) => tool === "write" || tool === "edit";
 
-// The Claude Code PreToolUse payload the shared hook reads, built from opencode's edit/write args.
+// The Claude Code Edit/Write tool input the shared hook reads, built from opencode's edit/write args
+// (edit: filePath, oldString, newString; write: filePath, content). Without `hook_event_name` the
+// hook does not read the file a write replaced: it runs after the write, so the file is the new
+// content already.
 const editPayload = (sessionID, cwd, args) => ({
   session_id: sessionID,
   cwd,
-  tool_input: { file_path: args?.filePath, new_string: args?.newString, content: args?.content },
+  tool_input: { file_path: args?.filePath, old_string: args?.oldString, new_string: args?.newString,
+    content: args?.content },
 });
 
 // opencode 1.x plugin API.

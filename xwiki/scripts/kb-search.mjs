@@ -23,7 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { kbIndexDir } from "./state-dir.mjs";
 
 // Bump whenever the index's shape or anything feeding it (tokenizer, fields, weights) changes.
-export const INDEX_FORMAT = 2;
+export const INDEX_FORMAT = 3;
 
 const FIELD_WEIGHTS = { heading: 3, questions: 2, context: 1, body: 1 };
 const K1 = 1.2;
@@ -283,6 +283,7 @@ export function buildIndex(root) {
       provenance: data.provenance || null,
       related: asList(data.related).map(String),
       appliesTo: asList(data["applies-to"]).map(String),
+      appliesWhen: asList(data["applies-when"]).map(String),
     };
     const questions = tokenize([...asList(data.questions), ...asList(data.aliases)].join("\n"));
     const context = tokenize(`${title}\n${summary}`);

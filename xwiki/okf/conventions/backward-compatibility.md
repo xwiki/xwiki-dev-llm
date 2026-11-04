@@ -10,7 +10,14 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [conventions/versioning.md, conventions/code-style.md, processes/release-notes.md, decisions/check-binary-not-source-compatibility.md]
-applies-to: ["**/*-legacy/**"]
+applies-to: ["**/*.java", "**/*.aj", "**/pom.xml"]
+applies-when:
+  - '@Unstable\b'
+  - '^\s*default\s+(?!:)[\w<>?,.\[\] ]+\s+\w+\s*\('
+  - '@Deprecated\b'
+  - '<revapi\.differences\b'
+  - '<xwiki\.revapi\.skip>'
+  - '\bdeclare\s+parents\b'
 ---
 
 # Backward compatibility policy

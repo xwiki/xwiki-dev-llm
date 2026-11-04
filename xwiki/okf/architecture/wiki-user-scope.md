@@ -13,6 +13,10 @@ sources:
 provenance: official
 last-confirmed: 2026-07-03
 related: [architecture/wiki-application-data.md, architecture/platform-modules.md]
+applies-when:
+  - '\bUserScope\b'
+  - '\buserScope\b'
+  - '\bWikiUserConfiguration\b'
 ---
 
 # Subwiki user scope (local vs global users and groups)

@@ -5,7 +5,17 @@
 //   node kb-hooks.mjs prompt   UserPromptSubmit — searches the KB with the prompt; ≤5 pointers, and
 //                              only those whose BM25 score clears MIN_SCORE.
 //   node kb-hooks.mjs edit     PreToolUse on Edit/Write — matches the target path against the topics'
-//                              `applies-to:` globs; ≤3 pointers. Advice only: it never blocks.
+//                              `applies-to:` globs and the text the edit adds against their
+//                              `applies-when:` regexes; ≤3 pointers. Advice only: it never blocks.
+//
+// `applies-when:` narrows a topic to edits that add matching text: a block list (`  - '<regex>'`,
+// single-quoted, no YAML escaping — an inline `[a, b]` list would split a regex on its commas) of
+// JavaScript regexes, compiled with the `m` flag only, so case-sensitive (spell out `[Ll]ogger`) and
+// `^`/`$` anchor at lines. One matching regex is enough. Such a topic matches only when its globs
+// match the path (no `applies-to:` = any path) and a regex matches the added text, and ranks above
+// every path-only match. The added text is Edit's `new_string` minus the lines already in its
+// `old_string` (unchanged context), each MultiEdit edit's likewise, and Write's `content` minus the
+// lines of the file it overwrites. A regex that does not compile is ignored.
 //
 // Both run only in repos repo-scope.mjs accepts, give a session each pointer once (state under
 // state-dir.mjs's kbHookStateDir(), keyed by session id), and never fail the prompt or the edit:
@@ -137,19 +147,64 @@ export function matchPath(filePath, projectDir) {
   return p.split(sep).join("/");
 }
 
+/** The lines of `text` whose trimmed form is not among `before`'s, joined back: what an edit adds. */
+function linesNotIn(text, before) {
+  const old = new Set(String(before ?? "").split("\n").map((l) => l.trim()));
+  return String(text).split("\n").filter((l) => l.trim() && !old.has(l.trim())).join("\n");
+}
+
 /**
- * Edit hook: the KB files whose `applies-to:` globs match the edited path, most specific glob first,
- * ties broken by the BM25 score of the file's best section against the path's words.
+ * The text a Claude Code Edit / MultiEdit / Write tool input adds, or null when the input carries
+ * none. `previous` is the content a Write overwrites (null for a new file or when unknown).
  */
-export function editPointers(index, filePath, { projectDir, seen = new Set(), k = EDIT_K } = {}) {
+export function addedText(input, previous = null) {
+  if (!input) return null;
+  if (Array.isArray(input.edits)) {
+    return input.edits.filter((e) => typeof e?.new_string === "string")
+      .map((e) => linesNotIn(e.new_string, e.old_string)).join("\n");
+  }
+  if (typeof input.new_string === "string") return linesNotIn(input.new_string, input.old_string);
+  if (typeof input.content === "string") return linesNotIn(input.content, previous);
+  return null;
+}
+
+const regexCache = new Map();
+/** A topic's `applies-when:` regex, compiled once; null when it does not compile. */
+function whenRegExp(source) {
+  if (!regexCache.has(source)) {
+    let re = null;
+    try {
+      re = new RegExp(source, "m");
+    } catch { /* an invalid regex is ignored, never an error */ }
+    regexCache.set(source, re);
+  }
+  return regexCache.get(source);
+}
+
+/**
+ * Edit hook: the KB files that apply to the edit — `applies-to:` globs matching the edited path and,
+ * for a topic with `applies-when:`, a regex matching `added` (the added text; null when unknown,
+ * which leaves such topics out). Content matches first, then the most specific glob, ties broken
+ * by the BM25 score of the file's best section against the path's words.
+ */
+export function editPointers(index, filePath, { projectDir, seen = new Set(), k = EDIT_K, added = null } = {}) {
   const path = matchPath(filePath, projectDir);
   const seenFiles = new Set([...seen].map((id) => id.replace(/#.*$/, "")));
   const candidates = [];
   for (const [file, meta] of Object.entries(index.files)) {
-    if (!meta.appliesTo.length || seenFiles.has(file)) continue;
-    const specificity = Math.max(
-      -1, ...meta.appliesTo.filter((g) => globToRegExp(g).test(path)).map(globSpecificity));
-    if (specificity >= 0) candidates.push({ file, specificity });
+    const when = meta.appliesWhen ?? [];
+    if ((!meta.appliesTo.length && !when.length) || seenFiles.has(file)) continue;
+    const specificity = meta.appliesTo.length
+      ? Math.max(-1, ...meta.appliesTo.filter((g) => globToRegExp(g).test(path)).map(globSpecificity))
+      : 0;
+    if (specificity < 0) continue;
+    let matched = "";
+    if (when.length) {
+      if (!added) continue;
+      matched = added.split("\n").filter((l) => when.some((src) => whenRegExp(src)?.test(l))).join("\n");
+      if (!matched && !when.some((src) => whenRegExp(src)?.test(added))) continue;
+    }
+    candidates.push({ file, content: when.length ? 1 : 0, specificity, matched });
   }
   if (!candidates.length) return [];
 
@@ -161,14 +216,27 @@ export function editPointers(index, filePath, { projectDir, seen = new Set(), k 
     }
   }
   const scoreOf = (file) => best.get(file)?.score ?? 0;
-  candidates.sort((a, b) => b.specificity - a.specificity || scoreOf(b.file) - scoreOf(a.file)
+  candidates.sort((a, b) => b.content - a.content || b.specificity - a.specificity
+    || scoreOf(b.file) - scoreOf(a.file)
     || a.file.localeCompare(b.file));
 
+  // A content match points at the section whose heading names a term of the lines that matched
+  // (`@Unstable` → "`@Unstable` annotation"), else at the topic's first section: the path's words
+  // say nothing about why such a topic matched, and code scores against prose by accident.
+  const sectionFor = (file, matched) => {
+    if (!matched) return best.get(file) ?? firstSectionHit(index, file);
+    const terms = new Set(tokenize(matched));
+    const named = index.sections.find((s) => s.file === file && tokenize(s.section).some((t) => terms.has(t)));
+    if (!named) return firstSectionHit(index, file);
+    const meta = index.files[file];
+    return { id: `${file}#${named.section}`, file, section: named.section, title: meta.title, first: named.first,
+      score: 0, tag: tagOf(meta, file) };
+  };
   const hits = [];
-  for (const { file } of candidates) {
+  for (const { file, matched } of candidates) {
     if (hits.length >= k) break;
     const meta = index.files[file];
-    const hit = best.get(file) ?? firstSectionHit(index, file);
+    const hit = sectionFor(file, matched);
     if (hit && usable({ tag: tagOf(meta, file) })) hits.push(hit);
   }
   return hits;
@@ -225,7 +293,16 @@ export function runHook(kind, payload, { root = defaultRoot(), cacheDir, stateDi
     const input = payload.tool_input || {};
     if (!input.file_path) return "";
     subject = matchPath(input.file_path, projectDir);
-    hits = editPointers(index, input.file_path, { projectDir, seen });
+    // Before a Write runs (Claude Code's PreToolUse), the file on disk is what it overwrites; after
+    // it (opencode), it is the new content itself, so it is read only for the former.
+    let previous = null;
+    if (typeof input.content === "string" && payload.hook_event_name === "PreToolUse") {
+      try {
+        previous = readFileSync(isAbsolute(input.file_path) ? input.file_path : join(projectDir, input.file_path),
+          "utf8");
+      } catch { /* a new file: all of its content is added */ }
+    }
+    hits = editPointers(index, input.file_path, { projectDir, seen, added: addedText(input, previous) });
   } else {
     return "";
   }

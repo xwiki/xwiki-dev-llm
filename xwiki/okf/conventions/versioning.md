@@ -15,6 +15,10 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [conventions/backward-compatibility.md, servers/jira.md, processes/release.md]
+applies-when:
+  - '@since\s'
+  - '@Deprecated\b'
+  - '@deprecated\s'
 ---
 
 # API versioning (`@since` / `@Deprecated`)

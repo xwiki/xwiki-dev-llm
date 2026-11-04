@@ -9,7 +9,10 @@ sources:
 provenance: official
 last-confirmed: 2026-09-01
 related: [conventions/commit-messages.md, servers/jira.md]
-applies-to: ["**/package.json"]
+applies-to: ["**/pom.xml", "**/package.json"]
+applies-when:
+  - '<groupId>(?!org\.xwiki\b|\$\{|org\.apache\.maven\.plugins<|org\.codehaus\.mojo<|org\.junit\b|org\.mockito<|org\.hamcrest<|org\.testcontainers<|org\.seleniumhq\b|org\.openclover<)[^<]+</groupId>'
+  - '^\s*"(?!version"|name"|node"|pnpm"|npm")(?:@(?!xwiki/)[\w.-]+/)?[\w.-]+"\s*:\s*"(?:[\^~]|\d|npm:)'
 ---
 
 # Accepting a new third-party dependency

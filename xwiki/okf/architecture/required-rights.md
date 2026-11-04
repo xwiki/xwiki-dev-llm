@@ -14,6 +14,10 @@ sources:
 provenance: official
 last-confirmed: 2026-10-14
 related: [conventions/security.md, architecture/wiki-application-data.md, testing/test-value.md]
+applies-when:
+  - 'enforceRequiredRights'
+  - '\bRequiredRightClass\b'
+  - '\bRequiredRightAnalyzer\b'
 ---
 
 # Required rights on a page an extension ships

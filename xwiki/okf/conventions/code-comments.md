@@ -9,6 +9,12 @@ sources:
 provenance: official
 last-confirmed: 2026-09-15
 related: [conventions/commit-messages.md, conventions/code-style.md, conventions/velocity-code-style.md]
+applies-to: ["**/*.java", "**/*.js", "**/*.ts", "**/*.vue", "**/*.vm", "**/*.xml", "**/*.groovy", "**/*.less", "**/*.css", "**/*.aj"]
+applies-when:
+  - '^\s*//\s*[A-Za-z]'
+  - '^\s*/\*(?!\*)\s*[A-Za-z]'
+  - '^\s*##\s*[A-Za-z]'
+  - '<!--\s*[A-Za-z]'
 ---
 
 # Code comment policy

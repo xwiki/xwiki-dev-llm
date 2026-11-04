@@ -9,6 +9,10 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [conventions/backward-compatibility.md, conventions/versioning.md, architecture/module-design.md]
+applies-to: ["**/pom.xml"]
+applies-when:
+  - '<revapi\.differences\b'
+  - '^\s*<code>java\.'
 ---
 
 # Check binary and semantic compatibility, but not source compatibility
