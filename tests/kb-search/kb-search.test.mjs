@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 
 process.env.XDG_STATE_HOME = mkdtempSync(join(tmpdir(), 'kb-state-'));
 const {
-  buildIndex, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, splitSections, tokenize,
-  versionMatches,
+  bodyHash, buildIndex, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, sidecarOf, splitSections,
+  tokenize, versionMatches,
 } = await import('../../xwiki/scripts/kb-search.mjs');
 const { kbIndexDir } = await import('../../xwiki/scripts/state-dir.mjs');
 
@@ -179,6 +179,12 @@ test('tags: accepted ADR, proposed ADR, volatile', () => {
   assert.deepEqual(flux, { 'decisions/new-idea.md': '[proposed: under discussion]', 'servers/ci.md': '[volatile]' });
 });
 
+test('a superseded or deprecated ADR is tagged as such, not as a rule', () => {
+  const adr = (status) => `---\ntitle: Old way\nstatus: ${status}\n---\n\n## Decision\n\nUse the wombat.\n`;
+  const index = buildIndex(kb({ 'decisions/old.md': adr('superseded'), 'decisions/older.md': adr('deprecated') }));
+  assert.deepEqual(search(index, 'wombat').map((h) => h.tag), ['[superseded]', '[superseded]']);
+});
+
 test('versions filter out, never down-rank', () => {
   const index = buildIndex(kb());
   assert.deepEqual(search(index, 'agent', { version: '17.10.2' }).map((h) => h.file), ['servers/ci.md']);
@@ -232,4 +238,48 @@ test('CLI: one line per hit plus related pointers, or JSON', () => {
     + 'decisions/binary-compat.md (Check binary but not source compatibility)\n');
   const json = JSON.parse(execFileSync('node', [script, '--json', '--root', root, 'revapi'], { encoding: 'utf8' }));
   assert.deepEqual(ids(json), ['decisions/binary-compat.md#Decision']);
+});
+
+// A sidecar for conventions/versioning.md: `hash` defaults to the topic body's current hash.
+function sidecar(root, { hash = bodyHash(FILES['conventions/versioning.md']), extra = {} } = {}) {
+  const path = join(root, sidecarOf('conventions/versioning.md'));
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify({
+    file: { questions: ['what number do I put on new code'], aliases: ['numbering'] },
+    sections: { Deprecation: { questions: ['how do I retire an old method'], aliases: ['sunset'] } },
+    source_hash: hash,
+    ...extra,
+  }));
+}
+
+test('sidecar: section questions find that section, file questions every section of the file', () => {
+  const root = kb();
+  assert.equal(sidecarOf('conventions/versioning.md'), '_meta/conventions/versioning.json');
+  assert.deepEqual(search(buildIndex(root), 'retire sunset'), []);
+  sidecar(root);
+  const index = buildIndex(root);
+  assert.deepEqual(ids(search(index, 'retire sunset')), ['conventions/versioning.md#Deprecation']);
+  const numbering = search(index, 'numbering', { k: 10 });
+  assert.equal(numbering.length, 2);
+  assert.ok(numbering.every((h) => h.file === 'conventions/versioning.md'));
+  assert.ok(!Object.keys(index.files).some((f) => f.startsWith('_meta/')));
+});
+
+test('sidecar: frontmatter edits keep it, body edits stale it, a broken one is ignored', () => {
+  const root = kb();
+  sidecar(root);
+  writeFileSync(join(root, 'conventions/versioning.md'),
+    FILES['conventions/versioning.md'].replace('custom-key: kept', 'provenance: official'));
+  assert.equal(search(buildIndex(root), 'sunset').length, 1);
+  sidecar(root, { hash: 'stale' });
+  assert.deepEqual(search(buildIndex(root), 'sunset'), []);
+  writeFileSync(join(root, sidecarOf('conventions/versioning.md')), '{ not json');
+  assert.ok(buildIndex(root).sections.length > 0);
+});
+
+test('the cache is rebuilt when a sidecar changes', () => {
+  const root = kb();
+  assert.deepEqual(kbSearch('sunset', { root }), []);
+  sidecar(root);
+  assert.equal(kbSearch('sunset', { root })[0].id, 'conventions/versioning.md#Deprecation');
 });

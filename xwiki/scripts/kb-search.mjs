@@ -10,6 +10,10 @@
 // measure it, they must not shape it. The index is never committed: it is built on first use and
 // cached under state-dir.mjs's kbIndexDir(), keyed by the KB's file list, sizes and mtimes.
 //
+// Generated retrieval metadata (developer-phrased questions and aliases, per file and per section)
+// lives in a sidecar, `_meta/<topic path>.json` (`.md` → `.json`), so a model reading a topic never
+// pays for it. A sidecar whose `source_hash` no longer matches its topic's body is ignored.
+//
 // Node built-ins only, so it runs unchanged under Claude Code, Kimi Code and opencode (Bun).
 
 import { createHash } from "node:crypto";
@@ -19,7 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { kbIndexDir } from "./state-dir.mjs";
 
 // Bump whenever the index's shape or anything feeding it (tokenizer, fields, weights) changes.
-export const INDEX_FORMAT = 1;
+export const INDEX_FORMAT = 2;
 
 const FIELD_WEIGHTS = { heading: 3, questions: 2, context: 1, body: 1 };
 const K1 = 1.2;
@@ -30,6 +34,7 @@ const PER_FILE = 2;
 const DEFAULT_K = 5;
 const FIRST_LINE_MAX = 160;
 const QUERY_MAX = 500;
+const META_DIR = "_meta";
 
 /** The KB root shipped with the plugin: `xwiki/kb`, or `xwiki/okf` before the rename. */
 export function defaultRoot() {
@@ -191,18 +196,49 @@ export function tokenize(text) {
 
 const asList = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]);
 
-function listMarkdown(root) {
+function listFiles(root, ext, { skipMeta = true } = {}) {
   const files = [];
   const walk = (dir) => {
+    if (!existsSync(dir)) return;
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       if (e.name.startsWith(".")) continue;
       const p = join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (e.isFile() && e.name.endsWith(".md")) files.push(relative(root, p).split(sep).join("/"));
+      if (e.isDirectory()) {
+        if (!(skipMeta && dir === root && e.name === META_DIR)) walk(p);
+      } else if (e.isFile() && e.name.endsWith(ext)) files.push(relative(root, p).split(sep).join("/"));
     }
   };
   walk(root);
   return files.sort();
+}
+
+const listMarkdown = (root) => listFiles(root, ".md");
+
+/** Hash a sidecar is tied to: the topic's body, so curating its frontmatter does not stale it. */
+export function bodyHash(text) {
+  return createHash("sha256").update(parseFrontmatter(text).body).digest("hex");
+}
+
+/** Path of a topic's sidecar, relative to the KB root: `_meta/<topic path>` with `.md` → `.json`. */
+export const sidecarOf = (rel) => `${META_DIR}/${rel.replace(/\.md$/, "")}.json`;
+
+/**
+ * The generated metadata of a topic, or null when its sidecar is absent, unreadable or stale (its
+ * `source_hash` differs from the topic body's). Returns `{ file: string[], sections: { heading: string[] } }`.
+ */
+export function loadSidecar(root, rel, text) {
+  let meta;
+  try {
+    meta = JSON.parse(readFileSync(join(root, sidecarOf(rel)), "utf8"));
+  } catch {
+    return null;
+  }
+  if (!meta || meta.source_hash !== bodyHash(text)) return null;
+  const terms = (o) => (o && typeof o === "object"
+    ? [...asList(o.questions), ...asList(o.aliases)].map(String) : []);
+  const sections = {};
+  for (const [heading, o] of Object.entries(meta.sections || {})) sections[heading] = terms(o);
+  return { file: terms(meta.file), sections };
 }
 
 /** Whether a KB file is searchable: not the root index nor glossary, and no `_template.md`. */
@@ -210,10 +246,11 @@ export function isCorpusFile(rel) {
   return rel !== "index.md" && rel !== "glossary.md" && !/(^|\/)_template\.md$/.test(rel);
 }
 
-/** Cache key of a KB root: the index format plus every Markdown file's path, size and mtime. */
+/** Cache key of a KB root: the index format plus every Markdown file's and sidecar's path, size and mtime. */
 export function indexKey(root) {
   const h = createHash("sha256").update(`kb-search/${INDEX_FORMAT}\n`);
-  for (const rel of listMarkdown(root)) {
+  const meta = listFiles(join(root, META_DIR), ".json", { skipMeta: false }).map((r) => `${META_DIR}/${r}`);
+  for (const rel of [...listMarkdown(root), ...meta]) {
     const s = statSync(join(root, rel));
     h.update(`${rel}\t${s.size}\t${s.mtimeMs}\n`);
   }
@@ -232,7 +269,8 @@ export function buildIndex(root) {
   const postings = Object.create(null);
   let totalLength = 0;
   for (const rel of listMarkdown(root).filter(isCorpusFile)) {
-    const { data, body } = parseFrontmatter(readFileSync(join(root, rel), "utf8"));
+    const text = readFileSync(join(root, rel), "utf8");
+    const { data, body } = parseFrontmatter(text);
     const h1 = /^#\s+(.+)$/m.exec(body);
     const title = String(data.title || (h1 && h1[1]) || rel.replace(/\.md$/, ""));
     const summary = data.summary ? String(data.summary) : "";
@@ -248,10 +286,18 @@ export function buildIndex(root) {
     };
     const questions = tokenize([...asList(data.questions), ...asList(data.aliases)].join("\n"));
     const context = tokenize(`${title}\n${summary}`);
+    // Generated questions and aliases: a section's own at the questions weight, the file's at half of it.
+    const sidecar = loadSidecar(root, rel, text);
+    const fileGenerated = sidecar ? tokenize(sidecar.file.join("\n")) : [];
     for (const s of splitSections(body, title)) {
       const tf = new Map();
       let length = countInto(tf, tokenize(s.heading), FIELD_WEIGHTS.heading);
       length += countInto(tf, questions, FIELD_WEIGHTS.questions);
+      if (sidecar) {
+        const own = Object.hasOwn(sidecar.sections, s.heading) ? sidecar.sections[s.heading] : [];
+        length += countInto(tf, tokenize(own.join("\n")), FIELD_WEIGHTS.questions);
+        length += countInto(tf, fileGenerated, FIELD_WEIGHTS.questions / 2);
+      }
       length += countInto(tf, context, FIELD_WEIGHTS.context);
       length += countInto(tf, tokenize(s.text), FIELD_WEIGHTS.body);
       const idx = sections.length;
@@ -355,9 +401,10 @@ export function versionMatches(constraint, version) {
   });
 }
 
-/** Tag shown with a hit: how much authority the section carries. */
+/** Tag shown with a hit: how much authority the section carries (a superseded ADR carries none). */
 export function tagOf(fileMeta, file) {
   if (fileMeta.status === "proposed") return "[proposed: under discussion]";
+  if (fileMeta.status === "superseded" || fileMeta.status === "deprecated") return "[superseded]";
   if (file.startsWith("decisions/") && fileMeta.status === "accepted") return "[ADR]";
   if (fileMeta.stability === "volatile") return "[volatile]";
   return "[rule]";
