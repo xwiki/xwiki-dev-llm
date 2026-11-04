@@ -5,7 +5,7 @@ description: Replace every call to a deprecated XWiki Java API with its replacem
 
 # Fix a deprecation
 
-A deprecated API is retired in two steps (the `backward-compatibility` OKF topic): first **every XWiki
+A deprecated API is retired in two steps (the `backward-compatibility` KB topic): first **every XWiki
 caller moves to the replacement**, then the API itself **moves to its `-legacy` module**. This skill
 does the first step and hands the second to `xwiki-legacy`. *Every* caller means every language: a
 Velocity template or a wiki page calling the deprecated API is migrated like a Java class.
@@ -141,7 +141,7 @@ first, then the move is a PR in the declaring repo.
 
 - Neither the caller migration nor the move to legacy changes anything for users or extensions (the
   legacy modules ship by default), so **no JIRA issue is needed**: `[Misc]` is fine. An issue is always
-  acceptable too — then component **Development Issues only** (`okf/servers/jira.md`), and the commit
+  acceptable too — then component **Development Issues only** (`kb/servers/jira.md`), and the commit
   summary is its title, verbatim.
 - One PR per API — or per group of related members of one class — so each stays reviewable. No backport:
   deprecation cleanup is for `master` only.

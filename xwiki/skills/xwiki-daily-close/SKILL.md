@@ -67,7 +67,7 @@ By kind:
   ("yes", "lgtm") — `votes` only sees `+1`/`-1`. For CLOSE-a, draft the conclusion in
   `runs/<date>-drafts/<topicId>.md`: the outcome and who voted, the decided points, next steps only
   if the thread names them (never invent a JIRA key), and the attribution line of
-  okf/servers/index.md.
+  kb/servers/index.md.
 
 ## 3. Rank and show
 

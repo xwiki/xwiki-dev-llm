@@ -1,7 +1,7 @@
 # Review checklist
 
 Applied to every page this skill writes or updates, before it is saved, and to any page it is asked
-to review. The rules behind each item are in `okf/conventions/documentation.md`.
+to review. The rules behind each item are in `kb/conventions/documentation.md`.
 
 Apply it **page by item**: every item against every page, and record the ones that came back clean
 alongside the findings. A checklist run as a list of things to look for stops at the pages that

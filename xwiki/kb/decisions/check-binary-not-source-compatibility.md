@@ -30,4 +30,4 @@ Enforce **binary** and **semantic** compatibility, but deliberately **not source
   force noise in the Revapi ignore configuration.
 - New public API can still be introduced as not-yet-stable via `@Unstable`, and interfaces are
   evolved with default methods rather than new interfaces — see
-  [[backward-compatibility]] in `okf/conventions/`.
+  [[backward-compatibility]] in `kb/conventions/`.

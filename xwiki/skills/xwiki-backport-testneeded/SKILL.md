@@ -15,7 +15,7 @@ finding the issues, the `@since` policy for test-support classes, the `testneede
 consolidated master PR.
 
 Related skills: **xwiki-backport** (mechanics), **xwiki-build** (Maven), **xwiki-pull-request**
-(PR/commit conventions), **xwiki-knowledge** (the `@since` / versioning convention in the OKF).
+(PR/commit conventions), **xwiki-knowledge** (the `@since` / versioning convention in the KB).
 
 ## Scope & finding the issues
 

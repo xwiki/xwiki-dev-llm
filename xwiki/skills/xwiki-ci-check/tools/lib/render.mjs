@@ -407,7 +407,7 @@ const closedAs = closed => (unfixed(closed)
 
 /**
  * The Fix Versions of a closed issue not yet released, as a clause. Such an issue is the one a
- * *human* may reopen (okf/servers/jira.md); the routine only comments on it (references/fix-signals.md),
+ * *human* may reopen (kb/servers/jira.md); the routine only comments on it (references/fix-signals.md),
  * which is the run's instruction and never a row's words.
  */
 const unshipped = closed => (closed.unreleased?.length ? `, ${closed.unreleased.join(', ')} unreleased` : '');
@@ -1189,7 +1189,7 @@ export function renderDigest(report, previous, { paste = null } = {}) {
 
 /**
  * The LTS lines older than the two maintained ones: they take security fixes only, and
- * okf/processes/release.md forbids naming them in a public artifact — which the digest is.
+ * kb/processes/release.md forbids naming them in a public artifact — which the digest is.
  */
 export function securityOnly(branches) {
   return [...new Set(branches)].filter(branch => classifyBranch(branch).class === 'lts').sort(branchOrder).slice(2);

@@ -8,9 +8,9 @@
 //   budget-pressure   files at 95% of their size budget or more (invariants 5, 8, 12)
 //   similar-skills    skill descriptions with a high word overlap, so the model may pick the wrong one
 //   one-way-pointers  a description routing to a sibling that names it nowhere in return
-//   okf-restated      OKF topics whose text reappears in skills, grouped by topic
-//   orphans           OKF topics no skill cites, references/ files their skill never names
-//   split             skills and OKF topics that are large, growing, or cover several readers or topics
+//   kb-restated      KB topics whose text reappears in skills, grouped by topic
+//   orphans           KB topics no skill cites, references/ files their skill never names
+//   split             skills and KB topics that are large, growing, or cover several readers or topics
 //
 // Usage: node scripts/consolidation-candidates.mjs [--json] [--limit N] [--exclude path,path,...]
 //        node scripts/consolidation-candidates.mjs --lossless [base-ref]   (default origin/master)
@@ -22,8 +22,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  COPY_RATIO, DEFAULT_MAX_BYTES, OKF_ENTRY_MAX_BYTES, OKF_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES, SKILL_MAX_BYTES,
-  budgetOf, inDupScope, indexBlocks, isBudgeted, okfIndexEntries, orgMapBlock, sharedWithOtherFiles,
+  COPY_RATIO, DEFAULT_MAX_BYTES, KB_ENTRY_MAX_BYTES, KB_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES, SKILL_MAX_BYTES,
+  budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock, sharedWithOtherFiles,
   EXTERNAL_SKILLS, shingles, skillPointers, words,
 } from "./md-blocks.mjs";
 
@@ -41,8 +41,8 @@ const bytes = (s) => Buffer.byteLength(s);
 const git = (...a) => execFileSync("git", a, { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 26 });
 const tracked = git("ls-files", "-z", "--", "*.md").split("\0").filter((p) => p && existsSync(join(repoRoot, p)));
 const skills = [...new Set(tracked.map((p) => p.match(/^xwiki\/skills\/([^/]+)\/SKILL\.md$/)?.[1]).filter(Boolean))].sort();
-const okfTopics = tracked.filter(
-  (p) => /^xwiki\/okf\/.+\.md$/.test(p) && !/\/(index|_template)\.md$/.test(p) && !/\/decisions\//.test(p)
+const kbTopics = tracked.filter(
+  (p) => /^xwiki\/kb\/.+\.md$/.test(p) && !/\/(index|_template)\.md$/.test(p) && !/\/decisions\//.test(p)
 );
 const skillDocs = (s) => tracked.filter((p) => p.startsWith(`xwiki/skills/${s}/`) && !/\/tools\//.test(p));
 const kept = (...paths) => paths.every((p) => !EXCLUDE.has(p));
@@ -133,11 +133,11 @@ const press = (file, what, size, max) => {
 };
 for (const p of tracked.filter(isBudgeted)) press(p, "file", bytes(read(p)), budgetOf(p, budgets));
 const orgMd = read("xwiki/instructions/xwiki-org.md");
-const okfIndex = read("xwiki/okf/index.md");
+const kbIndex = read("xwiki/kb/index.md");
 press("xwiki/instructions/xwiki-org.md", "always-on file", bytes(orgMd), ORG_MAX_BYTES);
-press("xwiki/instructions/xwiki-org.md", "OKF map block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
-press("xwiki/okf/index.md", "file", bytes(okfIndex), OKF_INDEX_MAX_BYTES);
-for (const e of okfIndexEntries(okfIndex)) press("xwiki/okf/index.md", `entry '${e.name}'`, bytes(e.text), OKF_ENTRY_MAX_BYTES);
+press("xwiki/instructions/xwiki-org.md", "KB map block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
+press("xwiki/kb/index.md", "file", bytes(kbIndex), KB_INDEX_MAX_BYTES);
+for (const e of kbIndexEntries(kbIndex)) press("xwiki/kb/index.md", `entry '${e.name}'`, bytes(e.text), KB_ENTRY_MAX_BYTES);
 
 // ---- similar-skills and one-way-pointers -------------------------------------------------------
 const skillMd = Object.fromEntries(skills.map((s) => [s, read(`xwiki/skills/${s}/SKILL.md`)]));
@@ -167,22 +167,22 @@ for (const a of skills) {
   }
 }
 
-// ---- okf-restated ------------------------------------------------------------------------------
-// 6-word shingles, a lower bar than invariant 11: a skill paraphrasing an OKF rule keeps its phrases.
-const okfSkillIndex = indexBlocks([...okfTopics, ...skills.flatMap(skillDocs)], read, 6);
-const restated = new Map(); // okf file -> { skills: Map(skill -> shared), cites: Set }
-okfSkillIndex.blocks.forEach((block, i) => {
+// ---- kb-restated ------------------------------------------------------------------------------
+// 6-word shingles, a lower bar than invariant 11: a skill paraphrasing a KB rule keeps its phrases.
+const kbSkillIndex = indexBlocks([...kbTopics, ...skills.flatMap(skillDocs)], read, 6);
+const restated = new Map(); // kb file -> { skills: Map(skill -> shared), cites: Set }
+kbSkillIndex.blocks.forEach((block, i) => {
   const skill = block.path.match(/^xwiki\/skills\/([^/]+)\//)?.[1];
   if (!skill) return;
-  for (const [j, count] of sharedWithOtherFiles(okfSkillIndex, i)) {
-    const topic = okfSkillIndex.blocks[j].path;
-    if (!topic.startsWith("xwiki/okf/") || count < 3 || count / block.shingles.size < 0.15) continue;
+  for (const [j, count] of sharedWithOtherFiles(kbSkillIndex, i)) {
+    const topic = kbSkillIndex.blocks[j].path;
+    if (!topic.startsWith("xwiki/kb/") || count < 3 || count / block.shingles.size < 0.15) continue;
     const r = restated.get(topic) ?? restated.set(topic, { skills: new Map(), cites: new Set() }).get(topic);
     r.skills.set(skill, (r.skills.get(skill) ?? 0) + count);
     if (skillDocs(skill).some((d) => read(d).includes(topic.slice("xwiki/".length)))) r.cites.add(skill);
   }
 });
-const okfRestated = [...restated].filter(([t, r]) => kept(t, ...[...r.skills.keys()].map((s) => `xwiki/skills/${s}/SKILL.md`)))
+const kbRestated = [...restated].filter(([t, r]) => kept(t, ...[...r.skills.keys()].map((s) => `xwiki/skills/${s}/SKILL.md`)))
   .map(([topic, r]) => ({
     score: r.skills.size + [...r.skills.values()].reduce((x, y) => x + y, 0) / 100,
     files: [topic],
@@ -191,16 +191,16 @@ const okfRestated = [...restated].filter(([t, r]) => kept(t, ...[...r.skills.key
 
 // ---- orphans -----------------------------------------------------------------------------------
 const allSkillText = skills.flatMap(skillDocs).map(read).join("\n");
-const indexNames = new Set(okfIndexEntries(okfIndex).map((e) => e.name));
+const indexNames = new Set(kbIndexEntries(kbIndex).map((e) => e.name));
 const orphans = [];
-for (const t of okfTopics) {
+for (const t of kbTopics) {
   const name = t.split("/").pop().replace(/\.md$/, "");
-  const sub = t.replace(/[^/]+$/, "index.md"); // okf/servers/index.md and the like map their own topics
+  const sub = t.replace(/[^/]+$/, "index.md"); // kb/servers/index.md and the like map their own topics
   const inIndex = indexNames.has(name) || (existsSync(join(repoRoot, sub)) && read(sub).includes(name));
   const cited = allSkillText.includes(t.slice("xwiki/".length));
   if ((!inIndex || !cited) && kept(t)) {
     orphans.push({ score: inIndex ? 0.5 : 2, files: [t],
-      why: [!inIndex && "no `**name**` entry in okf/index.md or its sub-index", !cited && "no skill cites its path"].filter(Boolean).join("; ") });
+      why: [!inIndex && "no `**name**` entry in kb/index.md or its sub-index", !cited && "no skill cites its path"].filter(Boolean).join("; ") });
   }
 }
 for (const s of skills) {
@@ -221,14 +221,14 @@ const pastSize = new Map(
 );
 // A section only one branch of a run, one mode or one sub-agent reads: the pattern the earlier splits moved out.
 const CONDITIONAL = /\b(only (when|if|in|for)|dry[- ]run|rehears|sub-?agents?|each (agent|reviewer)|--write|\bmode\b|resum|optional|if (the|a|an|you) )/i;
-// Which part of an OKF topic each skill reads: the section whose title the words around a citation
+// Which part of a KB topic each skill reads: the section whose title the words around a citation
 // of the topic's path name (a quoted title, or at least two of the title's content words).
-const citations = new Map(); // okf file -> { skills: Set, parts: Map(section title -> Set(skill)) }
+const citations = new Map(); // kb file -> { skills: Set, parts: Map(section title -> Set(skill)) }
 for (const s of skills) {
   for (const d of skillDocs(s)) {
     const text = read(d);
-    for (const m of text.matchAll(/okf\/([a-z0-9-]+\/[a-z0-9-]+\.md)/g)) {
-      const file = `xwiki/okf/${m[1]}`;
+    for (const m of text.matchAll(/kb\/([a-z0-9-]+\/[a-z0-9-]+\.md)/g)) {
+      const file = `xwiki/kb/${m[1]}`;
       if (!existsSync(join(repoRoot, file))) continue;
       const c = citations.get(file) ?? citations.set(file, { skills: new Set(), parts: new Map() }).get(file);
       c.skills.add(s);
@@ -244,11 +244,11 @@ for (const s of skills) {
     }
   }
 }
-// IDF over OKF topics, so a section is matched to a topic by the words that set topics apart.
-const topicWords = new Map(okfTopics.map((t) => [t, new Set(contentWords(read(t)))]));
+// IDF over KB topics, so a section is matched to a topic by the words that set topics apart.
+const topicWords = new Map(kbTopics.map((t) => [t, new Set(contentWords(read(t)))]));
 const df = new Map();
 for (const ws of topicWords.values()) for (const w of ws) df.set(w, (df.get(w) ?? 0) + 1);
-const idf = (w) => Math.log(okfTopics.length / (df.get(w) ?? 1));
+const idf = (w) => Math.log(kbTopics.length / (df.get(w) ?? 1));
 // IDF-weighted cosine of two word sets, so a large topic does not attract every section by its size.
 const weight = (ws) => [...ws].reduce((n, w) => n + idf(w) ** 2, 0);
 const affinity = (ws, topicSet) => {
@@ -269,14 +269,14 @@ for (const s of skills) {
   const condShare = conditional.reduce((n, x) => n + bytes(x.text), 0) / size;
   const refs = skillDocs(s).filter((d) => d.includes("/references/"));
   const g = growth(p, size);
-  const score = 2 * (size / cap) + Math.min(1, Math.max(0, g)) + condShare; // on the scale of an OKF topic below
+  const score = 2 * (size / cap) + Math.min(1, Math.max(0, g)) + condShare; // on the scale of a KB topic below
   if ((size / cap >= 0.75 || (g >= GROWN && size / cap >= 0.5)) && kept(p)) {
     split.push({ score, files: [p], size, cap, growth4w: `${pct(g)}%`, sections: secs.length,
       references: `${refs.length} (${refs.reduce((n, r) => n + bytes(read(r)), 0)} bytes)`,
       conditionalSections: conditional.map((x) => `${x.title} (${bytes(x.text)} B)`) });
   }
 }
-for (const t of okfTopics) {
+for (const t of kbTopics) {
   const md = read(t);
   const size = bytes(md);
   const max = budgetOf(t, budgets);
@@ -284,7 +284,7 @@ for (const t of okfTopics) {
   const foreign = [];
   for (const sec of secs) {
     const ws = new Set(contentWords(sec.text));
-    if (ws.size < 30 || t.startsWith("xwiki/okf/sonarqube/")) continue; // rule families are by rule, mapped in sonarqube/index.md
+    if (ws.size < 30 || t.startsWith("xwiki/kb/sonarqube/")) continue; // rule families are by rule, mapped in sonarqube/index.md
     const own = new Set(contentWords(md.replace(sec.text, "")));
     const ownAff = affinity(ws, own);
     let best = null;
@@ -293,13 +293,13 @@ for (const t of okfTopics) {
       const a = affinity(ws, set);
       if (a > 1.25 * ownAff && (!best || a > best.a)) best = { other, a };
     }
-    if (best) foreign.push(`"${sec.title}" reads closer to ${best.other.slice("xwiki/okf/".length)}`);
+    if (best) foreign.push(`"${sec.title}" reads closer to ${best.other.slice("xwiki/kb/".length)}`);
   }
   const c = citations.get(t);
   const parts = c ? [...c.parts].map(([sec, ss]) => `"${sec}": ${[...ss].join(", ")}`) : [];
   const partReaders = c ? new Set([...c.parts.values()].flatMap((ss) => [...ss])).size : 0;
   const g = growth(t, size);
-  // An OKF topic has no hard cap and its budget is its size plus ~10%; the 12 KB default is what says "large".
+  // A KB topic has no hard cap and its budget is its size plus ~10%; the 12 KB default is what says "large".
   const score = Math.min(2, size / DEFAULT_MAX_BYTES) + Math.min(1, Math.max(0, g)) + 0.3 * foreign.length +
     0.2 * (c?.parts.size ?? 0);
   if ((size >= DEFAULT_MAX_BYTES || (g >= GROWN && size >= DEFAULT_MAX_BYTES / 2) || foreign.length >= 2 ||
@@ -316,7 +316,7 @@ const report = {
   "budget-pressure": top(pressure),
   "similar-skills": top(similar),
   "one-way-pointers": top(oneWay),
-  "okf-restated": top(okfRestated),
+  "kb-restated": top(kbRestated),
   orphans: top(orphans),
   split: top(split),
 };

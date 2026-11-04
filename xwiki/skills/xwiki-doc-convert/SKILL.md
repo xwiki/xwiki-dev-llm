@@ -18,9 +18,9 @@ the target structure: extract the still-useful information, update it, drop the 
 **re-organize it into one or more pages** that each follow the new documentation rules.
 
 This skill builds on **`xwiki-doc-writing`** (the authoring procedure, review checklist, and live
-per-type examples) and on the OKF rules in **`okf/conventions/documentation.md`** (Diataxis types,
+per-type examples) and on the KB rules in **`kb/conventions/documentation.md`** (Diataxis types,
 titles/page-names, page-structure fields, style, location, versioning) plus
-**`okf/conventions/documentation-migration.md`** (what to do with the *original* page once its
+**`kb/conventions/documentation-migration.md`** (what to do with the *original* page once its
 content has moved). Read those for the rules; this skill covers only what is specific to converting.
 
 A conversion is also the case the **`tools/` scripts of `xwiki-doc-writing`** exist for: several pages
@@ -114,7 +114,7 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    filter for prose**, never just `description`. `installation` and `compatibility` routinely hold
    mandatory steps and prerequisites that appear nowhere else, and missing them is invisible later:
    the "nothing lost" verification below would compare against your incomplete extraction and pass.
-   The field-by-field table is in `okf/conventions/documentation-migration.md`.
+   The field-by-field table is in `kb/conventions/documentation-migration.md`.
 3. **Decompose by Diataxis type**, working from the inventories rather than the raw legacy text. A
    legacy page usually mixes types — some explanation, a procedure
    or two, a configuration reference, maybe a tutorial. Identify each distinct piece and its type and
@@ -143,7 +143,7 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    them under **kebab-case, lowercase-extension** names, insert images with `{{image}}` + `alt`, and
    **re-encode a video to `webm` and display it with `{{embed}}`**. When the legacy page *embedded* a
    video or an image, the new page **embeds it too**: turning an embed into an `attach:` link is a
-   silent regression that no check catches. See `okf/conventions/documentation.md`.
+   silent regression that no check catches. See `kb/conventions/documentation.md`.
 9. **De-duplicate and trim across the pages you produced** — splitting one legacy page into several is
    exactly what breeds duplication, because each new page wants to restate the context the legacy page
    stated once. Do the cross-page comparison **and trimming** pass from `xwiki-doc-writing` before
@@ -158,11 +158,11 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
     then the two steps that outlive the prose and are the ones actually forgotten —
     **delete the page's leftover attachments** and **triage and repoint its backlinks**. Both
     procedures, including how to prove an attachment is safe to delete and which backlinks to leave
-    alone, are in `okf/conventions/documentation-migration.md`.
+    alone, are in `kb/conventions/documentation-migration.md`.
 11. **Handle the backlinks of anything you delete — including the pages you created.** A conversion
     often ends by removing a page: one superseded by the new tree, or one of the **new pages you created
     earlier in this conversion** and then merged, moved or dropped. Every deletion follows
-    `okf/conventions/page-deletion.md` (list the backlinks, complete the list with a search, handle them,
+    `kb/conventions/page-deletion.md` (list the backlinks, complete the list with a search, handle them,
     then delete), and relocating a page is a rename/move rather than a delete-and-recreate.
 12. **Publish, once, at the end** — as a single task, after `dedup` and `originals` have settled the
     set. Save the pages **parents before children** so no page is ever live without its hub, then run
@@ -171,7 +171,7 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
     the whole set where the tooling can write into one — a conversion is a major change, the new
     pages and the original-page edits belong in the *same* one so a reviewer sees the move whole, and
     the pages stay invisible until it is merged. (The minor-change exception in
-    `okf/conventions/documentation.md` does not apply to a conversion.) Saving direct instead is a
+    `kb/conventions/documentation.md` does not apply to a conversion.) Saving direct instead is a
     decision to record in PLAN.md's Setup section, and it does not license publishing early: the set
     still goes live in one pass, at the end.
 
@@ -222,9 +222,9 @@ only complete record of what the legacy page said — comparing legacy → new, 
   **backlinks triaged**. A conversion that stops at the new pages is not done.
 - **No page was deleted with live backlinks** — for every page the conversion removed (the original, a
   superseded page, or an intermediate page created during this conversion), the backlinks were handled
-  **before** the delete, per `okf/conventions/page-deletion.md`.
+  **before** the delete, per `kb/conventions/page-deletion.md`.
 - **Guideline compliance** — titles, page names, page-structure fields and style follow
-  `okf/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist,
+  `kb/conventions/documentation.md` (reuse the `xwiki-doc-writing` review checklist,
   `xwiki-doc-writing/references/review-checklist.md`).
 
 Do **not** raise a finding merely because you would have phrased something differently: every finding

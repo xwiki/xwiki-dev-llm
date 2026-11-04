@@ -34,11 +34,11 @@ assumed. When the user asks for that step:
   the reason for closing a draft (`{"state": "closed"}` in a PATCH) go there, never into the
   description. Read the thread before changing or closing an advisory: a maintainer may already
   have answered there.
-- Link the advisory on each JIRA issue as a `Security Advisory` web link, as `okf/servers/jira.md`
+- Link the advisory on each JIRA issue as a `Security Advisory` web link, as `kb/servers/jira.md`
   ("The documentation fields") describes.
 - Do **not** merge any fix through the advisory's temporary private fork via the GitHub UI — that
   leaks the JIRA title into the commit log. Use the manual merge recipe in
-  [[security-policy]] (`okf/processes/security-policy.md`) instead.
+  [[security-policy]] (`kb/processes/security-policy.md`) instead.
 - **Import the advisory into the Security Advisory Application on xwiki.org** — the step that is
   easiest to forget, because the app is what fires the disclosure reminders; skip it and nothing
   ever reminds anyone to disclose. Import from
@@ -50,7 +50,7 @@ assumed. When the user asks for that step:
   backport lands on another branch or the version ranges change. Remind the user of it, with the
   link, rather than treating the GHSA draft as the end of the job; do it for them only when asked:
   - The import page needs wiki admin rights (SPAPP-35). It and the advisory sheet's status buttons
-    are `/bin/` pages, which ignore Basic auth (`okf/servers/index.md`): use the user's logged-in
+    are `/bin/` pages, which ignore Basic auth (`kb/servers/index.md`): use the user's logged-in
     browser. "Mark announced" only appears once the advisory is completed.
   - Check the import over REST: the page `SecurityAdvisoryApplication.SecurityEntries.<GHSA ID>`
     (read it by name: `/query` takes Solr only), its `SecurityAdvisoryApplicationClass` object and

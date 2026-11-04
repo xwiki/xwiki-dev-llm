@@ -15,7 +15,7 @@ XWiki instance: its work packages are **`xwiki-openproject`**'s.
   (read-only on public pages; writes get `401`). Always authenticate for write operations.
   For a **remote** instance (xwiki.org…), look for the `~/.xwiki-credentials` file before asking the
   developer for credentials — **never print that file** and **parse it, never `source` it**; its
-  format, the rule and the `curl` recipe are in `okf/servers/index.md`.
+  format, the rule and the `curl` recipe are in `kb/servers/index.md`.
 - **Send the default `curl` User-Agent** to the xwiki.org sites — Cloudflare answers `403` to a
   browser-like one or none ([[servers/index]]).
 - **Format:** responses are XML by default. Ask for JSON with `?media=json` on the URL **or** an
@@ -262,12 +262,12 @@ and a link to its REST resource — feed that link back into use case 1 to fetch
 
 - **Deleting a page over REST bypasses the deletion wizard** — no "New target"/"Update links"
   repointing, no automatic redirect — so on a real wiki the page's backlinks must be handled first, per
-  the OKF's `conventions/page-deletion.md`.
+  the KB's `conventions/page-deletion.md`.
 - URL-encode reserved characters in page/space names (a space name with a dot, `/`, space, etc.).
   `curl --data-urlencode` handles bodies; encode path segments yourself.
 - Editing **xwiki.org documentation** pages? The tree's own specifics — the `DocApp` xobjects, reading
   the doc-quality checker's findings, navigation pinning, hidden `{{display}}` fragments — are in the
-  OKF's `conventions/documentation-mechanics.md`, not here. For more than a one-field edit, the
+  KB's `conventions/documentation-mechanics.md`, not here. For more than a one-field edit, the
   `xwiki-doc-writing` skill ships a client and a publish/audit CLI in its `tools/` directory that
   already handle the traps below (session-bound token, read-back asserts) — prefer them over fresh
   `curl` calls.

@@ -27,7 +27,7 @@
  *
  * What it refuses to count: a run that failed in `beforeAll` never executed the test, so it is
  * reported as a setup error and left **out** of the rate rather than counted as a failure (see
- * `okf/testing/running-docker-its.md` — a starved Docker daemon otherwise reads as a flickering
+ * `kb/testing/running-docker-its.md` — a starved Docker daemon otherwise reads as a flickering
  * test). Same for a run killed by `--timeout`.
  *
  * The whole session takes one Docker IT slot through `xwiki-it-slot.mjs`, released however it ends.
@@ -53,7 +53,7 @@ const KEEP_RUNNING_MARKER = 'XWiki is kept running';
 
 /**
  * Lines that prove the run never reached the test. Straight from the symptom table in
- * `okf/testing/running-docker-its.md`: each one is about the machine, not about the code.
+ * `kb/testing/running-docker-its.md`: each one is about the machine, not about the code.
  */
 const SETUP_FAILURE_MARKERS = [
   'Error setting up the XWiki testing environment',
@@ -343,7 +343,7 @@ function renderSummary(report, baseline) {
   ];
   if (summary.setupErrors > 0) {
     lines.push(`${summary.setupErrors} run(s) failed to set up and are excluded from the rate — `
-      + 'the machine, not the test (okf/testing/running-docker-its.md).');
+      + 'the machine, not the test (kb/testing/running-docker-its.md).');
   }
   if (summary.timeouts > 0) lines.push(`${summary.timeouts} run(s) hit the timeout and are excluded from the rate.`);
   if (summary.noSlot > 0) lines.push(`${summary.noSlot} run(s) never got a Docker IT slot and never started.`);

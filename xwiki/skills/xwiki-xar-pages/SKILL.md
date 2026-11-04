@@ -17,7 +17,7 @@ changes across releases — the per-page XML `<version>` is not a changelog, and
 produces spurious diffs. `xar:verify` enforces this (it fails the build if a page's version is not
 `1.1`).
 
-This is unrelated to Java API `@since` / `@Deprecated` version tags (see the OKF `versioning`
+This is unrelated to Java API `@since` / `@Deprecated` version tags (see the KB `versioning`
 convention).
 
 ## After editing: run `mvn xar:format`

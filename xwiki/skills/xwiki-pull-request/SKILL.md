@@ -10,12 +10,12 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
 - Reference the JIRA issue, and make the summary line **the issue's title, verbatim** rather than a
   description you compose: `XWIKI-NNNNN: <the JIRA issue title>` (use `XCOMMONS-NNNNN:` in
   xwiki-commons, `XRENDERING-NNNNN:` in xwiki-rendering). Put what the commit actually does in the
-  body, as `*` bullets. See `okf/conventions/commit-messages.md`. **Except security fixes**:
-  `XWIKI-NNNNN: <neutral description>`, never the issue title (`okf/processes/security-policy.md`).
+  body, as `*` bullets. See `kb/conventions/commit-messages.md`. **Except security fixes**:
+  `XWIKI-NNNNN: <neutral description>`, never the issue title (`kb/processes/security-policy.md`).
 - A repo tracked on OpenProject (op.xwiki.org) uses the work package's project-based id instead —
   `DA-96: <the work package subject>`, never `OP#<n>` — and the PR body links
   `https://op.xwiki.org/work_packages/DA-96` (`xwiki-openproject` skill). Then comment the PR URL
-  on the work package, which does not list its PRs (`okf/servers/jira.md`, "Linking the pull request").
+  on the work package, which does not list its PRs (`kb/servers/jira.md`, "Linking the pull request").
 - For trivial changes that do not warrant a JIRA issue, prefix with `[Misc] <description>`.
   Do not create unnecessary JIRA issues
   (see https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices).
@@ -26,7 +26,7 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
 - **Backtick `@` tokens and `#123` in the commit body and the PR body** — a bare `@since` there
   notifies the GitHub account of that name, and a pushed message cannot be corrected. The summary
   line is exempt. Rule and exceptions:
-  `okf/conventions/commit-messages.md`; the `check-commit-text` hook also blocks it.
+  `kb/conventions/commit-messages.md`; the `check-commit-text` hook also blocks it.
 - When the change was authored with AI assistance, add AI attribution: a `Co-Authored-By: Claude
   <model> <noreply@anthropic.com>` trailer on the commit and a "Generated with Claude Code" line in
   the PR body.
@@ -51,7 +51,7 @@ complete every section meaningfully:
 - **Changes → Clarifications** — choices made, links to forum proposals / dependent issues.
 - **Screenshots & Video** — whenever the change has a visible result, show it: a reviewer should be
   able to judge the result without building the branch. The same images belong on the JIRA issue,
-  which is where `okf/servers/jira.md` states the rule and the how.
+  which is where `kb/servers/jira.md` states the rule and the how.
   - Upload them with `gh pr create --attach <file>` (gh ≥ 2.99, push access to the repo): a body
     reference to the local path (`![after](after.png)`, relative to the `--body-file`) becomes the
     uploaded URL. A failed upload still creates the PR, exiting non-zero — check for the printed URL
@@ -66,7 +66,7 @@ complete every section meaningfully:
     body's Screenshots & Video section rather than commenting: an edit notifies nobody. Pass
     `gh pr edit --attach` the whole updated body as `--body-file`; without one it only appends.
 - **Executed Tests** — how the change was validated: the `mvn` commands running its automated test
-  (`okf/testing/strategy.md` says when one is needed), plus any manual check. Especially important
+  (`kb/testing/strategy.md` says when one is needed), plus any manual check. Especially important
   for regression fixes.
 - **Expected merging strategy** — `Prefers squash: Yes`, and the `Backport on branches:` bullet
   listing the branches (say so explicitly when there is none).
@@ -110,4 +110,4 @@ It fails on a red gate; then read the findings —
 `issues/search?componentKeys=$SONARQUBE_PROJECT_KEY&pullRequest=<n>`. It is safe and cheap: a PR analysis is
 stored separately from the branch's, so it never affects `master`'s measures or issues, and on
 xwiki-commons the whole thing takes ~2 minutes (a warm `-T 1C` compile of all modules is ~1 min).
-Budget more in a bigger repo. Traps and the reasoning: `okf/sonarqube/verification.md`.
+Budget more in a bigger repo. Traps and the reasoning: `kb/sonarqube/verification.md`.

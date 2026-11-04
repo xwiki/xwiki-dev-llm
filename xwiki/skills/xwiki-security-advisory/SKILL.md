@@ -1,6 +1,6 @@
 ---
 name: xwiki-security-advisory
-description: Draft the content of a GitHub Security Advisory for an XWiki vulnerability, following the official template published on the XWiki Security Policy page (dev.xwiki.org). Use when asked to write/prepare/draft a security advisory, given a security-restricted JIRA issue key (e.g. XWIKI-1234) that needs a GHSA draft, or asked to fill in Impact/CVSS/Patches/Workarounds/References for a vulnerability. Always re-fetches the live template and the live JIRA issue rather than reusing a cached copy of the template or the wording of a past advisory. For the disclosure rules (obfuscated commits, restricted JIRA issues, the private-fork merge recipe) use xwiki-knowledge (okf/processes/security-policy.md); for reading/updating the JIRA issue itself use xwiki-jira; for the eventual fix's PR/commit conventions use xwiki-pull-request.
+description: Draft the content of a GitHub Security Advisory for an XWiki vulnerability, following the official template published on the XWiki Security Policy page (dev.xwiki.org). Use when asked to write/prepare/draft a security advisory, given a security-restricted JIRA issue key (e.g. XWIKI-1234) that needs a GHSA draft, or asked to fill in Impact/CVSS/Patches/Workarounds/References for a vulnerability. Always re-fetches the live template and the live JIRA issue rather than reusing a cached copy of the template or the wording of a past advisory. For the disclosure rules (obfuscated commits, restricted JIRA issues, the private-fork merge recipe) use xwiki-knowledge (kb/processes/security-policy.md); for reading/updating the JIRA issue itself use xwiki-jira; for the eventual fix's PR/commit conventions use xwiki-pull-request.
 ---
 
 # XWiki security advisory drafting
@@ -13,7 +13,7 @@ it are separate, explicitly-confirmed actions (see Step 6).
 ## Before you start — confidentiality
 
 The vulnerability is not public. Everything this skill produces or reads is confidential until
-disclosure ([[security-policy]] in the OKF owns the full rule):
+disclosure ([[security-policy]] in the KB owns the full rule):
 
 - **Never** write the draft into the repo, a commit, a PR, a public issue/comment, or a public chat.
 - Save the draft only under the session's **work directory** (per the org-wide "Work files"
@@ -61,7 +61,7 @@ From the response's `fields`, collect:
   advisory, or it was filed public, and the policy's checklist ("Verify that the Confidential level
   is set") comes first — tell the user before drafting.
 - The **CVSS vector** (`customfield_11870`, e.g. `CVSS:4.0/…`) and its numeric **score**
-  (`customfield_11871`); both fields are described in `okf/processes/security-policy.md`.
+  (`customfield_11871`); both fields are described in `kb/processes/security-policy.md`.
 - A `customfield_*` holding a `devSummaryJson`/pull-request bean can reveal whether a fix PR/commit
   already exists — useful for the Patches/References sections once a fix lands (remember: the fix
   commit message keeps the JIRA key but replaces the issue title with a neutral summary, per
@@ -122,7 +122,7 @@ Take the `content` field (xwiki/2.1 syntax). Three parts of it matter:
   XWiki rights to Privileges Required, the cap that a right required to exploit puts on the impacts,
   and the impact defaults fixed per vulnerability class (XSS and SSRF each have one, covering the
   subsequent system as well as the vulnerable one). Use these to justify each row of the CVSS table
-  with a one-line comment, the way past advisories do. `okf/processes/security-policy.md` has the
+  with a one-line comment, the way past advisories do. `kb/processes/security-policy.md` has the
   traps to watch for when reading them.
 
 If the page has moved (404), rediscover it instead of guessing a new path:
@@ -177,7 +177,7 @@ the vector of its own impact in JIRA and gets the advisory link (Step 6).
 | Impact prose | JIRA `description`'s explanation, rewritten as affected feature + attack vector + requirements + impact + affected versions, in your own words — **without the PoC** (see "No proof of concept in the advisory") and not a verbatim copy-paste of internal notes |
 | CVSS table | The vector found in Step 1, valued per the Step 2 scoring guidance, worded per the Step 3 precedent for the *comment* column |
 | Affected package(s) / vulnerable version range | The module(s) touched, and `versions` (Affects), verified against the code history → GitHub's version-range syntax — see "Affected products (packages) and version ranges" below — the checks are in `references/affected-products.md`, which also covers updating JIRA when they differ |
-| Patches | `fixVersions`: "has been patched in…" once the fix is committed on every branch, released or not (the advisory is only published after the releases); "will be fixed in…" before that. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`okf/conventions/versioning.md`), and mark them as to be confirmed |
+| Patches | `fixVersions`: "has been patched in…" once the fix is committed on every branch, released or not (the advisory is only published after the releases); "will be fixed in…" before that. While `fixVersions` is still empty, take each maintained branch's next release from its root `pom.xml` (`kb/conventions/versioning.md`), and mark them as to be confirmed |
 | Workarounds | From the JIRA description if a mitigation is mentioned, or patching the fixed file in the deployed WAR (e.g. a template), else "no known workaround other than upgrading" |
 | References | The JIRA issue URL, plus the fix commit's SHA/URL on `master` (no backports) — use an explicit placeholder such as `[commit SHA once merged]` until the fix actually lands, matching the Patches row above |
 | Credit / Attribution | `reporter`, or a named security researcher from the description — **ask the user to confirm the reporter consents to be credited** before naming them. Credit type (GitHub's definitions): `finder` for the person who discovered the vulnerability, also when they reported it themselves; `reporter` only for someone who passed on a finding that isn't theirs. Also link their account in the Attribution section: `[@login](https://github.com/login)` |
@@ -226,7 +226,7 @@ Security team and the credited researcher as collaborators, editing a draft othe
 Advisory Application import and the CVE request. Two rules hold whatever the user asks:
 
 - No fix is merged through the advisory's temporary private fork in the GitHub UI, which would put
-  the JIRA title in the commit log; the manual merge recipe is in `okf/processes/security-policy.md`.
+  the JIRA title in the commit log; the manual merge recipe is in `kb/processes/security-policy.md`.
 - Nothing is published before both the embargo date and a CVE ID.
 
 ## Troubleshooting

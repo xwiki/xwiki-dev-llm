@@ -12,7 +12,7 @@ follows.
   contrib. Reference issues by key (`XWIKI-12345`). To view/create/update issues use the
   **`xwiki-jira`** skill, which owns the backend choice and its traps; issue-field conventions, and
   **assigning an issue to the developer once work on it starts** (OpenProject too), in
-  `okf/servers/jira.md`.
+  `kb/servers/jira.md`.
 - XWiki Commons, XWiki Rendering and XWiki Platform are **released together with the same version**.
 - The **Java version depends on the XWiki version** (defined in the `pom.xml`) — build with that JDK,
   not the machine default; the **`xwiki-build`** skill has how. See
@@ -36,9 +36,9 @@ follows.
   `XWIKI-12345: <the JIRA issue title>` (the repo's own key). What *this* commit does goes in the
   body as `*` bullets.
 - Use `[Misc]` only for trivial changes with no issue; anything affecting users or extension
-  developers needs an issue. Full rule: `okf/conventions/commit-messages.md`.
+  developers needs an issue. Full rule: `kb/conventions/commit-messages.md`.
 - **A visible change carries images, plus a "before" for a UI fix** — on its JIRA issue, and in
-  its PR body if any. Producing them is also how you check it works: `okf/servers/jira.md`.
+  its PR body if any. Producing them is also how you check it works: `kb/servers/jira.md`.
 
 ## Building & tests
 
@@ -48,7 +48,7 @@ follows.
   suppress interactive prompts and the download/progress lines that otherwise flood the output.
 - Tests must **not** write to stdout/stderr — enforced by Surefire's `CaptureConsole` listener.
 - **A change comes with an automated test failing without it**, templates, wiki pages and JS
-  included (exceptions: `okf/testing/strategy.md`). **Load the `xwiki-test-guidelines` skill before
+  included (exceptions: `kb/testing/strategy.md`). **Load the `xwiki-test-guidelines` skill before
   creating or changing any test**, even a single `@Test`/`@UITest` method.
 - After changing a module's unit tests, run **`xwiki-increase-test-coverage`** in that same change.
 
@@ -61,15 +61,15 @@ follows.
 - In new code, prefer the `jakarta.*` namespaces over `javax.*` (the project is migrating
   `javax`→`jakarta`) — e.g. `jakarta.inject.*` for `@Inject`, `@Named`, `Provider`.
 - Use the XWiki **Component system** (`@Component`/`@Inject`/`@Role`) rather than passing context
-  objects around in new code — `okf/architecture/component-system.md`.
+  objects around in new code — `kb/architecture/component-system.md`.
 - **Prefer streaming over buffering for large / user-sized data** — never read attachments, bodies,
   uploads, exports or unbounded query results fully into memory (`byte[]`/`String`/
-  `ByteArrayOutputStream`), which OOMs on real data. Full guidance: `okf/conventions/performance.md`.
+  `ByteArrayOutputStream`), which OOMs on real data. Full guidance: `kb/conventions/performance.md`.
 - `-legacy` modules only re-export deprecated APIs; public API changes are checked by Revapi. Rules:
-  `okf/conventions/code-style.md`, `okf/conventions/backward-compatibility.md`.
+  `kb/conventions/code-style.md`, `kb/conventions/backward-compatibility.md`.
 - **Comments:** describe the code as it is *now*, with the real reason inline so the comment outlives
   its links; never justify by history ("as it was before"). An issue reference is optional and
-  carries the key *and* title. Full policy: `okf/conventions/code-comments.md`.
+  carries the key *and* title. Full policy: `kb/conventions/code-comments.md`.
 
 ## Versioning new/deprecated APIs
 
@@ -78,16 +78,16 @@ follows.
 - Do **not** trust the version string in a repo's `CLAUDE.md` — it goes stale. Read the real version
   from the root `pom.xml` (`<version>`) or the SNAPSHOT jar names under `~/.m2`.
 
-## OKF — how to go deeper
+## KB — how to go deeper
 
-Fuller *declarative* knowledge lives in this plugin's **OKF** knowledge base. When a question is
-about how XWiki works or what its rules are — rather than performing a task — consult the OKF. The
-**`xwiki-knowledge`** skill is the entry point for both reading and extending it, and `okf/index.md`
+Fuller *declarative* knowledge lives in this plugin's **KB** knowledge base. When a question is
+about how XWiki works or what its rules are — rather than performing a task — consult the KB. The
+**`xwiki-knowledge`** skill is the entry point for both reading and extending it, and `kb/index.md`
 is the full, described map. **Volatile facts are never cached** (current version, build/issue status,
 role holders): the relevant file gives a `verify:` recipe instead (read `pom.xml`, query the
 `sonarqube`/`discourse` MCP, or `curl` the dev wiki — the upstream source of truth).
 
-OKF map — topic files under `okf/`; **`okf/index.md` describes each one**, read it to choose:
+KB map — topic files under `kb/`; **`kb/index.md` describes each one**, read it to choose:
 
 - `conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
   `backward-compatibility`, `security`, `script-services`, `performance`, `logging`, `naming`,

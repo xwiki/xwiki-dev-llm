@@ -122,7 +122,7 @@ incident that carries it — master where master is in the group, otherwise the 
 branch — and every other branch is named on its line, with its own regression window, and is
 analysed nowhere.
 
-**`stale-snapshot` is the Environment Tests trap** — `okf/servers/jenkins.md` has it and how to
+**`stale-snapshot` is the Environment Tests trap** — `kb/servers/jenkins.md` has it and how to
 confirm one by hand.
 
 **The room is an input, and it may only ever buy silence.** `announced` and `being-handled` come
@@ -268,5 +268,5 @@ a failure and must not be reported as a warning.
 
 ## Related
 
-- `okf/servers/jenkins.md` — the CI traps the tooling encodes; `okf/servers/jira.md` — the flicker
-  fields; `okf/testing/strategy.md` — what a functional test is allowed to assert.
+- `kb/servers/jenkins.md` — the CI traps the tooling encodes; `kb/servers/jira.md` — the flicker
+  fields; `kb/testing/strategy.md` — what a functional test is allowed to assert.

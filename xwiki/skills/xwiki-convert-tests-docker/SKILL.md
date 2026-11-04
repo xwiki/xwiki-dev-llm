@@ -13,7 +13,7 @@ Load **`xwiki-test-guidelines`** too: its rules for writing a test still apply t
 
 ## Module structure
 
-Lay out the new modules as the "Functional-test module layout" section of `okf/testing/strategy.md`
+Lay out the new modules as the "Functional-test module layout" section of `kb/testing/strategy.md`
 describes, via the `xwiki-knowledge` skill. It covers the `-test` / `-test-pageobjects` /
 `-test-docker` modules and their profiles, the `-test-docker` pom, the `AllIT` entry point with a
 `@UITest` on every test class, and where `@since` goes. Create the `-test-docker` module in the
@@ -312,4 +312,4 @@ mvn clean verify -B -ntp \
 3. Run `mvn clean verify` with the `docker` profile and confirm 0 failures, 0 errors.
 4. Verify the DOOD use case by running the build itself inside the `xwiki/build` container (Docker socket mounted, e.g. on Tomcat) — this matches how CI runs it and validates everything in one run. See "Verify the DOOD use case" above.
 5. Check that `@Order` values cover the expected dependency chain between tests.
-6. Drop cleanup that only deletes what the tests created: a module's tests need none (cleanup rule in `okf/testing/strategy.md`). Keep a reset a later assertion depends on, as above.
+6. Drop cleanup that only deletes what the tests created: a module's tests need none (cleanup rule in `kb/testing/strategy.md`). Keep a reset a later assertion depends on, as above.

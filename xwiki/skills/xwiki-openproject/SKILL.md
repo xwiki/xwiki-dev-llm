@@ -50,14 +50,14 @@ and `##DA-103` renders a summary card instead.
 2. Resolve the project, then pick a type from the types that project enables. A project with no
    types enabled cannot hold work packages at all, so check before drafting.
 3. Draft `subject` and a Markdown `description` describing the work in user-visible terms, and set
-   **Observed in versions** per `okf/conventions/versioning.md`.
+   **Observed in versions** per `kb/conventions/versioning.md`.
 4. **Run the create form** and show the user the drafted fields, the defaults it resolved and any
    validation errors.
 5. On approval, POST the real endpoint. Report the returned `displayId` and
    `https://op.xwiki.org/work_packages/{displayId}`.
 
 **Starting work on a work package:** assign it as "Starting work on an issue" in
-`okf/servers/jira.md` says — `assignee` set to the `/api/v3/users/me` user, through the update form
+`kb/servers/jira.md` says — `assignee` set to the `/api/v3/users/me` user, through the update form
 below with `notify=false`.
 
 **Updating a work package:**
@@ -95,4 +95,4 @@ shell profile is only a shell variable, so it never reaches a child process — 
 not invent a credential or a different OpenProject host.
 
 If the project ever settles conventions for *which* fields a work package must carry (as
-`okf/servers/jira.md` does for JIRA), those belong in the OKF, not here — this skill is mechanics.
+`kb/servers/jira.md` does for JIRA), those belong in the KB, not here — this skill is mechanics.

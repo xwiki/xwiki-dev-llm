@@ -7,7 +7,7 @@ instance, so use REST API **v2** with the personal access token as a **bearer** 
 - Auth header: `Authorization: Bearer $JIRA_API_TOKEN` (the same token jira-cli uses)
 - **Never echo `$JIRA_API_TOKEN`.** Pass it only in the header; never print or log it.
 
-For which values to put in Component / Affects Version / Fix Version, see `okf/servers/jira.md` — this
+For which values to put in Component / Affects Version / Fix Version, see `kb/servers/jira.md` — this
 file is only the mechanics.
 
 ## Verify auth / identity
@@ -36,7 +36,7 @@ curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" -H "Accept: application/json"
 ```
 
 Each entry has `name`, `released` (bool) and `releaseDate` — sort by `releaseDate` to find the latest
-released feature line, and read the current LTS line off the `X.10` versions (see `okf/servers/jira.md`).
+released feature line, and read the current LTS line off the `X.10` versions (see `kb/servers/jira.md`).
 
 ## Create an issue
 
@@ -55,7 +55,7 @@ json.dump({"fields": {
     "summary":   "Concise summary of the bug",
     "description": desc,
     "components":  [{"name": "REST"}],
-    # affects version(s) — oldest affected, else last LTS (okf/servers/jira.md):
+    # affects version(s) — oldest affected, else last LTS (kb/servers/jira.md):
     "versions":    [{"name": "17.10.0"}],
 }}, open("payload.json", "w"))
 PY

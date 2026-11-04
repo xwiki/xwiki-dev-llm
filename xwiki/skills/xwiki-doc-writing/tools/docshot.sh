@@ -14,7 +14,7 @@
 #
 # The third argument says WHAT to capture, and `x,y,w,h` (viewport pixels) is the one to reach for:
 # a step's screenshot shows the element plus the nearest landmark that locates it, which is almost
-# never a whole window nor a single element (see okf/conventions/documentation.md). Give the region
+# never a whole window nor a single element (see kb/conventions/documentation.md). Give the region
 # the target width and it is saved unresampled — a wider region is downscaled, and a narrower one is
 # refused rather than upscaled into blur. There is no `--clip` in the CLI and macOS `sips -c` crops
 # from the centre, so the region is captured by screenshotting a transparent clip element.

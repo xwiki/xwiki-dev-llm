@@ -118,7 +118,7 @@ Tick **all six** (these also push the announcement to the "What's New" feed of e
 
 ## 5. Save it unpublished over REST
 
-Write as the developer's xwiki.org account (`okf/servers/index.md`; the `xwiki-doc-writing`
+Write as the developer's xwiki.org account (`kb/servers/index.md`; the `xwiki-doc-writing`
 `tools/xwikidoc.py` client handles the auth and the form token), on
 `https://www.xwiki.org/xwiki/rest/wikis/xwiki/spaces/Blog/spaces/<page-name>/pages/WebHome`. Build
 that URL yourself: a helper splitting a reference on `.` cuts the dotted page name in two.

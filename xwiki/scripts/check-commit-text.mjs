@@ -4,7 +4,7 @@
 // Before a `git commit` or `gh pr create`/`gh pr edit` runs, refuse a message whose BODY contains a
 // bare `@token` or `#123`, which GitHub autolinks into a mention of an unrelated account or a
 // reference to the wrong issue tracker. The rule, the account list and the exceptions are in
-// okf/conventions/commit-messages.md — not restated here. A `#123` is only wrong in a repo whose
+// kb/conventions/commit-messages.md — not restated here. A `#123` is only wrong in a repo whose
 // issues live in JIRA; a repo tracked in GitHub Issues (XWiki SAS's, some contrib ones) means it, so
 // usesJiraIssues() decides from the repo's own files whether to check it.
 //
