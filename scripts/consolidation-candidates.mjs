@@ -135,7 +135,7 @@ for (const p of tracked.filter(isBudgeted)) press(p, "file", bytes(read(p)), bud
 const orgMd = read("xwiki/instructions/xwiki-org.md");
 const okfIndex = read("xwiki/okf/index.md");
 press("xwiki/instructions/xwiki-org.md", "always-on file", bytes(orgMd), ORG_MAX_BYTES);
-press("xwiki/instructions/xwiki-org.md", "OKF map block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
+press("xwiki/instructions/xwiki-org.md", "knowledge-base block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
 press("xwiki/okf/index.md", "file", bytes(okfIndex), OKF_INDEX_MAX_BYTES);
 for (const e of okfIndexEntries(okfIndex)) press("xwiki/okf/index.md", `entry '${e.name}'`, bytes(e.text), OKF_ENTRY_MAX_BYTES);
 

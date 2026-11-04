@@ -64,8 +64,8 @@ export const sharedWithOtherFiles = ({ blocks, owners }, i) => {
 };
 
 // ---- Size budgets (invariants 5, 8 and 12) ---------------------------------------------------
-export const ORG_MAX_BYTES = 8000;
-export const ORG_MAP_MAX_BYTES = 1800;
+export const ORG_MAX_BYTES = 7000;
+export const ORG_MAP_MAX_BYTES = 800;
 export const OKF_INDEX_MAX_BYTES = 11000;
 export const OKF_ENTRY_MAX_BYTES = 240;
 export const SKILL_MAX_BYTES = 20000;
@@ -79,9 +79,10 @@ export const isBudgeted = (p) =>
 export const budgetOf = (p, budgets) =>
   budgets[p] ?? (p.endsWith("/SKILL.md") ? SKILL_MAX_BYTES : DEFAULT_MAX_BYTES);
 
-// The OKF map block of xwiki-org.md (invariant 5), or null when its delimiters are missing.
+// The knowledge-base block of xwiki-org.md (invariant 5) — how to reach the KB, which is searched,
+// not mapped — or null when its delimiters are missing.
 export const orgMapBlock = (orgMd) => {
-  const start = orgMd.indexOf("OKF map");
+  const start = orgMd.indexOf("## Knowledge base");
   const end = orgMd.indexOf("**Capturing learnings:**");
   return start === -1 || end === -1 || end < start ? null : orgMd.slice(start, end);
 };

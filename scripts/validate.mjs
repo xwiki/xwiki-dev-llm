@@ -6,11 +6,12 @@
 //   2. Each SKILL.md frontmatter `name:` equals its directory name.
 //   3. The plugin version fields are identical across all hosts (Claude marketplace + plugin, Kimi
 //      plugin, opencode config comment).
-//   4. Every OKF topic file is referenced in xwiki/okf/index.md AND in the injected mirror
-//      xwiki/instructions/xwiki-org.md.
-//   5. The injected mirror stays within its size budget. Invariant 4 can only ever demand *more*
-//      text in a file that is loaded into every session; without a ceiling the map grows by
-//      accretion, because each extension appends and none ever cuts.
+//   4. Every OKF topic file is referenced in xwiki/okf/index.md. The injected
+//      xwiki/instructions/xwiki-org.md no longer mirrors that map: the KB is reached by search
+//      (kb-search.mjs and the pointer hooks), so listing every topic there would only cost tokens.
+//   5. The injected xwiki-org.md, and its knowledge-base block, stay within their size budgets: a
+//      file loaded into every session grows by accretion, because each extension appends and none
+//      ever cuts.
 //   6. A branch does NOT change any version field, compared against its *merge base* with the base
 //      branch. The bump is not a pull request's job: five manifest fields carry the version, so
 //      every concurrent PR used to conflict with every other one on the same five lines over
@@ -121,7 +122,7 @@ if (new Set(Object.values(versions)).size !== 1) {
   errors.push(`Plugin version mismatch across manifests: ${JSON.stringify(versions)}`);
 }
 
-// ---- Invariant 4: OKF topic map completeness -------------------------------------------------
+// ---- Invariant 4: OKF index completeness -----------------------------------------------------
 const orgMd = read("xwiki/instructions/xwiki-org.md");
 const okfRoot = join(repoRoot, "xwiki/okf");
 const walk = (dir) =>
@@ -138,15 +139,12 @@ for (const abs of walk(okfRoot)) {
   if (!okfIndex.includes(base)) {
     errors.push(`xwiki/okf/index.md: OKF topic '${base}' is not referenced in the map`);
   }
-  if (!orgMd.includes(base)) {
-    errors.push(`xwiki/instructions/xwiki-org.md: OKF topic '${base}' is not referenced in the mirror map`);
-  }
 }
 
 // ---- Invariant 5: the always-on file stays small ---------------------------------------------
 // xwiki-org.md is injected at the start of every session in every xwiki/* repo, so each line is
-// paid for by every task, including the ones that never needed it. The map is routing only —
-// topic names; okf/index.md is where a topic gets described. Raise a budget only with a reason.
+// paid for by every task, including the ones that never needed it. The knowledge-base block says how
+// to reach the KB, never what is in it — search finds that. Raise a budget only with a reason.
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
@@ -156,15 +154,15 @@ if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
 const mapBlock = orgMapBlock(orgMd);
 if (mapBlock === null) {
   errors.push(
-    `xwiki/instructions/xwiki-org.md: cannot locate the OKF map block ` +
-      `(expected "OKF map" … "**Capturing learnings:**")`
+    `xwiki/instructions/xwiki-org.md: cannot locate the knowledge-base block ` +
+      `(expected "## Knowledge base" … "**Capturing learnings:**")`
   );
 } else {
   const mapBytes = Buffer.byteLength(mapBlock);
   if (mapBytes > ORG_MAP_MAX_BYTES) {
     errors.push(
-      `xwiki/instructions/xwiki-org.md: the OKF map block is ${mapBytes} bytes, over the ${ORG_MAP_MAX_BYTES}-byte ` +
-        `budget — the mirror lists topic *names*; describe the topic in xwiki/okf/index.md instead`
+      `xwiki/instructions/xwiki-org.md: the knowledge-base block is ${mapBytes} bytes, over the ` +
+        `${ORG_MAP_MAX_BYTES}-byte budget — it says how to reach the KB; what is in it is found by search`
     );
   }
 }
@@ -414,4 +412,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync at ` +
-    `${versions["marketplace.metadata.version"]}, OKF map complete).`);
+    `${versions["marketplace.metadata.version"]}, OKF index complete).`);

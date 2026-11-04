@@ -17,7 +17,7 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF map, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, OKF index, size budgets, copied paragraphs)
 node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
@@ -73,8 +73,8 @@ Inside `xwiki/`:
   get-url origin` and only injects when the remote's org is `xwiki`, `xwiki-contrib`, or one the
   developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
   case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
-  Code ships) so it is cross-platform with no bash/`jq` dependency. If you change the scoping rule,
-  it is the `orgs` array and the regex built from it in this script.
+  Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
+  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`).
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
@@ -106,9 +106,10 @@ Inside `xwiki/`:
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
-  `xwiki-line-endings.js` and `xwiki-commit-text.js`, which port the line-ending and commit/PR text
-  guards to opencode and reuse `scripts/check-line-endings.mjs` and `scripts/check-commit-text.mjs`
-  (each exports a shared check function; run directly it is still the Claude/Kimi CLI hook). Each
+  `xwiki-line-endings.js`, `xwiki-commit-text.js` and `xwiki-kb-pointers.js`, which port the
+  line-ending and commit/PR text guards and the KB pointer hooks to opencode and reuse
+  `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs` and `scripts/kb-hooks.mjs`
+  (each exports a shared function; run directly it is still the Claude/Kimi CLI hook). Each
   plugin's default export carries both APIs: `server` for opencode 1.x (`tool.execute.*` hooks) and
   `setup` for opencode 2.x (`ctx.tool.hook("execute.*")`), which refuses a module without it. opencode resolves the shared assets
   through the `XWIKI_LLM_HOME` env var (which points at the checkout), since it has no plugin
@@ -125,8 +126,9 @@ Inside `xwiki/`:
   each other. The release — including which segment moves — is cut on `master` afterwards; see
   **Release** above.
 - **`xwiki/instructions/xwiki-org.md` is injected into every session** in every `xwiki/*` repo, so
-  it has a byte budget the validator enforces. Its OKF map lists topic *names*; a topic is described
-  in `xwiki/okf/index.md`. Put a rule there only when it must be obeyed without opening any OKF file.
+  it has a byte budget the validator enforces. It lists no KB topic — the KB is reached by search
+  (`xwiki/scripts/kb-search.mjs`, the pointer hooks). Put a rule there only when it must be obeyed
+  without opening any KB file.
 - **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
   point to it instead of restating it. The validator fails a paragraph copied across files and a skill
   or OKF file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the

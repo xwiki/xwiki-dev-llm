@@ -82,12 +82,13 @@ ln -s "$XWIKI_LLM_HOME/xwiki/skills" ~/.config/opencode/skills
 - *Per project.* Copy `opencode.jsonc` to `opencode.json` in an XWiki repo (it needs no editing —
   it reads `XWIKI_LLM_HOME`). This scopes the config to that repo only.
 
-**Guard plugins (optional).** Symlink them into an opencode plugin directory:
+**Guard and KB pointer plugins (optional).** Symlink them into an opencode plugin directory:
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/opencode/plugins/xwiki-line-endings.js
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/opencode/plugins/xwiki-commit-text.js
+ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-kb-pointers.js" ~/.config/opencode/plugins/xwiki-kb-pointers.js
 ```
 
 > **Note — no git-remote scoping in opencode.** In Claude Code the org conventions are injected only
@@ -105,6 +106,8 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/op
 | **Org conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all repos": build commands, commit format, code conventions, `@since` rules | Every session, in `xwiki/*` and `xwiki-contrib/*` repos only (scoped by git remote) | `XWIKI_LLM_ORGS` to add your own orgs. No scoping in opencode — see the install note above |
 | **Work directory** — plans, handoffs, drafts and notes go to one root instead of the repo, `/tmp` and your home | The first time a task needs a file that must outlive the session | `XWIKI_LLM_WORK` ([defaults](docs/setup.md)) |
 | **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — blocks a write whose endings contradict the repo's `.gitattributes`, so no spurious whole-file diffs | Every `Write`/`Edit`; silent unless violated | — |
+| **KB prompt pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 5 `file#Section` pointers into the KB that match your prompt, so the model reads just that section; nothing when no match is strong enough, never a pointer twice per session | Every prompt of 3+ words, in the same repos as the org conventions | — (opencode 2.x has no prompt hook, so none there) |
+| **KB edit pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 3 pointers to the topics whose `applies-to:` globs match the file being edited (`sonarqube/` ones only when the path or edit mentions Sonar); advice only, never blocks | Every `Edit`/`Write`, same repos; after the write in opencode | — (not in Kimi Code, whose tool hooks cannot add context) |
 | **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name`, or a `#123` in a repo whose issues live in JIRA (read from its `pom.xml` or remote), which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; summary line exempt | — |
 
 A pushed commit message cannot be fixed without rewriting a shared branch, and a CRLF diff hides the
@@ -132,7 +135,7 @@ means it needs nothing.
 
 | Skill | What it does | Needs | Example |
 |---|---|---|---|
-| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" from the OKF, and extend it by PR | — | "what's our policy on comments in code?" |
+| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" by searching the KB, and extend it by PR | — | "what's our policy on comments in code?" |
 | [`xwiki-javadoc`](xwiki/skills/xwiki-javadoc/) | Write Javadoc per the XWiki code style | — | "javadoc this class" |
 | [`xwiki-fix-deprecation`](xwiki/skills/xwiki-fix-deprecation/) | Move every caller of a deprecated API — Java, Velocity, wiki pages, JS — to its replacement, then retire the API to legacy; proposes easy candidates | — | "fix some easy deprecations" |
 | [`xwiki-legacy`](xwiki/skills/xwiki-legacy/) | Move a deprecated API with no caller left to its `-legacy` module: remove, re-add, Revapi | — | "retire `XWikiRightService`" |
@@ -188,7 +191,7 @@ means it needs nothing.
 
 | | |
 |---|---|
-| **OKF** (`xwiki/okf/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Extended only through a reviewed PR. |
+| **KB** (`xwiki/okf/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Found by search (`xwiki/scripts/kb-search.mjs`, BM25 over `##` sections), not by a map. Extended only through a reviewed PR. |
 | **`discourse` MCP** | forum.xwiki.org: search and read with no credential, post with one ([setup](docs/setup.md#forum-write-access-for-the-discourse-mcp-server)) |
 | **`develocity` MCP** | community.develocity.cloud: build scans, test outcomes, flaky history, cache hit rates ([setup](docs/setup.md#develocity-access-for-the-develocity-mcp-server-and-dv-test-history)) |
 | **`sonarqube` MCP** | SonarCloud issues and quality gates, per repo ([setup](docs/setup.md)) |
@@ -204,7 +207,7 @@ credentials for JIRA, the forum, Develocity, SonarCloud and xwiki.org.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF map, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF index, size budgets, copied paragraphs)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.

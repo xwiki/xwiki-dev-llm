@@ -96,9 +96,8 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   before creating a file — but not one whose readers differ (a topic on *running* tests is not the
   home of rules for *writing* them), and not where `foreignSections` merely echoes a deliberate
   rules-vs-storage split. Check a new name against its siblings, and list what must follow: the
-  `okf/index.md` entry (≤240 bytes each); the topic name in the OKF map of
-  `xwiki/instructions/xwiki-org.md`, whose remaining byte headroom you state (the finder's
-  `budget-pressure` shows it); the skill pointers; the README row; and any open PR on those files.
+  `okf/index.md` entry (≤240 bytes each); the topic's search sidecar (`okf/_meta/`, regenerated
+  by `scripts/kb-pipeline/gen-metadata.mjs`); the skill pointers; the README row; and any open PR on those files.
 - **How much would really move?** `conditionalSections` is a keyword match on titles and openings
   ("Mode", "Phase", "only when"): open each section and check that most runs skip it — one that most
   runs read is the main path, whatever its title. Subtract what must stay in `SKILL.md` (the
