@@ -239,11 +239,14 @@ function applyFrontmatter(o) {
     try {
       proposed = JSON.parse(readFileSync(join(o.root, sidecarOf(topic.rel)), "utf8")).proposed || {};
     } catch { /* no sidecar: provenance and last-confirmed only */ }
+    // A topic with `provenance` was already migrated and its related/applies-to reviewed: an absent
+    // key there is a decision (no pointer from edits), so the proposals only go to new topics.
+    const reviewed = /^provenance:/m.test(topic.text.split(/^---\s*$/m)[1] ?? "");
     const next = addFrontmatter(topic.text, {
       provenance: o.provenance,
       "last-confirmed": lastCommitDate(abs),
-      related: proposed.related,
-      "applies-to": proposed["applies-to"],
+      related: reviewed ? undefined : proposed.related,
+      "applies-to": reviewed ? undefined : proposed["applies-to"],
     });
     if (next !== topic.text) {
       writeFileSync(abs, next);
