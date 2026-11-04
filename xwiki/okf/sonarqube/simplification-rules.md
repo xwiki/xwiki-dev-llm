@@ -7,7 +7,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the behaviour-pres
 provenance: official
 last-confirmed: 2026-08-27
 related: [sonarqube/index.md, sonarqube/syntax-rules.md, sonarqube/verification.md]
-applies-to: ["**/*.java"]
 ---
 
 # SonarQube simplification rules

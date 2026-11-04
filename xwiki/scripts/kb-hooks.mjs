@@ -139,18 +139,14 @@ export function matchPath(filePath, projectDir) {
 
 /**
  * Edit hook: the KB files whose `applies-to:` globs match the edited path, most specific glob first,
- * ties broken by the BM25 score of the file's best section against the path's words. The generated
- * `applies-to:` values are broad — every `sonarqube/` family claims `**\/*.java` — so a `sonarqube/`
- * file is only pointed at when the path or the edit text mentions Sonar (`NOSONAR`, a rule fix…).
+ * ties broken by the BM25 score of the file's best section against the path's words.
  */
-export function editPointers(index, filePath, { projectDir, editText = "", seen = new Set(), k = EDIT_K } = {}) {
+export function editPointers(index, filePath, { projectDir, seen = new Set(), k = EDIT_K } = {}) {
   const path = matchPath(filePath, projectDir);
-  const sonar = /sonar/i.test(`${path}\n${editText}`);
   const seenFiles = new Set([...seen].map((id) => id.replace(/#.*$/, "")));
   const candidates = [];
   for (const [file, meta] of Object.entries(index.files)) {
     if (!meta.appliesTo.length || seenFiles.has(file)) continue;
-    if (file.startsWith("sonarqube/") && !sonar) continue;
     const specificity = Math.max(
       -1, ...meta.appliesTo.filter((g) => globToRegExp(g).test(path)).map(globSpecificity));
     if (specificity >= 0) candidates.push({ file, specificity });
@@ -228,10 +224,8 @@ export function runHook(kind, payload, { root = defaultRoot(), cacheDir, stateDi
   } else if (kind === "edit") {
     const input = payload.tool_input || {};
     if (!input.file_path) return "";
-    const editText = [input.new_string, input.content, ...(input.edits || []).map((e) => e.new_string)]
-      .filter((s) => typeof s === "string").join("\n");
     subject = matchPath(input.file_path, projectDir);
-    hits = editPointers(index, input.file_path, { projectDir, editText, seen });
+    hits = editPointers(index, input.file_path, { projectDir, seen });
   } else {
     return "";
   }

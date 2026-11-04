@@ -10,7 +10,7 @@ sources:
 provenance: official
 last-confirmed: 2026-09-15
 related: [conventions/security.md, conventions/backward-compatibility.md, conventions/velocity-code-style.md, conventions/server-side-rendering.md]
-applies-to: ["**/*ScriptService.java", "**/*.vm"]
+applies-to: ["**/*ScriptService.java"]
 ---
 
 # Script service conventions

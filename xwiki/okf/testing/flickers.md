@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [servers/jenkins.md, servers/develocity.md, testing/strategy.md, testing/running-docker-its.md]
-applies-to: ["**/src/test/java/**/*.java"]
 ---
 
 # Diagnosing a flickering functional test

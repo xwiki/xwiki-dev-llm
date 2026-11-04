@@ -11,7 +11,7 @@ sources:
 provenance: official
 last-confirmed: 2026-07-01
 related: [architecture/component-system.md, conventions/backward-compatibility.md, architecture/platform-modules.md]
-applies-to: ["**/src/main/java/**/*MacroRefactoring*.java", "**/src/main/resources/META-INF/components.txt"]
+applies-to: ["**/*MacroRefactoring*.java"]
 ---
 
 # Macro reference refactoring and backlinks

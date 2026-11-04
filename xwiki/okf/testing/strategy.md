@@ -23,7 +23,7 @@ sources:
 provenance: official
 last-confirmed: 2026-11-01
 related: [testing/test-value.md, testing/running-docker-its.md, testing/flickers.md, testing/ci-watch.md]
-applies-to: ["**/src/test/**/*.java", "**/pom.xml"]
+applies-to: ["**/src/test/**/*.java", "**/*-test-pageobjects/**/*.java"]
 ---
 
 # XWiki testing strategy (overview)

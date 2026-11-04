@@ -12,7 +12,6 @@ sources:
 provenance: official
 last-confirmed: 2026-08-31
 related: [architecture/data-migrations.md, conventions/performance.md, architecture/platform-modules.md]
-applies-to: ["**/src/main/resources/**/*.xml", "**/*.vm"]
 ---
 
 # Stored data in a wiki application

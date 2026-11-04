@@ -9,7 +9,7 @@ sources:
 provenance: official
 last-confirmed: 2026-09-12
 related: [architecture/platform-modules.md, architecture/module-design.md, conventions/code-style.md]
-applies-to: ["**/src/main/java/**/*.java", "**/src/main/resources/META-INF/components.txt"]
+applies-to: ["**/META-INF/components.txt"]
 ---
 
 # The XWiki component system

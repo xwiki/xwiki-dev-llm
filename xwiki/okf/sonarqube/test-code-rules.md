@@ -9,7 +9,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the test-code rule
 provenance: official
 last-confirmed: 2026-10-20
 related: [sonarqube/index.md, conventions/code-style.md, testing/strategy.md, sonarqube/verification.md]
-applies-to: ["**/src/test/**/*.java"]
 ---
 
 # SonarQube test-code rules

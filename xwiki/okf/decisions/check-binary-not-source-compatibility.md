@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [conventions/backward-compatibility.md, conventions/versioning.md, architecture/module-design.md]
-applies-to: ["**/src/main/java/**/*.java"]
 ---
 
 # Check binary and semantic compatibility, but not source compatibility

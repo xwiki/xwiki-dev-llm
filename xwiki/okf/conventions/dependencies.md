@@ -9,7 +9,7 @@ sources:
 provenance: official
 last-confirmed: 2026-09-01
 related: [conventions/commit-messages.md, servers/jira.md]
-applies-to: ["**/pom.xml", "**/package.json", "**/pnpm-lock.yaml"]
+applies-to: ["**/package.json"]
 ---
 
 # Accepting a new third-party dependency

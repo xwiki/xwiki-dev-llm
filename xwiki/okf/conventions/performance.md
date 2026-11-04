@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-07-02
 related: [conventions/code-style.md, conventions/security.md]
-applies-to: ["**/*.java"]
 ---
 
 # Resource efficiency (memory and streaming)

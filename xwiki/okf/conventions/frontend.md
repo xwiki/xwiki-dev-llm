@@ -16,7 +16,7 @@ sources:
 provenance: official
 last-confirmed: 2026-11-03
 related: [conventions/server-side-rendering.md, conventions/backward-compatibility.md, conventions/naming.md, conventions/translations.md]
-applies-to: ["**/*.js", "**/*.css", "**/*.less", "**/*.vm"]
+applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css"]
 ---
 
 # Front-end conventions

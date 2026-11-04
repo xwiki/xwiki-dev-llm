@@ -10,7 +10,7 @@ sources:
 provenance: official
 last-confirmed: 2026-11-03
 related: [architecture/platform-modules.md, processes/module-lifecycle.md, conventions/translations.md]
-applies-to: ["**/pom.xml", "**/package.json", "**/xwiki.properties", "**/src/main/resources/**/*.xml"]
+applies-to: ["**/xwiki.properties*"]
 ---
 
 # Naming conventions

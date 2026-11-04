@@ -15,7 +15,7 @@ sources:
 provenance: official
 last-confirmed: 2026-10-30
 related: [testing/strategy.md, architecture/module-design.md, architecture/component-system.md, sonarqube/test-code-rules.md]
-applies-to: ["**/src/test/**/*.java"]
+applies-to: ["**/src/test/java/**/*.java"]
 ---
 
 # Writing a test worth having

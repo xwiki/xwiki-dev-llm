@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-22
 related: [sonarqube/verification.md, conventions/code-style.md, conventions/backward-compatibility.md, conventions/logging.md]
-applies-to: ["**/*.java"]
 ---
 
 # SonarQube rule fixes — index / map

@@ -8,7 +8,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the pure syntax an
 provenance: official
 last-confirmed: 2026-09-09
 related: [sonarqube/index.md, conventions/versioning.md, sonarqube/simplification-rules.md, sonarqube/verification.md]
-applies-to: ["**/*.java"]
 ---
 
 # SonarQube syntax and annotation rules

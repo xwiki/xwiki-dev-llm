@@ -9,7 +9,7 @@ sources:
 provenance: official
 last-confirmed: 2026-10-22
 related: [architecture/wiki-application-data.md, architecture/component-system.md, testing/strategy.md]
-applies-to: ["**/src/main/java/**/*Migration*.java", "**/src/test/**/*Migration*.java"]
+applies-to: ["**/src/main/java/**/*Migration*.java"]
 ---
 
 # Data migrations and the document-queueing pattern

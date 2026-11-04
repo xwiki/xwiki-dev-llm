@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-08-03
 related: [conventions/code-comments.md, conventions/code-style.md]
-applies-to: ["**/*.java"]
 ---
 
 # Logging — a log argument is an object, not text

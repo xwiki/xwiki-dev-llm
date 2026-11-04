@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-08-13
 related: [processes/release.md, conventions/naming.md, architecture/platform-modules.md, conventions/versioning.md]
-applies-to: ["**/pom.xml"]
 ---
 
 # Module lifecycle

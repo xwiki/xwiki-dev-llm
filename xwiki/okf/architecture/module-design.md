@@ -11,7 +11,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-21
 related: [architecture/component-system.md, architecture/platform-modules.md, conventions/code-style.md]
-applies-to: ["**/src/main/java/**/*.java"]
 ---
 
 # Module design

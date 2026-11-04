@@ -12,7 +12,7 @@ sources:
 provenance: official
 last-confirmed: 2026-10-13
 related: [processes/security-policy.md, conventions/script-services.md, conventions/server-side-rendering.md, conventions/translations.md]
-applies-to: ["**/*.vm", "**/*.groovy", "**/*.java", "**/*.xml", "**/*.js"]
+applies-to: ["**/*.vm", "**/src/main/resources/**/*.xml", "**/*ScriptService.java", "**/*.groovy"]
 ---
 
 # Secure-coding conventions

@@ -9,7 +9,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the constant, reso
 provenance: official
 last-confirmed: 2026-09-16
 related: [sonarqube/index.md, conventions/versioning.md, conventions/code-comments.md, sonarqube/verification.md]
-applies-to: ["**/*.java"]
 ---
 
 # SonarQube constant, resource and exception rules

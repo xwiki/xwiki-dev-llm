@@ -1,5 +1,5 @@
 // The KB pointer hooks: scoping by git remote, the prompt hook's score threshold (with the probes that
-// justify it, on the shipped KB), the edit hook's glob ranking and Sonar exclusion, per-session dedupe,
+// justify it, on the shipped KB), the edit hook's glob ranking, per-session dedupe,
 // and the never-fail rule — fed the stdin payloads Claude Code and Kimi Code actually send.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -64,7 +64,6 @@ function fixtureKb(files) {
 const topic = (title, appliesTo, body, extra = '') =>
   `---\ntitle: ${title}\nstability: durable\napplies-to: [${appliesTo.map((g) => `"${g}"`).join(', ')}]\n${extra}---\n\n# ${title}\n\n${body}\n`;
 const EDIT_KB = fixtureKb({
-  'sonarqube/syntax-rules.md': topic('Syntax rules', ['**/*.java'], '## S1128 — unused import\n\nRemove it.'),
   'conventions/logging.md': topic('Logging', ['**/*.java'], '## Levels\n\nUse debug for internals.'),
   'architecture/component-system.md': topic('Component system', ['**/src/main/java/**/*.java'],
     '## Components\n\nUse @Component.\n\n## Mail components\n\nThe mail sender is a component.'),
@@ -148,14 +147,6 @@ test('edit: most specific glob first, ties broken by the score of the path words
   const script = editPointers(editIndex, '/r/src/main/java/FooScriptService.java', { projectDir: '/r' });
   assert.equal(script[0].file, 'conventions/script-services.md');
   assert.ok(script.length <= 3);
-});
-
-test('edit: sonarqube files only when the path or the edit text mentions Sonar', () => {
-  const path = 'src/main/java/org/xwiki/Foo.java';
-  const files = (opts) => editPointers(editIndex, path, { k: 10, ...opts }).map((h) => h.file);
-  assert.ok(!files({ editText: 'import java.util.List;' }).some((f) => f.startsWith('sonarqube/')));
-  assert.ok(files({ editText: 'return x; // NOSONAR' }).includes('sonarqube/syntax-rules.md'));
-  assert.ok(editPointers(editIndex, 'sonar/Foo.java', { k: 10 }).some((h) => h.file.startsWith('sonarqube/')));
 });
 
 test('edit: superseded entries and non-matching globs are never pointed at', () => {
@@ -284,8 +275,8 @@ test('opencode: 1.x appends prompt pointers as a synthetic part and edit pointer
   assert.match(output.parts[1].text, /translations\.md#/);
   const tool = { title: 'edit', output: 'Edit applied.', metadata: {} };
   await hooks['tool.execute.after'](
-    { tool: 'edit', sessionID: 'oc-1', callID: 'c', args: { filePath: join(scoped, 'src/main/java/Foo.java') } }, tool);
-  assert.match(tool.output, /^Edit applied\.\n\nXWiki KB pointers for src\/main\/java\/Foo\.java /);
+    { tool: 'edit', sessionID: 'oc-1', callID: 'c', args: { filePath: join(scoped, 'src/main/java/FooScriptService.java') } }, tool);
+  assert.match(tool.output, /^Edit applied\.\n\nXWiki KB pointers for src\/main\/java\/FooScriptService\.java /);
   const off = await plugin.server({ directory: personal });
   const quiet = { message: { id: 'm' }, parts: [{ type: 'text', text: 'how do I add a translation key' }] };
   await off['chat.message']({ sessionID: 'oc-2' }, quiet);

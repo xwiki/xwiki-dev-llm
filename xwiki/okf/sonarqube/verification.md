@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-22
 related: [sonarqube/index.md, testing/strategy.md, sonarqube/dead-code-rules.md, sonarqube/modernization-rules.md]
-applies-to: ["**/src/main/java/**/*.java", "**/src/test/java/**/*.java"]
 ---
 
 # Verifying a SonarQube fix

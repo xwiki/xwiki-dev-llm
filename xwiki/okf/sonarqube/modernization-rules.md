@@ -7,7 +7,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the language-moder
 provenance: official
 last-confirmed: 2026-08-27
 related: [sonarqube/index.md, sonarqube/verification.md, conventions/backward-compatibility.md, conventions/code-style.md]
-applies-to: ["**/*.java"]
 ---
 
 # SonarQube modernization rules

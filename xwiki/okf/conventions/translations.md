@@ -10,7 +10,7 @@ sources:
 provenance: official
 last-confirmed: 2026-08-13
 related: [conventions/documentation.md, conventions/naming.md, conventions/backward-compatibility.md, conventions/server-side-rendering.md]
-applies-to: ["**/ApplicationResources.properties", "**/Translations.xml", "**/*Translations.xml", "**/src/main/resources/**/*.properties"]
+applies-to: ["**/ApplicationResources*.properties", "**/*Translations*.xml"]
 ---
 
 # Translation key lifecycle

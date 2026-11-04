@@ -10,7 +10,7 @@ sources:
 provenance: official
 last-confirmed: 2026-10-15
 related: [architecture/component-system.md, conventions/backward-compatibility.md, conventions/dependencies.md, processes/module-lifecycle.md]
-applies-to: ["**/src/main/java/**/*.java", "**/pom.xml"]
+applies-to: ["**/xwiki-platform-oldcore/src/main/java/**"]
 ---
 
 # The xwiki-platform module structure

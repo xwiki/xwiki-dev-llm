@@ -15,7 +15,6 @@ sources:
 provenance: official
 last-confirmed: 2026-10-17
 related: [conventions/backward-compatibility.md, servers/jira.md, processes/release.md]
-applies-to: ["**/*.java"]
 ---
 
 # API versioning (`@since` / `@Deprecated`)

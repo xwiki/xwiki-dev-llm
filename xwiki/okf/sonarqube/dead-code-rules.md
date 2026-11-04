@@ -9,7 +9,6 @@ summary: Correct fixes and XWiki-specific drop conditions for the dead-code and 
 provenance: official
 last-confirmed: 2026-10-17
 related: [sonarqube/index.md, sonarqube/verification.md, conventions/backward-compatibility.md, architecture/component-system.md]
-applies-to: ["**/*.java", "**/*.hbm.xml"]
 ---
 
 # SonarQube dead-code and unused-code rules

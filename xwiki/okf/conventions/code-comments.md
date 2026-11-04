@@ -9,7 +9,6 @@ sources:
 provenance: official
 last-confirmed: 2026-09-15
 related: [conventions/commit-messages.md, conventions/code-style.md, conventions/velocity-code-style.md]
-applies-to: ["**/*.java", "**/*.js", "**/*.vm", "**/*.xml", "**/*.properties", "**/*.sh"]
 ---
 
 # Code comment policy
