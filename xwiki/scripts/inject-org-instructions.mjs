@@ -6,9 +6,9 @@
 // Written in Node (ships with Claude Code and Kimi Code) so it works on Windows, macOS and Linux.
 
 import { readdirSync, readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { basename, join } from "node:path";
 
+import { isScopedRepo } from "./repo-scope.mjs";
 import { LEGACY_WORK_ROOT, workRoot } from "./state-dir.mjs";
 
 /** Whether `dir` exists and holds anything. A missing or unreadable directory counts as empty. */
@@ -35,28 +35,9 @@ if (payload.cwd) {
 
 const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.env.KIMI_PLUGIN_ROOT;
 
-// Resolve the repo's origin remote. If this isn't a git repo, inject nothing.
-let remote = "";
-try {
-  remote = execFileSync("git", ["-C", projectDir, "remote", "get-url", "origin"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"]
-  }).trim();
-} catch {
-  process.exit(0);
-}
-
-// Scope: the two upstream orgs, plus any the developer adds in XWIKI_LLM_ORGS (comma- or
-// whitespace-separated) — for a company or fork that follows the same conventions in its own
-// GitHub org. Names are taken literally (regex-escaped) and matched case-insensitively, since
-// GitHub org names are; the match handles both SSH and HTTPS remotes.
-const orgs = [
-  "xwiki",
-  "xwiki-contrib",
-  ...(process.env.XWIKI_LLM_ORGS || "").split(/[,\s]+/).filter(Boolean)
-];
-const orgPattern = orgs.map(org => org.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-if (!new RegExp(`github\\.com[:/](?:${orgPattern})/`, "i").test(remote)) {
+// Scope: the repo's origin remote must be in an org repo-scope.mjs accepts; a personal repo or a
+// non-git directory gets nothing.
+if (!isScopedRepo(projectDir)) {
   process.exit(0);
 }
 
