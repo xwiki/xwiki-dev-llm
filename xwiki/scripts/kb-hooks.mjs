@@ -10,6 +10,11 @@
 //   node kb-hooks.mjs edit     PreToolUse on Edit/Write — matches the target path against the topics'
 //                              `applies-to:` globs and the text the edit adds against their
 //                              `applies-when:` regexes; ≤3 pointers. Advice only: it never blocks.
+//   node kb-hooks.mjs commit   PreToolUse on a Bash `git commit` — asks for a self-review of the commit's
+//                              diff against what the session was pointed at (rules are skipped at commit
+//                              time, or overridden by copying the code around), listing those ids and up
+//                              to 5 more pointers matching the commit's files the way the edit hook does.
+//                              Nothing when neither exists. Advice only: it never blocks.
 //   node kb-hooks.mjs skill    PreToolUse on Skill — records the loaded skill, so it is not pointed at.
 //                              A skill named in a prompt (`/xwiki-legacy`) counts as loaded too.
 //
@@ -31,6 +36,7 @@
 // Every constant is set a priori (tests/kb-hooks/ records the probes behind MIN_SCORE), never tuned
 // on the benchmark's questions.
 
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -42,6 +48,8 @@ import { kbHookStateDir } from "./state-dir.mjs";
 
 export const PROMPT_K = 5;
 export const EDIT_K = 3;
+// Pointers matching a commit's files, on top of the session's: a commit spans several edits.
+export const COMMIT_K = PROMPT_K;
 // Skill pointers a hook may add on top of its KB ones: a skill is a task's whole procedure, so it is
 // not made to compete with the sections for the same few slots.
 export const SKILL_K = 2;
@@ -290,6 +298,91 @@ export function namedSkills(index, text) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Commit self-review
+
+const GIT_COMMIT = /(?:^|[\s;&|(`"'])git(?:\s+-[cC]\s+\S+|\s+--?[\w.-]+(?:=\S+)?)*\s+commit(?=$|[\s;&|)`"'])/;
+/** Whether a shell command runs `git commit` (also `git -C dir commit`, after `&&`, inside `bash -c "…"`). */
+export const isGitCommit = (command) => typeof command === "string" && GIT_COMMIT.test(command);
+
+/** Whether the commit also takes changes not staged yet: `-a`/`--all`, or a `git add` in the same command. */
+export const takesUnstaged = (command) => /(?:^|[\s;&|(])git\s+add\b/.test(command)
+  || /\scommit\b.*?\s(?:-[a-zA-Z]*a[a-zA-Z]*|--all)(?=\s|$)/.test(command);
+
+/** The lines each file of a unified diff adds: `Map(path → text)`, empty text for a deletion. */
+export function diffAdditions(diff) {
+  const files = new Map();
+  let cur = null;
+  for (const line of String(diff).split("\n")) {
+    const m = /^diff --git a\/.* b\/(.*)$/.exec(line);
+    if (m) files.set(cur = m[1], []);
+    else if (cur !== null && line.startsWith("+") && !line.startsWith("+++")) files.get(cur).push(line.slice(1));
+  }
+  return new Map([...files].map(([p, lines]) => [p, lines.join("\n")]));
+}
+
+/**
+ * What a commit adds, read from git in `cwd`: before it runs, the index (the work tree too when it
+ * takes unstaged changes); after it (opencode), HEAD. Empty when git cannot tell.
+ */
+export function commitAdditions(cwd, { after = false, unstaged = false } = {}) {
+  const args = after ? ["show", "--format=", "-U0", "--no-color", "--no-ext-diff", "HEAD"]
+    : ["diff", "-U0", "--no-color", "--no-ext-diff", unstaged ? "HEAD" : "--cached"];
+  try {
+    return diffAdditions(execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 << 20,
+      stdio: ["ignore", "pipe", "ignore"] }));
+  } catch {
+    return new Map();
+  }
+}
+
+/** The edit hook's pointers over a commit's files, minus the session's: content matches first. */
+export function commitPointers(index, files, { projectDir, seen = new Set(), k = COMMIT_K } = {}) {
+  const hits = [];
+  const taken = new Set();
+  for (const [file, added] of [...files].slice(0, 200)) {
+    for (const h of editPointers(index, file, { projectDir, seen, added: added || null, k })) {
+      if (!taken.has(h.file)) hits.push(h);
+      taken.add(h.file);
+    }
+  }
+  return capKinds(hits.sort((a, b) => Number(b.content) - Number(a.content)), k);
+}
+
+/**
+ * The self-review text: the instruction, the session's pointer ids (the latest kept when they do not
+ * all fit), then the pointers matching the commit, cut to MAX_CHARS. Returns `{ text, ids }` like
+ * formatPointers, `ids` being the matching pointers that made it in.
+ */
+export function formatCommitReview(given, hits, kbRoot) {
+  const header = "XWiki commit self-review — check this commit's diff (`git show HEAD` once it ran) against the "
+    + "XWiki rules this session was given, not against the code around the change, and fix and amend any "
+    + `violation before pushing. KB ids are files under ${kbRoot}/; re-read a section only when unsure.`;
+  const label = "\nAlso matching the commit's files:";
+  const reserve = given.length ? 200 : 0;
+  let lines = "";
+  const ids = [];
+  for (const h of hits) {
+    const line = `\n${pointerLine(h)}`;
+    if (header.length + label.length + lines.length + line.length > MAX_CHARS - reserve) break;
+    lines += line;
+    ids.push(h.id);
+  }
+  const names = given.map((id) => (id.startsWith("skill:") ? `skill ${id.slice(6)}` : id));
+  const prefix = "\nGiven this session: ";
+  let room = MAX_CHARS - header.length - (ids.length ? label.length + lines.length : 0) - prefix.length - 3;
+  const kept = [];
+  for (let i = names.length - 1; i >= 0 && names[i].length + 2 <= room; i--) {
+    kept.unshift(names[i]);
+    room -= names[i].length + 2;
+  }
+  if (!kept.length && !ids.length) return { text: "", ids: [] };
+  let text = header;
+  if (kept.length) text += `${prefix}${kept.length < names.length ? "…; " : ""}${kept.join("; ")}`;
+  if (ids.length) text += `${label}${lines}`;
+  return { text, ids };
+}
+
+// ---------------------------------------------------------------------------------------------
 // Hook entry points
 
 /**
@@ -300,6 +393,7 @@ export function namedSkills(index, text) {
 export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cacheDir, stateDir = kbHookStateDir(),
   env = process.env } = {}) {
   const projectDir = payload.cwd || env.CLAUDE_PROJECT_DIR || process.cwd();
+  if (kind === "commit" && !isGitCommit(payload.tool_input?.command)) return "";
   if (!isScopedRepo(projectDir, env)) return "";
   const skills = skillsRoot === undefined ? (root === defaultRoot() ? defaultSkillsRoot() : null) : skillsRoot;
   const index = loadIndex(root, { ...(cacheDir === undefined ? {} : { cacheDir }), skillsRoot: skills });
@@ -319,6 +413,17 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
       save();
     }
     return "";
+  } else if (kind === "commit") {
+    // Before the commit (Claude Code's PreToolUse) its changes are staged; after it (opencode), in HEAD.
+    const command = payload.tool_input.command;
+    const files = commitAdditions(projectDir,
+      { after: payload.hook_event_name !== "PreToolUse", unstaged: takesUnstaged(command) });
+    const given = [...seen].filter((id) => !id.startsWith("skill:") || index.files[id]);
+    const review = formatCommitReview(given, commitPointers(index, files, { projectDir, seen }),
+      root.split(sep).join("/"));
+    for (const id of review.ids) seen.add(id);
+    if (review.ids.length) save();
+    return review.text;
   } else if (kind === "prompt") {
     if (typeof payload.prompt !== "string") return "";
     const loaded = namedSkills(index, payload.prompt);

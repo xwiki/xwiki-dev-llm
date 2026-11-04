@@ -6,6 +6,7 @@
 //     text part. opencode 2.x has no documented hook on a submitted prompt, so there it is absent.
 //   - edit pointers: after an edit/write, appended to the tool result (opencode has no way to add
 //     context *before* a tool runs without refusing it, and these are advice, never a refusal).
+//   - commit self-review: after a bash `git commit`, appended to the tool result (it reads HEAD there).
 //   - a skill the session loads (the `skill` tool) is recorded, so no pointer names it again.
 //
 // Install it by symlinking (or copying) this file into one of opencode's plugin directories:
@@ -37,6 +38,8 @@ const loadHook = async () => {
 };
 
 const isFileWrite = (tool) => tool === "write" || tool === "edit";
+
+const commitPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { command: args?.command } });
 
 const skillPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { name: args?.name } });
 
@@ -71,15 +74,17 @@ const server = async ({ directory }) => {
       });
     },
     "tool.execute.after": async (input, output) => {
-      if (input.tool === "skill") hook("skill", skillPayload(input.sessionID, directory, input.args ?? output?.args));
-      if (!isFileWrite(input.tool) || typeof output?.output !== "string") return;
-      const text = hook("edit", editPayload(input.sessionID, directory, input.args ?? output?.args));
+      const args = input.args ?? output?.args;
+      if (input.tool === "skill") hook("skill", skillPayload(input.sessionID, directory, args));
+      if (typeof output?.output !== "string") return;
+      const text = isFileWrite(input.tool) ? hook("edit", editPayload(input.sessionID, directory, args))
+        : input.tool === "bash" ? hook("commit", commitPayload(input.sessionID, args?.workdir ?? directory, args)) : "";
       if (text) output.output += `\n\n${text}`;
     },
   };
 };
 
-// opencode 2.x plugin API: edit pointers and skill loads only (see the header).
+// opencode 2.x plugin API: edit pointers, commit self-review and skill loads (see the header).
 const setup = async (ctx) => {
   const hook = await loadHook();
   if (!hook) return;
@@ -88,9 +93,9 @@ const setup = async (ctx) => {
     if (event.tool === "skill") {
       hook("skill", skillPayload(event.sessionID, event.input?.workdir ?? ctx.location?.directory, event.input));
     }
-    if (!isFileWrite(event.tool)) return;
-    const text = hook("edit", editPayload(event.sessionID, event.input?.workdir ?? ctx.location?.directory,
-      event.input));
+    const cwd = event.input?.workdir ?? ctx.location?.directory;
+    const text = isFileWrite(event.tool) ? hook("edit", editPayload(event.sessionID, cwd, event.input))
+      : event.tool === "bash" ? hook("commit", commitPayload(event.sessionID, cwd, event.input)) : "";
     if (!text) return;
     const result = event.result;
     if (typeof result.output === "string") result.output += `\n\n${text}`;
