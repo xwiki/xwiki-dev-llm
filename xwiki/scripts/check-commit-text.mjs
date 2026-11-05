@@ -30,9 +30,10 @@
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-commit-text.js (tool.execute.before).
 // Kimi's hooks cannot block execution, so there the model must act on the message itself.
 //
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // A code span suppresses the autolink, so blank one out before looking for violations. Markdown
@@ -42,103 +43,224 @@ function blankCodeSpans(text) {
   return text.replace(/`[^`\n]*(?:\n(?!\s*\n)[^`\n]*)*`/g, (m) => " ".repeat(m.length));
 }
 
-// Pull heredoc bodies out of a shell command, returning them alongside the command with each
-// heredoc removed. Covers `<<EOF`, `<<'EOF'`, `<<"EOF"` and the `<<-` indented form — how a
-// multi-line commit message reaches `git commit -F -` or `gh pr create --body-file -`.
+// Placeholder left where a heredoc's `<<TAG` stood (control characters, which no command holds),
+// naming the body it fed.
+const HEREDOC = /\u0001(\d+)\u0001/;
+
+// Pull heredoc bodies out of a shell command. Each `<<TAG` (`<<'TAG'`, `<<"TAG"`, `<<-TAG`) becomes a
+// placeholder, and its body — the lines after the operator's line up to the one that is TAG (or TAG
+// followed by the `)` closing a `$(cat <<EOF …)`) — is removed, so what remains parses as a command
+// line and each body stays tied to the command it feeds. An operator whose terminator never comes is
+// left alone: it was text (`a << b` in a message), not a heredoc.
 function extractHeredocs(command) {
+  const lines = command.split("\n");
   const bodies = [];
-  const stripped = command.replace(
-    /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1\r?\n([\s\S]*?)\r?\n[ \t]*\2(?=\s|$)/g,
-    (_m, _q, _tag, body) => {
-      bodies.push(body);
-      return " ";
-    }
-  );
-  return { bodies, stripped };
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    let next = i + 1;
+    let rest = "";
+    const line = lines[i].replace(/<<(?!<)-?[ \t]*(['"]?)([A-Za-z_]\w*)\1/g, (op, _q, tag) => {
+      const end = new RegExp(`^[ \\t]*${tag}[ \\t]*(\\).*)?\\r?$`);
+      let j = next;
+      while (j < lines.length && !end.test(lines[j])) j++;
+      if (j >= lines.length) return op;
+      bodies.push(lines.slice(next, j).join("\n"));
+      rest += end.exec(lines[j])[1] ?? "";
+      next = j + 1;
+      return ` \u0001${bodies.length - 1}\u0001 `;
+    });
+    out.push(line + rest);
+    i = next - 1;
+  }
+  return { bodies, stripped: out.join("\n") };
 }
 
-// Split a shell command into tokens, tracking whether each was quoted so `-m` can be told from a
-// value that merely looks like a flag. Good enough for the shapes an agent actually writes; on
-// anything it cannot parse the caller stays silent rather than guessing.
-function tokenize(command) {
-  const tokens = [];
+// Split a shell command line into its simple commands — at unquoted `;`, `&`, `&&`, `|`, `||`, `(`,
+// `)` and newlines — each a list of tokens `{ value, flag }`, `flag` telling an unquoted token (`-m`)
+// from a quoted value that merely looks like one, and `piped` marking a command whose stdin is the
+// previous one's output. Good enough for the shapes an agent actually writes; null when the quoting
+// does not balance, and the caller then stays silent rather than guessing.
+function parseCommands(line) {
+  const commands = [];
+  let tokens = [];
+  let piped = false;
   let cur = "";
   let started = false;
-  let quoted = false;
-  for (let i = 0; i < command.length; i++) {
-    const c = command[i];
-    if (c === "'" || c === '"') {
-      const end = command.indexOf(c, i + 1);
-      if (end === -1) return null; // unbalanced — do not guess
-      cur += command.slice(i + 1, end);
-      started = true;
-      quoted = true;
+  let flag = false;
+  const endToken = () => {
+    if (started) tokens.push({ value: cur, flag });
+    cur = "";
+    started = false;
+  };
+  const endCommand = (nextPiped) => {
+    endToken();
+    if (tokens.length) commands.push({ tokens, piped });
+    tokens = [];
+    piped = nextPiped;
+  };
+  const take = (text, quoted) => {
+    if (!started) flag = !quoted;
+    cur += text;
+    started = true;
+  };
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === "'") {
+      const end = line.indexOf("'", i + 1);
+      if (end === -1) return null;
+      take(line.slice(i + 1, end), true);
       i = end;
-    } else if (c === "\\" && i + 1 < command.length) {
-      cur += command[i + 1];
-      started = true;
+    } else if (c === '"') {
+      // Inside double quotes a backslash escapes only `"`, `\`, `$`, `` ` `` and a newline.
+      let text = "";
+      let j = i + 1;
+      for (; j < line.length && line[j] !== '"'; j++) {
+        if (line[j] === "\\" && '"\\$`\n'.includes(line[j + 1] ?? "x")) {
+          if (line[j + 1] !== "\n") text += line[j + 1];
+          j++;
+        } else {
+          text += line[j];
+        }
+      }
+      if (j >= line.length) return null;
+      take(text, true);
+      i = j;
+    } else if (c === "\\") {
+      if (line[i + 1] !== "\n" && i + 1 < line.length) take(line[i + 1], false);
       i++;
+    } else if (c === "|") {
+      const pipe = line[i + 1] !== "|"; // `|` and `|&` pipe; `||` does not
+      if (!pipe || line[i + 1] === "&") i++;
+      endCommand(pipe);
+    } else if (c === "&" && !/[<>]/.test(line[i - 1] ?? "") && line[i + 1] !== ">") {
+      if (line[i + 1] === "&") i++;
+      endCommand(false);
+    } else if (c === ";" || c === "\n" || c === "(" || c === ")") {
+      endCommand(false);
+    } else if (c === "#" && !started) {
+      while (i + 1 < line.length && line[i + 1] !== "\n") i++;
     } else if (/\s/.test(c)) {
-      if (started) tokens.push({ value: cur, quoted });
-      cur = "";
-      started = false;
-      quoted = false;
+      endToken();
     } else {
-      cur += c;
-      started = true;
+      take(c, false);
     }
   }
-  if (started) tokens.push({ value: cur, quoted });
-  return tokens;
+  endCommand(false);
+  return commands;
 }
 
-// Collect the message text a command would write, split into the exempt summary and the body that
-// gets checked. Returns null when the command writes no message we recognise.
-function extractMessage(command) {
-  const { bodies, stripped } = extractHeredocs(command);
-  const tokens = tokenize(stripped);
-  if (!tokens) return null;
-
-  const words = tokens.map((t) => (t.quoted ? null : t.value));
-  const isGitCommit = words.some((w, i) => w === "git" && words.slice(i + 1).includes("commit"));
-  const isGhPr =
-    words.some((w, i) => w === "gh" && words[i + 1] === "pr" && ["create", "edit"].includes(words[i + 2]));
-  if (!isGitCommit && !isGhPr) return null;
-
-  // `git commit` without any message source opens an editor — nothing to inspect here.
-  const messages = [];
-  for (let i = 0; i < tokens.length; i++) {
-    const { value, quoted } = tokens[i];
-    if (quoted) continue;
-    if (isGitCommit && (value === "-m" || value === "--message") && tokens[i + 1]) {
-      messages.push(tokens[++i].value);
-    } else if (isGitCommit && value.startsWith("--message=")) {
-      messages.push(value.slice("--message=".length));
-    } else if (isGhPr && (value === "--body" || value === "-b") && tokens[i + 1]) {
-      messages.push(tokens[++i].value);
-    } else if (isGhPr && value.startsWith("--body=")) {
-      messages.push(value.slice("--body=".length));
-    }
-  }
-
-  if (isGhPr) {
-    // Every part of a PR body is body — a PR title is passed separately via --title and is not
-    // autolinked for mentions the way a body is.
-    const text = [...messages, ...bodies].join("\n");
-    return text.trim() ? { summary: "", body: text } : null;
-  }
-
-  // git commit: the first -m (or the heredoc's first line) is the summary, which is exempt.
-  if (messages.length) {
-    const [first, ...rest] = messages;
-    const firstLines = first.split("\n");
-    return { summary: firstLines[0], body: [...firstLines.slice(1), ...rest, ...bodies].join("\n") };
-  }
-  if (bodies.length) {
-    const lines = bodies.join("\n").split("\n");
-    return { summary: lines[0], body: lines.slice(1).join("\n") };
+// The subcommand of a `git`/`gh` invocation and the tokens after it, or null: `git -C dir commit -m …`
+// → `{ name: "commit", args }`. `git`'s options that take a separate value are skipped with it.
+function subcommand(tokens, program) {
+  const start = tokens.findIndex((t) => t.flag && t.value === program);
+  if (start === -1) return null;
+  for (let i = start + 1; i < tokens.length; i++) {
+    const { value, flag } = tokens[i];
+    if (flag && /^(?:-C|-c|--git-dir|--work-tree|--namespace|-R|--repo)$/.test(value)) i++;
+    else if (!(flag && value.startsWith("-"))) return { name: value, args: tokens.slice(i + 1) };
   }
   return null;
+}
+
+// The options among `args` that carry message text: `[kind, value]` pairs, kind "text" (`-m`, `--body`)
+// or "file" (`-F`, `--file`, `--body-file`). `short` maps a short option letter to its kind, `long` a
+// long option's name; short options may be clustered (`-am`) or take their value attached (`-mmsg`).
+function messageOptions(args, short, long) {
+  const found = [];
+  for (let i = 0; i < args.length; i++) {
+    const { value, flag } = args[i];
+    if (!flag) continue;
+    const long_ = /^--([\w-]+)(?:=([\s\S]*))?$/.exec(value);
+    if (long_) {
+      const kind = long[long_[1]];
+      if (kind && long_[2] !== undefined) found.push([kind, long_[2]]);
+      else if (kind && args[i + 1]) found.push([kind, args[++i].value]);
+    } else if (/^-[a-zA-Z]/.test(value)) {
+      // In a cluster, the first option taking a value takes the rest of the token, or the next one.
+      const k = [...value.slice(1)].findIndex((ch) => short[ch]);
+      if (k === -1) continue;
+      const rest = value.slice(k + 2);
+      if (rest) found.push([short[value[k + 1]], rest]);
+      else if (args[i + 1]) found.push([short[value[k + 1]], args[++i].value]);
+    }
+  }
+  return found;
+}
+
+// The text a command line writes as a commit message or PR body: one `{ summary, body }` per
+// `git commit` (the summary being its first line, exempt) and per `gh pr create`/`edit` (no summary:
+// a PR's title is passed separately and is not checked). Only the message is read — the -m/--message
+// values, the -F/--file content (a heredoc or the stdin fed to that command, a file the same command
+// line writes from a heredoc, or else the file on disk), and gh's --body/--body-file likewise — never
+// the rest of a compound command, whose heredocs and arguments may well hold `@Annotations`.
+function extractMessages(command, cwd = process.cwd()) {
+  const { bodies, stripped } = extractHeredocs(command);
+  const commands = parseCommands(stripped);
+  if (!commands) return [];
+  const heredocsOf = (cmd) => cmd.tokens.filter((t) => t.flag && HEREDOC.test(t.value))
+    .map((t) => bodies[Number(HEREDOC.exec(t.value)[1])]);
+  // A `$(cat <<EOF … EOF)` inside a -m value is replaced by the body it outputs.
+  const expand = (value) => value.replace(/\$\([^()]*?\u0001(\d+)\u0001[^()]*\)|\u0001(\d+)\u0001/g,
+    (_m, a, b) => bodies[Number(a ?? b)]);
+  let dir = cwd;
+  const dirs = commands.map(({ tokens }) => {
+    const here = dir;
+    if (tokens[0]?.value === "cd" && tokens[1]) dir = resolvePath(dir, tokens[1].value);
+    return here;
+  });
+  const fileText = (path, at) => {
+    const cmd = commands[at];
+    if (path === "-" || path === "/dev/stdin") {
+      const own = heredocsOf(cmd);
+      if (own.length) return own.join("\n");
+      const prev = cmd.piped && commands[at - 1];
+      if (!prev) return "";
+      if (prev.tokens[0]?.value === "echo") return prev.tokens.slice(1).filter((t) => !/^-[neE]+$/.test(t.value)).map((t) => t.value).join(" ");
+      if (prev.tokens[0]?.value === "printf") return (prev.tokens[1]?.value ?? "").replace(/\\n/g, "\n");
+      return heredocsOf(prev).join("\n");
+    }
+    // A file the same command line wrote from a heredoc (`cat > msg <<EOF`) does not exist yet.
+    for (let i = at - 1; i >= 0; i--) {
+      const t = commands[i].tokens;
+      const writes = t.some((x, k) => (x.flag && /^>>?$/.test(x.value) && t[k + 1]?.value === path)
+        || (x.flag && (x.value === `>${path}` || x.value === `>>${path}`)) || (t[0].value === "tee" && x.value === path));
+      if (writes && heredocsOf(commands[i]).length) return heredocsOf(commands[i]).join("\n");
+    }
+    try {
+      const file = resolvePath(dirs[at], path);
+      return statSync(file).size <= 1 << 20 ? readFileSync(file, "utf8") : "";
+    } catch {
+      return "";
+    }
+  };
+  const messages = [];
+  commands.forEach((cmd, at) => {
+    const git = subcommand(cmd.tokens, "git");
+    const gh = subcommand(cmd.tokens, "gh");
+    const commit = git?.name === "commit";
+    let parts;
+    if (commit) {
+      parts = messageOptions(git.args, { m: "text", F: "file" }, { message: "text", file: "file" });
+    } else if (gh?.name === "pr" && ["create", "edit"].includes(gh.args[0]?.value)) {
+      parts = messageOptions(gh.args.slice(1), { b: "text", F: "file" }, { body: "text", "body-file": "file" });
+    } else {
+      return;
+    }
+    const text = parts.map(([kind, value]) => (kind === "text" ? expand(value) : fileText(value, at))).join("\n");
+    if (!text.trim()) return;
+    if (commit) {
+      const [summary, ...body] = text.split("\n");
+      messages.push({ summary, body: body.join("\n") });
+    } else {
+      messages.push({ summary: "", body: text });
+    }
+  });
+  return messages;
+}
+
+// `path` resolved against `dir`, with a leading `~` expanded.
+function resolvePath(dir, path) {
+  return resolve(dir, path.replace(/^~(?=\/|$)/, homedir()));
 }
 
 // A commit can be wrapped in a shell invocation — `bash -c "git commit …"` — which hides it from
@@ -203,9 +325,16 @@ export function usesJiraIssues(dir) {
 // this into a long-running check.
 export function checkCommitText(command, { cwd = process.cwd() } = {}, depth = 0) {
   if (!command || typeof command !== "string") return null;
-  const message = extractMessage(command);
-  if (!message) return checkWrappers(command, cwd, depth);
+  for (const message of extractMessages(command, cwd)) {
+    const found = messageViolations(message, cwd);
+    if (found) return found;
+  }
+  // A clean message at this level does not settle it: the command may also carry a wrapped one.
+  return checkWrappers(command, cwd, depth);
+}
 
+// The autolink violations in one `{ summary, body }` message, or null.
+function messageViolations(message, cwd) {
   const scanned = blankCodeSpans(message.body);
   const findings = [];
   const seen = new Set();
@@ -222,8 +351,7 @@ export function checkCommitText(command, { cwd = process.cwd() } = {}, depth = 0
     seen.add(`#${m[1]}`);
     findings.push({ token: `#${m[1]}`, kind: "reference" });
   }
-  // A clean message at this level does not settle it: the command may also carry a wrapped one.
-  return findings.length ? { findings, summary: message.summary } : checkWrappers(command, cwd, depth);
+  return findings.length ? { findings, summary: message.summary } : null;
 }
 
 // Parse each `sh -c "<script>"` found in a command as a command in its own right, returning the
