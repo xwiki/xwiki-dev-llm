@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { checkCommit, nextRelease, pomVersion } from '../../xwiki/scripts/check-diff.mjs';
+import { checkCommit, nextRelease, pomVersion, previousReleases } from '../../xwiki/scripts/check-diff.mjs';
 
 const LICENSE = `/*
  * See the NOTICE file distributed with this work for additional
@@ -88,6 +88,10 @@ test('the next release follows versioning.md', () => {
   assert.equal(nextRelease('16.10.20-SNAPSHOT'), '16.10.20');
   assert.equal(nextRelease('18.9.0'), null);
   assert.equal(pomVersion(POM), '18.9.0-SNAPSHOT');
+  assert.deepEqual(previousReleases('18.10.0RC1'), ['18.9.0RC1']);
+  assert.deepEqual(previousReleases('18.0.0RC1'), ['17.10.0RC1']);
+  assert.deepEqual(previousReleases('18.4.3'), ['18.4.2']);
+  assert.deepEqual(previousReleases('18.4.1'), ['18.4.0', '18.4.0RC1']);
 });
 
 test('a new public method with @Unstable and the next release passes', () => {
@@ -121,7 +125,7 @@ test('a new public method without @Unstable is refused, with the rule home', () 
   assert.match(r.deny, /Diff-Check: skip/);
 });
 
-test('a wrong or malformed @since is refused; a final of the previous minor passes', () => {
+test('a wrong or malformed @since is refused; the previous line warns; a final of the previous minor passes', () => {
   const method = (v) => withMethod(`
     /**
      * @return the bar
@@ -134,7 +138,11 @@ test('a wrong or malformed @since is refused; a final of the previous minor pass
     }
 `);
   assert.deepEqual(rules(run(repo(base, method('18.9RC1')))), ['versioning']);
-  assert.match(run(repo(base, method('18.8.0RC1'))).deny, /does not name the next release, `18\.9\.0RC1`/);
+  assert.match(run(repo(base, method('18.7.0RC1'))).deny, /does not name the next release, `18\.9\.0RC1`/);
+  // Written before the 18.8 → 18.9 bump that a rebase or a late merge crossed: advice only.
+  const bumped = run(repo(base, method('18.8.0RC1')));
+  assert.equal(bumped.deny, '');
+  assert.match(bumped.context, /`@since 18\.8\.0RC1` does not name the next release, `18\.9\.0RC1`, only the one before it/);
   assert.equal(run(repo(base, method('18.8.0'))).deny, '');
 });
 
@@ -163,6 +171,24 @@ test('a backport line added to an existing @since block passes', () => {
     }
 `);
   assert.equal(run(repo(before, after)).deny, '');
+});
+
+test('a new deprecation naming the previous line warns, an older one is refused', () => {
+  const dep = (v) => withMethod(`
+    /**
+     * @return the old foo
+     * @deprecated use {@link #getFoo()} instead
+     */
+    @Deprecated(since = "${v}")
+    public String getOldFoo()
+    {
+        return "foo";
+    }
+`);
+  const bumped = run(repo(base, dep('18.8.0RC1')));
+  assert.equal(bumped.deny, '');
+  assert.match(bumped.context, /@Deprecated\(since = "18\.8\.0RC1"\)/);
+  assert.match(run(repo(base, dep('18.6.0RC1'))).deny, /does not name the next release/);
 });
 
 test('a javadoc @deprecated repeating the version is refused', () => {
@@ -281,6 +307,8 @@ test('a new source file without a license header is refused; JSON and test resou
   assert.match(r.deny, /license header/);
   assert.equal(run(repo({}, { 'xwiki-platform-core/foo/package.json': '{"name":"foo"}\n',
     'xwiki-platform-core/foo/src/test/resources/data.xml': '<data/>\n' })).deny, '');
+  // A repo that is no Maven project (no root pom) has no header rule.
+  assert.equal(run(repo({}, { 'pom.xml': null, 'scripts/tool.mjs': 'export const a = 1;\n' })).deny, '');
 });
 
 test('a contrib repo gets the license and encoding rules only', () => {

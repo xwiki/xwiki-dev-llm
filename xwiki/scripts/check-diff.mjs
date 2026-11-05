@@ -9,15 +9,18 @@
 //   - a public class or member added to a public type outside an `internal` package without
 //     `@Unstable` (kb/conventions/backward-compatibility.md);
 //   - a `.properties` file the commit turns into UTF-8 (kb/conventions/code-style.md, File encoding);
-//   - a new file, in a format with comments, without a license header (code-style.md, Formatting).
+//   - a new file, in a format with comments, without a license header, in a Maven project (code-style.md,
+//     Formatting).
 // It also gates on skills: a commit touching files whose rules live in a skill (the `gate` entries of
 // kb/_meta/skills.json — tests, -legacy code, translations, XAR pages) is refused once per skill the
 // session has not loaded (kb-hooks.mjs records loads), so the session loads it and checks the diff.
 // The version and `@Unstable` rules are XWiki Standard's (repos of the `xwiki` org); the other two hold
 // in every repo in scope. Lines the same commit removes elsewhere count as moved, not added (a class moved
 // to a -legacy module keeps its old `@since`), and so does an `@since` line added to an existing block
-// (a backport). Heuristics never refuse: they come back as advice (tests changed with the coverage
-// threshold untouched, a page or script changed with no test, `[Misc]` on a production change).
+// (a backport). A version naming the release line just before the next one comes back as advice, not a
+// refusal: it was right when written, before the version bump a rebased or late-merged change crossed.
+// Heuristics never refuse either (tests changed with the coverage threshold untouched, a page or script
+// changed with no test, `[Misc]` on a production change).
 //
 // Escape hatches, for a finding that is wrong: a `Diff-Check: skip` trailer in the commit message
 // (kept in history, so a reviewer sees it), or XWIKI_LLM_COMMIT_GATES=off in the environment.
@@ -131,6 +134,18 @@ export function nextRelease(version) {
   return m[3] === "0" ? `${m[1]}.${m[2]}.0RC1` : `${m[1]}.${m[2]}.${m[3]}`;
 }
 
+/**
+ * The releases the line before `next` would have named: `18.10.0RC1` → `18.9.0RC1`, `18.4.3` → `18.4.2`
+ * (and `18.4.1` → `18.4.0`, `18.4.0RC1`). A version bump between writing and committing leaves those.
+ */
+export function previousReleases(next) {
+  const m = /^(\d+)\.(\d+)\.(\d+)(RC1)?$/.exec(next || "");
+  if (!m) return [];
+  const [x, y, z] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (m[4]) return [y > 0 ? `${x}.${y - 1}.0RC1` : `${x - 1}.10.0RC1`];
+  return z > 1 ? [`${x}.${y}.${z - 1}`] : [`${x}.${y}.0`, `${x}.${y}.0RC1`];
+}
+
 /** The GitHub org of an `origin` URL, lower-cased, or null. */
 export const remoteOrg = (remote) => ((/github\.com[:/]([^/]+)\//i.exec(String(remote || "")) || [])[1] || "").toLowerCase() || null;
 
@@ -173,6 +188,9 @@ function namesNext(values, next) {
   return values.some((v) => new RegExp(`^${previous.replace(".", "\\.")}\\.\\d+$`).test(v));
 }
 
+/** Whether `values` name the release line just before `next` (see previousReleases). */
+const namesPrevious = (values, next) => previousReleases(next).some((v) => values.includes(v));
+
 function versionFindings(files, { next: nextVersion, moved, read }) {
   const out = [];
   for (const f of files.filter((x) => MAIN_JAVA.test(x.path))) {
@@ -199,8 +217,8 @@ function versionFindings(files, { next: nextVersion, moved, read }) {
         out.push({ rule: "version", at: where(f, group[0].no), text: `\`@since ${bad[0]}\` is not a valid version: three `
           + `numeric segments, e.g. \`18.5.0RC1\`, \`18.4.3\`` });
       } else if (next && !namesNext(values, next)) {
-        out.push({ rule: "version", at: where(f, group[0].no), text: `\`@since ${values.join("`, `@since ")}\` does not name `
-          + `the next release, \`${next}\`` });
+        out.push({ rule: "version", at: where(f, group[0].no), warn: namesPrevious(values, next),
+          text: `\`@since ${values.join("`, `@since ")}\` does not name the next release, \`${next}\`` });
       }
       group = [];
     };
@@ -223,8 +241,8 @@ function versionFindings(files, { next: nextVersion, moved, read }) {
           out.push({ rule: "version", at: where(f, a.no), text: `\`@Deprecated(since = "${dep[1]}")\` holds an invalid `
             + "version: three numeric segments, several branches comma-separated with no spaces" });
         } else if (next && !existing && !namesNext(values, next)) {
-          out.push({ rule: "version", at: where(f, a.no), text: `\`@Deprecated(since = "${dep[1]}")\` does not name the next `
-            + `release, \`${next}\`` });
+          out.push({ rule: "version", at: where(f, a.no), warn: namesPrevious(values, next),
+            text: `\`@Deprecated(since = "${dep[1]}")\` does not name the next release, \`${next}\`` });
         }
       }
       const jd = /^\*\s*@deprecated\b(.*)$/.exec(t);
@@ -456,14 +474,20 @@ export function checkDiff(commit, { org = null, summary = "" } = {}) {
   const { files, read, readBase = () => null } = commit;
   const moved = new Set(files.flatMap((f) => f.removed.map((r) => r.trim())).filter((t) => t.length > 3));
   const findings = [];
+  const tips = [];
   if (org === "xwiki") {
     const next = nextRelease(pomVersion(read("pom.xml")));
-    findings.push(...dropBackportExtensions(versionFindings(files, { next, moved, read }), files, read));
+    for (const f of dropBackportExtensions(versionFindings(files, { next, moved, read }), files, read)) {
+      if (!f.warn) findings.push(f);
+      else tips.push(`${f.at}: ${f.text}, only the one before it: `
+        + `right if written before the version bump, but if this change ships in \`${next}\`, update it (${HOME.version}).`);
+    }
     findings.push(...unstableFindings(files, { read, moved }));
   }
   findings.push(...encodingFindings(files, { read, readBase }));
-  findings.push(...licenseFindings(files, { read }));
-  return { findings, advice: advice(files, { summary, read }) };
+  // The header is a Maven project's rule (license-maven-plugin): a repo without a root pom has none.
+  if (read("pom.xml") !== null) findings.push(...licenseFindings(files, { read }));
+  return { findings, advice: [...tips, ...advice(files, { summary, read })] };
 }
 
 /** The refusal text for `findings`, grouped by rule with the rule's home. */
