@@ -2,7 +2,9 @@
 //
 // Ports the Claude Code / Kimi Code PreToolUse commit hook (xwiki/scripts/check-diff.mjs) to opencode:
 // before a bash `git commit` runs, it throws — refusing the call — when the commit breaks a rule a diff
-// shows exactly (see the shared script's header for the rules and the escape hatches). Its advice
+// shows exactly, or that touches files whose skill the session has not loaded (once per skill; the
+// loads are recorded by xwiki-kb-pointers.js, which must be installed too) — see the shared script's
+// header for the rules and the escape hatches. Its advice
 // (heuristics that never refuse) is appended to the commit's tool result, since opencode cannot add
 // context before a tool runs without refusing it.
 //
@@ -24,7 +26,7 @@ const loadCheck = async () => {
     const { checkCommit } = await import(pathToFileURL(`${home}/xwiki/scripts/check-diff.mjs`).href);
     return (command, cwd, sessionID) => {
       try {
-        return checkCommit(command, { cwd, sessionID });
+        return checkCommit(command, { cwd, sessionId: sessionID });
       } catch {
         return { deny: "", context: "" };
       }

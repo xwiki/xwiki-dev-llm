@@ -1,9 +1,11 @@
 {
   "xwiki-test-guidelines": {
-    "applies-to": ["**/src/test/**"]
+    "applies-to": ["**/src/test/**"],
+    "gate": true
   },
   "xwiki-increase-test-coverage": {
-    "applies-to": ["**/src/test/java/**/*.java"]
+    "applies-to": ["**/src/test/java/**/*.java"],
+    "gate": true
   },
   "xwiki-convert-tests": {
     "applies-to": ["**/src/test/java/**/*.java"],
@@ -15,7 +17,8 @@
   },
   "xwiki-legacy": {
     "applies-to": ["**/*-legacy/**", "**/src/main/java/**/*.java", "**/*.aj"],
-    "applies-when": ["@Deprecated\\b"]
+    "applies-when": ["@Deprecated\\b"],
+    "gate": true
   },
   "xwiki-javadoc": {
     "applies-to": ["**/src/main/java/**/*.java"],
@@ -27,9 +30,11 @@
       "^\\s*[A-Za-z][\\w.-]*\\s*=",
       "\\$services\\.localization\\.render\\b",
       "\\{\\{translation\\b"
-    ]
+    ],
+    "gate": true
   },
   "xwiki-xar-pages": {
-    "applies-to": ["**/src/main/resources/**/*.xml"]
+    "applies-to": ["**/src/main/resources/**/*.xml"],
+    "gate": { "file-contains": "<xwikidoc\\b" }
   }
 }

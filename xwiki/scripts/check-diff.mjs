@@ -10,6 +10,9 @@
 //     `@Unstable` (okf/conventions/backward-compatibility.md);
 //   - a `.properties` file the commit turns into UTF-8 (okf/conventions/code-style.md, File encoding);
 //   - a new file, in a format with comments, without a license header (code-style.md, Formatting).
+// It also gates on skills: a commit touching files whose rules live in a skill (the `gate` entries of
+// okf/_meta/skills.json — tests, -legacy code, translations, XAR pages) is refused once per skill the
+// session has not loaded (kb-hooks.mjs records loads), so the session loads it and checks the diff.
 // The version and `@Unstable` rules are XWiki Standard's (repos of the `xwiki` org); the other two hold
 // in every repo in scope. Lines the same commit removes elsewhere count as moved, not added (a class moved
 // to a -legacy module keeps its old `@since`), and so does an `@since` line added to an existing block
@@ -32,7 +35,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { extractMessages } from "./check-commit-text.mjs";
-import { isGitCommit, takesUnstaged } from "./kb-hooks.mjs";
+import { globToRegExp, isGitCommit, loadGate, saveGate, takesUnstaged } from "./kb-hooks.mjs";
+import { defaultRoot } from "./kb-search.mjs";
 import { isScopedRemote, originRemote } from "./repo-scope.mjs";
 
 const EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
@@ -388,6 +392,60 @@ function advice(files, { summary, read }) {
   return out;
 }
 
+// ---- skill gate ---------------------------------------------------------------------------------
+
+/** The `gate` entries of the KB's `_meta/skills.json` (see kb-search.mjs): `[{ skill, globs, when, contains }]`. */
+export function gateSkills(root = defaultRoot()) {
+  let meta;
+  try {
+    meta = JSON.parse(readFileSync(join(root, "_meta", "skills.json"), "utf8"));
+  } catch {
+    return [];
+  }
+  const re = (src, flags = "m") => { try { return new RegExp(src, flags); } catch { return null; } };
+  return Object.entries(meta).filter(([, m]) => m.gate).map(([skill, m]) => ({
+    skill,
+    globs: (m["applies-to"] || []).map(globToRegExp),
+    when: (m["applies-when"] || []).map((src) => re(src)).filter(Boolean),
+    contains: m.gate?.["file-contains"] ? re(m.gate["file-contains"]) : null,
+  }));
+}
+
+/** The gated skills a commit's files call for: `Map(skill → first matching path)`. */
+export function skillsFor(files, read, gates) {
+  const out = new Map();
+  for (const g of gates) {
+    const f = files.find((x) => (!g.globs.length || g.globs.some((r) => r.test(x.path)))
+      && (!g.when.length || g.when.some((r) => r.test(x.added.map((a) => a.text).join("\n"))))
+      && (!g.contains || g.contains.test(read(x.path) || "")));
+    if (f) out.set(g.skill, f.path);
+  }
+  return out;
+}
+
+/**
+ * The skill gate's refusal for a session: the skills the commit calls for that the session neither
+ * loaded nor was already refused a commit for (each refuses one commit at most, so it cannot loop).
+ * Records them as refused. "" when there are none.
+ */
+export function skillGate(sessionId, files, read, { stateDir, gates = gateSkills() } = {}) {
+  if (!sessionId) return "";
+  const gate = loadGate(sessionId, ...(stateDir ? [stateDir] : []));
+  const missing = [...skillsFor(files, read, gates)].filter(([s]) => !gate.loaded.has(s) && !gate.denied.has(s));
+  if (!missing.length) return "";
+  for (const [s] of missing) gate.denied.add(s);
+  try {
+    saveGate(sessionId, gate, ...(stateDir ? [stateDir] : []));
+  } catch {
+    return ""; // without the record the next commit would be refused again: do not refuse at all
+  }
+  const names = missing.map(([s]) => s);
+  return `XWiki skill gate — this commit touches ${missing.map(([s, p]) => `${p} (${s})`).join(", ")}; the rules for it are `
+    + `in skill${names.length > 1 ? "s" : ""} ${names.join(", ")}, which this session has not loaded. Load `
+    + `${names.length > 1 ? "them" : "it"} with your Skill tool, check the diff against ${names.length > 1 ? "them" : "it"}, `
+    + "fix what breaks a rule, then commit again: this gate refuses one commit per skill, the next one goes through.\n";
+}
+
 // ---- entry points -------------------------------------------------------------------------------
 
 /**
@@ -422,19 +480,26 @@ export function formatFindings(findings) {
   return out;
 }
 
-/** The whole hook for one Bash command in `cwd`: `{ deny, context }` texts ("" for none). */
-export function checkCommit(command, { cwd = process.cwd(), env = process.env } = {}) {
+/**
+ * The whole hook for one Bash command in `cwd`: `{ deny, context }` texts ("" for none). The skill gate
+ * runs only with a `sessionId` (to know what the session loaded) and not under Kimi Code, which records
+ * no skill load.
+ */
+export function checkCommit(command, { cwd = process.cwd(), env = process.env, sessionId = null, stateDir } = {}) {
   const none = { deny: "", context: "" };
   if (!isGitCommit(command) || /^off$/i.test(env.XWIKI_LLM_COMMIT_GATES || "")) return none;
   const remote = originRemote(cwd);
   if (remote === null || !isScopedRemote(remote, env)) return none;
   const messages = extractMessages(command, cwd).filter((m) => m.summary !== "");
-  if (messages.some((m) => SKIP_TRAILER.test(`${m.summary}\n${m.body}`))) return none;
+  const skip = messages.some((m) => SKIP_TRAILER.test(`${m.summary}\n${m.body}`));
   const commit = readCommit(cwd, command);
   if (!commit || !commit.files.length) return none;
-  const { findings, advice: tips } = checkDiff(commit, { org: remoteOrg(remote), summary: messages[0]?.summary });
+  const { findings, advice: tips } = skip ? { findings: [], advice: [] }
+    : checkDiff(commit, { org: remoteOrg(remote), summary: messages[0]?.summary });
+  const kimi = env.KIMI_PLUGIN_ROOT && !env.CLAUDE_PLUGIN_ROOT;
+  const skills = kimi ? "" : skillGate(sessionId, commit.files, commit.read, { stateDir });
   return {
-    deny: findings.length ? formatFindings(findings) : "",
+    deny: [findings.length ? formatFindings(findings) : "", skills].filter(Boolean).join("\n"),
     context: tips.length ? `XWiki diff check — advice, not a refusal:\n- ${tips.join("\n- ")}` : "",
   };
 }
@@ -446,7 +511,7 @@ if (invokedDirectly) {
   let result = { deny: "", context: "" };
   try {
     const payload = JSON.parse(readFileSync(0, "utf8"));
-    result = checkCommit(payload?.tool_input?.command, { cwd: payload?.cwd || process.cwd() });
+    result = checkCommit(payload?.tool_input?.command, { cwd: payload?.cwd || process.cwd(), sessionId: payload?.session_id });
   } catch {
     // A check that cannot run never blocks the commit.
   }

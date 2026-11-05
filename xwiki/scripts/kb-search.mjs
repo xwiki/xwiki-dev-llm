@@ -17,7 +17,9 @@
 // The pointer hooks (kb-hooks.mjs) also index the plugin's skills, each as one section — its name
 // and its description — tagged `[skill]`; their `applies-to`/`applies-when` live in `_meta/skills.json`
 // (`{ "<skill name>": { "applies-to": [...], "applies-when": [...] } }`), SKILL.md's frontmatter being
-// the hosts'. `search` returns skills only when asked (`skills: true`); the CLI never indexes them.
+// the hosts'. A `gate` entry (`true`, or `{ "file-contains": "<regex>" }` over the committed file) also
+// makes the commit skill gate (check-diff.mjs) refuse a matching commit until the skill is loaded.
+// `search` returns skills only when asked (`skills: true`); the CLI never indexes them.
 //
 // Node built-ins only, so it runs unchanged under Claude Code, Kimi Code and opencode (Bun).
 
