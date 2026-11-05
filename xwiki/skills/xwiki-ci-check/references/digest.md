@@ -59,7 +59,7 @@ could not be read. Leave all of that as it is, and fill or delete the markers:
   dashboard could never print is a fix, so it gets its row — *"→ draft fix for `ImageIT#editImage`:
   forced race red 4/4 → green 4/4 on Chrome, XWIKI-24749"* — and nothing else about that flicker is
   repeated.
-- **The security-only line is never in the digest.** `okf/processes/release.md` forbids naming it
+- **The security-only line is never in the digest.** `kb/processes/release.md` forbids naming it
   in a public artifact, and the room is one: `--render-digest` and `--delta` leave it out — its grid
   column, its rows, its `alsoOn` entries and its state — and name it in `delta.json`'s `withheld`,
   which is how `matrix.mjs --state` refuses a digest that names it after all. The paste and the

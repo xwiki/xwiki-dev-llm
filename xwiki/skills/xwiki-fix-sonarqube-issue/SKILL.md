@@ -1,6 +1,6 @@
 ---
 name: xwiki-fix-sonarqube-issue
-description: Find and fix open SonarCloud (SonarQube) issues in the current XWiki repo and open a PR. Use when asked to fix/clear/triage a SonarQube issue, reduce SonarCloud findings, or run a "fix one Sonar issue" pass. Per-rule fix correctness and drop conditions live in the OKF under okf/sonarqube/ — load the family file for the rule being fixed. For the build commands it relies on use xwiki-build; for PR/commit conventions use xwiki-pull-request.
+description: Find and fix open SonarCloud (SonarQube) issues in the current XWiki repo and open a PR. Use when asked to fix/clear/triage a SonarQube issue, reduce SonarCloud findings, or run a "fix one Sonar issue" pass. Per-rule fix correctness and drop conditions live in the KB under kb/sonarqube/ — load the family file for the rule being fixed. For the build commands it relies on use xwiki-build; for PR/commit conventions use xwiki-pull-request.
 ---
 
 # Fix a SonarCloud (SonarQube) issue
@@ -14,18 +14,18 @@ the working copy, never fetch them over a remote API.
 ## Know the rule before you fix it
 
 **The quality of the fix is decided by knowing which sites to DROP**, and that knowledge is
-rule-specific. It lives in the OKF at `okf/sonarqube/` (resolve from this skill's directory as
-`../../okf/sonarqube/`; in Claude Code `${CLAUDE_PLUGIN_ROOT}/okf/sonarqube/`, in Kimi Code
-`${KIMI_SKILL_DIR}/../../okf/sonarqube/`, in opencode `$XWIKI_LLM_HOME/xwiki/okf/sonarqube/`).
+rule-specific. It lives in the KB at `kb/sonarqube/` (resolve from this skill's directory as
+`../../kb/sonarqube/`; in Claude Code `${CLAUDE_PLUGIN_ROOT}/kb/sonarqube/`, in Kimi Code
+`${KIMI_SKILL_DIR}/../../kb/sonarqube/`, in opencode `$XWIKI_LLM_HOME/xwiki/kb/sonarqube/`).
 
-1. **Always read `okf/sonarqube/index.md` first** — the rule → family-file map, the rules never worth
+1. **Always read `kb/sonarqube/index.md` first** — the rule → family-file map, the rules never worth
    fixing, and the drop conditions that apply to every rule.
 2. **Then read only the one family file** for the rule you commit to fixing. Do not read the others.
-3. Read `okf/sonarqube/verification.md` before building.
+3. Read `kb/sonarqube/verification.md` before building.
 4. **When the rule is about a CONVENTION rather than a code shape, the knowledge lives in
-   `okf/conventions/`, not in `okf/sonarqube/`** — and the index entry will say so. Logging rules
+   `kb/conventions/`, not in `kb/sonarqube/`** — and the index entry will say so. Logging rules
    (`S2629`, `S2589` on log guards, anything about what to pass a logger) are owned by
-   `okf/conventions/logging.md`; follow the pointer before deciding the fix.
+   `kb/conventions/logging.md`; follow the pointer before deciding the fix.
 
 A fix applied without its family file is how a batch ships an infinite recursion (S3878), a dead
 reflective callback (S1185), or an NPE on a `null` enum key (S1640) — all of which compile cleanly.
@@ -42,7 +42,7 @@ The cost here is almost entirely file reads while evaluating candidates. Rules:
   `curl -s -u "$SONARQUBE_TOKEN:" "https://sonarcloud.io/api/issues/search?organization=xwiki&componentKeys=$SONARQUBE_PROJECT_KEY&issueStatuses=OPEN&severities=BLOCKER,CRITICAL&facets=rules&ps=1"`
   For an exact per-rule count read the response `total` from a `&rules=java:SXXXX&ps=1` query, not a
   facet value.
-* **Pick a rule from `okf/sonarqube/index.md`**, safest family first, and query it explicitly with
+* **Pick a rule from `kb/sonarqube/index.md`**, safest family first, and query it explicitly with
   `&rules=java:SXXXX`. Start with BLOCKER, then CRITICAL, then lower — but this is guidance, not a
   gate: a clean MAJOR fix beats forcing a risky higher-severity one, and the mechanical
   BLOCKER/CRITICAL pool is frequently exhausted.
@@ -70,7 +70,7 @@ The cost here is almost entirely file reads while evaluating candidates. Rules:
   `"…/issues/search?componentKeys=<the issue's full component>&resolved=false&ps=100"` — then compare
   with the lines your edit touches. A rewrite SonarCloud cannot match re-dates those findings into the
   new-code period and can turn the `master` quality gate red although you introduced nothing (see
-  `okf/sonarqube/verification.md`). Fix them in the same PR, or pick another site.
+  `kb/sonarqube/verification.md`). Fix them in the same PR, or pick another site.
 * **Stop at the first viable candidate.** Pull a small batch (`ps=5`), read only the top candidate's
   snippet, and accept it unless the snippet disqualifies it. Do not pre-read multiple candidates.
 
@@ -130,7 +130,7 @@ compiles, so the build will not catch it.
   *Accepted*) is the last resort and is the developer's call — see **Before retiring an issue** below.
 * Use Apache Commons helpers only when they genuinely reduce boilerplate.
 * **Verify the modified modules build with their tests running** — never `-DskipTests`, always
-  `-Plegacy,quality`. See `okf/sonarqube/verification.md` and the **xwiki-build** skill.
+  `-Plegacy,quality`. See `kb/sonarqube/verification.md` and the **xwiki-build** skill.
 * One PR per rule family; the PR's commits must be relevant only to the issues it fixes.
 * Open the PR with `gh`. For commit/PR conventions use the **xwiki-pull-request** skill; SonarQube
   fixes normally have no JIRA issue, so use `[Misc] <description>` with the word "SonarQube" in it:
@@ -140,7 +140,7 @@ compiles, so the build will not catch it.
   ```
 * Add the `llm-agent` label when running as the scheduled routine (rule in **xwiki-pull-request**).
 * Include a link to the SonarCloud issue in the PR description, and note any module you excluded from
-  the change (and why) — see `okf/sonarqube/verification.md`.
+  the change (and why) — see `kb/sonarqube/verification.md`.
 * **Security issues:** do not reveal what was fixed (commit logs are public and could expose a
   vulnerability) — keep the description cryptic.
 
@@ -153,7 +153,7 @@ the change is provably behaviour-preserving. Withdraw rather than argue: reply w
 and close the PR.
 
 Then **do not stop at closing it**. Ship the `@SuppressWarnings` + rationale version as its own PR,
-and narrow the rule's entry in `okf/sonarqube/` to the code shape that provoked the objection — do
+and narrow the rule's entry in `kb/sonarqube/` to the code shape that provoked the objection — do
 not blanket-denylist a rule that is fine elsewhere.
 
 ## Before retiring an issue: prevent it, do not silence it
@@ -184,7 +184,7 @@ suppression included. Never apply a suppression or a SonarCloud transition on yo
 
 Retiring in the code is right when the developer picks it, and when the analyser is simply wrong
 about the code — it cannot see reflective dispatch, XStream serialization or a cross-module contract.
-Then the `//` comment says *why the analyser is wrong*, per `okf/conventions/code-style.md`, and the
+Then the `//` comment says *why the analyser is wrong*, per `kb/conventions/code-style.md`, and the
 suppression goes in the code, not only in SonarCloud.
 
 ## Closing the issues
@@ -224,7 +224,7 @@ re-POST for any straggler.
 
 ## Capturing what you learn
 
-A durable, generic fact about **when a rule's fix is wrong in XWiki** belongs in `okf/sonarqube/` —
+A durable, generic fact about **when a rule's fix is wrong in XWiki** belongs in `kb/sonarqube/` —
 offer to add it via the `xwiki-knowledge` EXTEND flow (a reviewed PR, never a silent write). Volatile
 facts — how many issues a rule has, which module they cluster in, which pools are drained — do **not**
 belong there; they are stale within days.

@@ -14,7 +14,7 @@ when none of that is open, never instead of it. `summary.stabilise.blockers` is 
 | Tier | What | PR |
 |---|---|---|
 | **A — mechanical** | License headers, a Checkstyle violation the error localises exactly (line > 120 chars, unused import, whitespace, missing newline), a trivially broken compile after a rename | ready for review |
-| **A — coverage** | A failing coverage check whose `blame.tier` is `certain` or `likely`, fixed as `okf/testing/strategy.md`'s coverage rule says — a lowered ratio or new unit tests (`xwiki-increase-test-coverage`). Never edit an existing test | **draft** — the culprit judges which |
+| **A — coverage** | A failing coverage check whose `blame.tier` is `certain` or `likely`, fixed as `kb/testing/strategy.md`'s coverage rule says — a lowered ratio or new unit tests (`xwiki-increase-test-coverage`). Never edit an existing test | **draft** — the culprit judges which |
 | **B — inferred** | A UI change renamed a selector and the page object still queries the old one; renamed or moved test resources | **draft** |
 | **B — follows the culprit** | A *unit* test still expecting a value the culprit commit's own diff changed — see below | **draft** |
 | **B — the fix itself** | The failure is the product (or the build) being wrong, and the fix is production code: code a new lint rule rejects, a null the culprit's diff lets through. The body states any behaviour change — `.then()` → `await` changes how a rejection propagates — and the culprit, assigned, is the one who judges it | **draft** if it changes behaviour, ready for review otherwise |
@@ -31,7 +31,7 @@ old value: a one-line fix, unless a caller treats the two differently and the li
 regression — which only the author knows. So the PR asks, and only when all of these hold:
 
 - `blame.tier` is `certain` or `likely` — no culprit, no question to ask;
-- it is a **unit** test — a functional test asserts what a user sees (`okf/testing/strategy.md`);
+- it is a **unit** test — a functional test asserts what a user sees (`kb/testing/strategy.md`);
 - the test change mirrors one line of the culprit's diff, quoted in the body, and nothing else;
 - the body opens with: *"`<sha>` changed `<what>` from `<old>` to `<new>` and `<test>` still
   expects `<old>`. If intended, merge this; if not, close it — the bug is in `<sha>`."*

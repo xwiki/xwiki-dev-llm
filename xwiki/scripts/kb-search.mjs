@@ -45,11 +45,9 @@ const META_DIR = "_meta";
 const SKILLS_META = `${META_DIR}/skills.json`;
 const SKILL_PREFIX = "skill:";
 
-/** The KB root shipped with the plugin: `xwiki/kb`, or `xwiki/okf` before the rename. */
+/** The KB root shipped with the plugin: `xwiki/kb`. */
 export function defaultRoot() {
-  const plugin = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const kb = join(plugin, "kb");
-  return existsSync(kb) ? kb : join(plugin, "okf");
+  return join(resolve(dirname(fileURLToPath(import.meta.url)), ".."), "kb");
 }
 
 /** The skills shipped with the plugin, beside the KB: `xwiki/skills`. */

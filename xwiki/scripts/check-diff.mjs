@@ -4,14 +4,14 @@
 // Before a `git commit` runs, read what it will commit and refuse it for a violation that a diff
 // shows exactly, naming the rule's home in the KB:
 //   - an `@since` / `@Deprecated(since = …)` added in Java whose version is malformed, or that does
-//     not name the next release of the root pom's version (okf/conventions/versioning.md);
+//     not name the next release of the root pom's version (kb/conventions/versioning.md);
 //   - a javadoc `@deprecated` tag carrying a version (same file);
 //   - a public class or member added to a public type outside an `internal` package without
-//     `@Unstable` (okf/conventions/backward-compatibility.md);
-//   - a `.properties` file the commit turns into UTF-8 (okf/conventions/code-style.md, File encoding);
+//     `@Unstable` (kb/conventions/backward-compatibility.md);
+//   - a `.properties` file the commit turns into UTF-8 (kb/conventions/code-style.md, File encoding);
 //   - a new file, in a format with comments, without a license header (code-style.md, Formatting).
 // It also gates on skills: a commit touching files whose rules live in a skill (the `gate` entries of
-// okf/_meta/skills.json — tests, -legacy code, translations, XAR pages) is refused once per skill the
+// kb/_meta/skills.json — tests, -legacy code, translations, XAR pages) is refused once per skill the
 // session has not loaded (kb-hooks.mjs records loads), so the session loads it and checks the diff.
 // The version and `@Unstable` rules are XWiki Standard's (repos of the `xwiki` org); the other two hold
 // in every repo in scope. Lines the same commit removes elsewhere count as moved, not added (a class moved
@@ -136,7 +136,7 @@ export const remoteOrg = (remote) => ((/github\.com[:/]([^/]+)\//i.exec(String(r
 
 // ---- the rules ----------------------------------------------------------------------------------
 
-const KB = "okf/conventions";
+const KB = "kb/conventions";
 const HOME = {
   version: `${KB}/versioning.md`,
   unstable: `${KB}/backward-compatibility.md#\`@Unstable\` annotation`,

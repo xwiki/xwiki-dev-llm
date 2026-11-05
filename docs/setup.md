@@ -179,7 +179,7 @@ export JIRA_API_TOKEN="<your-jira-personal-access-token>"
 ```
 
 The token is read from the environment and never committed. Issue-field conventions (Component,
-Affects/Fix Version) are documented once in `xwiki/okf/servers/jira.md`.
+Affects/Fix Version) are documented once in `xwiki/kb/servers/jira.md`.
 
 ## xwiki.org credentials (for the documentation skills)
 

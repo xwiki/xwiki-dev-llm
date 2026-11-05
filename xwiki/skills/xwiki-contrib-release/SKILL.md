@@ -26,11 +26,11 @@ tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or 
    the open ones and ask whether to move them.
 3. **Every change of the version is documented**, the users' and the administrators' sides both (an
    admin UI gets admin pages): each issue or work package has its documentation field (JIRA
-   `Documentation`; OpenProject **Reference Documentation**, `okf/processes/release-notes.md`) set
+   `Documentation`; OpenProject **Reference Documentation**, `kb/processes/release-notes.md`) set
    to the page URL(s), or `N/A` when no page describes the change. Otherwise write or update the
    pages with **xwiki-doc-writing** first, badging what is new
    `{{version product="<extension>" since="X.Y"}}` (documenting before the release is accepted,
-   `okf/conventions/documentation.md`), fill the fields, read them back, then release. Left for
+   `kb/conventions/documentation.md`), fill the fields, read them back, then release. Left for
    after the release, this step (which may need a local instance for screenshots) stalls the
    hand-off while the version is already public and unannounced.
 4. **The build is green**: CI on the `HEAD` commit, or while it's pending a local
@@ -98,7 +98,7 @@ import creates:
   a duplicate page named after the pom `<name>`, and every later "Update project" goes to that page.
   If it happens, delete the duplicate (its `Versions/<version>` child first) and update again.
 - **Use the developer's logged-in browser** (claude-in-chrome). These `/bin/` URLs reject Basic auth
-  (`okf/servers/index.md`), and a scripted form login answers 401. From that tab, `fetch()` and REST writes
+  (`kb/servers/index.md`), and a scripted form login answers 401. From that tab, `fetch()` and REST writes
   (with the `XWiki-Form-Token` header from `<html data-xwiki-form-token>`) work.
 
 Verify that `lastVersion` is `X.Y` on the `ProjectClass`/`ExtensionClass` object, and that
@@ -111,7 +111,7 @@ page"). If that happened, click "Update project" again. With
 
 ## 7. Release notes
 
-They live in the `notes` property of the version object (`okf/processes/release-notes.md`): the
+They live in the `notes` property of the version object (`kb/processes/release-notes.md`): the
 Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherwise the
 `ExtensionCode.ExtensionVersionClass`.
 
@@ -125,7 +125,7 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
   without errors.
 
 Then set the release-notes field of every issue or work package of the version to the version page
-URL (`okf/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
+URL (`kb/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
 (`?notifyUsers=false` spares the watchers an email per issue), OpenProject **Release Notes
 Documentation** (find its `customFieldN` key in the work package schema).
 

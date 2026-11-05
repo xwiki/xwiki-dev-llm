@@ -551,7 +551,7 @@ const blocksRelease = incident => incident.alerting && incident.primary !== fals
 // four brakes every other write here has. `systematic` is excluded twice over: it is a blocker
 // above, and §4 says a "flicker" failing every time is a regression or a stale triage, not a flake.
 // Never on a security-only line: it takes no ordinary fix, and a PR there would name it in public
-// (okf/processes/release.md).
+// (kb/processes/release.md).
 const securityOnlyLines = securityOnly(targets.map(target => target.branch));
 const stabilisable = incident => incident.class === 1 && incident.kind === 'flicker' && incident.proven
   && incident.jira && !incident.fixState && incident.alerting && !incident.beyondHorizon

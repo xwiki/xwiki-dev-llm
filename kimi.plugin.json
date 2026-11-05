@@ -1,13 +1,13 @@
 {
   "name": "xwiki",
-  "version": "1.21.5",
+  "version": "1.21.7",
   "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
   "interface": {
     "displayName": "XWiki",
     "shortDescription": "XWiki org conventions, skills and MCP servers"
   },
   "skills": "./xwiki/skills/",
-  "skillInstructions": "When a skill needs to locate the shared OKF knowledge base, resolve it relative to the skill file: `${KIMI_SKILL_DIR}/../../okf/`. In Claude Code the same location is `${CLAUDE_PLUGIN_ROOT}/okf/`.",
+  "skillInstructions": "When a skill needs to locate the shared knowledge base (KB), resolve it relative to the skill file: `${KIMI_SKILL_DIR}/../../kb/`. In Claude Code the same location is `${CLAUDE_PLUGIN_ROOT}/kb/`.",
   "mcpServers": {
     "discourse": {
       "command": "node",

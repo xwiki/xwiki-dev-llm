@@ -278,7 +278,7 @@ than implying a visual regression that was never there.
 
 ## 5. Deliver: attach to the JIRA issue and the PR body
 
-The images go on the **JIRA issue** and in the **PR body** — see `okf/servers/jira.md` (under the
+The images go on the **JIRA issue** and in the **PR body** — see `kb/servers/jira.md` (under the
 plugin root, `$XWIKI_CAPTURE_SKILL/../..`) for the REST call (jira-cli has no `attach` command;
 Atlassian needs `X-Atlassian-Token: no-check`) and `xwiki-pull-request` for uploading to the PR.
 When each state is legible on its own, post them at native resolution, side by side:

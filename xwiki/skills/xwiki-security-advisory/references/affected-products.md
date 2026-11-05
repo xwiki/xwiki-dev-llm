@@ -107,9 +107,9 @@ not the repository one.
   the user before writing any patched version.
 - **Keep JIRA in sync:** when the verified first affected release differs from JIRA's "Affects
   Version/s", or the patched versions from its "Fix Version/s", update the issue with the verified
-  values (xwiki-jira skill; the field conventions are in `okf/servers/jira.md`), so that JIRA, the
+  values (xwiki-jira skill; the field conventions are in `kb/servers/jira.md`), so that JIRA, the
   advisory and the Security Advisory Application agree. The same goes for the CVSS vector and score
-  when the advisory's differ from the issue's (fields in `okf/processes/security-policy.md`), and for
+  when the advisory's differ from the issue's (fields in `kb/processes/security-policy.md`), and for
   the **Priority**, which the policy derives from the score (Step 2's "Severity" section). Without write access
   to JIRA (e.g. no token), tell the user exactly which values to set on which issue instead of
   leaving it silently out of sync.

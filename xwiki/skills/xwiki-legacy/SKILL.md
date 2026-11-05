@@ -14,7 +14,7 @@ description: Move a deprecated public XWiki API out of a main module into its ba
 # Moving a deprecated API to a `-legacy` module
 
 XWiki keeps binary/semantic backward compatibility (enforced by Revapi — see the
-`backward-compatibility` OKF topic). A deprecated **public** API therefore cannot simply be deleted:
+`backward-compatibility` KB topic). A deprecated **public** API therefore cannot simply be deleted:
 it is **removed from the main module** and **re-added by that module's `-legacy` companion**, which
 weaves the main artifact with AspectJ and re-exports it under the same
 `xwiki.extension.features`. Existing extensions that still call the old API keep working by depending
@@ -131,7 +131,7 @@ main artifact the moment it must modify an existing type. Mirror `xwiki-commons-
 A move to legacy adds **no** `<revapi.differences>` entry: the main module skips Revapi (step 4) and the
 legacy module's Revapi compares the woven jar with its previous release. A Revapi error on the legacy
 module means the re-add is not faithful — fix the re-add. A downstream consumer failing (step 8) is not
-fixed by an ignore either: see the `backward-compatibility` OKF topic.
+fixed by an ignore either: see the `backward-compatibility` KB topic.
 
 ## 6. Fix the legacy module's coverage ratio
 
@@ -181,7 +181,7 @@ member as removed. When the moved API sits on such a class, check one of those c
 cd <a module depending on the main artifact> && mvn compile revapi:check -B -ntp -Pquality
 ```
 
-If it fails, exclude the main artifact from its dependents' Revapi analysis as the OKF topic describes
+If it fails, exclude the main artifact from its dependents' Revapi analysis as the KB topic describes
 (not a per-method ignore), and re-run it.
 
 Open the PR with the `xwiki-pull-request` conventions (`[Misc]` prefix when there is no JIRA issue).

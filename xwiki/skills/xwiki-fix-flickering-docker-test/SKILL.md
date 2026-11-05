@@ -3,7 +3,7 @@ name: xwiki-fix-flickering-docker-test
 description: Investigate and fix a flickering (intermittently failing) Docker functional test (`@UITest`) in an XWiki repo — evidence from CI first, then a hypothesis from the test and production code, confirmed by a targeted experiment before any fix is written. Use when asked to investigate, fix or stabilise a flaky or flickering IT. To find or triage what is failing on CI use xwiki-release-test-triage; for test-writing rules use xwiki-test-guidelines.
 ---
 
-**Read first, before editing any test:** the rules the steps below depend on are not repeated here — `okf/testing/strategy.md` for the **page-object boundary** (the fix goes in a page object, never as a `getDriver()` call in the test class) and the don't-pay-the-timeout rule, and `okf/testing/running-docker-its.md` for the JDK-on-`PATH` and :8080 prerequisites that otherwise surface as "Failed to start XWiki in [N] seconds". `okf/testing/flickers.md` has how to read the failure's video, the Selenium and browser mechanics most flickers turn out to be, and how to force a race.
+**Read first, before editing any test:** the rules the steps below depend on are not repeated here — `kb/testing/strategy.md` for the **page-object boundary** (the fix goes in a page object, never as a `getDriver()` call in the test class) and the don't-pay-the-timeout rule, and `kb/testing/running-docker-its.md` for the JDK-on-`PATH` and :8080 prerequisites that otherwise surface as "Failed to start XWiki in [N] seconds". `kb/testing/flickers.md` has how to read the failure's video, the Selenium and browser mechanics most flickers turn out to be, and how to force a race.
 
 A flicker is investigated like any other bug: **evidence → hypothesis → experiment → fix**, looping back to the hypothesis whenever an experiment disagrees with it. Re-running the unchanged test until it fails locally rarely works — local timing seldom matches CI's — so the experiment *forces* the interleaving the hypothesis names instead of waiting for it. A flicker is understood when an experiment turns the test **red with the CI symptom** on demand — forced, or unforced when the flicker happens to reproduce reliably locally — and fixed when the same experiment turns **green** with the fix.
 
@@ -13,12 +13,12 @@ Keep the evidence, each hypothesis and each experiment's outcome in a notes file
 
 Gather it all before running anything locally. Done when you can state, for each distinct failure: the symptom (exception, failing step), the rate, the configurations it hits **and the ones it spares**, since when it fails, and what the browser showed at that moment.
 
-- **History.** When the flicker was seen on CI, start with Develocity rather than Jenkins — `dv-test-history` when installed, the `develocity` MCP otherwise (`okf/servers/develocity.md`). There is no Develocity data for `xwiki-contrib` repos: go to Jenkins (`okf/servers/jenkins.md`).
+- **History.** When the flicker was seen on CI, start with Develocity rather than Jenkins — `dv-test-history` when installed, the `develocity` MCP otherwise (`kb/servers/develocity.md`). There is no Develocity data for `xwiki-contrib` repos: go to Jenkins (`kb/servers/jenkins.md`).
 - **Failure groups.** Each group is a separate symptom until shown otherwise. Map every stack line number to the source of the branch that failing build ran (`git show origin/<branch>:<file>`) — line numbers differ between branches, so groups that look different are often one step, and one line can be two steps.
 - **Configurations.** The asymmetry is the strongest clue: a failure on Chrome only, on one database, or on one servlet container says which mechanism differs. Note the sample size of the spared configuration — "never on Firefox in 600 runs" is evidence, "never on Oracle in 4" is not.
-- **Onset.** A change point names a window: the commits in it on the test, its page objects and the production code it drives — and a browser image release (`okf/testing/flickers.md`).
-- **Screenshot, then video.** What page was on screen versus what the test expected is usually the single most informative fact. Detect the video's scene changes before extracting any frame (`okf/testing/flickers.md`).
-- **Logs.** The test output and the XWiki server log of the failing run, and for realtime WYSIWYG tests the `REALTIME_DEBUG` dump (`okf/testing/flickers.md`).
+- **Onset.** A change point names a window: the commits in it on the test, its page objects and the production code it drives — and a browser image release (`kb/testing/flickers.md`).
+- **Screenshot, then video.** What page was on screen versus what the test expected is usually the single most informative fact. Detect the video's scene changes before extracting any frame (`kb/testing/flickers.md`).
+- **Logs.** The test output and the XWiki server log of the failing run, and for realtime WYSIWYG tests the `REALTIME_DEBUG` dump (`kb/testing/flickers.md`).
 
 ## 2. Hypothesis
 
@@ -26,9 +26,9 @@ Read the failing step's test code, every page-object method it calls, and the pr
 
 Done when the hypothesis explains **every** piece of evidence: the symptom and the failing line, the configurations it hits and spares, the rough rate, the screenshot. Evidence it does not explain stays in the notes as open — it is usually a second cause or a wrong hypothesis, and several failure groups can need several hypotheses.
 
-- Check the causes catalogued in `okf/testing/flickers.md`; most flickers are one of them.
+- Check the causes catalogued in `kb/testing/flickers.md`; most flickers are one of them.
 - Look for a sibling method that already handles the same situation: a page object where `showMinorEdits()` waits for the reload and `deleteRangeVersions()` does not has its answer in the next method.
-- Before settling on a race inside the test, rule out a wiki already broken by a server-side race during setup (`okf/testing/flickers.md` has the signs); the experiment then targets the setup and the server rather than the test's own steps.
+- Before settling on a race inside the test, rule out a wiki already broken by a server-side race during setup (`kb/testing/flickers.md` has the signs); the experiment then targets the setup and the server rather than the test's own steps.
 - A flicker can be a real product bug that users hit too — a race in production code, not in the test. Say so when it is: step 4 has what that changes.
 
 Present the evidence, the hypothesis and the planned experiment to the developer before launching Docker runs: each costs minutes and holds port 8080.
@@ -37,12 +37,12 @@ Present the evidence, the hypothesis and the planned experiment to the developer
 
 Make the hypothesised interleaving happen on demand, then run the test with **the code unchanged**: this is the control.
 
-- **Delays** where CI is slower: a temporary `Thread.sleep` in the test or page object, a deferred browser action through `executeScript` (`okf/testing/flickers.md` has the recipes), or a sleep or `setTimeout` in the production code itself.
-- **Logging** with timestamps in the page object and the production code — the server log, and on the browser side a `window` array read back through `executeScript`, since the console is readable only on Chrome (`okf/testing/flickers.md`) — to observe the actual order of the two operations, when the order rather than the outcome is in doubt.
+- **Delays** where CI is slower: a temporary `Thread.sleep` in the test or page object, a deferred browser action through `executeScript` (`kb/testing/flickers.md` has the recipes), or a sleep or `setTimeout` in the production code itself.
+- **Logging** with timestamps in the page object and the production code — the server log, and on the browser side a `window` array read back through `executeScript`, since the console is readable only on Chrome (`kb/testing/flickers.md`) — to observe the actual order of the two operations, when the order rather than the outcome is in doubt.
 - **An isolated test**: a unit test of the component that reproduces the race without a browser is faster to iterate on and may become the regression test.
 - **The environment**: a pinned browser tag (`-Dxwiki.test.ui.browserTag=<tag>`), another browser, another database.
 
-**A reliable local reproduction is an experiment too.** When the unchanged test already fails with the CI symptom in a large share of local runs — 10 of 15, say — those runs are the control, and nothing needs forcing. Count the failures by symptom (by the deepest test frame, `okf/testing/flickers.md`): the CI one must be among them, and the others are further races of the same flicker that the fix has to account for. The failing runs' own screenshots, videos and logs feed the hypothesis, which still decides where the fix goes.
+**A reliable local reproduction is an experiment too.** When the unchanged test already fails with the CI symptom in a large share of local runs — 10 of 15, say — those runs are the control, and nothing needs forcing. Count the failures by symptom (by the deepest test frame, `kb/testing/flickers.md`): the CI one must be among them, and the others are further races of the same flicker that the fix has to account for. The failing runs' own screenshots, videos and logs feed the hypothesis, which still decides where the fix goes.
 
 **The forcing may make happen only what can happen without it** — a delay CI can plausibly hit, an order the code does not prevent, a value the source can return — and the notes say what it forces and why that is reachable. A forced state the code can never reach still turns red, and its fix then turns green, so that red proves nothing about CI.
 
@@ -99,7 +99,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/xwiki-it-repeat.mjs" --module <path-to-*-tes
 
 (In Kimi Code the script is under `${KIMI_SKILL_DIR}/../../scripts/`, in opencode under `$XWIKI_LLM_HOME/xwiki/scripts/`.) It keeps each failing repetition's Failsafe report, screenshot and video under `run-NN/`, writes a `report.json` and a `summary.md` table to quote on the issue or the pull request, and takes one Docker IT slot for the whole session. `--baseline <before>/report.json` on the second measurement prints both rates and the delta. It refuses to start when something already holds port 8080, rather than provisioning into somebody else's wiki (the `401` trap).
 
-- **A setup error is not a failure.** A repetition that died in `beforeAll` never ran the test, so it is listed on its own line and left out of the rate — see the symptom table in `okf/testing/running-docker-its.md`. Same for one that hit the timeout.
+- **A setup error is not a failure.** A repetition that died in `beforeAll` never ran the test, so it is listed on its own line and left out of the rate — see the symptom table in `kb/testing/running-docker-its.md`. Same for one that hit the timeout.
 - **How many repetitions.** The rule is step 4.1's: 20 clean executions bound the rate below ~15%, so ten prove almost nothing about a test that fails 1 in 12. `dv-test-history` gives the number of clean CI runs this particular test needs.
 - **`--mode reuse`, the default,** provisions the wiki once and re-runs the test against it, which is ten times faster per repetition; it needs the default `jetty_standalone` engine and port 8080 free. Repetitions then share one wiki, so when the suspicion is that the test depends on a fresh one, use `--mode fresh` — a full `-Pdocker,integration-tests` build per repetition, with any servlet engine.
 

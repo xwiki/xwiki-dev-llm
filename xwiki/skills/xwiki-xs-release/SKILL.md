@@ -33,7 +33,7 @@ developer which ones this skill does not cover yet.
 - **Security issues are restricted**: report counts and scores, never their titles, in anything
   that leaves the session.
 - Access to dev.xwiki.org (the `dev` subwiki), www.xwiki.org and their REST API, the User-Agent and
-  `~/.xwiki-credentials`: `okf/servers/index.md`. JIRA: `xwiki-jira`.
+  `~/.xwiki-credentials`: `kb/servers/index.md`. JIRA: `xwiki-jira`.
 
 ## Creating the plan
 
@@ -67,7 +67,7 @@ its own). The checks, all read-only:
 - **Release notes page**: `xwiki:ReleaseNotes.Data.XWiki.<short>` on www.xwiki.org, a nested page
   (`…/spaces/<short>/pages/WebHome` over REST). Fill the template placeholders: the summary (below),
   the dashboard link, `<version - 1>` (the previous final). Entries come from the Release Notes
-  Application (`okf/processes/release-notes.md`, which holds the rules an entry is reviewed
+  Application (`kb/processes/release-notes.md`, which holds the rules an entry is reviewed
   against).
 - **Summary**: one paragraph, the user-visible highlights first (an administrator or technical item
   such as clustering does not belong there), then "For developers, …", then
@@ -101,4 +101,4 @@ its own). The checks, all read-only:
     summary does not fit, so condense it and count before handing it over.
   - **Matrix**: ping the next two release managers of the list, and post an `[ANN] XWiki <short>
     has been released!` message (summary, release notes and blog URLs; for an RC, a call to test it
-    before the final's date). Mentions follow `okf/servers/index.md`.
+    before the final's date). Mentions follow `kb/servers/index.md`.

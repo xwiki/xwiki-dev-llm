@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Repo consistency validator for xwiki-dev-llm. Enforces the invariants that are otherwise kept in
 // sync by hand, so they can never drift silently:
-//   1. Every skill directory under xwiki/skills/ is listed in README.md, and (except the OKF
-//      governor xwiki-knowledge) in xwiki/okf/index.md.
+//   1. Every skill directory under xwiki/skills/ is listed in README.md, and (except the KB
+//      governor xwiki-knowledge) in xwiki/kb/index.md.
 //   2. Each SKILL.md frontmatter `name:` equals its directory name.
 //   3. The plugin version fields are identical across all hosts (Claude marketplace + plugin, Kimi
 //      plugin, opencode config comment).
-//   4. Every OKF topic file is referenced in xwiki/okf/index.md. The injected
+//   4. Every KB topic file is referenced in xwiki/kb/index.md. The injected
 //      xwiki/instructions/xwiki-org.md no longer mirrors that map: the KB is reached by search
 //      (kb-search.mjs and the pointer hooks), so listing every topic there would only cost tokens.
 //   5. The injected xwiki-org.md, and its knowledge-base block, stay within their size budgets: a
@@ -18,12 +18,12 @@
 //      something that was never the change itself. Instead scripts/release.mjs sets them on master
 //      after the merge (automatically, via .github/workflows/release.yml), which is what makes
 //      installed plugins pull the update.
-//   7. Every `okf/...md` path a skill cites actually exists, and so does every `references/...md`
-//      file it names. Skills delegate their rules to the OKF rather than restating them, and keep
+//   7. Every `kb/...md` path a skill cites actually exists, and so does every `references/...md`
+//      file it names. Skills delegate their rules to the KB rather than restating them, and keep
 //      what only one branch of a run needs in references/ files opened on demand, so a renamed or
 //      deleted file would otherwise leave a skill pointing at nothing — and a reviewer that cannot
 //      read its rule source fails silently. All of a skill's Markdown is checked, not only SKILL.md.
-//   8. The OKF index stays a map: each entry, and the file, within a size budget. An entry exists to
+//   8. The KB index stays a map: each entry, and the file, within a size budget. An entry exists to
 //      pick a topic, so it says what the topic is and when to open it; a description long enough to
 //      restate the rules gets acted on in place of the file it points at, at a third of the detail.
 //   9. Every SKILL.md frontmatter parses as YAML. A `name`/`description` is written as an unquoted
@@ -36,10 +36,10 @@
 //  10. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
 //      route work to each other through these pointers, so a renamed or removed skill leaves the
 //      others sending the model to nothing.
-//  11. No paragraph is copied across files. Each fact has one home — a skill, an OKF topic, the
+//  11. No paragraph is copied across files. Each fact has one home — a skill, a KB topic, the
 //      injected xwiki-org.md, README.md — and the other places link to it; a copy drifts from its
 //      original at the first edit of either, and the model then has two rules to choose from.
-//  12. Each skill and OKF file stays within its size budget (scripts/size-budgets.json). Like the
+//  12. Each skill and KB file stays within its size budget (scripts/size-budgets.json). Like the
 //      budgets of invariants 5 and 8, it turns growth into a decision: a file only gets longer
 //      when its budget is raised, in the same change and with the reason in the commit message.
 //      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
@@ -53,8 +53,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename, relative, sep } from "node:path";
 import {
-  COPY_RATIO, OKF_ENTRY_MAX_BYTES, OKF_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
-  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, okfIndexEntries, orgMapBlock,
+  COPY_RATIO, KB_ENTRY_MAX_BYTES, KB_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
+  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock,
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
 
@@ -69,7 +69,7 @@ const skills = readdirSync(join(repoRoot, "xwiki/skills"), { withFileTypes: true
   .sort();
 
 const readme = read("README.md");
-const okfIndex = read("xwiki/okf/index.md");
+const kbIndex = read("xwiki/kb/index.md");
 
 for (const skill of skills) {
   const skillMd = read(`xwiki/skills/${skill}/SKILL.md`);
@@ -83,8 +83,8 @@ for (const skill of skills) {
   if (!readme.includes(`\`${skill}\``)) {
     errors.push(`README.md: skill '${skill}' is not listed in the Skills section`);
   }
-  if (skill !== "xwiki-knowledge" && !okfIndex.includes(`\`${skill}\``)) {
-    errors.push(`xwiki/okf/index.md: skill '${skill}' is not listed in "Related skills"`);
+  if (skill !== "xwiki-knowledge" && !kbIndex.includes(`\`${skill}\``)) {
+    errors.push(`xwiki/kb/index.md: skill '${skill}' is not listed in "Related skills"`);
   }
 }
 
@@ -122,22 +122,22 @@ if (new Set(Object.values(versions)).size !== 1) {
   errors.push(`Plugin version mismatch across manifests: ${JSON.stringify(versions)}`);
 }
 
-// ---- Invariant 4: OKF index completeness -----------------------------------------------------
+// ---- Invariant 4: KB index completeness -----------------------------------------------------
 const orgMd = read("xwiki/instructions/xwiki-org.md");
-const okfRoot = join(repoRoot, "xwiki/okf");
+const kbRoot = join(repoRoot, "xwiki/kb");
 const walk = (dir) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
     const p = join(dir, d.name);
     return d.isDirectory() ? walk(p) : [p];
   });
-for (const abs of walk(okfRoot)) {
+for (const abs of walk(kbRoot)) {
   if (!abs.endsWith(".md")) continue;
-  if (abs === join(okfRoot, "index.md")) continue;        // the map itself
+  if (abs === join(kbRoot, "index.md")) continue;        // the map itself
   const base = basename(abs, ".md");
   if (base === "_template") continue;                     // ADR template, not a topic
   if (/[\\/]decisions[\\/]/.test(abs)) continue;          // ADRs are listed individually only in index.md
-  if (!okfIndex.includes(base)) {
-    errors.push(`xwiki/okf/index.md: OKF topic '${base}' is not referenced in the map`);
+  if (!kbIndex.includes(base)) {
+    errors.push(`xwiki/kb/index.md: KB topic '${base}' is not referenced in the map`);
   }
 }
 
@@ -148,7 +148,7 @@ for (const abs of walk(okfRoot)) {
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
-      `for the always-on file — move the detail into an okf/ topic (described in okf/index.md) or a skill`
+      `for the always-on file — move the detail into an kb/ topic (described in kb/index.md) or a skill`
   );
 }
 const mapBlock = orgMapBlock(orgMd);
@@ -220,10 +220,10 @@ if (!baseSha) {
   }
 }
 
-// ---- Invariant 7: OKF and references/ paths cited by skills resolve -------------------------
-// Matches `okf/<dir>/<topic>.md` (resolved against xwiki/) and `references/<file>.md` (resolved
+// ---- Invariant 7: KB and references/ paths cited by skills resolve -------------------------
+// Matches `kb/<dir>/<topic>.md` (resolved against xwiki/) and `references/<file>.md` (resolved
 // against the skill's own directory) wherever they appear, in backticks or bare.
-const okfRefPattern = /okf\/[a-z0-9-]+\/[a-z0-9-]+\.md/g;
+const kbRefPattern = /kb\/[a-z0-9-]+\/[a-z0-9-]+\.md/g;
 const referencesPattern = /(?<![\w/.-])references\/[\w.-]+\.md/g;
 for (const skill of skills) {
   const skillDir = `xwiki/skills/${skill}`;
@@ -232,7 +232,7 @@ for (const skill of skills) {
     .map((abs) => relative(repoRoot, abs).split(sep).join("/"));
   for (const doc of docs) {
     const text = read(doc);
-    for (const ref of new Set(text.match(okfRefPattern) ?? [])) {
+    for (const ref of new Set(text.match(kbRefPattern) ?? [])) {
       if (!existsSync(join(repoRoot, "xwiki", ref))) errors.push(`${doc}: cites '${ref}', which does not exist`);
     }
     for (const ref of new Set(text.match(referencesPattern) ?? [])) {
@@ -305,22 +305,22 @@ for (const skill of skills) {
   }
 }
 
-// ---- Invariant 8: the OKF index stays a map ---------------------------------------------------
-// okf/index.md is read whenever the OKF is consulted, and every topic is already described by its
+// ---- Invariant 8: the KB index stays a map ---------------------------------------------------
+// kb/index.md is read whenever the KB is consulted, and every topic is already described by its
 // own `summary:` frontmatter, so a long entry is the same text a third time. Budgets, not good
-// intentions, are what stop it growing back: extending the OKF always appends here and never cuts.
-if (Buffer.byteLength(okfIndex) > OKF_INDEX_MAX_BYTES) {
+// intentions, are what stop it growing back: extending the KB always appends here and never cuts.
+if (Buffer.byteLength(kbIndex) > KB_INDEX_MAX_BYTES) {
   errors.push(
-    `xwiki/okf/index.md: ${Buffer.byteLength(okfIndex)} bytes exceeds the ${OKF_INDEX_MAX_BYTES}-byte budget — ` +
+    `xwiki/kb/index.md: ${Buffer.byteLength(kbIndex)} bytes exceeds the ${KB_INDEX_MAX_BYTES}-byte budget — ` +
       `an entry picks a topic, it does not summarise it; the rules belong in the topic file`
   );
 }
-for (const entry of okfIndexEntries(okfIndex)) {
-  if (Buffer.byteLength(entry.text) > OKF_ENTRY_MAX_BYTES) {
+for (const entry of kbIndexEntries(kbIndex)) {
+  if (Buffer.byteLength(entry.text) > KB_ENTRY_MAX_BYTES) {
     errors.push(
-      `xwiki/okf/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
-        `${OKF_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
-        `and leave the rules to xwiki/okf/**/${entry.name}.md`
+      `xwiki/kb/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
+        `${KB_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
+        `and leave the rules to xwiki/kb/**/${entry.name}.md`
     );
   }
 }
@@ -348,7 +348,7 @@ for (const p of trackedMd) {
 // of its 8-word sequences also appear in one block of another file. Below 20 words a repeat is a
 // phrase, not a rule. This catches copy-paste only; a paraphrase is a reviewer's job.
 // A block naming a host's path variable is exempt: each skill has to say for itself where the shared
-// okf/ and scripts/ are on each host, as a skill cannot include another file.
+// kb/ and scripts/ are on each host, as a skill cannot include another file.
 // The splitting, words and thresholds are in md-blocks.mjs, shared with consolidation-candidates.mjs.
 const dupIndex = indexBlocks(trackedMd.filter(inDupScope), read);
 const { blocks } = dupIndex;
@@ -366,13 +366,13 @@ blocks.forEach((block, i) => {
   }
 });
 
-// ---- Invariant 12: skill and OKF files stay within their size budget -------------------------
+// ---- Invariant 12: skill and KB files stay within their size budget -------------------------
 // Covers what the model reads as instructions: skills (not their tools/, which hold data and the
-// scripts' own docs) and OKF topics. okf/index.md has its own budgets (invariant 8). A file with no
+// scripts' own docs) and KB topics. kb/index.md has its own budgets (invariant 8). A file with no
 // entry gets the default, so a new file needs an entry only once it outgrows it.
 // A SKILL.md is read whole once the skill fires, so its ceiling is the published guideline for a skill
 // body (https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices): under 500 lines,
-// about 5,000 tokens. OKF topics and reference files are opened on demand and have no such ceiling.
+// about 5,000 tokens. KB topics and reference files are opened on demand and have no such ceiling.
 const budgets = JSON.parse(read("scripts/size-budgets.json"));
 for (const p of trackedMd) {
   if (!isBudgeted(p)) continue;
@@ -382,7 +382,7 @@ for (const p of trackedMd) {
     errors.push(
       `${p}: ${size} bytes exceeds its ${max}-byte budget. Raise its entry in scripts/size-budgets.json ` +
         `only if the new text passes all three tests, saying why in the commit message: every reader of the ` +
-        `file needs it (else move it to the skill's references/ or a narrower OKF topic), it has no other home (else point to the OKF topic ` +
+        `file needs it (else move it to the skill's references/ or a narrower KB topic), it has no other home (else point to the KB topic ` +
         `or skill that holds it), and it is as short as it can be — see "Each fact has one home" in CLAUDE.md`
     );
   }
@@ -412,4 +412,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync at ` +
-    `${versions["marketplace.metadata.version"]}, OKF index complete).`);
+    `${versions["marketplace.metadata.version"]}, KB index complete).`);

@@ -4,7 +4,7 @@
 // ---- Paragraph blocks and shingles (invariant 11) --------------------------------------------
 // A block is a paragraph or a list item, with frontmatter and code fences left out. Below
 // MIN_BLOCK_WORDS a repeat is a phrase, not a rule. A block naming a host's path variable is exempt:
-// each skill has to say for itself where the shared okf/ and scripts/ are on each host, as a skill
+// each skill has to say for itself where the shared kb/ and scripts/ are on each host, as a skill
 // cannot include another file.
 export const SHINGLE_WORDS = 8;
 export const MIN_BLOCK_WORDS = 20;
@@ -66,14 +66,14 @@ export const sharedWithOtherFiles = ({ blocks, owners }, i) => {
 // ---- Size budgets (invariants 5, 8 and 12) ---------------------------------------------------
 export const ORG_MAX_BYTES = 7000;
 export const ORG_MAP_MAX_BYTES = 800;
-export const OKF_INDEX_MAX_BYTES = 11000;
-export const OKF_ENTRY_MAX_BYTES = 240;
+export const KB_INDEX_MAX_BYTES = 11000;
+export const KB_ENTRY_MAX_BYTES = 240;
 export const SKILL_MAX_BYTES = 20000;
 export const DEFAULT_MAX_BYTES = 12000;
 
 // Whether invariant 12 budgets this tracked Markdown file.
 export const isBudgeted = (p) =>
-  /^xwiki\/(skills|okf)\//.test(p) && !/\/tools\//.test(p) && p !== "xwiki/okf/index.md";
+  /^xwiki\/(skills|kb)\//.test(p) && !/\/tools\//.test(p) && p !== "xwiki/kb/index.md";
 
 // Its budget: the entry in scripts/size-budgets.json, else the default for its kind.
 export const budgetOf = (p, budgets) =>
@@ -87,11 +87,11 @@ export const orgMapBlock = (orgMd) => {
   return start === -1 || end === -1 || end < start ? null : orgMd.slice(start, end);
 };
 
-// The topic entries of okf/index.md (invariant 8): each `- **name** — …` with its wrapped lines.
-export const okfIndexEntries = (okfIndex) => {
+// The topic entries of kb/index.md (invariant 8): each `- **name** — …` with its wrapped lines.
+export const kbIndexEntries = (kbIndex) => {
   const entries = [];
   let entry = null;
-  for (const line of okfIndex.split("\n")) {
+  for (const line of kbIndex.split("\n")) {
     const head = line.match(/^- \*\*([a-z0-9-]+)\*\* —/);
     if (head) {
       entry = { name: head[1], text: line };

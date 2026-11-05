@@ -90,7 +90,7 @@ Use `pnpm`, not `npm`: the workspace is defined by a pnpm lockfile, and `npm ins
 a different tree that then fails in ways the lockfile was there to prevent. The Maven build remains
 the oracle — a change that passes `pnpm run build` still has to pass its module's `mvn` build, which
 is what runs the linters and packages the WebJar. Front-end *conventions* (AMD modules, WebJars,
-skin extensions, accessibility) are `okf/conventions/frontend.md`, not this skill.
+skin extensions, accessibility) are `kb/conventions/frontend.md`, not this skill.
 
 ## Validate **every** module the change touched
 
@@ -175,9 +175,9 @@ mvn verify -B -ntp -pl <module-path> -Pdocker,integration-tests -Dit.test='AllIT
 A `-Pdocker,integration-tests` run is a **machine-wide** operation: it takes host ports or a slice of
 the Docker daemon, and writes SNAPSHOT artifacts into the shared `~/.m2`. Other agents, other
 worktrees and the developer's own wiki are all on the same machine. Why each step below exists — and
-the table that tells a starved daemon from a real defect — is in `okf/testing/running-docker-its.md`
-(in Claude Code `${CLAUDE_PLUGIN_ROOT}/okf/testing/`, in Kimi Code
-`${KIMI_SKILL_DIR}/../../okf/testing/`, in opencode `$XWIKI_LLM_HOME/xwiki/okf/testing/`).
+the table that tells a starved daemon from a real defect — is in `kb/testing/running-docker-its.md`
+(in Claude Code `${CLAUDE_PLUGIN_ROOT}/kb/testing/`, in Kimi Code
+`${KIMI_SKILL_DIR}/../../kb/testing/`, in opencode `$XWIKI_LLM_HOME/xwiki/kb/testing/`).
 
 **1. Pre-flight — read the output before launching anything:**
 
@@ -252,7 +252,7 @@ The `xwiki-fix-flickering-docker-test` skill owns when and how to use it.
 
 **5. A failure in `beforeAll` is never evidence about your change.**
 `RuntimeException: Error setting up the XWiki testing environment` means no test method ran. Repair
-the machine and re-run; the symptom table in the OKF topic says which cause each line points at.
+the machine and re-run; the symptom table in the KB topic says which cause each line points at.
 
 ## Common profiles
 

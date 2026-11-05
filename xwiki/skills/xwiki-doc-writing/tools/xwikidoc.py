@@ -7,7 +7,7 @@ cookie-less client gets intermittent `403 Invalid or missing form token.` on obj
 for a while, then failing, depending on which node answered. That single fact is most of this file.
 
 Credentials come from the environment, else from `~/.xwiki-credentials`, which is parsed here, never
-sourced (okf/servers/index.md says why) and never printed.
+sourced (kb/servers/index.md says why) and never printed.
 
 Environment:
     XWIKI_USER, XWIKI_PASSWORD   required to write, unless the credentials file holds them; a read
@@ -50,7 +50,7 @@ def _auth(required=True):
         if not required:
             return None
         raise SystemExit('No credentials: set XWIKI_USER / XWIKI_PASSWORD or create '
-                         '~/.xwiki-credentials (format in okf/servers/index.md)')
+                         '~/.xwiki-credentials (format in kb/servers/index.md)')
     return 'Basic ' + base64.b64encode(f'{user}:{password}'.encode()).decode()
 
 
@@ -127,7 +127,7 @@ def form(pairs):
 
 def farm_wikis():
     """The wiki ids of the farm — what makes `doc:<wiki>:<ref>` the correct form of a cross-wiki
-    link instead of an absolute URL (see okf/conventions/documentation.md)."""
+    link instead of an absolute URL (see kb/conventions/documentation.md)."""
     st, d = getjson(WWW.rsplit('/wikis/', 1)[0] + '/wikis')
     return [w['id'] for w in (d or {}).get('wikis', [])]
 

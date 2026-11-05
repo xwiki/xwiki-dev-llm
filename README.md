@@ -64,7 +64,7 @@ export XWIKI_LLM_HOME="$HOME/dev/xwiki/xwiki-dev-llm"
 ```
 
 **Skills.** opencode only discovers skills in fixed directories, so symlink this checkout's skills
-into your opencode config once (a single link — the skills and their OKF stay in the checkout):
+into your opencode config once (a single link — the skills and their KB stay in the checkout):
 
 ```bash
 mkdir -p ~/.config/opencode
@@ -108,10 +108,10 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-gates.js" ~/.config/o
 | **Work directory** — plans, handoffs, drafts and notes go to one root instead of the repo, `/tmp` and your home | The first time a task needs a file that must outlive the session | `XWIKI_LLM_WORK` ([defaults](docs/setup.md)) |
 | **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — blocks a write whose endings contradict the repo's `.gitattributes`, so no spurious whole-file diffs | Every `Write`/`Edit`; silent unless violated | — |
 | **KB prompt pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 5 `file#Section` pointers into the KB, plus up to 2 skills to load, that match your prompt, so the model reads just that section; nothing when no match is strong enough, never a pointer twice per session nor to a skill already loaded | Every prompt of 3+ words, in the same repos as the org conventions | — (opencode 2.x has no prompt hook, so none there) |
-| **KB edit pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 3 pointers to the topics, plus up to 2 skills (their globs and regexes in `xwiki/okf/_meta/skills.json`), whose `applies-to:` globs match the file being edited and, for topics with `applies-when:` regexes, whose regex matches the text the edit adds (ranked first); advice only, never blocks | Every `Edit`/`Write`, and every Bash command that may have changed files (`sed -i`, a heredoc, a script: the lines it added since the previous check), same repos; after the write in opencode | — (not in Kimi Code, whose tool hooks cannot add context) |
+| **KB edit pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 3 pointers to the topics, plus up to 2 skills (their globs and regexes in `xwiki/kb/_meta/skills.json`), whose `applies-to:` globs match the file being edited and, for topics with `applies-when:` regexes, whose regex matches the text the edit adds (ranked first); advice only, never blocks | Every `Edit`/`Write`, and every Bash command that may have changed files (`sed -i`, a heredoc, a script: the lines it added since the previous check), same repos; after the write in opencode | — (not in Kimi Code, whose tool hooks cannot add context) |
 | **Commit self-review** (`xwiki/scripts/kb-hooks.mjs`) — asks the model to check the commit's diff against the KB sections and skills it was pointed at this session (listed), plus up to 5 pointers matching the committed files as the edit pointers do; advice only, never blocks, nothing when there is neither | Every `git commit`, same repos; after the commit in opencode | — (not in Kimi Code, whose tool hooks cannot add context) |
 | **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name`, or a `#123` in a repo whose issues live in JIRA (read from its `pom.xml` or remote), which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; only the message (`-m`, `-F` file or stdin, `--body`/`--body-file`) is read, not the rest of a compound command; summary line exempt | — |
-| **Commit diff check** (`xwiki/scripts/check-diff.mjs`) — refuses a commit whose diff breaks a rule it shows exactly: an `@since` / `@Deprecated(since)` not naming the next release of the root pom, a version in a javadoc `@deprecated`, new public API without `@Unstable` (`xwiki` org only), a `.properties` file turned UTF-8, a new file without a license header; heuristics (coverage threshold untouched, page change with no test, `[Misc]` on production code) come back as advice. It also refuses, once per skill, a commit touching files whose rules live in a skill the session has not loaded (`gate` entries in `xwiki/okf/_meta/skills.json`: tests, -legacy code, translations, XAR pages). Kimi gets the diff refusals only (it records no skill load) | Every `git commit`; reads the staged diff (the work tree too after `-a` or a `git add` in the same command) | `Diff-Check: skip` trailer for a wrong finding; `XWIKI_LLM_COMMIT_GATES=off` |
+| **Commit diff check** (`xwiki/scripts/check-diff.mjs`) — refuses a commit whose diff breaks a rule it shows exactly: an `@since` / `@Deprecated(since)` not naming the next release of the root pom, a version in a javadoc `@deprecated`, new public API without `@Unstable` (`xwiki` org only), a `.properties` file turned UTF-8, a new file without a license header; heuristics (coverage threshold untouched, page change with no test, `[Misc]` on production code) come back as advice. It also refuses, once per skill, a commit touching files whose rules live in a skill the session has not loaded (`gate` entries in `xwiki/kb/_meta/skills.json`: tests, -legacy code, translations, XAR pages). Kimi gets the diff refusals only (it records no skill load) | Every `git commit`; reads the staged diff (the work tree too after `-a` or a `git add` in the same command) | `Diff-Check: skip` trailer for a wrong finding; `XWIKI_LLM_COMMIT_GATES=off` |
 
 A pushed commit message cannot be fixed without rewriting a shared branch, and a CRLF diff hides the
 real change — which is why those two are hooks and not conventions. Both are Node (no bash, no `jq`),
@@ -154,7 +154,7 @@ means it needs nothing.
 | [`xwiki-daily-close`](xwiki/skills/xwiki-daily-close/) ⚠ | Your daily push on work you already have open: PRs, assigned issues and forum topics you started that are ready or one step from done, ranked, with stats and trend; offers each merge, close or forum conclusion for a yes | `gh` login; `JIRA_API_TOKEN`; `DISCOURSE_API_*` to write on the forum (read-only without) | `/xwiki-daily-close` |
 | [`xwiki-forum`](xwiki/skills/xwiki-forum/) | Draft and post forum.xwiki.org topics and replies: category, `brainstorming`/`proposal`/`vote` tag instead of a title prefix, confirmation of every field before posting | `DISCOURSE_API_*` to post (draft to paste without) | "prepare a brainstorming post about X" |
 | [`xwiki-pull-request`](xwiki/skills/xwiki-pull-request/) | Commit format, PR template, squash and backport conventions | `gh` login | "open a PR for this branch" |
-| [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | A few senior-reviewer agents (correctness, design, tests, history and past reviews of the touched code, conventions) reading the code with general judgement plus the OKF, each finding re-checked against the code before it is posted; asks for a quick or full security pass when the private `xwiki-security` plugin is installed | `gh` login | `/xwiki-review PR 6453` |
+| [`xwiki-review`](xwiki/skills/xwiki-review/) ⚠ | A few senior-reviewer agents (correctness, design, tests, history and past reviews of the touched code, conventions) reading the code with general judgement plus the KB, each finding re-checked against the code before it is posted; asks for a quick or full security pass when the private `xwiki-security` plugin is installed | `gh` login | `/xwiki-review PR 6453` |
 | [`xwiki-backport`](xwiki/skills/xwiki-backport/) | Cherry-pick to an older branch and *adapt* it (poms, Java level, `@since`, API drift) | `gh` login | "backport this to stable-18.8.x" |
 | [`xwiki-backport-testneeded`](xwiki/skills/xwiki-backport-testneeded/) | The `testneeded` sweep: backport one issue's test to every supported branch | `gh` login, `JIRA_API_TOKEN` | "backport the test of XWIKI-24710" |
 | [`xwiki-review-help`](xwiki/skills/xwiki-review-help/) | A local HTML page to decide on the user-facing changes of several PRs or a release: one card per change (before/after, screenshots that enlarge, who is affected, admin action, release-notes line), the open decisions, and an export of your choices to paste back | a browser | "make me the review page for the open PRs" |
@@ -167,7 +167,7 @@ means it needs nothing.
 |---|---|---|---|
 | [`xwiki-release-test-triage`](xwiki/skills/xwiki-release-test-triage/) | Reads CI and reports: known flicker, unknown flicker or real breakage — does it block the release? Never writes | — | "is master green?" |
 | [`xwiki-ci-check`](xwiki/skills/xwiki-ci-check/) ⚠ | The daily sweep that *acts*: attributes each failure, comments on the culprit commit, opens fix PRs, files flicker issues, posts the digest | to analyse, nothing — but a red quality gate keeps its cause only with `SONARQUBE_TOKEN`, and a failing test its history only with a [Develocity key](docs/setup.md); the **bot** tokens to write (`GH_TOKEN_BOT`, `JIRA_TOKEN_BOT`, `MATRIX_*`) | `/xwiki-ci-check xwiki-platform, master only` |
-| [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `okf/sonarqube/`) and open the PR | `SONARQUBE_TOKEN`, `SONARQUBE_PROJECT_KEY` | "fix a Sonar issue in this repo" |
+| [`xwiki-fix-sonarqube-issue`](xwiki/skills/xwiki-fix-sonarqube-issue/) | Fix a SonarCloud finding correctly (per-rule traps live in `kb/sonarqube/`) and open the PR | `SONARQUBE_TOKEN`, `SONARQUBE_PROJECT_KEY` | "fix a Sonar issue in this repo" |
 
 **Documentation** — the ones that write to xwiki.org read your credentials from `~/.xwiki-credentials`.
 
@@ -194,7 +194,7 @@ means it needs nothing.
 
 | | |
 |---|---|
-| **KB** (`xwiki/okf/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Found by search (`xwiki/scripts/kb-search.mjs`, BM25 over `##` sections), not by a map. Extended only through a reviewed PR. |
+| **KB** (`xwiki/kb/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Found by search (`xwiki/scripts/kb-search.mjs`, BM25 over `##` sections), not by a map. Extended only through a reviewed PR. |
 | **`discourse` MCP** | forum.xwiki.org: search and read with no credential, post with one ([setup](docs/setup.md#forum-write-access-for-the-discourse-mcp-server)) |
 | **`develocity` MCP** | community.develocity.cloud: build scans, test outcomes, flaky history, cache hit rates ([setup](docs/setup.md#develocity-access-for-the-develocity-mcp-server-and-dv-test-history)) |
 | **`sonarqube` MCP** | SonarCloud issues and quality gates, per repo ([setup](docs/setup.md)) |
@@ -210,7 +210,7 @@ credentials for JIRA, the forum, Develocity, SonarCloud and xwiki.org.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, OKF index, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, KB index, size budgets, copied paragraphs)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.
@@ -240,7 +240,7 @@ node scripts/release.mjs --dry-run
 
 - **minor** — the capability *inventory* changed: a skill, an MCP server, a hook or an opencode
   plugin was added or removed.
-- **patch** — anything else under `xwiki/` (OKF, skill and instruction wording).
+- **patch** — anything else under `xwiki/` (KB, skill and instruction wording).
 - **major** — never derived; it has to be asked for explicitly.
 
 Two ways to override it. For a change whose significance the file list cannot show, add a trailer to

@@ -3,7 +3,7 @@
 // tools/, so that each trap below is written down once and fixed once for every consumer.
 //
 // Read access is anonymous — no token. The full reference, including the endpoints worth knowing
-// and how to read a build, is in okf/servers/jenkins.md.
+// and how to read a build, is in kb/servers/jenkins.md.
 //
 // Consumers:
 //   - skills/xwiki-release-test-triage/tools/triage.mjs

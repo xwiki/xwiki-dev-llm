@@ -79,7 +79,7 @@ function repo(files, changes = {}, { remote = ORIGIN, stage = true } = {}) {
 }
 
 const run = (dir, command = "git commit -m 'XWIKI-1: Add foo'") => checkCommit(command, { cwd: dir, env });
-const rules = (r) => [...r.deny.matchAll(/^okf\/conventions\/([\w-]+)\.md/gm)].map((m) => m[1]);
+const rules = (r) => [...r.deny.matchAll(/^kb\/conventions\/([\w-]+)\.md/gm)].map((m) => m[1]);
 const base = { [`${API}/FooManager.java`]: javaClass('') };
 const withMethod = (method) => ({ [`${API}/FooManager.java`]: javaClass(method) });
 

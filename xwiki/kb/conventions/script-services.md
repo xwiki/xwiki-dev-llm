@@ -40,7 +40,7 @@ return value that must not reach the output ([[velocity-code-style]]).
 **Existing** script APIs keep their signature: changing a method that returns `null` into one that
 throws breaks backward compatibility. Add a new signature, deprecate the old one and move it to
 legacy — see [[backward-compatibility]]. This is also why the `S2447` Sonar rule is dropped rather
-than fixed on an existing service (`okf/sonarqube/index.md`).
+than fixed on an existing service (`kb/sonarqube/index.md`).
 
 ## Arguments: no bean factories
 

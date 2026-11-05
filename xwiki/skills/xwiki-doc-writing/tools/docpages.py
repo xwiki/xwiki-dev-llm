@@ -20,7 +20,7 @@ The page set is a module (default `pages.py` in the current directory, override 
     PIN = {"documentation.extensions.admin.antispam.WebHome":
            ["configure-keywords", "delete-spam-pages-users"]}   # optional, ordered child names
 
-The rules enforced here are the mechanical subset of okf/conventions/documentation.md — the ones a
+The rules enforced here are the mechanical subset of kb/conventions/documentation.md — the ones a
 regex can decide. They are not a substitute for the review checklist in the skill.
 """
 import importlib

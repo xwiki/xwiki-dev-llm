@@ -46,7 +46,7 @@ sends somebody to do a backport nobody needed:
   produce, because the change already exists and the other branches have been running it.
 - **an entry that does cover this branch** ⇒ the fix is here and the test fails anyway. The issue is
   wrong, not missing: **comment on it** and file nothing. Released, it is never reopened
-  (`okf/servers/jira.md`, "Whether to file an issue at all"); with its Fix Version still `unreleased`, a human may reopen it and
+  (`kb/servers/jira.md`, "Whether to file an issue at all"); with its Fix Version still `unreleased`, a human may reopen it and
   finish the fix under its key — the routine never does: it comments, and says so in the comment
   and on the row. An `earlier`
   list is the same signal repeated — a test filed three times is one that keeps coming back, and
@@ -56,7 +56,7 @@ sends somebody to do a backport nobody needed:
 raises the incident rather than quieting it, and it is the `Next` cell's business to say whose.
 
 **Not every branch is a backport target, and the report must not invent one.** Which lines are, and
-which one may never be named in a public artifact, is `okf/processes/release.md`. What follows from
+which one may never be named in a public artifact, is `kb/processes/release.md`. What follows from
 it here: a `jiraClosed` gap on an unsupported line is still reported in the paste and the terminal,
 which are internal, and is actionable only as a keyless `[Misc]` fix on the branch itself; and a
 `jiraClosed` issue failing on the line that may not be named gets no JIRA comment, which would name

@@ -135,12 +135,12 @@ Inside `xwiki/`:
   without opening any KB file.
 - **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
   point to it instead of restating it. The validator fails a paragraph copied across files and a skill
-  or OKF file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the
+  or KB file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the
   file. A `SKILL.md` stops at 20,000 bytes (Anthropic's 500-line / 5,000-token guideline); one already
   above it may only shrink. Below that, raise an entry only when the new text passes all three tests:
   1. **Every reader of the file needs it** — otherwise it goes in the skill's `references/`, opened
-     where it applies, or in a narrower OKF topic.
-  2. **It has no other home** — otherwise point to the OKF topic or skill that holds (or should hold) it.
+     where it applies, or in a narrower KB topic.
+  2. **It has no other home** — otherwise point to the KB topic or skill that holds (or should hold) it.
   3. **It is as short as it can be**, the text around it included.
 
   Then set the entry to the new size plus about 10%, and say in the commit message why the three hold.

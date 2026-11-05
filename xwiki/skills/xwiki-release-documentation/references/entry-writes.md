@@ -2,9 +2,9 @@
 
 Read by `xwiki-release-documentation` at §6.2 when the release note does not exist yet, or before the
 first entry that carries a screenshot. The contract and representations are in
-`okf/processes/release-notes.md`; the access rules (default `curl` User-Agent, Basic auth parsed from
+`kb/processes/release-notes.md`; the access rules (default `curl` User-Agent, Basic auth parsed from
 `~/.xwiki-credentials` and never sourced or printed, the `XWiki-Form-Token` header) are in
-`okf/servers/index.md`. Below, `$RN` is `https://www.xwiki.org/xwiki/rest/wikis/xwiki/releasenotes`
+`kb/servers/index.md`. Below, `$RN` is `https://www.xwiki.org/xwiki/rest/wikis/xwiki/releasenotes`
 , `$AUTH` the Basic credentials built from that file, and `$TOKEN` the `XWiki-Form-Token` header of
 an authenticated `/rest` GET.
 
@@ -21,7 +21,7 @@ curl -s -H "Authorization: Basic $AUTH" -H 'Content-Type: application/json' \
 
 `201` answers the stored note. A `409` means somebody created it in between: check that its
 `reference` is `ReleaseNotes.Data.XWiki.<ShortVersion>.WebHome`, re-read the list and carry on. The
-template leaves several things for the **release manager** (the OKF lists them): report those in §7,
+template leaves several things for the **release manager** (the KB lists them): report those in §7,
 never invent them here.
 
 ## Screenshots on an entry
