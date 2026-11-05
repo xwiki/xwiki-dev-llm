@@ -364,7 +364,7 @@ export function commitPointers(index, files, { projectDir, seen = new Set(), k =
 }
 
 /**
- * The self-review text: the instruction, the session's pointer ids (the latest kept when they do not
+ * The self-review text: the instruction, a line naming any matching skill to load, the session's pointer ids (the latest kept when they do not
  * all fit), then the pointers matching the commit, cut to MAX_CHARS. Returns `{ text, ids }` like
  * formatPointers, `ids` being the matching pointers that made it in.
  */
@@ -374,24 +374,29 @@ export function formatCommitReview(given, hits, kbRoot) {
     + `violation before pushing. KB ids are files under ${kbRoot}/; re-read a section only when unsure.`;
   const label = "\nAlso matching the commit's files:";
   const reserve = given.length ? 200 : 0;
+  // A matching skill leads, as an instruction of its own (see formatPointers).
+  const skillNames = hits.filter(isSkill).map((h) => h.title);
+  let lead = skillNames.length ? `\nBefore reviewing, load with your Skill tool: ${skillNames.join(", ")} — the rules `
+    + `to check against are in ${skillNames.length > 1 ? "them" : "it"}, not in this text.` : "";
   let lines = "";
   const ids = [];
-  for (const h of hits) {
+  for (const h of [...hits.filter(isSkill), ...hits.filter((x) => !isSkill(x))]) {
     const line = `\n${pointerLine(h)}`;
-    if (header.length + label.length + lines.length + line.length > MAX_CHARS - reserve) break;
+    if (header.length + lead.length + label.length + lines.length + line.length > MAX_CHARS - reserve) break;
     lines += line;
     ids.push(h.id);
   }
+  if (!ids.some((id) => id.startsWith("skill:"))) lead = "";
   const names = given.map((id) => (id.startsWith("skill:") ? `skill ${id.slice(6)}` : id));
   const prefix = "\nGiven this session: ";
-  let room = MAX_CHARS - header.length - (ids.length ? label.length + lines.length : 0) - prefix.length - 3;
+  let room = MAX_CHARS - header.length - lead.length - (ids.length ? label.length + lines.length : 0) - prefix.length - 3;
   const kept = [];
   for (let i = names.length - 1; i >= 0 && names[i].length + 2 <= room; i--) {
     kept.unshift(names[i]);
     room -= names[i].length + 2;
   }
   if (!kept.length && !ids.length) return { text: "", ids: [] };
-  let text = header;
+  let text = header + lead;
   if (kept.length) text += `${prefix}${kept.length < names.length ? "…; " : ""}${kept.join("; ")}`;
   if (ids.length) text += `${label}${lines}`;
   return { text, ids };

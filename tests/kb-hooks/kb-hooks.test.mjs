@@ -531,7 +531,7 @@ test('commit: lists what the session was given plus what matches the staged file
   assert.equal(runHook('commit', bash(repo, 'git status'), opts), '');
   saveSeen('c', new Set(['conventions/other.md#Rule', 'skill:xwiki-build']), stateDir);
   const text = runHook('commit', bash(repo, 'git commit -m "Add A"'), opts);
-  assert.match(text, /^XWiki commit self-review — check this commit's diff/);
+  assert.match(text, /^XWiki commit self-review — check this commit's diff[^\n]*\nBefore reviewing, load with your Skill tool: xwiki-legacy — /);
   assert.match(text, /\nGiven this session: conventions\/other\.md#Rule; skill xwiki-build\n/);
   assert.match(text, /\nAlso matching the commit's files:\n\[skill\] xwiki-legacy — .*\n\[rule\] conventions\/compat\.md#Deprecation/);
   assert.ok(text.length <= MAX_CHARS);
