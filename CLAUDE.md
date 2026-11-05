@@ -73,12 +73,12 @@ Inside `xwiki/`:
   get-url origin` and only injects when the remote's org is `xwiki`, `xwiki-contrib`, or one the
   developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
   case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
-  Code ships) so it is cross-platform with no bash/`jq` dependency. If you change the scoping rule,
-  it is the `orgs` array and the regex built from it in this script.
+  Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
+  `scripts/repo-scope.mjs`, shared with the commit diff check.
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
-  (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
-  by `xwiki-it-slot.mjs`). Never recompute those paths in another script, and never restate the
+  (`workRoot()`, used by the `SessionStart` hook), the Docker IT slot files (`itSlotDir()`, used
+  by `xwiki-it-slot.mjs`) and the commit skill gate's per-session files (`skillGateDir()`). Never recompute those paths in another script, and never restate the
   platform rules in a doc — `docs/setup.md`'s `XWIKI_LLM_WORK` table row is the one human-readable copy,
   and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
   work directory". Run directly, the script prints that work root: that is how opencode gets it,
@@ -106,8 +106,9 @@ Inside `xwiki/`:
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
-  `xwiki-line-endings.js` and `xwiki-commit-text.js`, which port the line-ending and commit/PR text
-  guards to opencode and reuse `scripts/check-line-endings.mjs` and `scripts/check-commit-text.mjs`
+  `xwiki-line-endings.js`, `xwiki-commit-text.js` and `xwiki-commit-gates.js`, which port the
+  line-ending and commit/PR text guards and the commit gates to opencode and reuse
+  `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs` and `scripts/check-diff.mjs`
   (each exports a shared check function; run directly it is still the Claude/Kimi CLI hook). Each
   plugin's default export carries both APIs: `server` for opencode 1.x (`tool.execute.*` hooks) and
   `setup` for opencode 2.x (`ctx.tool.hook("execute.*")`), which refuses a module without it. opencode resolves the shared assets
