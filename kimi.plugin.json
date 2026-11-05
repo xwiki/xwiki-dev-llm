@@ -39,6 +39,11 @@
       "event": "PreToolUse",
       "matcher": "Bash",
       "command": "node \"./xwiki/scripts/check-commit-text.mjs\""
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "command": "node \"./xwiki/scripts/check-diff.mjs\""
     }
   ]
 }

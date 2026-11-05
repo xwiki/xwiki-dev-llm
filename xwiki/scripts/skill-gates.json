@@ -1,0 +1,13 @@
+{
+  "xwiki-test-guidelines": { "paths": ["**/src/test/**"] },
+  "xwiki-increase-test-coverage": { "paths": ["**/src/test/java/**/*.java"] },
+  "xwiki-legacy": {
+    "paths": ["**/*-legacy/**", "**/src/main/java/**/*.java", "**/*.aj"],
+    "added": ["@Deprecated\\b"]
+  },
+  "xwiki-translations": {
+    "paths": ["**/*.properties", "**/*.vm", "**/src/main/resources/**/*.xml"],
+    "added": ["^\\s*[A-Za-z][\\w.-]*\\s*=", "\\$services\\.localization\\.render\\b", "\\{\\{translation\\b"]
+  },
+  "xwiki-xar-pages": { "paths": ["**/src/main/resources/**/*.xml"], "file-contains": "<xwikidoc\\b" }
+}

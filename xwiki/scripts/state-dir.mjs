@@ -1,5 +1,6 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
-// (plans, handoffs, drafts, extracted source) and the Docker IT slot files. Both are computed here
+// (plans, handoffs, drafts, extracted source), the Docker IT slot files and the commit skill gate's
+// per-session record of loaded skills. All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
 
@@ -29,6 +30,11 @@ export function workRoot() {
 /** Directory holding the Docker IT slot files. `XWIKI_LLM_IT_SLOT_DIR` overrides it. */
 export function itSlotDir() {
   return process.env.XWIKI_LLM_IT_SLOT_DIR || join(stateRoot(), "it-slots");
+}
+
+/** Directory holding the commit skill gate's per-session files: the skills a session loaded. */
+export function skillGateDir() {
+  return join(stateRoot(), "skill-gate");
 }
 
 /**
