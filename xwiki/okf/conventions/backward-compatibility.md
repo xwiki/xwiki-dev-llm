@@ -41,8 +41,8 @@ use any `internal` class.
 
 ## `@Unstable` annotation
 
-New public API can be marked `@Unstable` (in addition to `@since`) to signal it may change at any
-time. Lifecycle rules:
+New public API **must** be marked `@Unstable` (in addition to `@since`), signalling it may change at
+any time: dev.xwiki.org says it "can (and should)" be used, and reviewers ask for it. Lifecycle rules:
 
 - An API may stay `@Unstable` for at most **one full release cycle**. E.g. an unstable API added in
   N.1 must come out of unstability before N+2 Milestone 1.
