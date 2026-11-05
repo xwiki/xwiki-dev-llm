@@ -6,6 +6,11 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-org-instructions.mjs\""
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/diff-critic.mjs\" start",
+            "timeout": 15
           }
         ]
       }
@@ -83,6 +88,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/diff-critic.mjs\" agent",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -102,6 +117,17 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-line-endings.mjs\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/diff-critic.mjs\" stop",
+            "timeout": 15
           }
         ]
       }

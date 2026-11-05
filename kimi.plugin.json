@@ -7,6 +7,7 @@
     "shortDescription": "XWiki org conventions, skills and MCP servers"
   },
   "skills": "./xwiki/skills/",
+  "agents": "./xwiki/agents/",
   "skillInstructions": "When a skill needs to locate the shared knowledge base (KB), resolve it relative to the skill file: `${KIMI_SKILL_DIR}/../../kb/`. In Claude Code the same location is `${CLAUDE_PLUGIN_ROOT}/kb/`.",
   "mcpServers": {
     "discourse": {
@@ -29,6 +30,19 @@
     {
       "event": "SessionStart",
       "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\""
+    },
+    {
+      "event": "SessionStart",
+      "command": "node \"./xwiki/scripts/diff-critic.mjs\" start"
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "Agent",
+      "command": "node \"./xwiki/scripts/diff-critic.mjs\" agent"
+    },
+    {
+      "event": "Stop",
+      "command": "node \"./xwiki/scripts/diff-critic.mjs\" stop"
     },
     {
       "event": "UserPromptSubmit",

@@ -109,6 +109,10 @@ Inside `xwiki/`:
   goes in the skill's `references/*.md`, one level deep, named in SKILL.md at the point where it must
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
+- **`agents/*.md`** — plugin sub-agents, auto-discovered by Claude Code (`agents/`) and declared in
+  `kimi.plugin.json` for Kimi. Today `xwiki-diff-critic`, which `scripts/diff-critic.mjs` (a `Stop` hook)
+  asks the session to run once on its changes; it loads its skills with the Skill tool, since the skills
+  depend on the diff and a `skills:` frontmatter list is static.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
   `xwiki-line-endings.js`, `xwiki-commit-text.js` and `xwiki-kb-pointers.js`, which port the
   line-ending and commit/PR text guards and the KB pointer hooks to opencode and reuse
