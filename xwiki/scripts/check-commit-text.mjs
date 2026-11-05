@@ -89,7 +89,7 @@ function messageOptions(args, short, long) {
 // values, the -F/--file content (a heredoc or the stdin fed to that command, a file the same command
 // line writes from a heredoc, or else the file on disk), and gh's --body/--body-file likewise — never
 // the rest of a compound command, whose heredocs and arguments may well hold `@Annotations`.
-function extractMessages(command, cwd = process.cwd()) {
+export function extractMessages(command, cwd = process.cwd()) {
   const parsed = simpleCommands(command);
   if (!parsed) return [];
   const { commands, bodies } = parsed;
