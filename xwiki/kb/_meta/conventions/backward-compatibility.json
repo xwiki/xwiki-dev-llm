@@ -1,117 +1,114 @@
 {
   "file": {
     "questions": [
-      "What are the backward compatibility rules for changing public APIs in XWiki?",
-      "How do I know if my change breaks binary or semantic compatibility in XWiki?",
-      "Can I use internal packages from another XWiki project in my code?",
-      "How do I deprecate a method in XWiki without breaking callers?",
-      "Revapi fails my build, what criticality should the ignore have?"
+      "How do I change a public XWiki API without breaking extensions that depend on it?",
+      "What compatibility rules apply when I modify a public Java class or method in xwiki-platform?",
+      "Which xwiki API changes are allowed in a minor release, and which need a deprecation first?",
+      "My build fails with a Revapi error after I changed a public method. What do I do?"
     ],
     "aliases": [
       "API compatibility",
-      "Revapi",
       "binary compatibility",
       "breaking changes",
-      "xwiki-legacy"
+      "API stability",
+      "revapi"
     ]
   },
   "sections": {
     "Backward compatibility policy": {
       "questions": [
-        "Does my change to a public XWiki class break existing extensions?",
-        "Why did the build fail with a Revapi error after I changed a public method?",
-        "What kinds of API changes does XWiki's build check for compatibility?"
+        "What compatibility rules apply when I change a public XWiki API?",
+        "Does the build check source compatibility or only binary compatibility?",
+        "Why does the build fail with a Revapi error after my change?"
       ],
       "aliases": [
         "API compatibility policy",
-        "binary and semantic compatibility",
-        "Revapi check"
+        "breaking change policy"
       ]
     },
     "Who may use `internal` packages": {
       "questions": [
-        "Can my extension import classes from the internal package of xwiki-platform?",
-        "Can xwiki-rendering code call internal classes from xwiki-commons?",
-        "Is it safe to use an internal class from another project in my contrib code?"
+        "Can my extension import classes from an XWiki internal package?",
+        "Can I use an internal package from another XWiki project in my main code?",
+        "Is it fine to use internal classes in my unit tests?"
       ],
       "aliases": [
         "internal API",
-        "non-public package",
-        "private package"
+        "non-public API",
+        "internal package restrictions"
       ]
     },
     "`@Unstable` annotation": {
       "questions": [
-        "How do I mark a new API as experimental so it can change later?",
-        "How long can a method stay annotated @Unstable before it must become stable?",
-        "What happens if I forget the @since tag on an unstable API?"
+        "How do I mark a new XWiki API as experimental so it can change later?",
+        "How long can a class or method stay annotated @Unstable before I have to remove it?",
+        "Does the build check that @Unstable and @since are present on new API?"
       ],
       "aliases": [
-        "experimental API annotation",
-        "unstable API",
-        "provisional API"
+        "unstable API annotation",
+        "experimental API"
       ]
     },
     "Evolving an interface without breaking it": {
       "questions": [
-        "How do I add a method to an interface without breaking implementations?",
-        "Should I create a new interface or add a default method to add functionality?",
-        "What should a default method throw when it is not implemented in every class?"
+        "How do I add a method to an existing XWiki interface without breaking its implementations?",
+        "Should I add a Java default method or create a new interface when extending an API?",
+        "Is it acceptable for a new default method to throw UnsupportedOperationException?"
       ],
       "aliases": [
-        "default methods",
-        "interface evolution",
-        "adding interface methods"
+        "adding a method to an interface",
+        "interface evolution with default methods"
       ]
     },
     "Deprecation": {
       "questions": [
-        "How do I deprecate an XWiki API and move it to the legacy module?",
-        "Can I remove a deprecated method right away, or do I have to wait?",
-        "How do I move a removed class into a -legacy module without breaking extensions?"
+        "How do I deprecate a Java method or class in XWiki and name its replacement?",
+        "When can I move a deprecated class to the legacy module, and what goes in the @deprecated tag?",
+        "What is the two-step process for removing an old API from XWiki?"
       ],
       "aliases": [
-        "deprecating APIs",
+        "deprecating an API",
         "legacy module",
-        "removing deprecated code"
+        "@deprecated tag"
       ]
     },
     "Choosing the `<criticality>` of a Revapi ignore": {
       "questions": [
-        "Which criticality should I pick for a Revapi ignore that is a real API break?",
-        "When is a Revapi difference allowed rather than highlighted in release notes?",
-        "Why does my Revapi ignore not take effect in the pom.xml?"
+        "Which criticality should I pick for a Revapi ignore: highlight, documented, or allowed?",
+        "Where do I put a Revapi ignore in the pom so Maven does not silently ignore it?",
+        "Can I add a Revapi ignore on my own to make the build pass?"
       ],
       "aliases": [
-        "revapi criticality",
         "revapi ignore",
-        "allowed highlight documented"
+        "revapi differences",
+        "revapi suppression"
       ]
     },
     "Where Revapi does and does not look": {
       "questions": [
-        "Why does a downstream module fail Revapi even though my module's build is green?",
-        "Which modules does Revapi skip, and why is my legacy module's check on the woven jar?",
-        "How far does Revapi analyse transitive dependencies of my module?"
+        "Why does my build pass with a Revapi check but a downstream module still breaks?",
+        "How do I exclude a wrapped main artifact from Revapi analysis of its dependents?",
+        "Why is a green build not proof that a change is compatible?"
       ],
       "aliases": [
-        "Revapi coverage",
+        "revapi filter",
         "revapi transitive dependencies",
-        "revapi scope"
+        "xwiki.revapi.skip"
       ]
     }
   },
   "proposed": {
     "related": [
       "conventions/versioning.md",
-      "conventions/code-style.md",
       "processes/release-notes.md",
-      "decisions/check-binary-not-source-compatibility.md"
+      "decisions/check-binary-not-source-compatibility.md",
+      "conventions/code-style.md"
     ],
     "applies-to": [
-      "**/pom.xml",
-      "**/src/main/java/**/*.java"
+      "**/*.java",
+      "**/*.aj",
+      "**/pom.xml"
     ]
   },
-  "source_hash": "a018b5d764a1fa1b67353d5098f66142b95c52dcf1f73dc46f71101d39a498c4"
+  "source_hash": "36f7cdcbe51bf7ff323450e0bf91390c97910e78cf8c255f27b37a3ccbdabb11"
 }
