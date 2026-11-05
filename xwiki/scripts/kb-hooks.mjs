@@ -16,6 +16,12 @@
 //                              time, or overridden by copying the code around), listing those ids and up
 //                              to 5 more pointers matching the commit's files the way the edit hook does.
 //                              Nothing when neither exists. Advice only: it never blocks.
+//   node kb-hooks.mjs bash     PostToolUse on Bash — the edit hook for files a shell command changed
+//                              (`sed -i`, a heredoc, a script): the lines the work tree adds since the
+//                              session's previous check (a snapshot of per-line hashes next to its
+//                              dedupe state; a commit in between is seen through), matched per file like
+//                              an edit; ≤3 pointers. Skips a clearly read-only command without running
+//                              git. Advice only: it never blocks.
 //   node kb-hooks.mjs skill    PreToolUse on Skill — records the loaded skill, so it is not pointed at.
 //                              A skill named in a prompt (`/xwiki-legacy`) counts as loaded too.
 //
@@ -28,23 +34,25 @@
 // `old_string` (unchanged context), each MultiEdit edit's likewise, and Write's `content` minus the
 // lines of the file it overwrites. A regex that does not compile is ignored.
 //
-// Both run only in repos repo-scope.mjs accepts, give a session each pointer once (state under
+// They all run only in repos repo-scope.mjs accepts, give a session each pointer once (state under
 // state-dir.mjs's kbHookStateDir(), keyed by session id), and never fail the prompt or the edit:
 // any error exits 0 with nothing written. Claude Code reads `additionalContext`; Kimi Code reads a
-// UserPromptSubmit hook's plain stdout (its PreToolUse can only block, so the edit hook is Claude's).
+// UserPromptSubmit hook's plain stdout (its tool hooks cannot add context, so the edit, shell-edit and
+// commit hooks are Claude's).
 // opencode reaches the same functions through xwiki/opencode/plugins/xwiki-kb-pointers.js.
 //
 // Every constant is set a priori (tests/kb-hooks/ records the probes behind MIN_SCORE), never tuned
 // on the benchmark's questions.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { defaultRoot, defaultSkillsRoot, loadIndex, promptToQuery, search, sectionHit, tagOf, tokenize }
   from "./kb-search.mjs";
 import { isScopedRepo } from "./repo-scope.mjs";
+import { simpleCommands } from "./shell-commands.mjs";
 import { kbHookStateDir } from "./state-dir.mjs";
 
 export const PROMPT_K = 5;
@@ -403,6 +411,131 @@ export function formatCommitReview(given, hits, kbRoot) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Files changed through the shell
+
+// Programs that write no file unless their output is redirected into one; sed, awk, perl and find
+// only without their in-place or exec options, git only with READ_ONLY_GIT's subcommands.
+const READ_ONLY = new Set(("cat head tail less more wc grep egrep fgrep rg ag ls tree find fd stat file du df "
+  + "pwd cd pushd popd echo printf true false test [ which type command basename dirname realpath readlink sort "
+  + "uniq cut tr diff cmp comm column nl jq xmllint date env sleep awk sed perl git").split(" "));
+const READ_ONLY_GIT = new Set(("status log diff show grep blame rev-parse ls-files ls-tree cat-file describe "
+  + "shortlog reflog branch tag remote config merge-base rev-list").split(" "));
+// git subcommands that change only files git tracks, as sed -i, perl -i, awk inplace and find -delete do.
+const TRACKED_GIT = new Set("add commit rm mv restore reset".split(" "));
+const SHELL_TIMEOUT_MS = 4000;
+// More changed files than this, or a larger diff, is a branch switch or a rebase, not an edit: it is
+// pointed at by nothing.
+const MAX_SHELL_FILES = 200;
+const MAX_SHELL_DIFF_BYTES = 8 << 20;
+const MAX_UNTRACKED_BYTES = 256 << 10;
+
+/**
+ * What a Bash command can change: "none" (every simple command a read-only program, no output
+ * redirected into a file: the shell-edit hook skips it without running git), "tracked" (only files
+ * git already tracks: the walk for new files, the slow half of a check on a large repo, is skipped),
+ * or "any". A command it cannot parse is "any".
+ */
+export function shellWrites(command) {
+  const parsed = typeof command === "string" && simpleCommands(command);
+  if (!parsed) return "any";
+  const kinds = parsed.commands.map(({ tokens }) => {
+    const redirected = tokens.some((t, i) => {
+      const m = t.flag && /^(?:\d*|&)>>?(.*)$/.exec(t.value);
+      const target = m && (m[1] || tokens[i + 1]?.value || "");
+      return m && !target.startsWith("&") && !/^\/dev\/(?:null|stdout|stderr|tty)$/.test(target);
+    });
+    let i = 0;
+    while (i < tokens.length - 1 && /^\w+=/.test(tokens[i].value)) i++; // `LC_ALL=C sort`
+    const program = tokens[i]?.value.replace(/^.*\//, "");
+    const args = tokens.slice(i + 1).map((t) => t.value);
+    if (redirected || !READ_ONLY.has(program)) return "any";
+    if (program === "git") {
+      const sub = args.find((v, k) => !v.startsWith("-") && !/^-[Cc]$/.test(args[k - 1] ?? ""));
+      return READ_ONLY_GIT.has(sub) ? "none" : TRACKED_GIT.has(sub) ? "tracked" : "any";
+    }
+    if (program === "find" && args.some((v) => /^-(?:exec|execdir|ok|okdir|fprint\w*|fls)$/.test(v))) return "any";
+    const inPlace = ((program === "sed" || program === "perl") && args.some((v) => /^-[a-zA-Z]*i|^--in-place/.test(v)))
+      || (program === "awk" && args.includes("inplace")) || (program === "find" && args.includes("-delete"));
+    if (inPlace) return "tracked";
+    return program === "perl" ? "any" : "none";
+  });
+  return kinds.includes("any") ? "any" : kinds.includes("tracked") ? "tracked" : "none";
+}
+
+export const writesNothing = (command) => shellWrites(command) === "none";
+
+const git = (cwd, args) => execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: MAX_SHELL_DIFF_BYTES,
+  timeout: SHELL_TIMEOUT_MS, stdio: ["ignore", "pipe", "ignore"] });
+
+/** A short hash of one trimmed line (FNV-1a), what a snapshot keeps instead of the line. */
+function lineHash(line) {
+  let h = 2166136261;
+  for (let i = 0; i < line.length; i++) h = Math.imul(h ^ line.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * What the work tree of `root` adds over commit `base`: `Map(path → text)`, deleted files left out,
+ * untracked files whole when `untracked`. null for a mass change (more than MAX_SHELL_FILES files,
+ * or a diff git cannot hand over within the buffer and time limits).
+ */
+function workTreeAdditions(root, base, untracked) {
+  let files;
+  let added = [];
+  try {
+    files = diffAdditions(git(root, ["diff", "-U0", "--no-color", "--no-ext-diff", "--no-renames", "--diff-filter=d", base]));
+    if (untracked) added = git(root, ["ls-files", "--others", "--exclude-standard", "-z"]).split("\0").filter(Boolean);
+  } catch {
+    return null;
+  }
+  if (files.size + added.length > MAX_SHELL_FILES) return null;
+  for (const p of added) {
+    try {
+      const file = join(root, p);
+      if (statSync(file).size > MAX_UNTRACKED_BYTES) continue;
+      const text = readFileSync(file, "utf8");
+      if (!text.includes("\0")) files.set(p, text);
+    } catch { /* gone already */ }
+  }
+  return files;
+}
+
+/**
+ * The lines the shell added since a session's previous check: `{ changes: Map(absolute path → added
+ * text), snapshot }`, the snapshot to keep for the next check (the repo, HEAD, and per file the
+ * hashes of the lines its work tree adds). A commit since the previous check is seen through: the
+ * work tree is then compared with the previous HEAD. Without a snapshot every uncommitted line
+ * counts. Without `untracked` new files are not looked for, and the snapshot keeps their entries.
+ * null when `cwd` is not in a git repo with a commit.
+ */
+export function shellChanges(cwd, snapshot, { untracked = true } = {}) {
+  let root;
+  let head;
+  try {
+    [root, head] = git(cwd, ["rev-parse", "--show-toplevel", "HEAD"]).trim().split("\n");
+  } catch {
+    return null;
+  }
+  const previous = snapshot?.root === root ? snapshot : null;
+  const base = previous?.head ?? head;
+  const now = workTreeAdditions(root, base, untracked);
+  const files = base === head ? now : workTreeAdditions(root, head, untracked);
+  const kept = untracked || !files ? {} : previous?.files ?? {};
+  const next = { root, head, files: { ...kept, ...Object.fromEntries([...files ?? []].map(([p, text]) =>
+    [p, [...new Set(text.split("\n").map((l) => l.trim()).filter(Boolean).map(lineHash))]])) } };
+  const changes = new Map();
+  if (!now) return { changes, snapshot: next };
+  for (const [p, text] of now) {
+    const old = new Set(previous?.files[p] ?? []);
+    const added = text.split("\n").filter((l) => l.trim() && !old.has(lineHash(l.trim()))).join("\n");
+    if (added) changes.set(join(root, p), added);
+  }
+  return { changes, snapshot: next };
+}
+
+const snapshotFile = (dir, sessionId) => stateFile(dir, `${sessionId}.shell`);
+
+// ---------------------------------------------------------------------------------------------
 // Hook entry points
 
 /**
@@ -414,6 +547,8 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
   env = process.env } = {}) {
   const projectDir = payload.cwd || env.CLAUDE_PROJECT_DIR || process.cwd();
   if (kind === "commit" && !isGitCommit(payload.tool_input?.command)) return "";
+  // The shell-edit hook needs a session for its snapshot, and nothing to do after a read-only command.
+  if (kind === "bash" && (!payload.session_id || writesNothing(payload.tool_input?.command))) return "";
   if (!isScopedRepo(projectDir, env)) return "";
   const skills = skillsRoot === undefined ? (root === defaultRoot() ? defaultSkillsRoot() : null) : skillsRoot;
   const index = loadIndex(root, { ...(cacheDir === undefined ? {} : { cacheDir }), skillsRoot: skills });
@@ -464,6 +599,25 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
       } catch { /* a new file: all of its content is added */ }
     }
     hits = editPointers(index, input.file_path, { projectDir, seen, added: addedText(input, previous) });
+  } else if (kind === "bash") {
+    const file = snapshotFile(stateDir, payload.session_id);
+    let snapshot = null;
+    try {
+      snapshot = JSON.parse(readFileSync(file, "utf8"));
+    } catch { /* the session's first check */ }
+    const shell = shellChanges(projectDir, snapshot,
+      { untracked: shellWrites(payload.tool_input?.command) === "any" });
+    if (!shell) return "";
+    try {
+      mkdirSync(stateDir, { recursive: true });
+      writeFileSync(file, JSON.stringify(shell.snapshot));
+    } catch { /* without a snapshot the next check counts these lines again; the dedupe still holds */ }
+    // git names the repo by its real path; the cwd may reach it through a symlink.
+    const realDir = realpathSync(projectDir);
+    const paths = [...shell.changes.keys()].map((p) => matchPath(p, realDir));
+    if (!paths.length) return "";
+    subject = paths.length > 2 ? `${paths.slice(0, 2).join(", ")} and ${paths.length - 2} more` : paths.join(", ");
+    hits = commitPointers(index, shell.changes, { projectDir: realDir, seen, k: EDIT_K });
   } else {
     return "";
   }
@@ -480,7 +634,7 @@ export function hookOutput(kind, text, env = process.env) {
   if (env.KIMI_PLUGIN_ROOT && !env.CLAUDE_PLUGIN_ROOT) return text;
   return JSON.stringify({
     hookSpecificOutput: {
-      hookEventName: kind === "prompt" ? "UserPromptSubmit" : "PreToolUse",
+      hookEventName: kind === "prompt" ? "UserPromptSubmit" : kind === "bash" ? "PostToolUse" : "PreToolUse",
       additionalContext: text,
     },
   });

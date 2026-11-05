@@ -74,7 +74,10 @@ Inside `xwiki/`:
   developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
   case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
   Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
-  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`).
+  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`). Those hooks
+  see an edit made through Bash (`sed -i`, a heredoc, a script) by a `PostToolUse` hook that diffs the
+  work tree against a per-session snapshot; `scripts/shell-commands.mjs` is the shell-command parser
+  they share with the commit/PR text guard.
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used

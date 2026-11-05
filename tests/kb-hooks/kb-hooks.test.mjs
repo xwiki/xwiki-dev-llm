@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -572,4 +572,91 @@ test('opencode: a bash git commit gets the self-review appended, read from HEAD'
   const ls = { title: 'bash', output: 'README', metadata: {} };
   await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-commit', callID: 'd', args: { command: 'ls' } }, ls);
   assert.equal(ls.output, 'README');
+});
+
+// ---------------------------------------------------------------------------------------------
+// Shell edits: the edit pointers for the lines a Bash command added
+
+const { shellChanges, shellWrites, writesNothing } = await import('../../xwiki/scripts/kb-hooks.mjs');
+
+const postBash = (cwd, command, session = 'sh') => ({ session_id: session, cwd, hook_event_name: 'PostToolUse',
+  tool_name: 'Bash', tool_input: { command }, tool_response: { stdout: '', stderr: '' } });
+
+test('shell edits: a clearly read-only command is skipped without running git', () => {
+  for (const c of ['grep -rn "@Deprecated" core/src | head -20', 'git -C core log --oneline -3', 'cat A.java 2>/dev/null',
+    "find . -name '*.java' | wc -l", 'sed -n 1,20p A.java', 'cd core && git status --short', 'ls > /dev/null 2>&1',
+    'LC_ALL=C sort a.txt | uniq -c']) assert.ok(writesNothing(c), c);
+  for (const c of ["sed -i 's/a/b/' A.java", "python3 - <<'EOF'\nopen('A.java', 'w').write('x')\nEOF",
+    "cat > A.java <<'EOF'\nclass A {}\nEOF", 'echo x >> A.java', 'find . -name "*.orig" -delete',
+    'git add -A && git commit -m x', 'perl -pi -e s/a/b/ A.java', "cat <<'EOF' | tee A.java\nx\nEOF", "echo 'x"])
+    assert.ok(!writesNothing(c), c);
+  // Only tracked files can change: the walk for new files is skipped.
+  for (const c of ["sed -i 's/a/b/' A.java", "cd core && perl -pi -e 's/a/b/' A.java && git add -A && git commit -qm x",
+    'find . -name "*.orig" -delete']) assert.equal(shellWrites(c), 'tracked', c);
+  for (const c of ["sed 's/a/b/' A.java > B.java", 'perl gen.pl', 'git checkout other', "python3 - <<'EOF'\nx\nEOF"])
+    assert.equal(shellWrites(c), 'any', c);
+});
+
+test('shell edits: points at what the command added, once, and sees through a commit', () => {
+  const stateDir = mkdtempSync(join(tmpdir(), 'kb-hooks-seen-'));
+  const root = fixtureKb({
+    'conventions/compat.md': readFileSync(join(SKILL_KB, 'conventions/compat.md'), 'utf8'),
+    'conventions/translations.md': topic('Translations', ['**/*.properties'], '## Keys\n\nPrefix each key.'),
+    '_meta/skills.json': readFileSync(join(SKILL_KB, '_meta/skills.json'), 'utf8'),
+  });
+  const opts = { root, skillsRoot: SKILLS, cacheDir: null, stateDir, env: {} };
+  const repo = commitRepo();
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'A');
+  const java = join(repo, 'core/src/main/java/A.java');
+  writeFileSync(java, 'class A {\n    @Deprecated\n    void old() {}\n    @Deprecated\n    void older() {}\n}\n');
+  assert.equal(runHook('bash', postBash(repo, 'grep -n Deprecated core/src/main/java/A.java'), opts), '');
+  const edit = "python3 - <<'EOF'\np = 'core/src/main/java/A.java'\nEOF";
+  const text = runHook('bash', postBash(repo, edit), opts);
+  assert.match(text, /^Before going further, load with your Skill tool: xwiki-legacy — /);
+  assert.match(text, /\nXWiki KB pointers for core\/src\/main\/java\/A\.java — [^\n]*\n\[rule\] conventions\/compat\.md#Deprecation/);
+  assert.match(hookOutput('bash', text), /"hookEventName":"PostToolUse"/);
+  // Nothing new since the previous check: nothing.
+  assert.equal(runHook('bash', postBash(repo, "sed -i 's/x/x/' README"), opts), '');
+  // A command that edits and commits: the commit is seen through, only its new lines count.
+  mkdirSync(join(repo, 'core/src/main/resources'), { recursive: true });
+  writeFileSync(join(repo, 'core/src/main/resources/ApplicationResources.properties'), 'core.a.label=A\n');
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'B');
+  const both = runHook('bash', postBash(repo, "cat > core/src/main/resources/ApplicationResources.properties <<'EOF'\n"
+    + "core.a.label=A\nEOF\ngit add -A && git commit -qm B"), opts);
+  assert.match(both, /^XWiki KB pointers for core\/src\/main\/resources\/ApplicationResources\.properties [^\n]*\n\[rule\] conventions\/translations\.md#Keys/);
+  assert.doesNotMatch(both, /xwiki-legacy|compat\.md/);
+  // Outside a scoped repo, or without a session to keep a snapshot for, nothing.
+  assert.equal(runHook('bash', postBash(personal, edit, 'p'), opts), '');
+  assert.equal(runHook('bash', { ...postBash(repo, edit), session_id: undefined }, opts), '');
+});
+
+test('shell edits: a snapshot keeps line hashes, and a mass change points at nothing', () => {
+  const repo = commitRepo();
+  const first = shellChanges(repo, null);
+  assert.deepEqual([...first.changes.keys()], [join(repo, 'core/src/main/java/A.java')].map((p) => realpathSync(p)));
+  assert.ok(!JSON.stringify(first.snapshot).includes('Deprecated'));
+  assert.equal(shellChanges(repo, first.snapshot).changes.size, 0);
+  for (let i = 0; i < 201; i++) writeFileSync(join(repo, `f${i}.txt`), `line ${i}\n`);
+  const mass = shellChanges(repo, first.snapshot);
+  assert.equal(mass.changes.size, 0);
+  // A branch switch is seen through: only the work tree against the new HEAD is kept.
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'many');
+  const switched = shellChanges(repo, first.snapshot);
+  assert.equal(switched.changes.size, 0);
+  assert.deepEqual(switched.snapshot.files, {});
+  assert.equal(shellChanges(notGit, null), null);
+});
+
+test('opencode: a bash edit gets the shell-edit pointers appended', async () => {
+  process.env.XWIKI_LLM_HOME = join(dirname(fileURLToPath(import.meta.url)), '../..');
+  const plugin = (await import('../../xwiki/opencode/plugins/xwiki-kb-pointers.js')).default;
+  const repo = commitRepo();
+  const hooks = await plugin.server({ directory: repo });
+  const tool = { title: 'bash', output: '', metadata: {} };
+  await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-shell', callID: 'c',
+    args: { command: "cat > core/src/main/java/A.java <<'EOF'\n...\nEOF" } }, tool);
+  assert.match(tool.output, /^\n\nBefore going further, load with your Skill tool: xwiki-legacy/);
 });
