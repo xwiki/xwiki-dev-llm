@@ -42,7 +42,7 @@ use any `internal` class.
 ## `@Unstable` annotation
 
 New public API **must** be marked `@Unstable` (in addition to `@since`), signalling it may change at
-any time: dev.xwiki.org says it "can (and should)" be used, and reviewers ask for it. Lifecycle rules:
+any time. Lifecycle rules:
 
 - An API may stay `@Unstable` for at most **one full release cycle**. E.g. an unstable API added in
   N.1 must come out of unstability before N+2 Milestone 1.
@@ -139,6 +139,9 @@ per module**: a module can opt out with `<xwiki.revapi.skip>true</xwiki.revapi.s
 in its place). A downstream module that depends on the **clean** main jar still sees the dropped API as
 removed when its own API *reaches* the class, and fails far from the change (moving the
 `XWikiHibernateStore` constructors to legacy failed `xwiki-platform-extension-script`, which reaches the
-class via `XWiki.getHibernateStore()`). That, and only that, warrants an `allowed` ignore for a legacy
-move — added when that build actually fails, justified by the move, and approved (see above). A green build on the changed
+class via `XWiki.getHibernateStore()`). The fix is **not** a per-method ignore: exclude the wrapped main
+artifact from the Revapi analysis of its dependents, in the `<revapi.filter><archives><exclude>` of the
+parent pom they share (e.g. `<item>org\.xwiki\.platform:xwiki-platform-oldcore:.*</item>` in
+`xwiki-platform-core/pom.xml`), with a comment saying its API is checked by the legacy module that wraps it.
+Per-method `java.method.removed` ignores for moved methods are then useless — remove them. A green build on the changed
 module therefore never means "compatible".
