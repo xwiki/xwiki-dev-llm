@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Knowledge-base pointer hooks: they inject *pointers* into the KB (`[tag] file#Section — Title: first
-// line`) and to the plugin's skills (`[skill] load xwiki-legacy — first sentence`), never bodies, so the
-// model reads only the section, or loads only the skill, it needs. Skills are searched by their name and
+// line`) and to the plugin's skills (a leading "load with your Skill tool: xwiki-legacy" line, then
+// `[skill] xwiki-legacy — first sentence`), never bodies, so the model reads only the section, or
+// loads only the skill, it needs. Skills are searched by their name and
 // description and matched by `_meta/skills.json` (see kb-search.mjs); up to SKILL_K of them come on top
 // of a hook's KB pointers. The hooks:
 //
@@ -264,29 +265,43 @@ function firstSectionHit(index, file) {
 }
 
 /**
- * The injected text: one header line (what the pointers are and how to use them), then one line per
- * pointer, cut to MAX_CHARS. Returns `{ text, ids }`, `ids` being the pointers that made it in.
+ * The injected text, cut to MAX_CHARS: the skills first, as an instruction of their own (a line
+ * naming them, then one line each), then the KB block — one header line (what the pointers are and
+ * how to use them) and one line per pointer. A skill listed among the KB candidates read as one more
+ * candidate, already summed up by its line, and was seldom loaded. Returns `{ text, ids }`, `ids`
+ * being the pointers that made it in.
  */
 export function formatPointers(hits, kbRoot, { subject } = {}) {
-  const header = `XWiki KB pointers${subject ? ` for ${subject}` : ""} — candidates, not answers. If one `
-    + `looks relevant, Read only its named \`## Section\` of the file under ${kbRoot}/; `
-    + "`[proposed: under discussion]` entries are not rules."
-    + (hits.some(isSkill) ? " A `[skill]` line names a skill to load before doing that work." : "");
-  let text = header;
+  const lines = (list) => list.map((h) => ({ id: h.id, line: `\n${pointerLine(h)}` }));
+  const skills = lines(hits.filter(isSkill));
+  const kb = lines(hits.filter((h) => !isSkill(h)));
   const ids = [];
-  for (const h of hits) {
-    const line = `\n${pointerLine(h)}`;
-    if (text.length + line.length > MAX_CHARS) break;
-    text += line;
-    ids.push(h.id);
+  let text = "";
+  const add = (head, entries) => {
+    let block = head;
+    for (const { id, line } of entries) {
+      if (text.length + block.length + line.length > MAX_CHARS) break;
+      block += line;
+      ids.push(id);
+    }
+    if (block !== head) text += (text ? "\n" : "") + block;
+  };
+  if (skills.length) {
+    const names = hits.filter(isSkill).map((h) => h.title);
+    add(`Before going further, load with your Skill tool: ${names.join(", ")} — `
+      + `${names.length > 1 ? "their" : "its"} steps are not in these pointers, only what ${names.length > 1 ? "each is" : "it is"} for.`,
+    skills);
   }
-  return { text: ids.length ? text : "", ids };
+  add(`XWiki KB pointers${subject ? ` for ${subject}` : ""} — candidates, not answers. If one `
+    + `looks relevant, Read only its named \`## Section\` of the file under ${kbRoot}/; `
+    + "`[proposed: under discussion]` entries are not rules.", kb);
+  return { text, ids };
 }
 
-/** One pointer line: `[tag] file#Section — Title: first line`, or `[skill] load <name> — first sentence`. */
+/** One pointer line: `[tag] file#Section — Title: first line`, or `[skill] <name> — first sentence`. */
 function pointerLine(h) {
   const first = h.first.length > FIRST_LINE_MAX ? `${h.first.slice(0, FIRST_LINE_MAX - 1)}…` : h.first;
-  if (isSkill(h)) return `[skill] load ${h.title}${first ? ` — ${first}` : ""}`;
+  if (isSkill(h)) return `[skill] ${h.title}${first ? ` — ${first}` : ""}`;
   const title = h.title === h.section ? "" : ` — ${h.title}`;
   return `${h.tag} ${h.id}${title}${first ? `: ${first}` : ""}`;
 }

@@ -416,15 +416,23 @@ test('skills: indexed by name and own description; sibling routing and explicit-
   assert.equal(Object.keys(buildIndex(SKILL_KB).files).some((f) => f.startsWith('skill:')), false);
 });
 
-test('skills: a prompt pointer reads "[skill] load <name> — <first sentence>", on top of the KB pointers', () => {
+test('skills: a prompt\'s skill pointers lead, as a load instruction naming them, ahead of the KB block', () => {
   const hits = promptPointers(skillIndex, 'how do I retire a deprecated method to the legacy module', { minScore: 0 });
   assert.equal(hits[0].id, 'skill:xwiki-legacy');
   assert.ok(hits.some((h) => h.id === 'conventions/compat.md#Deprecation'));
   assert.ok(promptPointers(skillIndex, 'retire deprecated legacy module', { minScore: 0, k: 0 }).every((h) => h.tag === '[skill]'));
-  const { text } = formatPointers(hits, 'KB');
-  assert.match(text, /A `\[skill\]` line names a skill to load/);
-  assert.match(text, /\n\[skill\] load xwiki-legacy — Move a deprecated API into its legacy module\.\n/);
-  assert.doesNotMatch(formatPointers(hits.filter((h) => h.tag !== '[skill]'), 'KB').text, /\[skill\]/);
+  // KB hits first in the input: the skills still come first in the text.
+  const { text, ids } = formatPointers([...hits.filter((h) => h.tag !== '[skill]'), ...hits.filter((h) => h.tag === '[skill]')], 'KB');
+  assert.match(text, /^Before going further, load with your Skill tool: xwiki-legacy, xwiki-build — their steps are not in these pointers/);
+  assert.match(text, /\n\[skill\] xwiki-legacy — Move a deprecated API into its legacy module\.\n\[skill\] xwiki-build — .*\nXWiki KB pointers — /);
+  assert.match(formatPointers(hits.filter((h) => h.id !== 'skill:xwiki-build'), 'KB').text, /^[^\n]*: xwiki-legacy — its steps /);
+  assert.match(text, /\n\[\w+\] conventions\/compat\.md#Deprecation/);
+  assert.deepEqual(new Set(ids), new Set(hits.map((h) => h.id)));
+  const kbOnly = formatPointers(hits.filter((h) => h.tag !== '[skill]'), 'KB').text;
+  assert.match(kbOnly, /^XWiki KB pointers — /);
+  assert.doesNotMatch(kbOnly, /\[skill\]|Skill tool/);
+  // Only skills: no KB header.
+  assert.doesNotMatch(formatPointers(hits.filter((h) => h.tag === '[skill]'), 'KB').text, /XWiki KB pointers/);
 });
 
 test('skills: the edit hook matches a skill by applies-to and applies-when, apart from the KB slots', () => {
@@ -525,7 +533,7 @@ test('commit: lists what the session was given plus what matches the staged file
   const text = runHook('commit', bash(repo, 'git commit -m "Add A"'), opts);
   assert.match(text, /^XWiki commit self-review — check this commit's diff/);
   assert.match(text, /\nGiven this session: conventions\/other\.md#Rule; skill xwiki-build\n/);
-  assert.match(text, /\nAlso matching the commit's files:\n\[skill\] load xwiki-legacy — .*\n\[rule\] conventions\/compat\.md#Deprecation/);
+  assert.match(text, /\nAlso matching the commit's files:\n\[skill\] xwiki-legacy — .*\n\[rule\] conventions\/compat\.md#Deprecation/);
   assert.ok(text.length <= MAX_CHARS);
   // What matched is now given: the next commit lists it, without matching it again.
   const again = runHook('commit', bash(repo, 'git commit -m "Add A"'), opts);
@@ -560,7 +568,7 @@ test('opencode: a bash git commit gets the self-review appended, read from HEAD'
   const tool = { title: 'bash', output: '[master 1234567] A', metadata: {} };
   await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-commit', callID: 'c', args: { command: 'git commit -m A' } }, tool);
   assert.match(tool.output, /^\[master 1234567\] A\n\nXWiki commit self-review/);
-  assert.match(tool.output, /\[skill\] load xwiki-translations/);
+  assert.match(tool.output, /\[skill\] xwiki-translations/);
   const ls = { title: 'bash', output: 'README', metadata: {} };
   await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-commit', callID: 'd', args: { command: 'ls' } }, ls);
   assert.equal(ls.output, 'README');
