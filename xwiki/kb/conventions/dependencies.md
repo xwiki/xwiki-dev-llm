@@ -37,5 +37,4 @@ a newer pnpm resolves peers differently and produces a lockfile the build then r
 `pnpm dedupe --lockfile-only` with the same version, so the upgrade does not leave duplicated
 versions behind; expect it to touch entries unrelated to the dependency you bumped.
 
-Whether the bump is `[Misc]` or needs an issue, and what that issue's description holds, are in
-[[commit-messages]] and [[jira]].
+The bump needs its own issue; its component (runtime vs dev-only) and description are in [[jira]].

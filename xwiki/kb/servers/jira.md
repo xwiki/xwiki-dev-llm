@@ -84,8 +84,11 @@ it explain the **user-visible problem**, not just the code change — but mind t
 
 ## Dependency-upgrade issues
 
-A dependency upgrade that ships to users needs its own issue (the `[Misc]` split is in
-[[commit-messages]]): summary `Upgrade to <dependency> <version>`, component **Dependency Upgrades**.
+A dependency upgrade needs its own issue: summary `Upgrade to <dependency> <version>`, component
+**Dependency Upgrades** when it reaches users at runtime, **Development Issues only** when it only
+reaches developers (npm `devDependencies`/`peerDependencies`, a build/test-scoped Maven dependency or
+plugin). A version property or pnpm `catalog:` hides where it is declared, and one runtime use
+anywhere decides. Follow the chain up: the `dependencies` of a lint/build/test package are dev-only.
 The description is the **raw release-note URLs of every version being crossed** — one line each, from
 the version after the one currently declared up to the target — not just the target's; skipping the
 intermediates hides the changes actually being pulled in. Keep them as bare URLs, which means setting
