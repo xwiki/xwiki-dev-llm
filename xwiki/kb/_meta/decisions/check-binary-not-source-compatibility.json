@@ -1,55 +1,54 @@
 {
   "file": {
     "questions": [
-      "Does XWiki's build fail if I change a public Java method signature in a way that compiled callers can still use?",
-      "Which kinds of API compatibility does XWiki's Revapi check enforce, and which does it skip?",
-      "Can I add generics to a public method's return type without breaking the build?",
-      "Why did the Revapi check fail on my public API change, and is there a way to avoid it?"
+      "Can I remove a method parameter or change a return type in a public XWiki API without breaking the build?",
+      "Why does Revapi not complain when I only add generics to a return type?",
+      "Should I enforce source compatibility on XWiki public Java APIs?",
+      "How strict is the XWiki compatibility check on pom.xml, binary versus source changes?"
     ],
     "aliases": [
-      "revapi",
+      "Revapi",
+      "API compatibility check",
       "binary compatibility",
       "source compatibility",
-      "API breaking change check",
-      "semantic compatibility"
+      "semantic versioning Java API"
     ]
   },
   "sections": {
     "Context": {
       "questions": [
-        "Why does XWiki care so much about not breaking its public Java APIs for extensions and other applications?",
-        "What tool in the xwiki-platform Maven build detects incompatible changes to public APIs?",
-        "How does the build catch an accidental API break before it gets merged?"
+        "Why does XWiki's build fail when I change a public Java API method signature?",
+        "What compatibility rules apply to public classes and interfaces that downstream extensions use?",
+        "How does the Revapi plugin in the default Maven build check for breaking API changes?"
       ],
       "aliases": [
         "Revapi Maven plugin",
-        "public API stability",
-        "API breakage detection",
+        "public API breakage",
         "downstream extensions"
       ]
     },
     "Decision": {
       "questions": [
-        "Should I expect the build to fail if I only change a method's generics but compiled callers keep working?",
-        "Does XWiki require binary and semantic compatibility, or also source compatibility, for public APIs?",
-        "What is the rule for source-only changes to XWiki public Java interfaces and classes?"
+        "Does XWiki enforce source compatibility or only binary compatibility for its Java API?",
+        "Can I make a source-only change like adding generics without the Revapi build failing?",
+        "What exactly does the XWiki project check with Revapi: binary, semantic, or source?"
       ],
       "aliases": [
-        "binary-only API check",
-        "source-level API change policy"
+        "binary compatibility policy",
+        "semantic compatibility",
+        "source-only change"
       ]
     },
     "Consequences": {
       "questions": [
-        "What do I get from XWiki not enforcing source compatibility, and what risk remains for downstream users?",
-        "How do I mark a new public API as not yet stable so it can change later without a Revapi failure?",
-        "How do I evolve a public interface by adding a method without breaking existing implementations?"
+        "What happens to downstream compiled extensions when I upgrade XWiki after an API change?",
+        "How do I handle a new public API that is not yet stable in XWiki?",
+        "Do I need to add Revapi ignore entries for generics-only changes in pom.xml?"
       ],
       "aliases": [
+        "Revapi ignore configuration",
         "@Unstable annotation",
-        "revapi ignore configuration",
-        "experimental API",
-        "default methods in interfaces"
+        "default methods for interface evolution"
       ]
     }
   },
@@ -60,8 +59,8 @@
       "architecture/module-design.md"
     ],
     "applies-to": [
-      "**/src/main/java/**/*.java"
+      "**/pom.xml"
     ]
   },
-  "source_hash": "d774bbf21f5ba2567a017c38041598184caf7232290787e68fbf6a219f4fc0c9"
+  "source_hash": "72351824fe9f74a097e01a9d6c832fce368d6c94a1efbfa839736d49cbe212c3"
 }

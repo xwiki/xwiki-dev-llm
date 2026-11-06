@@ -1,59 +1,60 @@
 {
   "file": {
     "questions": [
-      "How should a new Velocity script service report errors to templates?",
-      "How do I pass a map literal from a wiki page to a Java method on a script service?",
-      "Why does my script service need its own rights check when the Script Right is already required?",
-      "Should my script service method throw an exception or return null on failure?"
+      "how should my script service report errors back to velocity templates instead of returning null?",
+      "how do I pass a map or object from a wiki script to a Java service method without writing a factory method?",
+      "is it OK to change an existing script service method so it throws instead of returning null?",
+      "what right checks does a script service need when a script runs with the author's rights?"
     ],
     "aliases": [
-      "script service conventions",
-      "scripting API guidelines",
-      "Velocity service design rules",
-      "XWiki script API conventions"
+      "Script Service",
+      "Method Arguments Uberspector",
+      "getLastError",
+      "bean factory method",
+      "xcontext error"
     ]
   },
   "sections": {
     "Errors: throw, do not stash": {
       "questions": [
-        "Should my new script service method throw or return null when something fails?",
-        "How do I catch an exception from a script service call in a Velocity template?",
-        "Why is getLastError() discouraged in new script service code?"
+        "my velocity script service returns null on failure, how do I make it throw so the template can show the error?",
+        "how do I catch an exception from a script service call in a wiki template?",
+        "should I still set an xcontext property for the last error or just let the exception propagate?",
+        "how do I stop a script service call from leaking its exception into the rendered page?"
       ],
       "aliases": [
-        "getLastError",
         "#try directive",
-        "exception handling in Velocity",
-        "error stashing in xcontext",
-        "script service exceptions"
+        "getLastError",
+        "xcontext error property",
+        "catch exception in velocity"
       ]
     },
     "Arguments: no bean factories": {
       "questions": [
-        "How do I pass a map from Velocity to a Java method that takes a bean object?",
-        "Do I need to add a factory method to my script service to create a parameter object?",
-        "How do I make a Velocity map argument convert into a Java bean automatically?"
+        "how do I pass a map literal from velocity to a java method that takes a bean?",
+        "do I need a createFoo method on my script service so templates can build an object for me?",
+        "what do @PropertyMandatory and @PropertyDescription do, and how do I register a converter for my bean in velocity?",
+        "why does my script service method fail when a template passes a plain map instead of my object?"
       ],
       "aliases": [
-        "Method Arguments Uberspector",
-        "Velocity map to Java object conversion",
-        "Converter for script arguments",
-        "Properties module mandatory property",
-        "bean factory method"
+        "Properties module converter",
+        "AbstractConverter",
+        "factory method for beans",
+        "Method Arguments Uberspector"
       ]
     },
     "Rights": {
       "questions": [
-        "Why does my script service perform a right check for the page author as well as the current user?",
-        "Which user's rights should a script service method check when called from a wiki page?",
-        "How do I make sure a script service cannot be abused through a script with programming rights?"
+        "my script service can be called by any script with script right; how do I check rights for the page author rather than the current user?",
+        "why does my script service need its own right check when the script right already allows the call?",
+        "how do I do a right check for the context author inside a script service?",
+        "what changes when a script runs with the author's rights instead of the viewer's?"
       ],
       "aliases": [
         "script right",
-        "context user vs author rights",
-        "programming rights check",
-        "checkRight in script service",
-        "author privilege escalation"
+        "programming rights",
+        "context author",
+        "contextual user rights"
       ]
     }
   },
@@ -65,9 +66,8 @@
       "conventions/server-side-rendering.md"
     ],
     "applies-to": [
-      "**/*ScriptService.java",
-      "**/*.vm"
+      "**/*ScriptService.java"
     ]
   },
-  "source_hash": "85531ebd99d87a8f224db881df275287eeb797a624638c30aee58d0c942b713d"
+  "source_hash": "56f28d51ed476c44eab875f5a1b9c8c1732596432b98d43db14fe4d85046e00e"
 }

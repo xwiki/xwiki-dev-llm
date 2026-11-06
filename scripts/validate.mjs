@@ -45,6 +45,9 @@
 //      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
 //      a loaded skill body — and the budget of one already above the cap may only go down: detail
 //      past it moves into a file the skill opens on demand.
+//  13. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
+//      outlives its topic. kb-search silently drops a sidecar whose `source_hash` no longer matches
+//      the topic body, so an edited topic would lose its generated questions and aliases unnoticed.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -57,6 +60,8 @@ import {
   SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock,
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
+import { corpus } from "./kb-pipeline/gen-metadata.mjs";
+import { loadSidecar, sidecarOf } from "../xwiki/scripts/kb-search.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -402,6 +407,24 @@ for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
       `scripts/size-budgets.json: '${p}' is raised from ${before} to ${max} bytes, but a SKILL.md over ` +
         `${SKILL_MAX_BYTES} bytes may only shrink — move detail into a file the skill opens on demand`
     );
+  }
+}
+
+// ---- Invariant 13: KB search metadata is current -------------------------------------------
+const topics = corpus(kbRoot);
+for (const t of topics) {
+  if (!loadSidecar(kbRoot, t.rel, t.text)) {
+    errors.push(
+      `xwiki/kb/${sidecarOf(t.rel)}: missing or stale for kb/${t.rel} — regenerate it with ` +
+        `\`node scripts/kb-pipeline/gen-metadata.mjs --only ${t.rel}\` and commit it with the topic`
+    );
+  }
+}
+const sidecars = new Set(topics.map((t) => sidecarOf(t.rel)));
+for (const abs of walk(join(kbRoot, "_meta"))) {
+  const rel = relative(kbRoot, abs).split(sep).join("/");
+  if (rel.endsWith(".json") && rel !== "_meta/skills.json" && !sidecars.has(rel)) {
+    errors.push(`xwiki/kb/${rel}: its topic no longer exists — remove it`);
   }
 }
 
