@@ -492,9 +492,9 @@ test('opencode: a skill loaded through the skill tool is recorded for the sessio
 });
 
 // ---------------------------------------------------------------------------------------------
-// Commit self-review
+// Commits (shared with check-diff.mjs)
 
-const { diffAdditions, formatCommitReview, isGitCommit, takesUnstaged } = await import('../../xwiki/scripts/kb-hooks.mjs');
+const { diffAdditions, isGitCommit, takesUnstaged } = await import('../../xwiki/scripts/kb-hooks.mjs');
 
 const git = (dir, ...args) => execFileSync('git', ['-C', dir, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args]);
 function commitRepo() {
@@ -506,8 +506,6 @@ function commitRepo() {
   writeFileSync(join(dir, 'core/src/main/java/A.java'), 'class A {\n    @Deprecated\n    void old() {}\n}\n');
   return dir;
 }
-const bash = (cwd, command, session = 'c') => ({ session_id: session, cwd, hook_event_name: 'PreToolUse',
-  tool_name: 'Bash', tool_input: { command } });
 
 test('commit: which shell commands commit, and which take unstaged changes', () => {
   for (const c of ['git commit -m x', 'cd core && git commit -F - <<EOF', 'git -C core commit --amend',
@@ -518,60 +516,6 @@ test('commit: which shell commands commit, and which take unstaged changes', () 
   assert.ok(!takesUnstaged('git commit -m x') && !takesUnstaged('git commit --amend -m x'));
   assert.deepEqual([...diffAdditions('diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n+c\n'
     + 'diff --git a/gone b/gone\n+++ /dev/null\n-z\n')], [['x', 'b\nc'], ['gone', '']]);
-});
-
-test('commit: lists what the session was given plus what matches the staged files', () => {
-  const stateDir = mkdtempSync(join(tmpdir(), 'kb-hooks-seen-'));
-  const opts = { root: SKILL_KB, skillsRoot: SKILLS, cacheDir: null, stateDir, env: {} };
-  const repo = commitRepo();
-  git(repo, 'add', '-A');
-  // Nothing given and nothing staged that matches: nothing.
-  const empty = commitRepo();
-  assert.equal(runHook('commit', bash(empty, 'git commit -m x', 'e'), opts), '');
-  assert.equal(runHook('commit', bash(repo, 'git status'), opts), '');
-  saveSeen('c', new Set(['conventions/other.md#Rule', 'skill:xwiki-build']), stateDir);
-  const text = runHook('commit', bash(repo, 'git commit -m "Add A"'), opts);
-  assert.match(text, /^XWiki commit self-review — check this commit's diff[^\n]*\nBefore reviewing, load with your Skill tool: xwiki-legacy — /);
-  assert.match(text, /\nGiven this session: conventions\/other\.md#Rule; skill xwiki-build\n/);
-  assert.match(text, /\nAlso matching the commit's files:\n\[skill\] xwiki-legacy — .*\n\[rule\] conventions\/compat\.md#Deprecation/);
-  assert.ok(text.length <= MAX_CHARS);
-  // What matched is now given: the next commit lists it, without matching it again.
-  const again = runHook('commit', bash(repo, 'git commit -m "Add A"'), opts);
-  assert.match(again, /Given this session: .*skill xwiki-legacy/);
-  assert.doesNotMatch(again, /Also matching/);
-  // Unstaged changes count with -a; outside a scoped repo, nothing.
-  const unstaged = commitRepo();
-  git(unstaged, 'add', '-A');
-  git(unstaged, 'commit', '-qm', 'A');
-  writeFileSync(join(unstaged, 'core/src/main/java/A.java'), 'class A {\n    @Deprecated\n    void old() {}\n    @Deprecated\n    void older() {}\n}\n');
-  assert.match(runHook('commit', bash(unstaged, 'git commit -am x', 'u'), opts), /xwiki-legacy/);
-  assert.equal(runHook('commit', bash(unstaged, 'git commit -m x', 'u2'), opts), '');
-  assert.equal(runHook('commit', bash(personal, 'git commit -am x', 'u3'), opts), '');
-});
-
-test('commit: the given list keeps the latest ids when they do not all fit', () => {
-  const given = Array.from({ length: 60 }, (_, i) => `conventions/topic-${i}.md#Some fairly long section heading ${i}`);
-  const { text } = formatCommitReview(given, [], 'KB');
-  assert.ok(text.length <= MAX_CHARS);
-  assert.match(text, /Given this session: …; .*heading 59$/);
-});
-
-test('opencode: a bash git commit gets the self-review appended, read from HEAD', async () => {
-  process.env.XWIKI_LLM_HOME = join(dirname(fileURLToPath(import.meta.url)), '../..');
-  const plugin = (await import('../../xwiki/opencode/plugins/xwiki-kb-pointers.js')).default;
-  const repo = commitRepo();
-  mkdirSync(join(repo, 'core/src/main/resources'), { recursive: true });
-  writeFileSync(join(repo, 'core/src/main/resources/ApplicationResources.properties'), 'core.a.label=A\n');
-  git(repo, 'add', '-A');
-  git(repo, 'commit', '-qm', 'A');
-  const hooks = await plugin.server({ directory: repo });
-  const tool = { title: 'bash', output: '[master 1234567] A', metadata: {} };
-  await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-commit', callID: 'c', args: { command: 'git commit -m A' } }, tool);
-  assert.match(tool.output, /^\[master 1234567\] A\n\nXWiki commit self-review/);
-  assert.match(tool.output, /\[skill\] xwiki-translations/);
-  const ls = { title: 'bash', output: 'README', metadata: {} };
-  await hooks['tool.execute.after']({ tool: 'bash', sessionID: 'oc-commit', callID: 'd', args: { command: 'ls' } }, ls);
-  assert.equal(ls.output, 'README');
 });
 
 // ---------------------------------------------------------------------------------------------

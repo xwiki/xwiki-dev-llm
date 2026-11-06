@@ -6,7 +6,6 @@
 //     text part. opencode 2.x has no documented hook on a submitted prompt, so there it is absent.
 //   - edit pointers: after an edit/write, appended to the tool result (opencode has no way to add
 //     context *before* a tool runs without refusing it, and these are advice, never a refusal).
-//   - commit self-review: after a bash `git commit`, appended to the tool result (it reads HEAD there).
 //   - shell-edit pointers: after any bash command that may have changed files (`sed -i`, a heredoc),
 //     the edit pointers for the lines it added, appended to the tool result.
 //   - a skill the session loads (the `skill` tool) is recorded, so no pointer names it again.
@@ -41,10 +40,7 @@ const loadHook = async () => {
 
 const isFileWrite = (tool) => tool === "write" || tool === "edit";
 
-const commitPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { command: args?.command } });
-
-// After a bash command: the commit self-review, then the pointers for the files it changed.
-const bashText = (hook, payload) => [hook("commit", payload), hook("bash", payload)].filter(Boolean).join("\n\n");
+const bashPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { command: args?.command } });
 
 const skillPayload = (sessionID, cwd, args) => ({ session_id: sessionID, cwd, tool_input: { name: args?.name } });
 
@@ -83,13 +79,13 @@ const server = async ({ directory }) => {
       if (input.tool === "skill") hook("skill", skillPayload(input.sessionID, directory, args));
       if (typeof output?.output !== "string") return;
       const text = isFileWrite(input.tool) ? hook("edit", editPayload(input.sessionID, directory, args))
-        : input.tool === "bash" ? bashText(hook, commitPayload(input.sessionID, args?.workdir ?? directory, args)) : "";
+        : input.tool === "bash" ? hook("bash", bashPayload(input.sessionID, args?.workdir ?? directory, args)) : "";
       if (text) output.output += `\n\n${text}`;
     },
   };
 };
 
-// opencode 2.x plugin API: edit and shell-edit pointers, commit self-review and skill loads (see the header).
+// opencode 2.x plugin API: edit and shell-edit pointers and skill loads (see the header).
 const setup = async (ctx) => {
   const hook = await loadHook();
   if (!hook) return;
@@ -100,7 +96,7 @@ const setup = async (ctx) => {
     }
     const cwd = event.input?.workdir ?? ctx.location?.directory;
     const text = isFileWrite(event.tool) ? hook("edit", editPayload(event.sessionID, cwd, event.input))
-      : event.tool === "bash" ? bashText(hook, commitPayload(event.sessionID, cwd, event.input)) : "";
+      : event.tool === "bash" ? hook("bash", bashPayload(event.sessionID, cwd, event.input)) : "";
     if (!text) return;
     const result = event.result;
     if (typeof result.output === "string") result.output += `\n\n${text}`;
