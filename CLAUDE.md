@@ -29,7 +29,10 @@ importable modules, tested from `tests/<skill>/` with real inputs: CI logs, past
 Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
 and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,
 its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
-logic with `validate.mjs` through `scripts/md-blocks.mjs`).
+logic with `validate.mjs` through `scripts/md-blocks.mjs`). The same routine opens at most one
+`[Misc] Weekly KB source sync:` PR, bringing a KB file in line with the dev.xwiki.org pages in its
+`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`; its finder is
+`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file.
 
 ## Release
 
