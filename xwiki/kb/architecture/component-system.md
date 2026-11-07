@@ -25,7 +25,9 @@ architectural convention for back-end XWiki code.
 ## The core concepts
 
 - **Role** — an interface annotated `@Role` (in `org.xwiki.component.annotation`). The role is the
-  contract other code depends on. A role can be parameterized by a generic type.
+  contract other code depends on. A role can be parameterized by a generic type, and lookups match
+  the registered role type exactly: inject `Provider<SomeRole<String>>` for a role registered
+  parameterized, a raw `Provider<SomeRole>` only for one registered raw (`@Component(roles = …)`).
 - **Implementation** — a class annotated `@Component` that implements a role. It is registered so
   the container can instantiate and inject it.
 - **Registration** — implementations are listed in `META-INF/components.txt` (one fully-qualified

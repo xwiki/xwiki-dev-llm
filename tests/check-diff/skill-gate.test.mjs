@@ -1,5 +1,5 @@
-// The commit skill gate (check-diff.mjs + the skill loads kb-hooks.mjs records): a commit touching files
-// whose rules live in a skill the session has not loaded is refused once per skill, never twice.
+// The commit skill gate (check-diff.mjs + skill-gate.mjs, which records the skill loads): a commit
+// touching files whose rules live in a skill the session has not loaded is refused once per skill, never twice.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -7,7 +7,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { checkCommit } from '../../xwiki/scripts/check-diff.mjs';
-import { runHook } from '../../xwiki/scripts/kb-hooks.mjs';
+import { loadedBy, recordLoaded } from '../../xwiki/scripts/skill-gate.mjs';
 
 const HEADER = '<!-- See the NOTICE file distributed with this work. GNU Lesser General Public License. -->\n';
 
@@ -48,7 +48,7 @@ test('a test change is refused once for the unloaded test skills, then goes thro
 test('a skill loaded through the Skill tool is not asked for', () => {
   const dir = repo({ [TEST]: JAVA_TEST });
   const state = mkdtempSync(join(tmpdir(), 'skill-gate-state-'));
-  runHook('skill', { session_id: 's3', cwd: dir, tool_input: { skill: 'xwiki:xwiki-test-guidelines' } }, { stateDir: state, cacheDir: null });
+  recordLoaded('s3', loadedBy({ session_id: 's3', tool_input: { skill: 'xwiki:xwiki-test-guidelines' } }), state);
   const deny = gate(dir, 's3', state);
   assert.doesNotMatch(deny, /xwiki-test-guidelines/);
   assert.match(deny, /skill xwiki-increase-test-coverage, which/);
@@ -73,4 +73,11 @@ test('no gate without a session, under Kimi Code, or with the gates off', () => 
   assert.equal(gate(dir, null, state), '');
   assert.equal(gate(dir, 'k1', state, { KIMI_PLUGIN_ROOT: '/k' }), '');
   assert.equal(gate(dir, 'k2', state, { XWIKI_LLM_COMMIT_GATES: 'off' }), '');
+});
+
+test('the loads come from the Skill tool and from a prompt invoking a skill, not from one naming it', () => {
+  assert.deepEqual(loadedBy({ tool_input: { skill: 'xwiki:xwiki-legacy' } }), ['xwiki-legacy']);
+  assert.deepEqual(loadedBy({ prompt: '/xwiki:xwiki-translations fix the French labels' }), ['xwiki-translations']);
+  assert.deepEqual(loadedBy({ prompt: '/xwiki-test-guidelines' }), ['xwiki-test-guidelines']);
+  assert.deepEqual(loadedBy({ prompt: 'should I use xwiki-legacy here?' }), []);
 });

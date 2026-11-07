@@ -1,7 +1,8 @@
 # Weekly consolidation routine
 
 The prompt of the weekly scheduled Claude routine that keeps this repo consistent, deduplicated and
-concise now that committers merge without a maintainer reviewing every PR. The routine's config says
+concise now that committers merge without a maintainer reviewing every PR, and keeps the KB in step
+with the dev.xwiki.org pages it summarizes. The routine's config says
 only "follow `scripts/consolidation-routine.md`", so this file *is* the prompt: changing what the
 routine does is a pull request here. It lives outside `xwiki/` because it is repo maintenance, not
 something the plugin ships.
@@ -13,9 +14,12 @@ those thresholds and decides, one small batch a week.
 ## The task
 
 You are in a checkout of `xwiki/xwiki-dev-llm` on `master`. Read `CLAUDE.md` first: its conventions
-bind every change. Make **no change to intended behaviour** — every rule, fact, trigger and pointer
-the repo states today is still stated after your change, with the same meaning. The steps of a
-procedure cut to its goal (step 3) are method, not rule: the goal and the fact behind it stay.
+bind every change. Never merge, approve or close a PR, and never push to `master`.
+
+Steps 1–7 are the consolidation: make **no change to intended behaviour** — every rule, fact,
+trigger and pointer the repo states today is still stated after your change, with the same meaning.
+The steps of a procedure cut to its goal (step 3) are method, not rule: the goal and the fact behind
+it stay.
 
 ### 1. Decide whether to run at all
 
@@ -23,13 +27,13 @@ procedure cut to its goal (step 3) are method, not rule: the goal and the fact b
   the cloud session refuses (HTTP 403).
 - List the open PRs: `gh api 'repos/xwiki/xwiki-dev-llm/pulls?state=open&per_page=100'`, and each one's
   files with `gh api --paginate 'repos/xwiki/xwiki-dev-llm/pulls/<n>/files?per_page=100' --jq '.[].filename'`.
-- **A consolidation PR is still open** (title starting `[Misc] Weekly consolidation:`): stop. Open
-  nothing, comment nothing, push nothing. One unreviewed batch is the limit — a second one would only
-  queue, conflict with the first, and spend a committer's attention twice; updating it would move a
-  diff someone may be reviewing. The next run after it is merged or closed recomputes everything
-  from the repo, so nothing is lost by waiting.
 - Note every file any open PR changes: you never edit those files (the PR would conflict), and you
   pass them to the finder with `--exclude`.
+- **A consolidation PR is still open** (title starting `[Misc] Weekly consolidation:`): go to step 8.
+  For steps 2–7, open nothing, comment nothing, push nothing. One unreviewed batch is the limit — a
+  second one would only queue, conflict with the first, and spend a committer's attention twice;
+  updating it would move a diff someone may be reviewing. The next run after it is merged or closed
+  recomputes everything from the repo, so nothing is lost by waiting.
 - Read the bodies of the consolidation PRs closed in the last 8 weeks (`gh api -X GET search/issues
   -f q='repo:xwiki/xwiki-dev-llm is:pr is:closed in:title "Weekly consolidation"'`). A fix from one
   closed unmerged was declined: do not retry it. A split proposal from any of them is not repeated
@@ -165,4 +169,47 @@ can apply it without a session. Never apply one in this PR.
   - `## Routine notes`, when the critic left any (step 6);
   - the validator results in one line.
 
-Never merge, approve or close a PR, and never push to `master`.
+### 8. Sync the KB with its dev.xwiki.org sources
+
+A KB file summarizes the dev.xwiki.org pages in its `sources:`; `scripts/kb-source-pins.json` holds,
+per page, the wiki version the KB reflects. This step changes what the KB states, so it has its own
+PR and `--lossless` does not apply.
+
+- **A sync PR is still open** (title starting `[Misc] Weekly KB source sync:`): stop, for step 1's
+  reasons. Read the sync PRs closed in the last 8 weeks (step 1's query, with `"Weekly KB source
+  sync"`): a KB edit from one closed unmerged was declined — for that page, pin the version it read
+  and edit nothing.
+- Start from `origin/master`, never from step 7's branch: the two PRs must merge independently. The
+  open-PR files of step 1, plus those of the PR step 7 just opened, are off limits.
+- `node scripts/kb-sources.mjs` lists the pages edited since their pin, with each edit's author and
+  comment and the KB files citing the page; `--diff <url>` prints the page's wiki-syntax diff. Exit 2
+  means the wiki cannot be read: skip this step and say so in the run log. Take at most **5** changed
+  pages whose citing files are not off limits; the rest wait.
+- For each page, read its diff against every citing file:
+  - **It changes or adds a rule** that a citing file states, or that every reader of that file needs:
+    edit the file to say what the page now says, at the same strength. CLAUDE.md's conventions hold —
+    the KB summarizes, detail stays upstream where `sources:` sends the reader; one home per fact; a
+    size budget is raised only under its three tests, stated in the PR body.
+  - **Anything else** — wording, layout, examples, detail the KB leaves upstream, or the page catching
+    up with what the KB already says (a KB rule written back upstream): no KB edit.
+  - **It contradicts the KB**: no KB edit; quote both texts under `## For a committer`. The KB may
+    be ahead of the wiki — a decision captured before the page was updated — and then the fix
+    belongs on dev.xwiki.org.
+
+  Then `node scripts/kb-sources.mjs --pin <url>@<version>…` pins each handled page to the version
+  you read (never a later one the diff did not show), flagged ones included: the committer settles
+  those in review.
+- Pin an **unpinned** page with no KB edit: a newly cited source was written from the page as it
+  stood. A **moved** page (its version fell below the pin) or one **unreachable** with `no such page`
+  is a dead source: when the wiki's search finds where it went, fix the `sources:` URL and read the
+  new page whole against the citing files before pinning it — no diff spans a move; otherwise list it
+  under `## For a committer`. Any other unreachable reason is transient: leave it. `--pin` also drops
+  unused pins.
+- Run step 5's validators, then one fresh critic as in step 6, given the diff, the page diffs and this
+  step, asking: does each KB edit state what the page now says — no more, no less, same strength; was
+  a pin moved past a rule change the KB states but was not edited; does an edit copy upstream detail.
+- Nothing to edit or pin: open nothing. Otherwise branch `claude/kb-source-sync-<YYYY-MM-DD>`, one
+  commit and the PR as in step 7, titled `[Misc] Weekly KB source sync: <what changed, in a few
+  words>`. The body: a table — page | versions (the `viewer=changes` link the finder prints) | edit
+  authors | KB edit or "pin only", and why; `## For a committer`, when there is anything; the
+  validator results in one line.

@@ -1,196 +1,193 @@
 {
   "file": {
     "questions": [
-      "Where do the rules for writing xwiki.org documentation pages live?",
-      "What conventions should I follow when writing a new page for the documentation wiki?",
-      "How do I write or review a documentation page so it passes the xwiki.org guide?",
-      "Which rules apply to a documentation page on the xwiki.org wiki, and what is the source of truth when they conflict?"
+      "Where are the rules for writing and editing xwiki.org documentation pages?",
+      "What conventions should I follow when I write a new page in the xwiki.org documentation tree?",
+      "How do I structure a new xwiki.org doc page: its type, audience, title and fields?"
     ],
     "aliases": [
-      "DocGuide",
       "Documentation Guide",
-      "xwiki.org documentation guidelines",
-      "Diataxis"
+      "DocGuide",
+      "xwiki.org doc guidelines",
+      "Diataxis",
+      "documentation style guide"
     ]
   },
   "sections": {
     "XWiki documentation conventions (Documentation Guide)": {
       "questions": [
-        "Where do new xwiki.org documentation pages go, and what language and version must they be tested on?",
-        "Is this summary of the documentation guide authoritative, or should I check the live guide when they differ?"
+        "Where are the official rules for writing xwiki.org documentation?",
+        "What is the house style I should follow before I touch a doc page?",
+        "Is there a guide I can check when a doc page feels borderline?"
       ],
       "aliases": [
         "DocGuide",
         "documentation guidelines",
-        "xwiki.org docs rules"
+        "xwiki.org writing guide"
       ]
     },
     "Diataxis: one type + one audience per page": {
       "questions": [
-        "How do I decide whether my page is a how-to, tutorial, reference or explanation?",
-        "Can one documentation page mix a tutorial section and a reference table, or must I split it?",
-        "Which audience tag should a documentation page get: user, administrator or developer?"
+        "Should my doc page be a how-to, a tutorial, a reference or an explanation?",
+        "Can one documentation page mix a tutorial and a reference section?",
+        "How do I choose whether a doc page targets users, admins or developers?"
       ],
       "aliases": [
-        "Diataxis types",
+        "Diataxis framework",
         "documentation quadrants",
-        "page type and audience"
+        "doc page types"
       ]
     },
     "Titles and page names": {
       "questions": [
-        "How should I word a how-to title, and should it start with a verb?",
-        "Why can't my page title contain words like How to, Reference or Tutorial?",
-        "How do I pick a clean URL name for a page without stop words like a or the?"
+        "How should I title a new documentation page so it reads well out of context?",
+        "Can I put 'How to' or 'Tutorial' in a page title or page name?",
+        "What format do the page names in the doc tree use, and which words get dropped?"
       ],
       "aliases": [
-        "page naming",
-        "URL slug",
-        "kebab-case page name",
-        "stop words in page names"
+        "page naming rules",
+        "URL slug for docs",
+        "doc title conventions"
       ]
     },
     "Content rules per type": {
       "questions": [
-        "Does the last step of a how-to need a screenshot, and what must it show?",
-        "How do I document the methods of a Java API in a reference page without a section for each one?",
-        "What should the opening sentence of a how-to or tutorial say?"
+        "What must a how-to page contain, and how many screenshots does its procedure need?",
+        "What should the last step of a procedure show the reader?",
+        "How should I lay out an API reference page: tables or code samples?"
       ],
       "aliases": [
-        "how-to steps",
-        "procedure format",
+        "per-type content",
+        "how-to structure",
         "reference page layout"
       ]
     },
     "How much belongs on one page": {
       "questions": [
-        "My how-to is getting long, what should I cut or move to another page?",
-        "How do I avoid repeating the same paragraph or step across several documentation pages?",
-        "When should I use the display macro to reuse shared content?"
+        "My doc page is getting too long, how do I decide what to split out?",
+        "Where should a paragraph that appears on several doc pages live?",
+        "How do I avoid stating the same fact on multiple documentation pages?"
       ],
       "aliases": [
-        "duplicate content",
-        "display macro",
-        "page length",
-        "reusing text across pages"
+        "page granularity",
+        "content fragment",
+        "doc duplication"
       ]
     },
     "Page-structure fields": {
       "questions": [
-        "What is the limit on FAQ entries and what belongs in Highlights versus Related links?",
-        "What format does the technical ID take for an extension's documentation page?",
-        "When should a page show Highlights, and how many can it have?"
+        "What do the Highlights, More and Related links fields hold on a doc page?",
+        "How many FAQ entries can a documentation page have, and how long can answers be?",
+        "What value goes in the Technical ID field and what prefix does it need?"
       ],
       "aliases": [
         "DocumentationClass",
-        "documentation object fields",
-        "technical id",
-        "highlights field"
+        "doc page xobject fields",
+        "documentation technical id"
       ]
     },
     "Documentation style": {
       "questions": [
-        "How do I format button names, menu items and code literals in documentation text?",
-        "Should I hard-wrap long lines in documentation pages?",
-        "How do I link to a file on GitHub from a documentation page?"
+        "How do I format prose and line breaks in documentation pages?",
+        "Can I use HTML or inline styles in a documentation page?",
+        "How should I write UI button names, code words and links in doc text?"
       ],
       "aliases": [
-        "writing style",
-        "monospace text",
-        "scm macro",
-        "em dash"
+        "writing style for docs",
+        "doc formatting rules",
+        "em dash usage"
       ]
     },
     "Attachments, images and videos": {
       "questions": [
-        "How do I insert a screenshot with the right size and alt text?",
-        "What pixel width and red box do I need for a documentation screenshot?",
-        "How do I embed a video in a documentation page and not just link to it?"
+        "How do I insert a screenshot into an xwiki.org documentation page?",
+        "Which size and pixel width should a doc screenshot use, and what format?",
+        "How do I embed a video in the docs, and how do I draw a red box on a screenshot?"
       ],
       "aliases": [
         "screenshots",
         "image macro",
         "embed macro",
-        "webm video",
-        "alt text"
+        "webm video"
       ]
     },
     "Choose the right location": {
       "questions": [
-        "Where in the documentation tree should the page for my new extension go?",
-        "Should my extension's documentation live under the bundled or the non-bundled tree?",
-        "Should I organize extension docs by audience first or by topic first?"
+        "Where in the documentation tree should I put my new page?",
+        "Should an extension's doc go under the xs space or the extensions space?",
+        "Do I need to confirm the page placement with the developer before creating pages?"
       ],
       "aliases": [
         "documentation tree placement",
-        "page hierarchy",
-        "where to put my docs"
+        "doc space location",
+        "xs vs extensions docs"
       ]
     },
     "Versioning and perspective": {
       "questions": [
-        "How do I tell readers that a feature was added in a specific XWiki version?",
-        "Can I document a feature before its release, and how do I mark it?",
-        "How do I write a version badge that says a behavior changed before a version?"
+        "How do I say a feature only exists since a certain XWiki version?",
+        "How do I document old behavior next to the current behavior?",
+        "Can I document a feature before its release, and how do I mark it?"
       ],
       "aliases": [
         "version macro",
-        "since version",
-        "version badge",
-        "before version"
+        "since badge",
+        "version badge"
       ]
     },
     "Saving changes: minor directly, major via a Change Request": {
       "questions": [
-        "Do I need a Change Request to fix a typo or a broken link in the docs?",
-        "What counts as a major documentation change that needs a Change Request?",
-        "How do I mark an edit as minor when I save through the REST API?"
+        "Do I need a Change Request to fix a typo in a documentation page?",
+        "How do I save a small docs fix without notifying page followers?",
+        "When must a documentation edit go through a Change Request?"
       ],
       "aliases": [
-        "change request for docs",
+        "change request",
         "minor edit",
-        "minor revision"
+        "docs pull request"
       ]
     },
     "Handling the original page after migration": {
       "questions": [
-        "What do I do with the old page after I move its content into the new documentation tree?",
-        "Should I delete the leftover attachments on the old page once it is migrated?"
+        "What do I do with the old page once its content has moved to the new docs?",
+        "Should I delete the leftover attachments of a migrated documentation page?",
+        "How do I handle the backlinks pointing at a page I migrated?"
       ],
       "aliases": [
         "documentation migration",
-        "old documentation page",
-        "legacy page cleanup"
+        "migrating old docs",
+        "original page cleanup"
       ]
     },
     "Deleting a page": {
       "questions": [
-        "How do I safely delete a documentation page that other pages link to?",
-        "I created a page by mistake and want to remove it, what should I check first?"
+        "How do I safely delete a documentation page without leaving broken links?",
+        "What should I check about backlinks before removing a wiki page?",
+        "Is it better to rename a page than to delete and recreate it?"
       ],
       "aliases": [
-        "remove a page",
-        "backlinks",
-        "delete documentation page"
+        "removing a page",
+        "page deletion",
+        "backlinks cleanup"
       ]
     },
     "XWiki syntax traps that bite when authoring documentation": {
       "questions": [
-        "Why does my command-line flag show as struck-through text in the page?",
-        "Why does my URL lose its trailing hash, or my image show a red validation box?",
-        "Why does my numbered list restart at 1 after a blank line, and how do I link a page on another subwiki?"
+        "Why does my doc text render wrongly even though the syntax looks right?",
+        "Why does my command-line flag lose its leading dashes or get struck through?",
+        "How do I link to another xwiki.org page without pasting a full URL?"
       ],
       "aliases": [
-        "XWiki syntax",
-        "wiki markup gotchas",
-        "strikethrough dashes",
-        "2.0 vs 2.1 syntax"
+        "xwiki syntax gotchas",
+        "wiki markup pitfalls",
+        "strikethrough dashes"
       ]
     },
     "Navigation order — pinning child pages": {
       "questions": [
         "How do I change the order of pages in the documentation navigation panel?",
-        "Why are my child pages sorted alphabetically by title in the tree?"
+        "Why are my child pages listed alphabetically in the doc tree?",
+        "How do I pin the sort order of a documentation section?"
       ],
       "aliases": [
         "document tree pinning",
@@ -207,5 +204,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "7026f77d21c4ad8768f3f09455191a27fe357b6ff3255355a2682277025d60db"
+  "source_hash": "0d0a3f65343211bdf5310058b4666f45847fe5b800319014f10871f593d42493"
 }

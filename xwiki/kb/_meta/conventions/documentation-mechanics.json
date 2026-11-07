@@ -1,99 +1,89 @@
 {
   "file": {
     "questions": [
-      "How do I script changes to xwiki.org documentation pages instead of editing each one by hand?",
-      "Where does the xwiki.org documentation site keep its metadata, like type, target, and the technical ID?",
-      "Why does a documentation page show a red warning banner, and how do I find out what is actually wrong?",
-      "How is the order of pages in the documentation navigation menu decided and stored?",
-      "How do I reuse one block of text across several documentation pages without copying it?"
+      "How do I read or update the metadata of xwiki.org documentation pages with a script instead of the editor?",
+      "Where does the Documentation application store a page's type, target and Technical ID?",
+      "Why does an xwiki.org documentation page show a red banner without saying what is wrong?"
     ],
     "aliases": [
       "DocApp",
       "Documentation application",
-      "xwiki.org docs internals",
-      "doc quality checker",
-      "doc linter"
+      "xwiki.org docs tree",
+      "doc tree"
     ]
   },
   "sections": {
     "Programming against the xwiki.org documentation tree": {
       "questions": [
-        "Where does the xwiki.org documentation app store its data when I want to edit pages through the API?",
-        "What do I need to know before scripting changes to the xwiki.org docs or debugging a warning on a page?"
+        "How do I script changes to xwiki.org documentation pages over REST instead of editing them one by one?",
+        "Where does the xwiki.org documentation app keep its data on a page, and which class holds what?",
+        "What do I need to know before writing an audit or migration script for the xwiki.org docs?"
       ],
       "aliases": [
-        "xwiki.org docs data model",
-        "documentation app storage"
+        "documentation app data model",
+        "xwiki.org documentation REST"
       ]
     },
     "The DocApp xobjects on a documentation page": {
       "questions": [
-        "Which class objects does a documentation page need besides its content, and what is the Technical ID?",
-        "My new documentation page looks fine but something is missing. Which objects must it carry?",
-        "When is the DocumentationExtensionClass object empty, and what does it hold?"
+        "Which xobjects does a documentation page need besides its content, and what happens if one is missing?",
+        "How do I find the Technical ID of a documentation page for an extension?",
+        "What is the DocumentationClass object on an xwiki.org doc page and what fields does it hold?"
       ],
       "aliases": [
         "DocumentationClass",
         "DocumentationExtensionClass",
-        "Technical ID",
-        "doc page xobjects",
-        "Diataxis type field"
+        "technical ID"
       ]
     },
     "Landing pages carry a different class": {
       "questions": [
-        "Why does my script skip some documentation pages when it looks for DocumentationClass?",
-        "How are landing pages stored differently from normal documentation pages, and who can change their highlights?",
-        "Why does my sweep for highlights or type fields miss the landing pages?"
+        "Why does my script that checks Highlights on documentation pages skip the landing pages?",
+        "Which object does a landing page carry instead of DocumentationClass?",
+        "How do I audit every page in the documentation tree, including the landing pages?"
       ],
       "aliases": [
         "LandingPageClass",
-        "landing page highlights",
-        "type landing page",
-        "target landing page",
-        "documentation.xs landing pages"
+        "documentation landing page object"
       ]
     },
     "Reading the doc-quality checker's actual findings": {
       "questions": [
-        "Why does a documentation page show a generic red banner that never says what the problem is?",
-        "How do I see the specific violations the doc checker recorded on a page?",
-        "My docs fix didn't clear the warning. How do I check the rendered page for errors that have no stored object?"
+        "How do I see which problem the documentation quality checker found on a page with a red banner?",
+        "My verification says the documentation page is clean, but it still shows an error box when rendered. Why?",
+        "Where are the documentation checker's violation messages stored on a page?"
       ],
       "aliases": [
         "DocumentationViolationClass",
+        "doc quality checker",
         "best practice warning",
-        "red banner on docs page",
-        "doc validation errors",
         "inline error box"
       ]
     },
     "How navigation order is pinned": {
       "questions": [
-        "How do I change the order of child pages in the documentation navigation tree?",
-        "Why does an old branch still show in the docs navigation after I renamed or moved a space?",
-        "Where is the pinned child page ordering stored, and how do I confirm the tree really shows it?"
+        "How do I force the child pages of a documentation space into a fixed order in the navigation panel?",
+        "I moved a space and the old branch still shows in the navigation tree. What is left behind?",
+        "Where is the sidebar menu order of documentation pages stored, and how do I verify it?"
       ],
       "aliases": [
         "PinnedChildPagesClass",
-        "WebPreferences page",
-        "sort order of child pages",
-        "Document Tree macro",
-        "navigation panel order"
+        "WebPreferences",
+        "pinned child pages",
+        "menu order"
       ]
     },
-    "Hidden fragment pages (the `{{display}}` pattern)": {
+    "Content fragments (the `{{fragment}}` macro)": {
       "questions": [
-        "How do I hide a helper page from the page tree while still showing its content elsewhere?",
-        "How do I reuse one shared text block on several documentation pages without copying it?",
-        "Why does my display macro reference fail to resolve when I add a doc: prefix?"
+        "How do I reuse the same block of text on several documentation pages without copy-pasting it?",
+        "Why does a page show an error after I removed a content fragment it was displaying?",
+        "How is a shared snippet stored and where do I display it from another page?"
       ],
       "aliases": [
-        "display macro",
-        "content transclusion",
-        "hidden page",
-        "shared fragment",
-        "include page content"
+        "content fragment",
+        "transclusion",
+        "ContentFragmentClass",
+        "reusable content block"
       ]
     }
   },
@@ -105,5 +95,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "63d8b5031059712d6cb796ff34d465bceaa259e0060229460f9106e8cb18e01b"
+  "source_hash": "f437ccb4c00d291111b77284bf0692a4568c886e238170606c94c2e3a8de27c1"
 }

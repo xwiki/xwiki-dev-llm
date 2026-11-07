@@ -494,7 +494,8 @@ test('opencode: a skill loaded through the skill tool is recorded for the sessio
 // ---------------------------------------------------------------------------------------------
 // Commits (shared with check-diff.mjs)
 
-const { diffAdditions, isGitCommit, takesUnstaged } = await import('../../xwiki/scripts/kb-hooks.mjs');
+const { diffAdditions } = await import('../../xwiki/scripts/kb-hooks.mjs');
+const { isGitCommit, takesUnstaged } = await import('../../xwiki/scripts/shell-commands.mjs');
 
 const git = (dir, ...args) => execFileSync('git', ['-C', dir, '-c', 'user.name=t', '-c', 'user.email=t@t', ...args]);
 function commitRepo() {

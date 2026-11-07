@@ -1,84 +1,75 @@
 {
   "file": {
     "questions": [
-      "What testing rules apply when I write tests for an XWiki change?",
-      "Do I need an automated test for a template, wiki page or JavaScript fix, or is a manual check enough?",
-      "Which kind of XWiki test should I write for this change: unit, integration or functional?",
-      "What are the house rules for writing XWiki functional tests, such as fixtures, page objects and cleanup?"
+      "How do I know which tests to write for my XWiki change and at what level?",
+      "What are the testing rules for XWiki functional tests and unit tests?",
+      "Where do XWiki test frameworks live in each repository checkout?",
+      "Is a unit test or a functional test required for my XWiki fix?"
     ],
     "aliases": [
-      "XWiki testing guidelines",
+      "XWiki test guidelines",
+      "testing overview",
       "test policy",
-      "testing conventions",
-      "XWiki test strategy"
+      "Docker functional tests",
+      "IT tests"
     ]
   },
   "sections": {
     "XWiki testing strategy (overview)": {
       "questions": [
-        "Where should I start when I need to write tests for an XWiki feature?",
-        "Which skill or doc tells me how to write, convert or stabilise a test in xwiki-platform?",
-        "What does XWiki expect for test coverage on a module I'm changing?"
+        "What rules govern writing tests for an XWiki change?",
+        "Which XWiki test skill do I use for converting or writing tests?"
       ],
       "aliases": [
         "testing overview",
-        "test guidelines entry point",
-        "test skills"
+        "test rules"
       ]
     },
     "Test kinds and naming": {
       "questions": [
-        "What suffix should my XWiki test class have so the build runs it?",
-        "Why isn't my new integration test class being picked up by Maven?",
-        "How do I tell whether a test runs under Surefire or Failsafe in XWiki?"
+        "How do I name unit tests versus integration tests in XWiki?",
+        "Why does my XWiki integration test not run under Surefire?"
       ],
       "aliases": [
         "Surefire vs Failsafe",
-        "*Test.java vs *IT.java",
-        "integration test naming",
-        "integration-tests profile"
+        "test class naming"
       ]
     },
     "Durable rules": {
       "questions": [
-        "Do I need a new test for my bug fix, and how do I prove it actually catches the bug?",
-        "My functional test fails because of console output or a PRChecker programming-right line. How should I handle that?",
-        "How do I avoid Thread.sleep and long Selenium timeouts in a Docker functional test?",
-        "Which assertion style, JUnit 5 or Hamcrest, should I use in an XWiki test?"
+        "Does my XWiki bug fix need a test that fails without the fix?",
+        "How do I avoid slow functional tests and wasteful waits in XWiki UI tests?",
+        "Why does the PRChecker log say programming right was blocked in my test?",
+        "How should functional test methods share fixtures and use @Order?"
       ],
       "aliases": [
-        "CaptureConsole",
+        "test rules",
+        "Selenium best practices",
         "PRChecker",
-        "page object pattern",
-        "@Order scenarios",
-        "flaky Selenium wait"
+        "programming right in tests",
+        "@Order scenario"
       ]
     },
     "Functional-test module layout": {
       "questions": [
-        "Where should functional tests for my new xwiki-platform feature live?",
-        "What goes in the -test-docker pom, and which parent pom lists the test modules?",
-        "Where do I put test-only components or listeners for a Docker functional test?"
+        "Where do I put functional tests for a new XWiki feature module?",
+        "How is the -test-docker pom set up for an XWiki feature?"
       ],
       "aliases": [
-        "xwiki-platform-*-test-docker",
-        "Docker functional test module",
-        "AllIT",
-        "failsafe pom setup"
+        "test module structure",
+        "AllIT layout",
+        "docker test module"
       ]
     },
     "Where the test frameworks live (per repo checkout)": {
       "questions": [
-        "Which repository and module contain the XWiki component test framework?",
-        "Where is the rendering test framework source located in xwiki-rendering?",
-        "Where do I find the Oldcore and Docker test framework classes in xwiki-platform?"
+        "Which repository contains the XWiki rendering test framework?",
+        "Where is the XWiki oldcore or Docker test framework code located?"
       ],
       "aliases": [
-        "xwiki-commons-tool-test",
-        "xwiki-rendering-test",
+        "test framework location",
         "xwiki-platform-test",
-        "OldcoreTest framework",
-        "test framework source"
+        "xwiki-commons-tool-test"
       ]
     }
   },
@@ -91,8 +82,8 @@
     ],
     "applies-to": [
       "**/src/test/**/*.java",
-      "**/pom.xml"
+      "**/*-test-pageobjects/**/*.java"
     ]
   },
-  "source_hash": "576d95651d9247928a3cb4290c6e723d16d84e3d5d90cdfaa75709f4e1686cce"
+  "source_hash": "63226ae9dc992f8de496824d0c1a130cd01258e307932dd7f5f31424eccd107c"
 }

@@ -17,9 +17,8 @@
 //                              dedupe state; a commit in between is seen through), matched per file like
 //                              an edit; ≤3 pointers. Skips a clearly read-only command without running
 //                              git. Advice only: it never blocks.
-//   node kb-hooks.mjs skill    PreToolUse on Skill — records the loaded skill, so it is not pointed at,
-//                              and for the commit skill gate (check-diff.mjs, loadGate()). A skill named
-//                              in a prompt (`/xwiki-legacy`) counts as loaded too.
+//   node kb-hooks.mjs skill    PreToolUse on Skill — records the loaded skill, so it is not pointed at.
+//                              A skill named in a prompt (`/xwiki-legacy`) counts as loaded too.
 //
 // `applies-when:` narrows a topic to edits that add matching text: a block list (`  - '<regex>'`,
 // single-quoted, no YAML escaping — an inline `[a, b]` list would split a regex on its commas) of
@@ -105,36 +104,6 @@ export function saveSeen(sessionId, seen, dir = kbHookStateDir(), now = Date.now
     }
   }
   writeFileSync(file, JSON.stringify([...seen]));
-}
-
-/**
- * The skills a session loaded and those the commit skill gate (check-diff.mjs) already refused a commit
- * for: `{ loaded, denied }` sets of skill names. Kept apart from the pointer ids, which also name the
- * skills a session was only pointed at.
- */
-export function loadGate(sessionId, dir = kbHookStateDir()) {
-  try {
-    const g = JSON.parse(readFileSync(stateFile(dir, `${sessionId}.gate`), "utf8"));
-    return { loaded: new Set(g.loaded), denied: new Set(g.denied) };
-  } catch {
-    return { loaded: new Set(), denied: new Set() };
-  }
-}
-
-export function saveGate(sessionId, gate, dir = kbHookStateDir()) {
-  if (!sessionId) return;
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(stateFile(dir, `${sessionId}.gate`), JSON.stringify({ loaded: [...gate.loaded], denied: [...gate.denied] }));
-}
-
-/** Records skills (`skill:<name>` ids) as loaded by the session; an unwritable state dir only costs the gate. */
-function recordLoaded(sessionId, ids, dir) {
-  if (!sessionId || !ids.length) return;
-  try {
-    const gate = loadGate(sessionId, dir);
-    for (const id of ids) gate.loaded.add(id.replace(/^skill:/, ""));
-    saveGate(sessionId, gate, dir);
-  } catch { /* see above */ }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -345,15 +314,7 @@ export function namedSkills(index, text) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Commits (shared with the commit gates in check-diff.mjs) and changed-file pointers
-
-const GIT_COMMIT = /(?:^|[\s;&|(`"'])git(?:\s+-[cC]\s+\S+|\s+--?[\w.-]+(?:=\S+)?)*\s+commit(?=$|[\s;&|)`"'])/;
-/** Whether a shell command runs `git commit` (also `git -C dir commit`, after `&&`, inside `bash -c "…"`). */
-export const isGitCommit = (command) => typeof command === "string" && GIT_COMMIT.test(command);
-
-/** Whether the commit also takes changes not staged yet: `-a`/`--all`, or a `git add` in the same command. */
-export const takesUnstaged = (command) => /(?:^|[\s;&|(])git\s+add\b/.test(command)
-  || /\scommit\b.*?\s(?:-[a-zA-Z]*a[a-zA-Z]*|--all)(?=\s|$)/.test(command);
+// Changed-file pointers
 
 /** The lines each file of a unified diff adds: `Map(path → text)`, empty text for a deletion. */
 export function diffAdditions(diff) {
@@ -536,13 +497,11 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
       for (const id of ids) seen.add(id);
       save();
     }
-    recordLoaded(payload.session_id, ids, stateDir);
     return "";
   } else if (kind === "prompt") {
     if (typeof payload.prompt !== "string") return "";
     const loaded = namedSkills(index, payload.prompt);
     for (const id of loaded) seen.add(id);
-    recordLoaded(payload.session_id, loaded, stateDir);
     hits = promptPointers(index, payload.prompt, { seen });
     if (!hits.length && loaded.length) save();
   } else if (kind === "edit") {

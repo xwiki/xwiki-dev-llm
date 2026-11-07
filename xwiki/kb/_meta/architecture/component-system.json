@@ -1,136 +1,134 @@
 {
   "file": {
     "questions": [
-      "How do I write XWiki Java code as injectable components instead of passing a context object around?",
-      "Why isn't my XWiki component found or injected at runtime?",
-      "How do I register a new Java class so XWiki's container picks it up?",
-      "What's the right way to get a service object into my XWiki Java class?"
+      "How does dependency injection work when I write back-end XWiki code?",
+      "How do I register a Java class so XWiki can inject it into other code?",
+      "Where do I list my classes in META-INF/components.txt, and when do I need it?",
+      "How do I share a service between XWiki modules without passing a context object everywhere?"
     ],
     "aliases": [
-      "dependency injection",
-      "DI",
-      "IoC container",
-      "component model",
-      "components.txt"
+      "XWiki dependency injection",
+      "XWiki IoC container",
+      "XWiki component manager",
+      "xwiki components"
     ]
   },
   "sections": {
     "The XWiki component system": {
       "questions": [
-        "How does dependency injection work in XWiki's Java back end?",
-        "Should I write my new XWiki Java code as a component or pass the context object around?",
-        "What is XWiki's component framework and why do the developers use it instead of plain constructors?"
+        "How do I write back-end XWiki code as injectable services instead of passing context objects around?",
+        "How is XWiki's dependency injection different from Spring or Guice?",
+        "What is the basic pattern for making a Java class available to other XWiki code?"
       ],
       "aliases": [
-        "dependency injection",
-        "DI",
-        "IoC container",
-        "component framework"
+        "XWiki component framework",
+        "XWiki DI container",
+        "component model"
       ]
     },
     "The core concepts": {
       "questions": [
-        "What's the difference between a role interface and its implementation in XWiki?",
-        "How do I mark a class as a component so the container can create it?",
-        "Do I have to write META-INF/components.txt by hand or is it generated?",
-        "Should I use @Inject from javax or jakarta for a field dependency in XWiki?"
+        "What is the difference between a role and a component implementation in XWiki?",
+        "How do I declare an interface that other modules can plug into?",
+        "Why does my injected Provider come back empty for a generic interface?",
+        "What does @Component do, and how does it relate to components.txt?"
       ],
       "aliases": [
-        "@Role",
-        "jakarta inject",
-        "javax.inject",
-        "components.txt"
+        "@Role annotation",
+        "@Component annotation",
+        "service interface",
+        "extension point"
       ]
     },
     "Hints (multiple implementations of a role)": {
       "questions": [
-        "I have two implementations of the same interface in XWiki, how do I choose which one to inject?",
-        "How do I give my component a name so it isn't the default implementation of a role?",
-        "What does @Named do when several components implement the same role?"
+        "How do I have two implementations of the same XWiki interface and choose one at injection time?",
+        "What does @Named do on a component, and which hint does a component get by default?",
+        "How do I select a specific implementation of a role when I inject it?"
       ],
       "aliases": [
-        "named implementations",
-        "@Named",
-        "qualifier",
-        "component hint"
+        "@Named qualifier",
+        "component hint",
+        "default hint",
+        "named implementation"
       ]
     },
     "Instantiation strategy": {
       "questions": [
-        "How do I get a fresh object every time my XWiki component is requested instead of a shared instance?",
-        "Are XWiki components singletons by default and how do I change that?",
-        "My component keeps state between uses and it's leaking data, how do I make it per-lookup?"
+        "How do I get a fresh instance of an XWiki component on every lookup?",
+        "Are XWiki components singletons, and how do I stop them being shared?",
+        "How do I make a component stateful per request or per caller?"
       ],
       "aliases": [
-        "singleton scope",
         "PER_LOOKUP",
+        "singleton scope",
         "prototype scope",
         "component scope"
       ]
     },
     "Programmatic lookup": {
       "questions": [
-        "I need to pick an XWiki component at runtime by name, how do I look it up?",
-        "How do I fetch a component from the ComponentManager when I can't inject it as a field?",
-        "When is it acceptable to call getInstance instead of using @Inject?"
+        "How do I get a component at runtime when I cannot inject it with a field?",
+        "How do I look up an implementation by role and hint using ComponentManager?",
+        "When should I use a runtime lookup instead of @Inject?"
       ],
       "aliases": [
-        "ComponentManager.getInstance",
+        "ComponentManager getInstance",
         "service locator",
-        "dynamic component lookup"
+        "dynamic component lookup",
+        "runtime component retrieval"
       ]
     },
     "Never grow `xwiki-platform-oldcore`": {
       "questions": [
-        "Where should I put my new Java code in xwiki-platform, oldcore or a new module?",
-        "Can I add a new feature class to xwiki-platform-oldcore since it's already there?",
-        "Oldcore needs a class I just wrote, can I put it there and move it out later?"
+        "Where should I put my new Java code, since xwiki-platform-oldcore is being split up?",
+        "Can I add a new class to xwiki-platform-oldcore for my feature?",
+        "How do I move existing oldcore code out when a new module needs it?"
       ],
       "aliases": [
         "oldcore",
-        "old core",
-        "xwiki-platform-oldcore module",
-        "old model"
+        "old core module",
+        "Old Model",
+        "xwiki-platform-oldcore split"
       ]
     },
     "Event listeners: local-only vs. cluster-wide": {
       "questions": [
-        "My event listener runs twice on a clustered XWiki, how do I make it act only on the node where the event happened?",
-        "Should my XWiki listener react to events replicated from other cluster nodes?",
-        "Which listener base class do I extend so a side effect isn't duplicated on remote nodes?"
+        "My event listener runs on every cluster node, so the side effect happens twice. How do I run it only where the event originated?",
+        "What is the difference between AbstractEventListener and AbstractLocalEventListener?",
+        "How do I stop replicated events from triggering my action on other nodes?"
       ],
       "aliases": [
-        "AbstractEventListener",
         "AbstractLocalEventListener",
         "observation listener",
-        "replicated events",
-        "multi-instance"
+        "remote events",
+        "cluster event replication"
       ]
     },
     "Monitoring: expose it as a JMX MBean": {
       "questions": [
-        "How do I expose statistics or a management interface from my XWiki component over JMX?",
-        "Where do I register and unregister an MBean in a component's lifecycle?",
-        "I want to watch my XWiki component from JConsole, how do I wire that up?"
+        "How do I expose statistics from an XWiki component so I can see them in JConsole?",
+        "How do I register an MBean in XWiki and make sure it is removed on shutdown?",
+        "Where in a component's lifecycle should JMX registration and unregistration go?"
       ],
       "aliases": [
-        "MBean",
         "JMX",
-        "management bean",
-        "JConsole"
+        "MBean",
+        "JMXBeanRegistration",
+        "JConsole monitoring"
       ]
     },
     "Where to go deeper": {
       "questions": [
-        "Where is the official documentation on XWiki components, lifecycle and overrides?",
-        "Where can I find the full component tutorial and the Component Module reference?",
-        "What should I read next for component priorities and initializable interfaces?"
+        "Where is the full XWiki component tutorial with lifecycle, events, and overrides?",
+        "Where can I find the official Component Module reference for XWiki extensions?",
+        "Which official pages should I read for the complete component API?"
       ],
       "aliases": [
         "component tutorial",
-        "Component Module",
-        "extensions.xwiki.org",
-        "dev wiki"
+        "Component Module page",
+        "dev.xwiki.org components",
+        "extensions.xwiki.org"
       ]
     }
   },
@@ -141,9 +139,9 @@
       "conventions/code-style.md"
     ],
     "applies-to": [
-      "**/src/main/java/**/*.java",
-      "**/src/main/resources/META-INF/components.txt"
+      "**/META-INF/components.txt",
+      "**/src/main/java/**/*.java"
     ]
   },
-  "source_hash": "adae1ce132ea8028a97994c2815e23c5c3bc1b542e9888eb0b1a2f2ea9357887"
+  "source_hash": "373f3e52fbd3758ed7204d4c677221a118d6d3c2c84c1b310ac998d46c602387"
 }

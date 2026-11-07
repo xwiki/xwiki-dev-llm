@@ -1,6 +1,7 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
 // (plans, handoffs, drafts, extracted source), the Docker IT slot files, the knowledge-base
-// search index cache and the KB pointer hooks' per-session state. All are computed here
+// search index cache, the KB pointer hooks' per-session state and the commit skill gate's
+// per-session record of loaded skills. All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
 
@@ -40,6 +41,11 @@ export function kbIndexDir() {
 /** Directory holding the KB pointer hooks' per-session files: which pointers a session was given. */
 export function kbHookStateDir() {
   return join(stateRoot(), "kb-hooks");
+}
+
+/** Directory holding the commit skill gate's per-session files: the skills a session loaded. */
+export function skillGateDir() {
+  return join(stateRoot(), "skill-gate");
 }
 
 /**

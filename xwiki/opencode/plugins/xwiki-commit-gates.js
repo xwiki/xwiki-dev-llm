@@ -2,9 +2,9 @@
 //
 // Ports the Claude Code / Kimi Code PreToolUse commit hook (xwiki/scripts/check-diff.mjs) to opencode:
 // before a bash `git commit` runs, it throws — refusing the call — when the commit breaks a rule a diff
-// shows exactly, or that touches files whose skill the session has not loaded (once per skill; the
-// loads are recorded by xwiki-kb-pointers.js, which must be installed too) — see the shared script's
-// header for the rules and the escape hatches. Its advice
+// shows exactly, or that touches files whose skill the session has not loaded (once per skill; it
+// records the session's `skill` tool calls for that, through skill-gate.mjs) — see the shared scripts'
+// headers for the rules and the escape hatches. Its advice
 // (heuristics that never refuse) is appended to the commit's tool result, since opencode cannot add
 // context before a tool runs without refusing it.
 //
@@ -18,18 +18,23 @@
 
 import { pathToFileURL } from "node:url";
 
-// Returns (command, cwd, sessionID) => { deny, context }, or undefined when the shared script cannot load.
+// Returns { check(command, cwd, sessionID) => { deny, context }, record(sessionID, args) }, or undefined
+// when the shared scripts cannot load.
 const loadCheck = async () => {
   const home = process.env.XWIKI_LLM_HOME;
   if (!home) return undefined;
   try {
     const { checkCommit } = await import(pathToFileURL(`${home}/xwiki/scripts/check-diff.mjs`).href);
-    return (command, cwd, sessionID) => {
-      try {
-        return checkCommit(command, { cwd, sessionId: sessionID });
-      } catch {
-        return { deny: "", context: "" };
-      }
+    const { loadedBy, recordLoaded } = await import(pathToFileURL(`${home}/xwiki/scripts/skill-gate.mjs`).href);
+    return {
+      check: (command, cwd, sessionID) => {
+        try {
+          return checkCommit(command, { cwd, sessionId: sessionID });
+        } catch {
+          return { deny: "", context: "" };
+        }
+      },
+      record: (sessionID, args) => recordLoaded(sessionID, loadedBy({ tool_input: { name: args?.name } })),
     };
   } catch {
     return undefined;
@@ -41,10 +46,12 @@ const pending = new Map();
 
 // opencode 1.x plugin API.
 const server = async ({ directory }) => {
-  const check = await loadCheck();
-  if (!check) return {};
+  const gates = await loadCheck();
+  if (!gates) return {};
+  const { check, record } = gates;
   return {
     "tool.execute.before": async (input, output) => {
+      if (input.tool === "skill") record(input.sessionID, output?.args);
       if (input.tool !== "bash") return;
       const { deny, context } = check(output?.args?.command, output?.args?.workdir ?? directory, input.sessionID);
       if (deny) throw new Error(deny);
@@ -60,9 +67,11 @@ const server = async ({ directory }) => {
 
 // opencode 2.x plugin API: throwing from `execute.before` refuses the tool call.
 const setup = async (ctx) => {
-  const check = await loadCheck();
-  if (!check) return;
+  const gates = await loadCheck();
+  if (!gates) return;
+  const { check, record } = gates;
   await ctx.tool.hook("execute.before", (event) => {
+    if (event.tool === "skill") record(event.sessionID, event.input);
     if (event.tool !== "bash") return;
     const { deny, context } = check(event.input?.command, event.input?.workdir ?? ctx.location?.directory, event.sessionID);
     if (deny) throw new Error(deny);

@@ -29,7 +29,10 @@ importable modules, tested from `tests/<skill>/` with real inputs: CI logs, past
 Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
 and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,
 its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
-logic with `validate.mjs` through `scripts/md-blocks.mjs`).
+logic with `validate.mjs` through `scripts/md-blocks.mjs`). The same routine opens at most one
+`[Misc] Weekly KB source sync:` PR, bringing a KB file in line with the dev.xwiki.org pages in its
+`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`; its finder is
+`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file.
 
 ## Release
 
@@ -74,14 +77,14 @@ Inside `xwiki/`:
   developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
   case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
   Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
-  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`). Those hooks
-  see an edit made through Bash (`sed -i`, a heredoc, a script) by a `PostToolUse` hook that diffs the
-  work tree against a per-session snapshot; `scripts/shell-commands.mjs` is the shell-command parser
-  they share with the commit/PR text guard.
+  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`) and the commit
+  diff check. The pointer hooks see an edit made through Bash (`sed -i`, a heredoc, a script) by a
+  `PostToolUse` hook that diffs the work tree against a per-session snapshot; `scripts/shell-commands.mjs`
+  is the shell-command parser they share with the commit/PR text guard and the commit diff check.
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
-  (`workRoot()`, used by the `SessionStart` hook) and the Docker IT slot files (`itSlotDir()`, used
-  by `xwiki-it-slot.mjs`). Never recompute those paths in another script, and never restate the
+  (`workRoot()`, used by the `SessionStart` hook), the Docker IT slot files (`itSlotDir()`, used
+  by `xwiki-it-slot.mjs`) and the commit skill gate's per-session files (`skillGateDir()`). Never recompute those paths in another script, and never restate the
   platform rules in a doc — `docs/setup.md`'s `XWIKI_LLM_WORK` table row is the one human-readable copy,
   and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
   work directory". Run directly, the script prints that work root: that is how opencode gets it,
@@ -110,10 +113,11 @@ Inside `xwiki/`:
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
-  `xwiki-line-endings.js`, `xwiki-commit-text.js` and `xwiki-kb-pointers.js`, which port the
-  line-ending and commit/PR text guards and the KB pointer hooks to opencode and reuse
-  `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs` and `scripts/kb-hooks.mjs`
-  (each exports a shared function; run directly it is still the Claude/Kimi CLI hook). Each
+  `xwiki-line-endings.js`, `xwiki-commit-text.js`, `xwiki-commit-gates.js` and `xwiki-kb-pointers.js`,
+  which port the line-ending and commit/PR text guards, the commit gates and the KB pointer hooks to
+  opencode and reuse `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs`,
+  `scripts/check-diff.mjs` and `scripts/kb-hooks.mjs` (each exports a shared function; run directly it
+  is still the Claude/Kimi CLI hook). Each
   plugin's default export carries both APIs: `server` for opencode 1.x (`tool.execute.*` hooks) and
   `setup` for opencode 2.x (`ctx.tool.hook("execute.*")`), which refuses a module without it. opencode resolves the shared assets
   through the `XWIKI_LLM_HOME` env var (which points at the checkout), since it has no plugin

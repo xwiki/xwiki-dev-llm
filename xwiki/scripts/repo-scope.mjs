@@ -1,7 +1,8 @@
 // Which repos this plugin's always-on context applies to: those whose `origin` remote is in the
 // `xwiki` or `xwiki-contrib` GitHub org, or in an org the developer named in XWIKI_LLM_ORGS.
 // Personal repos and non-git directories are out of scope. Shared by the SessionStart hook, the
-// knowledge-base pointer hooks and their opencode wrapper, so the rule is written down once.
+// knowledge-base pointer hooks and their opencode wrapper, and the commit diff check, so the rule is
+// written down once.
 
 import { execFileSync } from "node:child_process";
 
