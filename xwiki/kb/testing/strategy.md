@@ -219,11 +219,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   effective metadata author only when the content is dirty. A change made only through objects
   dirties the metadata, so after one user saves a page and another modifies its objects, the content
   author is still the first user and only the metadata author is the second.
-- **An injected `Provider` names the exact registered role** — role types match exactly, so if the
-  code's provider does not return `@MockComponent SomeComponent<String> mock` (`@InjectMockComponents`
-  silently mocked the role it asks for), fix the production code: give the provider the role's type
-  arguments (`Provider<SomeComponent<String>>`). Only a role registered raw
-  (`@Component(roles = EditorWikiComponent.class)`) is injected raw, and then mocked raw.
+- **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked
+  the role the provider asks for, which differs from the registered one: fix the provider in the
+  production code ([[component-system]]), not the mock's type.
 - **A functional test is done once CI has proven it, not when its PR is merged** — a new or modified
   `*IT`, a flicker fix included, must have run and passed on CI on **every branch** it was merged or
   backported to, in N (default 3) builds of distinct commits containing the merge. What counts as
