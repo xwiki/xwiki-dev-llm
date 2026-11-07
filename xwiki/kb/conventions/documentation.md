@@ -245,9 +245,8 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   the shared one linked from both. Repeated **steps** are worth hunting first, because a step drags its
   screenshot with it and those copies drift apart while every page still passes its own checks.
 - When **no** restructure gives the shared content a page of its own (an info box, a warning, a short
-  procedure), make it a **content fragment** of the documentation page it belongs to and display it on the
-  others with the **"Content Fragment" macro** (`{{fragment reference="…" name="…"/}}`, Documentation
-  application 1.18+). Never a second copy, however short, and never a hidden page holding it: a hidden page
+  procedure), make it a **content fragment** of the documentation page it belongs to, displayed on the others
+  with the "Content Fragment" macro. Never a second copy, however short, and never a hidden page holding it: a hidden page
   still shows in the navigation and the search for users who display hidden pages. Mechanics:
   [[documentation-mechanics]].
 - **A How-to's intro is one short paragraph.** Anything that wants to be a second or trailing
@@ -406,7 +405,7 @@ Use the guide for the authoring rules, and that page for what each structure fie
   project's issue tracker in Related links. When the issue gets fixed, the link and the sentence it
   supports are updated or removed.
 - **Macros** — use the **code macro with an explicit `language` parameter** for code snippets
-  (omitting it is slower and mis-colors). Shared content goes through a **content fragment**, as above.
+  (omitting it is slower and mis-colors).
 - **Developer documentation is short** — short sentences, and not many of them in a row: developers
   scan, they don't read. Use bullet points when there are several items to explain, not by default.
   This holds on dev.xwiki.org and for any developer-facing text (a release-note entry included).

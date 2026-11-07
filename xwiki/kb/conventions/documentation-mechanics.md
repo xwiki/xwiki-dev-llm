@@ -113,8 +113,7 @@ Two traps:
 ## Content fragments (the `{{fragment}}` macro)
 
 [[documentation]] requires that shared content exist once and be displayed elsewhere rather than copied.
-Since Documentation application 1.18 the one copy is a **content fragment** held by the documentation page
-it belongs to; it replaced the hidden page displayed with `{{display}}`.
+The one copy is a **content fragment** (Documentation application 1.18+) held by the page it belongs to.
 
 - Stored as a `DocApp.Code.ContentFragmentClass` xobject on the page holding it: `name` (lowercase words
   separated by hyphens), `description`, `content`. The "Content Fragments" section of the page's edit form
@@ -123,5 +122,4 @@ it belongs to; it replaced the hidden page displayed with `{{display}}`.
   current page, and the macro also works inline, inside a paragraph.
 - It renders as part of the displaying page (its headings join that page's table of contents), with the
   rights of the author of the page holding it; the reader needs view right on that page.
-- Renaming either page updates the macro's `reference`. Remove the macros displaying a fragment before
-  removing it: they show an error once it is gone.
+- Remove the macros displaying a fragment before removing it: they show an error once it is gone.
