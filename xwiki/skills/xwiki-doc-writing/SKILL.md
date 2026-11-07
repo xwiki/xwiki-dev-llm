@@ -111,7 +111,7 @@ applies to everything a regex cannot decide.
    `kb/conventions/documentation.md` → *Content rules per type*.
 8. **Apply the style rules** — `"quotes"` for UI elements, uppercase-first XWiki terminology,
    `##literals##`, link-reference syntax (never hardcoded URLs), `{{scm}}` for GitHub files, the
-   code macro with an explicit `language`, the display macro to avoid duplication, and **no overused
+   code macro with an explicit `language`, a content fragment to avoid duplication, and **no overused
    em dashes** (use the comma, period, colon or parentheses the sentence needs; quoted text keeps its
    dashes).
 9. **Give the page something to look at, wherever it earns its place** — **screenshots** on

@@ -48,7 +48,7 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       within the page.
 - [ ] **No repeated entry step, one home per attachment** — sibling How-tos do not open with the same
       navigation step, and no attachment name is declared by two pages. The fix is a **visible** page the
-      others link to (here, its own How-to), not a hidden `{{display}}` fragment.
+      others link to (here, its own How-to), else a content fragment, never a hidden page.
 - [ ] **FAQ** — reader questions live in the FAQ field (1–2 sentence answers), not buried in steps;
       longer answers split into an Explanation page.
 - [ ] **Attachments** — kebab-case names with lowercase extensions; images use `{{image}}` with an

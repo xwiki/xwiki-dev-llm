@@ -6,13 +6,15 @@ summary: Where the xwiki.org Documentation application stores its data and how t
   LandingPageClass that landing pages carry instead of DocumentationClass and the audit trap it sets, how
   to read the checker's real findings instead of guessing at the red banner — including the ones that
   never become an object and show up only as an inline error box in the rendered page — how navigation
-  order is pinned via the parent space's WebPreferences page, and the hidden-fragment pattern behind the
-  {{display}} macro. The authoring *rules* live in [[documentation]]; the generic REST calls live in
+  order is pinned via the parent space's WebPreferences page, and how a content fragment is stored and
+  displayed (the `{{fragment}}` macro). The authoring *rules* live in [[documentation]]; the generic REST calls live in
   the `xwiki-rest-api` skill.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/create-documentation-page/page-structure/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationNavigationPanel/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/LandingPages/
+  - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/reuse-content-fragment/
+  - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/content-fragment-macro/
 ---
 
 # Programming against the xwiki.org documentation tree
@@ -108,14 +110,18 @@ Two traps:
   returns the children **in display order**. Reading the stored string back only proves it was stored.
   **The REST view of a tree is not the reader's view of it.**
 
-## Hidden fragment pages (the `{{display}}` pattern)
+## Content fragments (the `{{fragment}}` macro)
 
 [[documentation]] requires that shared content exist once and be displayed elsewhere rather than copied.
-The implementation: the fragment is an ordinary **hidden page nested inside one of the consuming pages**.
+Since Documentation application 1.18 the one copy is a **content fragment** held by the documentation page
+it belongs to; it replaced the hidden page displayed with `{{display}}`.
 
-- `hidden` is a plain page field, not an object — no extra xobject is needed to hide it.
-- A fragment carries **no** `DocumentationClass` / `DocumentationExtensionClass` objects: it is not a
-  documentation page in its own right and must not appear as one.
-- In `{{display reference="…"}}`, the reference takes **no `doc:` prefix**.
-- Displayed headings **keep their level** inside the host page's field, so author the fragment at the
-  level it will be consumed at.
+- Stored as a `DocApp.Code.ContentFragmentClass` xobject on the page holding it: `name` (lowercase words
+  separated by hyphens), `description`, `content`. The "Content Fragments" section of the page's edit form
+  adds and edits them, and its "Used in:" list shows the pages displaying each one.
+- Displayed with `{{fragment reference="<page holding it>" name="<name>"/}}`; `reference` defaults to the
+  current page, and the macro also works inline, inside a paragraph.
+- It renders as part of the displaying page (its headings join that page's table of contents), with the
+  rights of the author of the page holding it; the reader needs view right on that page.
+- Renaming either page updates the macro's `reference`. Remove the macros displaying a fragment before
+  removing it: they show an error once it is gone.

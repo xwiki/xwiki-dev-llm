@@ -10,8 +10,8 @@ summary: The rules for xwiki.org documentation — Diataxis page types & audienc
   and above all when the reader must edit or copy it,
   architecture/concept diagrams for Explanations, and when *not* to force a visual, how much belongs on
   one page (granularity, keeping verbosity low, a hub page routing rather than narrating, how
-  duplication is actually detected & why the surviving copy of shared content wants a visible page rather
-  than a hidden `{{display}}` fragment), the page-structure xobject fields (Highlights/More/Related and their exact
+  duplication is actually detected & where the one copy of shared content lives: a visible page,
+  else a content fragment, never a hidden page), the page-structure xobject fields (Highlights/More/Related and their exact
   semantics), documentation style (incl. never hard-wrapping prose and not overusing the em dash),
   attachment/image/video rules (incl. webm + the `{{embed}}` macro, what `caption` is and is *not*
   for, and drawing the red box as an overlay so no ancestor clips it),
@@ -243,14 +243,13 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   sibling How-to opens with becomes **its own How-to** ("Open the … Application") that each one links to
   from a single opening item; a page whose section is repeated elsewhere **splits into two smaller pages**,
   the shared one linked from both. Repeated **steps** are worth hunting first, because a step drags its
-  screenshot with it and those copies drift apart while every page still passes its own checks. The guide
-  states the avoid-duplication rule and gives `{{display}}` as its mechanism, but not this preference —
-  worth adding upstream.
-- When **no** restructure gives the shared content a page of its own and it genuinely must appear in two
-  places, use the **`{{display}}` macro**, not a
-  second copy — the shared text lives on a **hidden page nested inside one of the consuming pages** and
-  is displayed from the others. Never a second copy, however short. Mechanics (hiding the page, what
-  objects it must *not* carry, reference syntax, heading levels): [[documentation-mechanics]].
+  screenshot with it and those copies drift apart while every page still passes its own checks.
+- When **no** restructure gives the shared content a page of its own (an info box, a warning, a short
+  procedure), make it a **content fragment** of the documentation page it belongs to and display it on the
+  others with the **"Content Fragment" macro** (`{{fragment reference="…" name="…"/}}`, Documentation
+  application 1.18+). Never a second copy, however short, and never a hidden page holding it: a hidden page
+  still shows in the navigation and the search for users who display hidden pages. Mechanics:
+  [[documentation-mechanics]].
 - **A How-to's intro is one short paragraph.** Anything that wants to be a second or trailing
   paragraph is misplaced content, and each kind has a home: a **prerequisite** shrinks to one clause
   with a link, a **reader question** becomes a **FAQ** entry, the ***why*** goes to the Explanation.
@@ -407,8 +406,7 @@ Use the guide for the authoring rules, and that page for what each structure fie
   project's issue tracker in Related links. When the issue gets fixed, the link and the sentence it
   supports are updated or removed.
 - **Macros** — use the **code macro with an explicit `language` parameter** for code snippets
-  (omitting it is slower and mis-colors). Use the **display macro** to avoid duplicated content: put
-  repeated text/steps/images on a single hidden page and display it where needed.
+  (omitting it is slower and mis-colors). Shared content goes through a **content fragment**, as above.
 - **Developer documentation is short** — short sentences, and not many of them in a row: developers
   scan, they don't read. Use bullet points when there are several items to explain, not by default.
   This holds on dev.xwiki.org and for any developer-facing text (a release-note entry included).

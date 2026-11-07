@@ -266,7 +266,7 @@ and a link to its REST resource — feed that link back into use case 1 to fetch
 - URL-encode reserved characters in page/space names (a space name with a dot, `/`, space, etc.).
   `curl --data-urlencode` handles bodies; encode path segments yourself.
 - Editing **xwiki.org documentation** pages? The tree's own specifics — the `DocApp` xobjects, reading
-  the doc-quality checker's findings, navigation pinning, hidden `{{display}}` fragments — are in the
+  the doc-quality checker's findings, navigation pinning, content fragments — are in the
   KB's `conventions/documentation-mechanics.md`, not here. For more than a one-field edit, the
   `xwiki-doc-writing` skill ships a client and a publish/audit CLI in its `tools/` directory that
   already handle the traps below (session-bound token, read-back asserts) — prefer them over fresh
