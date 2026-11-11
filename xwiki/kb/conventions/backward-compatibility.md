@@ -3,9 +3,11 @@ title: Backward compatibility policy
 stability: durable
 summary: Revapi enforces binary/semantic compatibility of public APIs, though not uniformly per module;
   @Unstable marks not-yet-stable API with a max 1-cycle lifetime; evolve interfaces with default
-  methods, not new interfaces; main code never uses another project's `internal` packages.
+  methods, not new interfaces; main code never uses another project's `internal` packages; test
+  code, test frameworks and page objects are not API.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HBackwardCompatibility
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCodeThatIsNotAPI
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HPackagenames
 ---
 
@@ -27,6 +29,15 @@ code may only use the `internal` packages of its **own project** — xwiki-commo
 xwiki-platform count as one project and may use each other's. Anything else (a contrib extension) must
 not import theirs: when no public API covers the need, ask for one in the core project. Test code may
 use any `internal` class.
+
+## Test code is not API
+
+Test code (`src/test`, test-jars included), test frameworks (the `src/main` of modules meant to help
+write tests: `xwiki-commons-tool-test-*`, `xwiki-rendering-test`, `xwiki-platform-test-*`,
+`*-test-utils`…) and page objects (`*-test-pageobjects`) are not API: no `@Unstable`, no Revapi, no
+deprecation or legacy cycle, and changing them needs no JIRA issue. Contrib extensions use test
+frameworks and page objects, though: prefer deprecating over removing when it's cheap. They still carry
+`@since` ([[versioning]]).
 
 ## `@Unstable` annotation
 

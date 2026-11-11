@@ -258,8 +258,8 @@ xwiki-platform-<feature>/
       src/test/webapp/…         ← optional files overlaid onto the test WAR
 ```
 
-- **The `-test` parent** sets `xwiki.revapi.skip` and `xwiki.checkstyle.skip` to `true`: test
-  modules are not API.
+- **The `-test` parent** sets `xwiki.revapi.skip` to `true` (test modules are not API:
+  [[backward-compatibility]]) and usually `xwiki.checkstyle.skip` too.
 - **The `-test-docker` pom** — `jar` packaging, `<testSourceDirectory>src/test/it</testSourceDirectory>`,
   `maven-failsafe-plugin` declared in `<build><plugins>`, `xwiki.surefire.captureconsole.skip` set to
   `true`, test-scoped dependencies on `xwiki-platform-test-docker` and the feature's
