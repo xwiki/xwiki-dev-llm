@@ -53,9 +53,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   lifecycle, evolving an interface with default methods, and who may use `internal` packages.
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with and how to check them, injection, parsing XML.
-- **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
-  it does not return `null` for a `getLastError()` read-back) and takes arguments, and why an
-  existing signature cannot change.
+- **script-services** — writing a script service: its package (a non-internal `script` one, it is
+  API), errors (throw, the caller uses `#try()`), arguments, and why a signature cannot change.
 - **performance** — the memory rule for user-sized data: stream it, never buffer it.
 - **logging** — what to pass a log call and at which level, and why an explicit `toString()` is
   usually deliberate.
