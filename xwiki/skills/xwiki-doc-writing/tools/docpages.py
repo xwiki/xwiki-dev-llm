@@ -38,6 +38,11 @@ PIN_CLASS = 'XWiki.PinnedChildPagesClass'
 
 # Words that must not appear in a title: the page type and the audience are both carried by the
 # path and the badge already.
+# The block every bluegray diagram carries, read from the file the skills tell authors to paste —
+# a page and that file must stay byte-identical, or a palette revision quietly leaves pages behind.
+PALETTE = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'plantuml-accessible-palette.puml'), encoding='utf-8').read().strip()
+
 BANNED_IN_TITLE = [r'\bHow[- ]?to\b', r'\bTutorial\b', r'\bReference\b', r'\bExplanation\b',
                    r'\bfor (Developers|Administrators|Admins|Users)\b']
 
@@ -145,6 +150,14 @@ def lint(mod):
             cap = re.search(r'caption="([^"]*)"', attrs)
             if cap and re.search(r'\d+\.\d+', cap.group(1)):
                 problems.append(f'{name}: caption used for a version: {cap.group(1)!r}')
+
+        # `bluegray` alone fails WCAG AA (see tools/README.md), and nothing in the rendered page
+        # says so: light text on a light fill looks deliberate.
+        for body in diagram_bodies(p['content']):
+            if '!theme bluegray' in body and PALETTE not in body:
+                problems.append(f'{name}: bluegray diagram without the accessible palette, or '
+                                f'with an outdated copy of it — paste '
+                                f'tools/plantuml-accessible-palette.puml verbatim under !theme')
 
         referenced = set(re.findall(r'reference="([^"]+)"', strip_verbatim(p['content'])))
         declared = set(p['attachments'])
@@ -463,6 +476,14 @@ def verify(mod):
 
 
 INLINE_CODE = re.compile(r'\{\{code\b[^}]*\}\}.*?\{\{/code\}\}')
+
+
+def diagram_bodies(content):
+    """The bodies of the `{{plantuml}}` macros that render, for the checks that read them. One shown
+    as source inside a `{{code}}` block is an example, not a diagram, and carries no palette.
+    `live_diagrams` counts the same macros for `verify`, line by line, to survive an unclosed pair."""
+    return re.findall(r'\{\{plantuml\b[^}]*\}\}(.*?)\{\{/plantuml\}\}',
+                      re.sub(r'\{\{code\b[^}]*\}\}.*?\{\{/code\}\}', '', content, flags=re.S), re.S)
 
 
 def live_diagrams(content):
