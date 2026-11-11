@@ -50,7 +50,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **versioning** — which version string `@since` and `@Deprecated(since=…)` take, the version a
   change ships in on another branch, and an issue's affected version (JIRA and OpenProject).
 - **backward-compatibility** — what a public API may change, what Revapi checks, the `@Unstable`
-  lifecycle, evolving an interface with default methods, and who may use `internal` packages.
+  lifecycle, evolving an interface with default methods, who may use `internal` packages, and what
+  isn't API (test code).
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with and how to check them, injection, parsing XML.
 - **script-services** — writing a script service: its package (a non-internal `script` one, it is
