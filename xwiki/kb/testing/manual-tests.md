@@ -2,7 +2,7 @@
 title: Manual tests on test.xwiki.org — data model and automation status
 stability: durable
 summary: Where a manual test's steps, results and automation status are stored on test.xwiki.org, how
-  to find a release's runs, and which of the two automation flags to trust.
+  to find a release's runs, and which automation fields are deprecated.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy
   - https://github.com/xwiki-contrib/application-testreporting
@@ -27,6 +27,7 @@ automated: the "Manual tests migration strategy" section of the Manual Test Stra
 - **The current record is a `QA.AutomatedTestStatusClass` object** on the test page: `status`
   (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),
   `tests` (GitHub links to the automated tests) and `notes`.
-- **`QA.TestClass.automated` (yes/no) is the legacy flag**, which upstream still asks to update. The
-  two disagree on many tests, and most tests have no status object at all — so neither proves a test
-  is *not* automated: search the code for an existing test before writing one.
+- **`QA.TestClass.automated` and `automatedLinkSourceCode` are deprecated: never fill them**; record
+  automation only in the status object. They disagree with it on many tests, and most tests have no
+  status object at all — so neither proves a test is *not* automated: search the code for an
+  existing test before writing one.
