@@ -93,6 +93,8 @@ into one, the usual shape for a developer extension point ("Write a Macro in Jav
 
 ## Titles and page names
 
+Source: the guide's [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/).
+
 **Title rules depend on the type:**
 
 | Type | Title |
@@ -103,26 +105,23 @@ into one, the usual shape for a developer extension point ("Write a Macro in Jav
 | Explanation | **Does not** start with a verb; a phrase naming the subject, answering "why" — "Conflict Resolution" |
 
 An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title; the accepted
-words are listed on [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/).
+words are listed on that page.
 
 **Titles use English title case** — capitalise the significant words, not just the first:
-*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. Per the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
-page, which also lets a title be **more explicit than its page name** where readability requires it.
+*"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. A title may be
+**more explicit than its page name** where readability requires it.
 
 **Titles and page names must not contain the page type** — no "How to", "Explanation", "Reference",
 "Tutorial", etc. These are **reserved terms**: the type is already conveyed by the content, the
 structure and the badge, so repeating it is redundant. Nor may they repeat the **audience**: a topic
 page is titled just "AntiSpam" under `…admin.` *and* under `…dev.` — never "AntiSpam for Developers" —
-since the path and the badge already carry it. Per the guide's
-[Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)
-page.
+since the path and the badge already carry it.
 
 **Disambiguation is a parenthetical in the title, and is not added to the page name** — e.g. "All the
-Pages on the Wiki (for Administrators)". Same source page.
+Pages on the Wiki (for Administrators)".
 
 **Titles and page names must be understandable out of context** — a reader may arrive from a search
-result, a bookmark or a link, none of which carry the surrounding context. Same source page.
+result, a bookmark or a link, none of which carry the surrounding context.
 
 **Page-name rules** (the URL segment):
 
@@ -149,27 +148,17 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
 - **The last step shows the result, and showing it is mandatory.** A procedure that ends on the
   last action leaves the reader unable to tell whether it worked. Close with a step that *shows what
   they should now see* — "The macro is inserted in the page, as follows:" plus the screenshot (or the
-  code macro, when the result is text, or the produced output on a Developer page). Being a list step,
-  it breaks neither the one-short-intro nor the no-explanations-in-steps rule. A How-to stopping at
-  "Click Save" is incomplete, and no automatic check says so.
-- **Reference** — prefer **tables**, keep information concise; use **code examples** for API
-  references, documenting each element's parameters, types, supported/default values and return value.
-  The two halves of that sentence are not alternatives, and reading the second as licence to drop the
-  first is the observed failure: **a bare signature is a table *column*, not a code example**. Parameters,
-  types, defaults and return value are precisely what a row holds, so an API reference's members go in
-  **one table** (`|=Member |=Returns |=Default |=What it does`), and the code example is reserved for
-  something a cell cannot hold — a usage snippet, a builder call, a whole role interface. A **section per
-  member** (heading + signature + a line of prose, repeated) is the shape to avoid: it costs a page seven
-  screens to say what a seven-row table says in one, and it stays invisible to review because each section
-  reads fine on its own. It earns its place only when every section carries something no cell can hold, such
-  as a screenshot per option. Same defect, second shape: a `name: meaning` **bullet list** is a two-column
-  table written as prose. Both are flagged, advisory, by `docpages.py lint`.
+  code macro, when the result is text, or the produced output on a Developer page). No check catches its
+  absence.
+- **Reference** — prefer **tables**, keep it concise. An API reference's members go in **one table**
+  (`|=Member |=Returns |=Default |=What it does`): a bare signature is a *column*, not a code example,
+  which is kept for what a cell cannot hold (a usage snippet, a whole role interface). Avoid a section per
+  member (unless each holds something a cell cannot, such as a screenshot) and a `name: meaning` bullet
+  list — a table in disguise. `docpages.py lint` flags both, advisory.
 - **Explanation** — explain concepts, limitations, consequences, and background; link to the How-tos
   applying the concept and the References pinning down its details.
 - **A topic page** — top of a tree, with children — **must be an Explanation whose first sentence
   links to its Extensions-wiki page** (the one named by the tree's Technical ID).
-- **Several routes to one goal** (several installation methods, say) → **one How-to per route, plus an
-  Explanation above them** helping the reader choose.
 
 Source: the guide's
 [Apply Diataxis](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis/).
@@ -184,30 +173,20 @@ replace a paragraph:
   worth a **screenshot** — it beats a paragraph of "click the three-dot menu at the top right of the
   second panel". On a procedure this is per-step; see "Content rules per type" above.
 - **Developer pages: code examples.** A runnable snippet (script macro, Java API call, REST request,
-  configuration file) shows in five lines what a paragraph struggles to say. Use the code macro with an
-  explicit `language`.
+  configuration file) shows in five lines what a paragraph struggles to say.
 - **Explanation pages: a diagram, when there is a structure to show.** Four shapes need one: a
   **component structure** (the parts and what flows between them), a **request or data flow**, a
   **lifecycle or state machine**, and a **decision between alternatives**. Three do not: a risk or
   policy narrative, a page defining a single idea, and a FAQ-shaped page. Decide by shape, not by
   audience — but for a User audience draw it without technical vocabulary. Diagrams use the
-  **PlantUML macro with the `bluegray` theme** (see below), so the source stays editable in the page.
-- **Textual content is shown as a code macro, never as a screenshot of text.** The two bullets above
-  split by audience; this one overrides them, and it splits by **what is being shown**. A screenshot is
-  for a UI — a screen, a menu, a control the reader has to find. Anything that is itself text gets a
-  **code macro**: a configuration file, a command line, a log line, a query, a snippet. The rule bites
-  hardest when the reader has to **edit or copy** that text, which is the normal case for a
-  configuration file, because text can be selected out of a code block and cannot be selected out of an
-  image — a screenshot forces the reader to retype it by hand, and to retype it correctly from a
-  picture. A picture of text is also unsearchable, untranslatable, invisible to a screen reader, and
-  impossible to diff when the shipped default changes, so it rots silently. An Administrator How-to
-  whose steps edit `xwiki.properties` therefore carries code macros, even though its audience is one the
-  bullets above expect screenshots for. The screenshot is right only when the *point* is where the text
-  sits on screen rather than the text itself — and then the text still appears in a code macro nearby.
+  **PlantUML macro with the `bluegray` theme** (see below).
+- **Textual content is shown as a code macro, never as a screenshot of text**, whatever the audience: a
+  configuration file, a command line, a log line, a query, a snippet. The reader must be able to copy it,
+  and a picture of text is unsearchable, inaccessible and rots silently — so an Administrator How-to
+  editing `xwiki.properties` carries code macros. A screenshot is right only when the point is *where*
+  the text sits on screen, and the text then also appears in a code macro.
 - **Do not force it.** This is a strong default, not a checkbox: a short Explanation of a single concept,
-  a small Reference table, a FAQ-shaped page can be perfectly complete with no visual at all. A
-  decorative screenshot, a diagram of something that is not a structure, or a snippet added to satisfy
-  the rule each cost the reader attention and cost a maintainer an update. The test is **does it replace
+  a small Reference table, a FAQ-shaped page can be perfectly complete with no visual at all. The test is **does it replace
   or clarify something the prose does badly?** — if not, leave it out.
 - Screenshots have hard mechanical rules (mandatory `size`, capture width, red box, PNG, `{{image}}`
   + `alt`) — see "Attachments, images and videos" below. Those rules govern *how*; this section is the
@@ -222,11 +201,7 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
 
 ## How much belongs on one page
 
-- **A How-to is ONE procedure**: a single numbered list, **no level-2 sections**, and no explanatory
-  material inside the steps. Reader questions go to the **FAQ** field; the *why* goes to an
-  Explanation page. As an order of magnitude (indicative sizes observed on one refactored tree, **not**
-  limits): a leaf How-to came to a few thousand characters, under ten steps and **0 headings**; a hub
-  Explanation was somewhat shorter and carried no procedure at all.
+- **A How-to is ONE procedure**: a single numbered list, **no level-2 sections**.
 - **Two alternative procedures for the same goal are two How-tos**, with an **Explanation hub** above
   them that explains how to choose between them — e.g. several alternative ways to install or deploy
   something become one How-to each, under a single Explanation that compares them.
@@ -236,18 +211,11 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   the parent and the How-tos are its children. The guide's
   [Choose the Right Location](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/)
   does not state a rule either way.
-- **One fact lives on one page; every other page links to it.** A How-to's intro states the goal plus
-  the facts needed to follow the steps — never the *why*, which is the Explanation's job. Do not
-  copy-paste a paragraph, a FAQ entry or a step between pages, however short it is.
-- **Give the one copy a *visible* home before reaching for a hidden one.** The bullet above says what to
-  avoid; this one says where the surviving copy goes. A restructure that turns the shared material into a
-  page of the tree in its own right beats a hidden fragment: it is reachable from the navigation panel and
-  from search, it answers a reader goal on its own, and a later author cannot re-duplicate it by failing
-  to notice that it is shared. What the restructure is depends on the content — a navigation step every
-  sibling How-to opens with becomes **its own How-to** ("Open the … Application") that each one links to
-  from a single opening item; a page whose section is repeated elsewhere **splits into two smaller pages**,
-  the shared one linked from both. Repeated **steps** are worth hunting first, because a step drags its
-  screenshot with it and those copies drift apart while every page still passes its own checks.
+- **One fact lives on one page; every other page links to it.** Do not copy-paste a paragraph, a FAQ entry or a step between pages, however short it is.
+- **Give the one copy a *visible* home before reaching for a hidden one.** Restructure so the shared
+  material becomes a page of its own, reachable from navigation and search: a navigation step every
+  sibling How-to opens with becomes **its own How-to** ("Open the … Application") that each one links to;
+  a repeated section **splits into a shared page** linked from both.
 - When **no** restructure gives the shared content a page of its own (an info box, a warning, a short
   procedure), make it a **content fragment** of the documentation page it belongs to, displayed on the others
   with the "Content Fragment" macro. Never a second copy, however short, and never a hidden page holding it: a hidden page
@@ -301,9 +269,6 @@ itself (`GET /rest/wikis/xwiki/classes/DocApp.Code.DocumentationClass`) rather t
 | `type` | `tutorial` \| `howto` \| `reference` \| `explanation` |
 | `target` | `user` \| `administrator` \| `developer` (**`administrator`**, not `admin`) |
 
-There are only those four `type` values — in particular **there is no `troubleshooting` type**; a
-troubleshooting page is an **Explanation** (see "Troubleshooting pages" below).
-
 The fields:
 
 - **Content** — the main content for the page type. Additional headings go under it as level-2 (or
@@ -324,9 +289,8 @@ The fields:
   ** Description of the second page
   ```
   **Fill it only when a page has many children**, and then **only with a subset** — the "More" section
-  already lists every child, so highlighting all of them defeats the purpose (on one refactored tree the
-  hubs settled on 5 highlights out of 9 children, and 5 out of 7). A **leaf page's Highlights is empty**;
-  so is that of a page with one or a few children. Do not "fill Highlights everywhere".
+  already lists every child, so highlighting all of them defeats the purpose. A **leaf page's Highlights is
+  empty**; so is that of a page with one or a few children.
 
   Highlights are **recommended once a page has more than 15 child pages**, with a **maximum of 6**
   highlights — on documentation pages and landing pages alike. "Child pages", "rows of the automatic
@@ -346,12 +310,11 @@ The fields:
     within the same section.
   - **Labels are `<exact page title> (for <target>)`**, `<target>` being **plural**: Users, Administrators or
     Developers. A linked title already ending with its qualifier is the whole label.
-  - **After a restructure, re-check it.** Moving a page *in* under a hub turns it into a child, which
-    silently puts it in breach of the not-children rule inside that hub's `related` — the link still
-    resolves, so no broken-reference sweep can detect it. The check a restructure needs is not only
-    "does every reference still resolve?" but **"is every field still allowed to hold what it holds?"**
+  - **After a restructure, re-check it.** Moving a page *in* under a hub makes it a child, silently
+    breaking the not-children rule in that hub's `related`: the link still resolves, so no
+    broken-reference sweep detects it.
 - **Technical ID** — **every documentation page must be associated with an Extension**, and located
-  accordingly (see "Choose the right location" above); the Technical ID is that extension's id (or its
+  accordingly (see "Choose the right location" below); the Technical ID is that extension's id (or its
   NPM package), copied from the Extensions-wiki `ExtensionCode` xobject. The value is
   **prefixed by how the feature is distributed** — the bare `<groupId>:<artifactId>` is *not* the
   format:
@@ -364,9 +327,7 @@ The fields:
   extension with no page on the Extensions wiki is imported first, per
   [Link the Documentation Page to its Extension](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/).
   **Older pages carrying an unprefixed id are the non-conformant ones** — do not "fix" a prefixed id
-  to match them. The generic
-  [Apply Diataxis](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis/) page does
-  not state this xwiki.org-specific prefix; the authority is
+  to match them. Authority:
   [Page Structure on xwiki.org](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/documentation-xwiki-org/page-structure-xwikiorg/).
 
 The **Documentation application's own reference** for these fields is
@@ -413,8 +374,6 @@ Use the guide for the authoring rules, and that page for what each structure fie
 - **Developer documentation is short** — short sentences, and not many of them in a row: developers
   scan, they don't read. Use bullet points when there are several items to explain, not by default.
   This holds on dev.xwiki.org and for any developer-facing text (a release-note entry included).
-- **Never hard-wrap prose** — each paragraph and list item is one line; only `{{code}}` blocks keep
-  their line structure.
 - **Do not overuse the em dash (`—`)** — it is not a substitute for a comma, a period, a colon or
   parentheses. Use the mark the sentence actually needs; keep the em dash for a sharp interruption or
   a genuine aside. **Exception:** inside a direct quote, punctuation stays exactly as the quoted
@@ -424,7 +383,6 @@ Use the guide for the authoring rules, and that page for what each structure fie
 
 The guide's own page is
 [Working with Attachments](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/).
-These rules decide whether a page renders as intended, so they belong to authoring, not to clean-up:
 
 - **Attachment names follow the page-name rules** — kebab-case, and a **lowercase extension**:
   `Image.png` and `Image.PNG` are two different attachments with separate version histories. The
@@ -488,9 +446,7 @@ These rules decide whether a page renders as intended, so they belong to authori
 - **Videos: avoid them unless they carry real value** — they rot as the UI changes. When one is
   justified it is in **`webm`** format and it is **displayed with the `{{embed}}` macro**:
   `{{embed attachment="usage.webm" width="780"/}}`, which renders a real HTML5 player. **A video is
-  embedded, never linked.** Downgrading an embed to an `attach:` link — the tempting move when
-  converting an old page whose video you are re-encoding — loses the player, and nothing flags it:
-  the link resolves, the checker stays silent, and the page reads fine.
+  embedded, never linked:** an `attach:` link loses the player, and nothing flags it.
 - **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
   diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
   and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
@@ -591,8 +547,7 @@ Full signature (Documentation 1.7+, per
 - **Do not pin a version in prose unless it is load-bearing.** The test that separates the two cases:
   **does the sentence stay complete and true without the number?** If yes, the number is an incidental
   "what happens to be current" value — delete it. If no, it marks a real behavioural boundary — badge
-  it with `{{version}}`. This is what keeps the versioning rule above from colliding with the general
-  preference for writing from the latest version's perspective.
+  it with `{{version}}`.
 
 ## Saving changes: minor directly, major via a Change Request
 
@@ -615,22 +570,17 @@ page splits edits in two, and the split decides whether a Change Request is the 
 
 ## Handling the original page after migration
 
-Migrating old content is not done until the **source** page is handled — stripping its prose without
-deleting an extension page, deleting its leftover attachments, and triaging its backlinks. Those
-rules are in [[documentation-migration]]; they apply only to a migration, so they are not repeated
-here.
+A migration is not done until the **source** page is handled (prose, attachments, backlinks): see
+[[documentation-migration]].
 
 ## Deleting a page
 
-Whenever a page is **removed** — a superseded or duplicate page, an obsolete one, or a page you created
-earlier in the task and then decided against — **its backlinks are listed and handled first**, and
-relocating content is a **rename/move** rather than a delete-and-recreate. The rule and the procedure
-are in [[page-deletion]]; they are not doc-specific, so they are not repeated here.
+Before removing any page, even one you created earlier in the task, **list and handle its backlinks**;
+relocating content is a **rename/move**, not a delete-and-recreate. See [[page-deletion]].
 
 ## XWiki syntax traps that bite when authoring documentation
 
-All verified against rendered output on www.xwiki.org. Each one produces a *plausible-looking* page
-rather than an error, which is why they are worth listing.
+All verified on www.xwiki.org; each renders plausibly instead of failing.
 
 - **Newlines are significant.** A paragraph, a table row or a list item must be on **one single
   line** — never wrap for readability. A newline inside a paragraph splits it in two; inside a table
@@ -677,9 +627,7 @@ rather than an error, which is why they are worth listing.
   red link looks like an authoring mistake.
 - **A `url:` prefix on the link target does not mean "keep this a URL".** It reads like the writer
   declaring intent, but it is what the WYSIWYG editor emits when a URL is pasted, and it lands on
-  internal and external links indiscriminately — one design proposal carries 47 of them, and a FOSDEM
-  stand page 13 while its sibling pages from other years have none. Decide by the exception list above,
-  not by the prefix.
+  internal and external links alike. Decide by the exception list above, not by the prefix.
 - **Never escape the hashes of a monospace span.** `~#~#1/1~#~#` renders as a *literal* `##1/1##`.
   Plain `##1/1##` works fine, even directly after a sentence.
 - **Never put a bare URL in a heading** — the autolinker absorbs the trailing punctuation into the
