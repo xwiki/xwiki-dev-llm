@@ -232,25 +232,17 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   delete it, and do not "compress" it into a subordinate clause. Restating what the next section
   already says, motivating the feature at length, and describing what the reader can see on screen are
   the three that inflate a page most. Prefer a **screenshot or a code example** over a paragraph
-  wherever one will do (see "Every page shows something" above), a **table** over prose in a Reference
+  wherever one will do (see "Show, don't only tell" above), a **table** over prose in a Reference
   (see "Content rules per type" for the two prose shapes that hide a table), and a **link** over a summary.
-- **A hub page's job is to route, not to narrate.** An extension/topic landing page that explains the
-  feature in several paragraphs but never links to its own How-to, Reference and Explanation pages has
-  failed at the one thing it exists for. Every page it introduces is **named and linked** (in the prose,
-  in **Highlights**, or both); the prose around those links stays a short orienting sentence each.
-  Observed failure mode: an extension hub whose intro read as a mini-manual, with the pages documenting
-  each of its features reachable only through the automatic "More" table.
-- **Duplication is found by comparing pages, not by writing each one carefully.** Every page reads
-  fine on its own; that is exactly why the duplication survives. Before finishing a tree, put the
-  intros, the FAQ entries and the hub prose **side by side** and look for *the same fact stated
-  twice*, not for repeated wording — a re-phrased sentence is still a duplicate, and re-phrasing is
-  what makes it invisible. Observed on one refactored tree: "the paste plugin must be activated by an
-  administrator" appeared in **five** places (two How-to intros, two FAQ entries, one hub) in five
-  different phrasings, and a limitation ("Jira Cloud is not supported, because …") appeared verbatim
-  on both the user and the administrator hub. Give each recurring fact **one named home**, and
-  elsewhere state it as a clause with a link — or not at all. Line up the sibling How-tos' **step 1**
-  and the tree's **attachment names** as well as the prose: those two need no judgement, and are the
-  duplication a prose comparison never reaches.
+- **A hub page's job is to route, not to narrate.** Its children are reached through the automatic
+  **More** table and, for those readers should open first, **Highlights** with their one-line
+  description — never through a prose list ("See X and Y."), which repeats the More table without the
+  descriptions. The prose is a short orientation on the topic, not a mini-manual of its features.
+- **Duplication is found by comparing pages, not by writing each one carefully.** Before finishing a
+  tree, put the intros, the FAQ entries and the hub prose **side by side** and look for *the same fact*,
+  not the same wording — a re-phrased duplicate is the invisible one. Line up the sibling How-tos'
+  **step 1** and the tree's **attachment names** too: steps drag their screenshots along, and those copies
+  drift apart while every page passes its own checks.
 
 ## Page-structure fields
 
