@@ -202,8 +202,9 @@ only complete record of what the legacy page said — comparing legacy → new, 
   relationships between features; nothing was over-simplified into being wrong.
 - **Up to date** — no obsolete UI names, deprecated terminology, removed features, or references to
   unsupported versions survive; the `{{version}}` macro is used correctly.
-- **Diataxis respected** — each new page is exactly one type; no procedures inside an Explanation, no
-  conceptual essays inside a How-to, no configuration tables inside a Tutorial.
+- **Diataxis respected** — each new page is exactly one type, re-tested on the drafted page (the
+  How-to/Tutorial test in `documentation.md`); no procedures inside an Explanation, no conceptual essays
+  inside a How-to, no configuration tables inside a Tutorial.
 - **Placement & splitting** — content sits on the right page; a page covering several unrelated
   topics/goals should be split further; over-fragmented pages on one coherent topic should be merged.
 - **Nothing duplicated** — no fact appears on two of the new pages, or in both a page's intro and its

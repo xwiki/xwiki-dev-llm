@@ -62,7 +62,9 @@ Also verify by hand anything stored in **xproperties** rather than page content 
 
 When the goal is to **relocate** content, **rename/move the page instead of deleting and re-creating
 it**: there "Update links" is on by default and history is preserved. Delete is for content that is
-going away.
+going away. Over HTTP, rename with the UI's own action — `POST <page view URL>?xpage=rename&step=2` with
+`form_token`, `newWikiName`, `newSpaceName` (the parent, dotted), `newPageName`, `deep=true`,
+`updateLinks=true`, `autoRedirect=false`.
 
 ## Procedure
 

@@ -83,9 +83,13 @@ the type-grouped landing pages.
 | Type | Orientation | Purpose |
 |------|-------------|---------|
 | **How-to** | goal-oriented | directions to achieve a specific goal |
-| **Tutorial** | learning-oriented | a How-to applied to a concrete example; more specific / end-to-end |
+| **Tutorial** | learning-oriented | builds one concrete example, end to end |
 | **Reference** | information-oriented | technical description covering a topic extensively |
 | **Explanation** | understanding-oriented | discussion that answers "why" |
+
+**How-to or Tutorial:** if the steps only work by building the page's own example (its class, data,
+names), it is a Tutorial. Re-test the type on the drafted page: a worked example turns a planned How-to
+into one, the usual shape for a developer extension point ("Write a Macro in Java").
 
 ## Titles and page names
 
@@ -136,7 +140,7 @@ result, a bookmark or a link, none of which carry the surrounding context. Same 
 
 - **How-to / Tutorial** — every step **starts with a verb** and is an item of a **numbered list**.
   Do **not** add extra explanations inside the steps; reader questions and clarifications go in the
-  **FAQ** field instead. Tutorials may include short concrete examples.
+  **FAQ** field instead.
   Its **opening sentence** says what the reader will achieve and **links to a relevant Explanation**.
 - **Most steps carry a screenshot** — or a **code macro**, when what the step shows is itself text
   (see *Textual content is shown as a code macro* below). Skip only those a picture adds nothing to
@@ -536,13 +540,10 @@ it. For a conversion, the split into pages *is* that decision.
     `The tab uses the "Language" terminology ({{version before="16.10.12"}}Previously, the tab was using the "Locale" terminology{{/version}}).`
   - Skip the macro for trivial UI changes (no text changed, same behavior, same area) — it only
     clutters the page.
-- **Documenting a feature before it is released is accepted, and even desirable** — the documentation
-  is then ready on release day. The condition is that the unreleased content carries
-  `{{version since="…"}}`, so a reader on the current release knows it does not apply to them yet.
-  This also settles what "the perspective of the latest version" means when the newest UI ships in no
-  release yet: keep the **released** version as the baseline prose — which is also what the
-  screenshots can show — and badge the additions. Describing unreleased UI as if it were current is
-  the failure mode, not documenting it early.
+- **Documenting a feature before it is released is accepted, and even desirable** (ready on release
+  day), provided the unreleased content carries `{{version since="…"}}`. Keep the **released** version as
+  the baseline prose, which is also what screenshots can show, and badge the additions: describing
+  unreleased UI as if it were current is the failure mode.
 - **Version bounds** — for **XWiki itself**, only specify versions **at or after the LTS**, and only
   while that version is within the currently supported **LTS cycle**. For **extensions**, specify the
   **released version**. Per the guide's
