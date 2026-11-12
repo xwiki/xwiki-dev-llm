@@ -137,8 +137,9 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    illustrated to the new tree's standard, so carrying its images over is the floor, not the goal: the
    converted User/Administrator pages want **screenshots** of the UI they describe (re-captured on the
    local instance, since legacy ones show old skins), the Developer pages **code examples**, and an
-   Explanation you extracted about design/architecture a **PlantUML `bluegray` diagram** where the legacy
-   page described the structure in prose. Don't add a visual that clarifies nothing. Then, by the new
+   Explanation you extracted about design/architecture a **PlantUML `bluegray` diagram carrying
+   `xwiki-doc-writing/tools/plantuml-accessible-palette.puml`** where the legacy page described the
+   structure in prose. Don't add a visual that clarifies nothing. Then, by the new
    tree's rules — images and videos are content. Re-upload
    them under **kebab-case, lowercase-extension** names, insert images with `{{image}}` + `alt`, and
    **re-encode a video to `webm` and display it with `{{embed}}`**. When the legacy page *embedded* a

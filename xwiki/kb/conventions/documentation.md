@@ -488,7 +488,12 @@ These rules decide whether a page renders as intended, so they belong to authori
   converting an old page whose video you are re-encoding — loses the player, and nothing flags it:
   the link resolves, the checker stays silent, and the page reads fine.
 - **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
-  diagram, so the source stays in the page and stays editable.
+  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
+  and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
+  3.0:1, and 3:1 is the bar for large text, not for PlantUML's 12px. So `!theme bluegray` is always
+  followed, verbatim, by **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, which keeps
+  the XWiki blue; `docpages.py lint` fails a diagram without it, and that directory's README
+  explains the palette.
 - **Updating an attachment means re-uploading it under the same name**, which versions it — do not
   delete and re-add. The one place attachments *are* deleted is the original page after a migration
   (see [[documentation-migration]]).

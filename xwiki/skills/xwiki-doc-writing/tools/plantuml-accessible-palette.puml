@@ -1,0 +1,224 @@
+' ---- XWiki accessible diagram palette (WCAG 2.1 AA): paste verbatim under
+' !theme bluegray. Canonical copy: xwiki-doc-writing/tools/ in xwiki-dev-llm.
+skinparam activity {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+  StartColor #04538B
+  EndColor #04538B
+  BarColor #5A5A5A
+  DiamondBackgroundColor #F5F5F5
+  DiamondBorderColor #5A5A5A
+  DiamondFontColor #262626
+}
+skinparam state {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+  AttributeFontColor #FFFFFF
+  StartColor #04538B
+  EndColor #04538B
+}
+skinparam class {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+  HeaderBackgroundColor #0568AE
+  AttributeFontColor #FFFFFF
+  StereotypeFontColor #262626
+}
+skinparam object {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+  AttributeFontColor #FFFFFF
+  StereotypeFontColor #262626
+}
+skinparam participant {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam actor {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam component {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam collections {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam queue {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam stack {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+' database, control, entity, boundary and interface draw their label beside or
+' under the icon, on the page, in some diagram types: their text stays dark.
+skinparam database {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam control {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #262626
+}
+skinparam entity {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #262626
+}
+skinparam boundary {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #262626
+}
+skinparam usecase {
+  BackgroundColor #0568AE
+  BorderColor #034873
+  FontColor #FFFFFF
+  StereotypeFontColor #FFFFFF
+}
+skinparam card {
+  BackgroundColor #04538B
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #04538B
+  BorderColor #034873
+  FontColor #FFFFFF
+}
+skinparam storage {
+  BackgroundColor #8A4A00
+  BorderColor #8A4A00
+  FontColor #FFFFFF
+}
+skinparam agent {
+  BackgroundColor #8A4A00
+  BorderColor #8A4A00
+  FontColor #FFFFFF
+}
+skinparam interface {
+  BackgroundColor #A62222
+  BorderColor #A62222
+  FontColor #262626
+}
+skinparam node {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam cloud {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam artifact {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam file {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #5A5A5A
+  FontColor #262626
+  StereotypeFontColor #0568AE
+}
+skinparam folder {
+  BackgroundColor #F5F5F5
+  BorderColor #8A4A00
+  FontColor #8A4A00
+}
+skinparam frame {
+  BackgroundColor #F5F5F5
+  BorderColor #04538B
+  FontColor #04538B
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #0568AE
+  FontColor #262626
+}
+skinparam partition {
+  BackgroundColor #FFFFFF
+  BorderColor #0568AE
+  FontColor #0568AE
+}
+skinparam swimlane {
+  BorderColor #0568AE
+  TitleBackgroundColor #F5F5F5
+  TitleFontColor #0568AE
+}
+skinparam sequence {
+  BoxBackgroundColor #F5F5F5
+  BoxBorderColor #5A5A5A
+  BoxFontColor #262626
+  DelayFontColor #262626
+  GroupBorderColor #5A5A5A
+  GroupFontColor #262626
+  LifeLineBorderColor #5A5A5A
+  LifeLineBackgroundColor #F5F5F5
+  TitleFontColor #0568AE
+  StartColor #0568AE
+  EndColor #0568AE
+  BorderColor #0568AE
+}
+skinparam arrow {
+  Color #0568AE
+  FontColor #262626
+}
+skinparam legend {
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
+}
+skinparam stereotype {
+  CBackgroundColor #F5F5F5
+  CBorderColor #5A5A5A
+  ABackgroundColor #F5F5F5
+  ABorderColor #5A5A5A
+  IBackgroundColor #F5F5F5
+  IBorderColor #5A5A5A
+  EBackgroundColor #F5F5F5
+  EBorderColor #5A5A5A
+  NBackgroundColor #F5F5F5
+  NBorderColor #5A5A5A
+}
+skinparam ArrowColor #0568AE
+' titleFontColor only: the nested `skinparam title { BackgroundColor }` form
+' leaks its background onto every element in the diagram.
+skinparam titleFontColor #0568AE
+skinparam titleBorderColor #5A5A5A
+' Links otherwise take bluegray's white root colour, unreadable on a light fill.
+<style>
+  root {
+    HyperLinkColor #0568AE
+  }
+  element {
+    HyperLinkColor #FFFFFF
+  }
+  actor, artifact, boundary, cloud, control, database, entity, file, folder, frame, interface,
+  legend, node, package, rectangle {
+    HyperLinkColor #0568AE
+  }
+</style>
+' ---- end XWiki accessible diagram palette ----

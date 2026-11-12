@@ -1,9 +1,9 @@
 # Tools for authoring xwiki.org documentation
 
-Five scripts for the mechanical half of writing or converting a documentation tree: draft the pages
-as data, check them offline, publish them, prove what landed. The rules they enforce are the subset
-of `kb/conventions/documentation.md` a regex can decide — they replace the tedium, not the review
-checklist in `references/review-checklist.md`.
+Five scripts and one asset for the mechanical half of writing or converting a documentation tree:
+draft the pages as data, check them offline, publish them, prove what landed. The rules the scripts
+enforce are the subset of `kb/conventions/documentation.md` a regex can decide — they replace the
+tedium, not the review checklist in `references/review-checklist.md`.
 
 They exist because each of these steps has a failure mode that **passes silently**. Every rule below
 was added the first time it produced a defect on a live page.
@@ -15,6 +15,7 @@ was added the first time it produced a defect on a live page.
 | `docshot.sh` | Capture a screenshot at a `size` width with the mandatory red box, and check it. |
 | `checkredbox.py` | Prove each screenshot's red box is a closed rectangle. |
 | `docplan.py` | `status` \| `brief` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Also the plan bookkeeping of `xwiki-doc-export`. |
+| `plantuml-accessible-palette.puml` | Not a script: the colour block every diagram carries. See [below](#the-accessible-diagram-palette). |
 
 `xwiki-doc-export/tools/docexport.py` imports `xwikidoc.py` (it reads anonymously: without
 `XWIKI_USER`/`XWIKI_PASSWORD` a read goes out as Guest, a write still refuses) and drives `docplan.py`
@@ -177,6 +178,24 @@ the wrong part of the page. A region narrower than the target width is refused r
 into blur. `docshot.sh` runs `checkredbox.py` on the shot it just took whenever a box selector was
 given, so a capture reports its own verdict and a failed box stops the script — the point being that
 you never have to open the PNG to find out.
+
+## The accessible diagram palette
+
+`plantuml-accessible-palette.puml` is the colour block every `{{plantuml}}` diagram carries; why, and
+where it goes, is in `kb/conventions/documentation.md`. `lint` compares each page's copy with this
+file byte for byte, so revise it here and re-run the sweep rather than editing a page.
+
+Every fill is flat rather than a gradient, so each has one ratio instead of two. The main fill,
+`#0568AE` under white text, is bluegray's own `$INFO`, which keeps the XWiki blue. Keep every element
+type, including ones no page draws yet: an unstyled one falls back to the failing theme colours.
+
+An author-set colour (`package "X" #DDDDDD`) and a `@startditaa` diagram, which takes no
+`skinparam`, are outside it and have to be checked by hand.
+
+Do not factor the repeated hex into a `!procedure`: a `$proc()` call is valid only on its own line
+inside `skinparam x { ... }`, so the compact `skinparam component { $solid() }` form is a syntax
+error, and `-syntax` blames the line of the procedure *body*, not the call that broke it. The other
+traps are commented in the file, next to the lines they protect.
 
 ## Notes
 

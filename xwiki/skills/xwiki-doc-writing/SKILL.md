@@ -115,10 +115,11 @@ applies to everything a regex cannot decide.
    em dashes** (use the comma, period, colon or parentheses the sentence needs; quoted text keeps its
    dashes).
 9. **Give the page something to look at, wherever it earns its place** — **screenshots** on
-   User/Administrator pages, **code examples** on Developer pages, a **PlantUML `bluegray` diagram** on
-   an Explanation with a structure to show. **Never screenshot text**: a configuration file, a command,
-   a log line or a query goes in a **code macro**, whatever the page's audience. **Don't force it**: a
-   visual must replace or clarify something the prose does badly. Which page needs which, and why:
+   User/Administrator pages, **code examples** on Developer pages, a **PlantUML `bluegray` diagram
+   carrying `tools/plantuml-accessible-palette.puml`** on an Explanation with a structure to show.
+   **Never screenshot text**: a configuration file, a command, a log line or a query goes in a **code
+   macro**, whatever the page's audience. **Don't force it**: a visual must replace or clarify
+   something the prose does badly. Which page needs which, and why:
    `kb/conventions/documentation.md` → *Show, don't only tell*. Capture screenshots on the local
    instance agreed above, using the
    [Documentation Resources](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/)
