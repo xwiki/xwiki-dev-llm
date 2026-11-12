@@ -548,15 +548,15 @@ it. For a conversion, the split into pages *is* that decision.
   **released version**. Per the guide's
   [Versioning](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/) page, "The Version
   Macro" section.
-- **Maintenance** — remove content and version macros for **unsupported old versions**, and remove
-  obsolete macros once the referenced version is no longer relevant.
+- **Maintenance** — remove content and version macros for **unsupported old versions**, and obsolete
+  macros once their version no longer matters. Leave out, too, what rots unflagged on an upgrade without
+  the reader needing it: a bundled library's version ("Pygments 2.4.2"), a full copy of what it supports
+  (its style names), why it is pinned. Give an example or two and link the upstream list instead.
 - **The macro is the only form a version may take.** A version never appears on a page as bare text:
   not in prose, not in a cell, and above all **not as a `Since` (or `Version`, or `Available in`)
-  column in a reference table**. That column is the failure mode this rule exists to catch, because
-  an API reference makes it look natural — it is the Javadoc `@since` tag transcribed into a table,
-  and it defeats the macro on every count: it renders no badge, it survives every gardening pass
-  unnoticed, and a column has to be filled for *every* row, which is what drags pre-LTS versions back
-  onto the page. Badge the rows that need it and let the others carry nothing.
+  column in a reference table**. That column looks natural in an API reference (Javadoc `@since`
+  transcribed) but renders no badge, and filling it for *every* row drags pre-LTS versions back onto
+  the page. Badge the rows that need it and let the others carry nothing.
 - **A version below the LTS floor is deleted, not badged.** "At or after the LTS" is not a
   formatting rule to apply to the numbers you have, it decides whether the number appears at all: a
   member that has existed since before the current LTS cycle is simply documented, with no version
