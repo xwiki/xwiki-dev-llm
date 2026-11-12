@@ -33,6 +33,19 @@ import xwikidoc as x
 
 DOC_CLASS = 'DocApp.Code.DocumentationClass'
 EXT_CLASS = 'DocApp.Code.DocumentationExtensionClass'
+# Bundled-macro reference pages ("box" Macro, …) keep their body in this object, the page content
+# staying empty. A page dict carries it as `macro=dict(description=…, usage=…, parameters=…,
+# examples=…)`; lint reads those fields as if they were the content.
+MACRO_CLASS = 'DocApp.Code.RenderingMacroClass'
+MACRO_FIELDS = ('description', 'usage', 'parameters', 'examples')
+
+
+def lint_view(p):
+    if not p.get('macro'):
+        return p
+    v = dict(p)
+    v['content'] = '\n\n'.join([p['content']] + [p['macro'].get(k, '') for k in MACRO_FIELDS])
+    return v
 VIO_CLASS = 'DocApp.Code.DocumentationViolationClass'
 PIN_CLASS = 'XWiki.PinnedChildPagesClass'
 
@@ -65,6 +78,12 @@ def shots_dir(mod):
 
 
 INLINE_VERBATIM = re.compile(r'\{\{(code|plantuml)\b[^}]*\}\}.*?\{\{/\1\}\}')
+# An escaped call (`~{{code .../}}`) or a self-closing one opens no block.
+NON_OPENING_CALL = re.compile(r'~\{\{[^}]*\}\}|\{\{(code|plantuml)\b[^}]*/\}\}')
+# A self-closing `{{code .../}}` written as a sample inside a `{{code}}` block is parsed by XWiki as a
+# nested opener with no end: the outer block then swallows everything after it (checked on 18.9.0).
+CODE_BLOCK = re.compile(r'\{\{code\b[^}]*(?<!/)\}\}(.*?)\{\{/code\}\}', re.S)
+NESTED_SELF_CLOSING = re.compile(r'(?<!~)\{\{code\b[^}]*/\}\}')
 
 
 def strip_verbatim(text):
@@ -78,7 +97,7 @@ def strip_verbatim(text):
     there, and — worse — real defects on those lines hidden from every check."""
     out, inside = [], False
     for line in text.split('\n'):
-        bare = INLINE_VERBATIM.sub('', line)
+        bare = NON_OPENING_CALL.sub('', INLINE_VERBATIM.sub('', line))
         if re.search(r'\{\{(plantuml|code)\b', bare):
             inside = True
             out.append('')
@@ -97,10 +116,11 @@ def steps_of(content):
 
 def lint(mod):
     problems = []
+    all_pages = [lint_view(p) for p in mod.ALL]
     farm = ('www|extensions|dev|design|snippets|rendering|commons|contrib|cristal|test')
-    refs = {p['ref'] for p in mod.ALL}
-    hubs = {'.'.join(p['space'][:-1]) + '.WebHome' for p in mod.ALL} & refs
-    for p in mod.ALL:
+    refs = {p['ref'] for p in all_pages}
+    hubs = {'.'.join(p['space'][:-1]) + '.WebHome' for p in all_pages} & refs
+    for p in all_pages:
         name = p['ref']
 
         for field in ('content', 'faq', 'related'):
@@ -134,11 +154,35 @@ def lint(mod):
             problems.append(f'{name}: title carries the page type or the audience '
                             f'({", ".join(hits)}): {p["title"]!r}')
 
+        def texts(value):
+            if isinstance(value, str):
+                yield value
+            elif isinstance(value, dict):
+                for v in value.values():
+                    yield from texts(v)
+            elif isinstance(value, (list, tuple)):
+                for v in value:
+                    yield from texts(v)
+        seen_calls = set()
+        for text in texts(p):
+            for m in CODE_BLOCK.finditer(text):
+                for call in sorted(set(NESTED_SELF_CLOSING.findall(m.group(1))) - seen_calls):
+                    seen_calls.add(call)
+                    problems.append(f'{name}: self-closing {call!r} inside a {{{{code}}}} block is parsed as '
+                                    f'an unclosed nested macro — write it as {{{{code ...}}}}{{{{/code}}}} or '
+                                    f'show it inline as ##~{{{{code .../}}}}##')
+
         entries = len(re.findall(r'^== ', p['faq'], re.M))
         if entries > 5:
             problems.append(f'{name}: FAQ has {entries} entries (max 5)')
         if len(p['faq'].split('\n')) > 25:
             problems.append(f'{name}: FAQ is {len(p["faq"].split(chr(10)))} lines (max 25)')
+
+        # The xwiki.org checker reports two images with nothing but blank lines between them as an
+        # Error ("use the Gallery macro"): put them in a {{gallery}}, or give each one its own sentence.
+        for m in re.finditer(r'\{\{image ([^}]*)/\}\}\s*\{\{image\b', p['content']):
+            problems.append(f'{name}: consecutive images, use the Gallery macro or a sentence between '
+                            f'them: {m.group(1)[:70]}')
 
         for m in re.finditer(r'\{\{image ([^}]*)/\}\}', p['content']):
             attrs = m.group(1)
@@ -241,7 +285,7 @@ def lint(mod):
                 problems.append(f'{name}: reference states {max(runs)} members as a '
                                 f'`name: meaning` bullet list — that is a table')
 
-        if name in (p['ref'] for p in mod.ALL):
+        if name in (p['ref'] for p in all_pages):
             # A topic page is a top-level page: its parent is an audience page, i.e. the path is
             # documentation.<xs|extensions>.<audience>.<topic>. Read from the path, not from the page
             # set, so that a set holding one new page below an existing topic is not taken for one.
@@ -258,7 +302,7 @@ def lint(mod):
     # Cross-page checks. Both defects are invisible page by page — every page above passes on its own
     # — and both are decidable without reading a word of prose.
     firsts, owners = {}, {}
-    for p in mod.ALL:
+    for p in all_pages:
         steps = steps_of(p['content'])
         # Only a repeated opening step that carries its own screenshot is the defect: the one-line
         # link that replaces it is *meant* to read identically on every page.
@@ -363,6 +407,20 @@ def save(mod, only=None):
             st, again = x.get_object(x.WWW, ref, EXT_CLASS)
             if ((again or {}).get('id') or '') != p['ext']:
                 problems.append(f'{ref}: {EXT_CLASS}.id read-back mismatch')
+        if p.get('macro'):
+            mprops = {k: p['macro'].get(k, '') for k in MACRO_FIELDS}
+            if MACRO_CLASS not in have:
+                st, _, b = x.post_object(x.WWW, ref, MACRO_CLASS, mprops)
+                print('  RenderingMacroClass', st)
+                if st != 201:
+                    problems.append(f'{ref}: {MACRO_CLASS} -> {st} {b}')
+            st, got = x.get_object(x.WWW, ref, MACRO_CLASS)
+            for k, v in mprops.items():
+                if ((got or {}).get(k) or '') != v:
+                    x.put_property(x.WWW, ref, MACRO_CLASS, 0, k, v)
+                    st, again = x.get_object(x.WWW, ref, MACRO_CLASS)
+                    if ((again or {}).get(k) or '') != v:
+                        problems.append(f'{ref}: {MACRO_CLASS}.{k} read-back mismatch')
     return problems
 
 
@@ -430,6 +488,14 @@ def verify(mod):
         st, props = x.get_object(x.WWW, ref, EXT_CLASS)
         if ((props or {}).get('id') or '') != p['ext']:
             problems.append(f'{ref}: Technical ID is {(props or {}).get("id")!r}')
+        if p.get('macro'):
+            if counts.get(MACRO_CLASS) != 1:
+                problems.append(f'{ref}: {counts.get(MACRO_CLASS, 0)} RenderingMacroClass object(s)')
+            st, props = x.get_object(x.WWW, ref, MACRO_CLASS)
+            for k in MACRO_FIELDS:
+                cur = (props or {}).get(k) or ''
+                if cur != p['macro'].get(k, ''):
+                    problems.append(f'{ref}: macro.{k} mismatch (stored {len(cur)} chars)')
 
         # Checker surface 1: the violation objects the quality checker leaves on the page.
         for cn, n in objs:

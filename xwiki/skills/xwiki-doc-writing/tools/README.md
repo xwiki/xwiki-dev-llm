@@ -67,6 +67,11 @@ PIN = {f"{ROOT}.WebHome": ["configure-keywords", "delete-spam-pages-users"]}   #
 
 `highlights` defaults to `""` — it stays empty unless a page has enough children to need it.
 
+A bundled macro's reference page (such as `"box" Macro`) keeps an empty `content` and holds its body
+in a `DocApp.Code.RenderingMacroClass` object: give such a page `macro=dict(description=…, usage=…,
+parameters=…, examples=…)`. `lint` checks those fields as if they were the content, `save` creates and
+updates the object, and `verify` compares it with the draft.
+
 ## The steps
 
 ```bash
