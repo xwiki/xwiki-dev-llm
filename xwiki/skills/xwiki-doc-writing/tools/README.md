@@ -15,7 +15,7 @@ was added the first time it produced a defect on a live page.
 | `docshot.sh` | Capture a screenshot at a `size` width with the mandatory red box, and check it. |
 | `checkredbox.py` | Prove each screenshot's red box is a closed rectangle. |
 | `docplan.py` | `status` \| `brief` \| `next` \| `start` \| `done` over a conversion's `PLAN.md`. Also the plan bookkeeping of `xwiki-doc-export`. |
-| `plantuml-accessible-palette.puml` | Not a script: the colour block every `{{plantuml}}` diagram carries under its `!theme bluegray` line. See [below](#the-accessible-diagram-palette). |
+| `plantuml-accessible-palette.puml` | Not a script: the colour block every diagram carries. See [below](#the-accessible-diagram-palette). |
 
 `xwiki-doc-export/tools/docexport.py` imports `xwikidoc.py` (it reads anonymously: without
 `XWIKI_USER`/`XWIKI_PASSWORD` a read goes out as Guest, a write still refuses) and drives `docplan.py`
@@ -181,27 +181,21 @@ you never have to open the PNG to find out.
 
 ## The accessible diagram palette
 
-`plantuml-accessible-palette.puml` is pasted **verbatim** under the `!theme bluegray` line of every
-`{{plantuml}}` diagram — `lint` fails a page whose block differs from this file by a byte, so revise
-it here and re-run the sweep rather than editing a page. `bluegray` alone draws light text on light
-fills in every diagram type it renders: `#D2D2D2` on `#33B2E2` is 1.61:1, and the ordinary
-white-on-`#009FDB` box is 3.01:1 — which looks fine and is not, since 3:1 is the bar for 24px text
-and these labels are 12px.
+`plantuml-accessible-palette.puml` is the colour block every `{{plantuml}}` diagram carries; why, and
+where it goes, is in `kb/conventions/documentation.md`. `lint` compares each page's copy with this
+file byte for byte, so revise it here and re-run the sweep rather than editing a page.
 
-Every fill in it is flat rather than a gradient, so each has one ratio instead of two. `#0568AE`
-(white on it, 5.84:1) is bluegray's own `$INFO`, which is why the diagrams still read as XWiki blue;
-`#034873` borders are 9.64:1 on the page, `#262626` on `#F5F5F5` is 13.88:1. Lowest ratio anywhere:
-5.21:1.
+Every fill is flat rather than a gradient, so each has one ratio instead of two. The main fill,
+`#0568AE` under white text, is bluegray's own `$INFO`, which keeps the XWiki blue. Keep every element
+type, including ones no page draws yet: an unstyled one falls back to the failing theme colours.
 
-It covers what the theme colours, and only that. An author-set colour — `package "X" #DDDDDD` — and
-a `@startditaa` diagram, which takes no `skinparam` at all, are outside it and have to be checked by
-hand. It styles ~30 element types because bluegray does: trimming it to the types the documentation
-uses today saves 75 lines and breaks the first author who draws an untouched one.
+An author-set colour (`package "X" #DDDDDD`) and a `@startditaa` diagram, which takes no
+`skinparam`, are outside it and have to be checked by hand.
 
 Do not factor the repeated hex into a `!procedure`: a `$proc()` call is valid only on its own line
 inside `skinparam x { ... }`, so the compact `skinparam component { $solid() }` form is a syntax
-error — and `-syntax` blames the line of the procedure *body*, not the call that broke it. The two
-other traps it survives are commented in the file, next to the lines they protect.
+error, and `-syntax` blames the line of the procedure *body*, not the call that broke it. The other
+traps are commented in the file, next to the lines they protect.
 
 ## Notes
 

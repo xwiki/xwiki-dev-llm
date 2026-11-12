@@ -187,8 +187,7 @@ replace a paragraph:
   **lifecycle or state machine**, and a **decision between alternatives**. Three do not: a risk or
   policy narrative, a page defining a single idea, and a FAQ-shaped page. Decide by shape, not by
   audience — but for a User audience draw it without technical vocabulary. Diagrams use the
-  **PlantUML macro with the `bluegray` theme + the accessible palette** (see below), so the source
-  stays editable in the page.
+  **PlantUML macro with the `bluegray` theme** (see below), so the source stays editable in the page.
 - **Textual content is shown as a code macro, never as a screenshot of text.** The two bullets above
   split by audience; this one overrides them, and it splits by **what is being shown**. A screenshot is
   for a UI — a screen, a menu, a control the reader has to find. Anything that is itself text gets a
@@ -489,13 +488,12 @@ These rules decide whether a page renders as intended, so they belong to authori
   converting an old page whose video you are re-encoding — loses the player, and nothing flags it:
   the link resolves, the checker stays silent, and the page reads fine.
 - **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
-  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**:
-  it draws light text on light fills in every diagram type, and nothing flags it because the result
-  looks deliberate — measured November 2026, 1126 of 1662 text runs failed 1.4.3 on 57 of 63 live
-  pages, worst 1.61:1. So every diagram also carries
-  **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, pasted verbatim immediately under
-  its `!theme bluegray` line, which clears both criteria and keeps the XWiki blue; `docpages.py
-  lint` fails a page that is missing it. That tool directory's README is where it is explained.
+  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
+  and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
+  3.0:1, and 3:1 is the bar for large text, not for PlantUML's 12px. So `!theme bluegray` is always
+  followed, verbatim, by **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, which keeps
+  the XWiki blue; `docpages.py lint` fails a diagram without it, and that directory's README
+  explains the palette.
 - **Updating an attachment means re-uploading it under the same name**, which versions it — do not
   delete and re-add. The one place attachments *are* deleted is the original page after a migration
   (see [[documentation-migration]]).

@@ -116,10 +116,10 @@ applies to everything a regex cannot decide.
    dashes).
 9. **Give the page something to look at, wherever it earns its place** — **screenshots** on
    User/Administrator pages, **code examples** on Developer pages, a **PlantUML `bluegray` diagram
-   carrying `tools/plantuml-accessible-palette.puml`** (the theme alone fails WCAG AA) on an
-   Explanation with a structure to show. **Never screenshot text**: a configuration file, a command,
-   a log line or a query goes in a **code macro**, whatever the page's audience. **Don't force it**: a
-   visual must replace or clarify something the prose does badly. Which page needs which, and why:
+   carrying `tools/plantuml-accessible-palette.puml`** on an Explanation with a structure to show.
+   **Never screenshot text**: a configuration file, a command, a log line or a query goes in a **code
+   macro**, whatever the page's audience. **Don't force it**: a visual must replace or clarify
+   something the prose does badly. Which page needs which, and why:
    `kb/conventions/documentation.md` → *Show, don't only tell*. Capture screenshots on the local
    instance agreed above, using the
    [Documentation Resources](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/)
@@ -129,8 +129,8 @@ applies to everything a regex cannot decide.
    `{{image}}` macro with an `alt` and the mandatory `size`, **framed on the element plus the nearest
    landmark that locates it** and cropped to exactly that size's pixel width, with a red
    (`255, 0, 0`) box around the element concerned, **videos in `webm` displayed with the
-   `{{embed}}` macro and never as a link**, Gallery for several images, PlantUML (`bluegray` plus
-   the palette) for diagrams. See `kb/conventions/documentation.md`.
+   `{{embed}}` macro and never as a link**, Gallery for several images, PlantUML (`bluegray`) for
+   diagrams. See `kb/conventions/documentation.md`.
 11. **Respect version perspective** — write for the latest version; use `{{version}}` (with `before`
     for changed behavior) only for genuine new/changed behavior. A version is **only ever** a
     `{{version}}` badge, never bare text and never a table column; and only versions **at or after the

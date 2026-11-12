@@ -1,8 +1,5 @@
-' ---- XWiki accessible diagram palette — WCAG 2.1 AA --------------------
-' Paste verbatim under !theme bluegray, which alone draws light text on light
-' fills, down to 1.61:1. Edit only the canonical copy — xwiki-doc-writing/
-' tools/ in the xwiki-dev-llm plugin — and read its README first: the colour
-' choices, what this does not cover, and the traps it has to survive are there.
+' ---- XWiki accessible diagram palette (WCAG 2.1 AA): paste verbatim under
+' !theme bluegray. Canonical copy: xwiki-doc-writing/tools/ in xwiki-dev-llm.
 skinparam activity {
   BackgroundColor #0568AE
   BorderColor #034873
@@ -67,25 +64,27 @@ skinparam stack {
   BorderColor #034873
   FontColor #FFFFFF
 }
+' database, control, entity, boundary and interface draw their label beside or
+' under the icon, on the page, in some diagram types: their text stays dark.
 skinparam database {
-  BackgroundColor #0568AE
-  BorderColor #034873
-  FontColor #FFFFFF
+  BackgroundColor #F5F5F5
+  BorderColor #5A5A5A
+  FontColor #262626
 }
 skinparam control {
   BackgroundColor #0568AE
   BorderColor #034873
-  FontColor #FFFFFF
+  FontColor #262626
 }
 skinparam entity {
   BackgroundColor #0568AE
   BorderColor #034873
-  FontColor #FFFFFF
+  FontColor #262626
 }
 skinparam boundary {
   BackgroundColor #0568AE
   BorderColor #034873
-  FontColor #FFFFFF
+  FontColor #262626
 }
 skinparam usecase {
   BackgroundColor #0568AE
@@ -116,7 +115,7 @@ skinparam agent {
 skinparam interface {
   BackgroundColor #A62222
   BorderColor #A62222
-  FontColor #FFFFFF
+  FontColor #262626
 }
 skinparam node {
   BackgroundColor #F5F5F5
@@ -209,13 +208,17 @@ skinparam ArrowColor #0568AE
 ' leaks its background onto every element in the diagram.
 skinparam titleFontColor #0568AE
 skinparam titleBorderColor #5A5A5A
-' Links inside a label or a title otherwise inherit the theme's white root colour.
+' Links otherwise take bluegray's white root colour, unreadable on a light fill.
 <style>
   root {
     HyperLinkColor #0568AE
   }
   element {
     HyperLinkColor #FFFFFF
+  }
+  actor, artifact, boundary, cloud, control, database, entity, file, folder, frame, interface,
+  legend, node, package, rectangle {
+    HyperLinkColor #0568AE
   }
 </style>
 ' ---- end XWiki accessible diagram palette ----
