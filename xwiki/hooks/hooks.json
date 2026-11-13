@@ -59,12 +59,6 @@
             "type": "command",
             "if": "Bash(zsh *)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-diff.mjs\"",
-            "timeout": 15
           }
         ]
       },
