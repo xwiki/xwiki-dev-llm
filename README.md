@@ -258,5 +258,6 @@ locally instead.
 ## Contributing
 
 Keep committed content **minimal and generic** — no personal paths, machine state, or secrets — and
-review the conventions and skills periodically. Issues and changes are discussed on the
+review the conventions and skills periodically. To show what a change to the KB, a hook or a skill
+does for an agent, measure it against `master` with the benchmark in [`eval/`](eval/README.md). Issues and changes are discussed on the
 [XWiki forum](https://forum.xwiki.org/) and tracked in [JIRA](https://jira.xwiki.org/).

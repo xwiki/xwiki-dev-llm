@@ -1,0 +1,328 @@
+[
+  {
+    "id": "c01",
+    "group": "c",
+    "task": "The master build fails on the Revapi check of xwiki-platform-extension-script, reporting as removed the oldcore methods that were moved to xwiki-platform-legacy-oldcore (e.g. getLocalReferenceMaxLength()). Fix it — moving to legacy is not supposed to break any API.",
+    "repo": "xwiki-platform",
+    "base": "cbe6f7d9b42ef68f3caebe304bf4a8f349a63ce3",
+    "cwd": "xwiki-platform-core",
+    "gold": {
+      "checklist": [
+        "No additional per-method `java.method.removed` Revapi ignore is added: the methods still exist through xwiki-platform-legacy-oldcore, so the fix is in the Revapi configuration",
+        "xwiki-platform-oldcore is excluded from the Revapi analysis of dependent modules in xwiki-platform-core/pom.xml (archive exclusions; its API is checked by xwiki-platform-legacy-oldcore), and the now-useless per-method 'moved to legacy' ignores are removed",
+        "A pom comment explains why oldcore is excluded (dependent modules see the non-woven oldcore jar, without the legacy aspects)"
+      ]
+    },
+    "source": "163813eb"
+  },
+  {
+    "id": "c02",
+    "group": "c",
+    "task": "Fix XWIKI-6688 (possible race condition when clicking on a tab at the bottom of a page in view mode): the slow-loading tab can steal the display from the tab clicked afterwards. Fix it in the product (xwiki.js) rather than with waits in the tests, and prove it with a Docker functional test in DocExtraTabsIT.",
+    "repo": "xwiki-platform",
+    "base": "ff28aac78054201be4ed5f8ed97a0551d290447d",
+    "gold": {
+      "checklist": [
+        "The race is fixed in production code (xwiki.js), not with waits in tests; existing test waits that only worked around XWIKI-6688 are dropped",
+        "If a test page runs a script macro (e.g. groovy to slow a tab down), it gets programming rights through the @UITest annotation (properties = xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=...), with a pattern that also matches the test when it runs nested in AllIT (e.g. `.*:.*DocExtraTabsIT\\..*`, not `.*:DocExtraTabsIT\\..*`)",
+        "No getDriver() call in the IT class: the interactions (start opening a pane, wait for its content) are page-object methods (e.g. on ViewPage)"
+      ]
+    },
+    "source": "da6b687d"
+  },
+  {
+    "id": "c03",
+    "group": "c",
+    "task": "Convert the manual test \"Insert Info Macro in CKEditor\" (XWIKI-25074) to an automated Docker functional test in the CKEditor test module.",
+    "repo": "xwiki-platform",
+    "base": "9d992e7e94bec6d3c6f522ef4a7f2a12063baa04",
+    "cwd": "xwiki-platform-core/xwiki-platform-ckeditor/xwiki-platform-ckeditor-test",
+    "gold": {
+      "checklist": [
+        "The IT does not know the HTML/JS: no raw By.cssSelector (e.g. \".box.infomessage …\") in the test or passed from the test to page objects; a page object (e.g. a MessageBoxElement / ViewPage method) encapsulates it",
+        "Page-object actions do all the waits they can: the info-box insertion method waits for its outcome itself instead of the test calling textArea.waitUntilTextContains(...)",
+        "Waits following a page-object action (e.g. waitForContentRefresh() after macroEditModal.clickSubmit()) are inside the page-object method, not left in the test"
+      ]
+    },
+    "source": "a2350ad6-a"
+  },
+  {
+    "id": "c04",
+    "group": "c",
+    "task": "Port the JUnit 4 SkinxTest (xwiki-platform-distribution-flavor-test-ui) to the skin Docker tests as a JUnit 5 @UITest (SkinExtensionIT), and delete the old test.",
+    "repo": "xwiki-platform",
+    "base": "f26c699542dc72626aca83d5c3b8b1825aa639d4",
+    "cwd": "xwiki-platform-core/xwiki-platform-skin/xwiki-platform-skin-test/xwiki-platform-skin-test-docker",
+    "gold": {
+      "checklist": [
+        "No getDriver() (nor By/WebElement) usage in the IT test class",
+        "No JavaScript in the test class: the test checks the visible result of a sample skin extension (e.g. via ViewPage.getContent()) rather than inspecting script tags",
+        "No page-object class is introduced for non-visible <head> content: page objects represent UI",
+        "The test-only conversion (no product change) is a [Misc] commit"
+      ]
+    },
+    "source": "ef5562c9"
+  },
+  {
+    "id": "c05",
+    "group": "c",
+    "task": "Fix XWIKI-24632 (the MySQL/MariaDB table row format can be updated in the wrong database). A reviewer of an earlier attempt said a unit test pinning the SQL statement is not very useful. Prove the fix with an integration test in xwiki-platform-wiki-test-docker that checks the actual ROW_FORMAT of the wiki created by WikiManagerRestIT.",
+    "repo": "xwiki-platform",
+    "base": "6cf8b0db2c6516390e152391105553b5b3e32270",
+    "gold": {
+      "checklist": [
+        "AllIT keeps a bare @UITest with no parameters: configuration (properties, extra JARs) goes on the nested test classes, from which it is inherited (leaving AllIT untouched and bare fully respects this point)",
+        "The fix is verified by a Docker integration test checking the real ROW_FORMAT, not only by a unit test asserting the SQL text",
+        "A test page that executes a groovy script gets programming rights through the test.prchecker.excludePattern property in the @UITest configuration",
+        "The IT asserts on the wiki WikiManagerRestIT actually creates (`foo`) and reads the row format through production code (e.g. MySQLHibernateAdapter) so MySQL vs MariaDB differences are handled"
+      ]
+    },
+    "source": "ca2899a0"
+  },
+  {
+    "id": "c06",
+    "group": "c",
+    "task": "SonarQube reports that the `ch >= 0x10000` comparison in WikiPageUtil#isValidXmlNameStartChar(char, boolean) can never hold. Fix it properly by introducing a new code-point (int) based API for isValidXmlNameChar/isValidXmlNameStartChar, deprecating the char signatures and moving them to legacy. Then create a PR.",
+    "repo": "xwiki-rendering",
+    "base": "6aa2e57cc0ffd75951246308600cfdfa0fb39844",
+    "cwd": "xwiki-rendering-wikimodel",
+    "gold": {
+      "checklist": [
+        "The javadoc @deprecated text carries no version; the version is only in @Deprecated(since = \"X.Y.ZRC1\")",
+        "The new public int-based methods carry @Unstable and an @since of the next release (18.8.0RC1)",
+        "The char overloads are removed from xwiki-rendering-wikimodel and re-added through an AspectJ compatibility aspect in a new xwiki-rendering-legacy-wikimodel module registered in xwiki-rendering-legacy/pom.xml",
+        "The final message flags the companion xwiki-platform change: xwiki-platform-distribution-war-legacydependencies must add the new legacy-wikimodel artifact and exclude/ban the plain xwiki-rendering-wikimodel jar",
+        "No Revapi ignore is added for the char signatures moved to legacy: the legacy module's Revapi checks the woven jar"
+      ]
+    },
+    "source": "aef727e7"
+  },
+  {
+    "id": "c07",
+    "group": "c",
+    "task": "(XWiki)Document#getLocalReferenceMaxLength() isn't related to a specific document (it's a store limit). Introduce XWiki#getDocumentLocalReferenceMaxLength(XWikiContext) with a script-side equivalent, migrate the callers, and deprecate the old methods and move them to legacy. Create the JIRA issue and the PR.",
+    "repo": "xwiki-platform",
+    "base": "9262ec5c3778f029213ea0500f56dcfbc8fee1c2",
+    "cwd": "xwiki-platform-core/xwiki-platform-oldcore",
+    "gold": {
+      "checklist": [
+        "The deprecated XWikiDocument/Document methods are removed from oldcore and re-added in xwiki-platform-legacy-oldcore compatibility aspects (*CompatibilityAspect.aj), not left in place nor deleted",
+        "Old methods use @Deprecated(since = \"<current version>\") and a javadoc @deprecated without a version, pointing to the replacement",
+        "New methods on XWiki and api.XWiki carry @since; api.XWiki delegates to the same-named XWiki method",
+        "Internal callers, Java and Velocity (e.g. CreateActionRequestHandler, createinline.vm), are migrated to the new API",
+        "Moving to legacy is not treated as an API break: no java.method.removed Revapi ignores are added for the moved methods"
+      ]
+    },
+    "source": "af98f7c5"
+  },
+  {
+    "id": "c08",
+    "group": "c",
+    "task": "Fix the raw type issues on ResourceReferenceHandler (e.g. Comparable<ResourceReferenceHandler> / raw usages) in all places where it is used, provided there's no backward compatibility problem. Commit using a [Misc] and create a PR.",
+    "repo": "xwiki-platform",
+    "base": "87ee0d61525fea6c6821c820f806989e74d8f135",
+    "cwd": "xwiki-platform-core/xwiki-platform-resource/xwiki-platform-resource-api",
+    "gold": {
+      "checklist": [
+        "The generic change keeps the erasure identical so already-compiled handlers keep working (binary compatibility)",
+        "Any Revapi ignore for this non-breaking change uses <criticality>allowed</criticality> (not highlight) with a justification",
+        "Revapi ignores go in xwiki-platform-core/pom.xml",
+        "Commit message prefixed [Misc] (no JIRA issue for a type cleanup)"
+      ]
+    },
+    "source": "cc0890e3"
+  },
+  {
+    "id": "c09",
+    "group": "c",
+    "task": "Fix the SonarQube issues (java:S1123) about missing @Deprecated annotations on elements that only have a javadoc @deprecated tag in xwiki-platform: ViewrevAction, PackageAPI, XWikiCacheStore, EntityJobStatus and DomainObjectFactory#createClass. [Misc] PR.",
+    "repo": "xwiki-platform",
+    "base": "b3ae6bfa10d97c010798eab2fe8823549c2f8b1e",
+    "gold": {
+      "checklist": [
+        "No class-level @Deprecated is added on the script-exposed PackageAPI ($xwiki.package): XWiki's DeprecatedCheckUberspector would log a warning on every Velocity call (importinline.vm/imported.vm); the javadoc tag stays and the Sonar issue is accepted",
+        "A deprecation done on several branches lists all versions comma-separated in the annotation (\"since 10.2 and 9.11.4\" becomes @Deprecated(since = \"10.2,9.11.4\"))",
+        "The version moves from the javadoc @deprecated text into the annotation's since attribute; the javadoc keeps only the replacement hint"
+      ]
+    },
+    "source": "b6cec21e"
+  },
+  {
+    "id": "c10",
+    "group": "c",
+    "task": "Instead of suppressing the java:S107 (too many parameters) Sonar findings on internal REST code, fix them: remove the deprecated DomainObjectFactory#createObject and #createObjectSummary and migrate their callers. Do it in a [Misc] PR by itself so it's easy to merge.",
+    "repo": "xwiki-platform",
+    "base": "edf22bbff091a7ca549a6be44506faffd047945b",
+    "cwd": "xwiki-platform-core/xwiki-platform-rest/xwiki-platform-rest-server",
+    "gold": {
+      "checklist": [
+        "No @SuppressWarnings(\"java:S107\") is added: the API is fixed instead",
+        "The deprecated methods, being in an `internal` package (not public API), are deleted outright with their callers migrated: no -legacy move, no Revapi ignore",
+        "No published (non-internal) API signature is changed in place",
+        "Commit message prefixed [Misc], no JIRA issue"
+      ]
+    },
+    "source": "5eea4fe9"
+  },
+  {
+    "id": "c11",
+    "group": "c",
+    "task": "SonarQube is choking on java:S5961 ('reduce the number of assertions from 28 to less than 25') for DefaultJobExecutorTest#matchingGroupPathAreBlockedPoolMultiSizeParentFirst, which is currently suppressed. Make the test readable and remove the java:S5961 suppression without dropping assertions that check the job state machine. Fix it on top of the existing PR branch (the current HEAD).",
+    "repo": "xwiki-commons",
+    "base": "65004150b52802b1a23e25a5c71617f553a734e4",
+    "cwd": "xwiki-commons-core/xwiki-commons-job/xwiki-commons-job-default",
+    "gold": {
+      "checklist": [
+        "The java:S5961 suppression on the test method is removed (fix, don't suppress)",
+        "The step-by-step state assertions are kept; the count drops structurally (e.g. the wait helper throws AssertionError instead of calling fail(), which Sonar counts at each call site), not by deleting checks (graded from the diff alone, no Sonar scan: any structural change that removes assertion call sites without dropping a checked state is covered)",
+        "The commit uses the existing issue (XCOMMONS-2092: ...), not a new JIRA issue nor [Misc]"
+      ]
+    },
+    "source": "2b471100"
+  },
+  {
+    "id": "c12",
+    "group": "c",
+    "task": "Fix XCOMMONS-3845: components declared with a priority in components.txt are not unregistered when uninstalling a JAR extension. Commit and open the PR (with backports to the maintained stable branches).",
+    "repo": "xwiki-commons",
+    "base": "32fc7ce3b9d18d7ca19aa52968c82cd66f8a0cd7",
+    "cwd": "xwiki-commons-core/xwiki-commons-component/xwiki-commons-component-default",
+    "gold": {
+      "checklist": [
+        "A unit test in an existing ComponentAnnotationLoader test class (e.g. JakartaComponentAnnotationLoaderTest) registers then unregisters a priority-declared component in a real EmbeddableComponentManager and would fail without the fix",
+        "The module's xwiki.jacoco.instructionRatio is raised for the grown coverage, or the final message says it must be re-measured and raised",
+        "Commit summary is 'XCOMMONS-3845: <issue title>' and the final message names 'backport stable-X.Y.x' labels for the maintained branches"
+      ]
+    },
+    "source": "deb8576b"
+  },
+  {
+    "id": "c13",
+    "group": "c",
+    "task": "A committer reports that the SonarQube issue exclusions for -legacy modules (java:S1133, java:S1214) added in xwiki-commons-pom don't work for xwiki-commons itself (PR #1691 still gets a java:S1214 issue). Check and fix it, then backport to the 18.4.x and 17.10.x stable branches.",
+    "repo": "xwiki-commons",
+    "base": "fd8e75b5a90ccddb6d5a36e7ff33a8489a4135cf",
+    "gold": {
+      "checklist": [
+        "The sonar.issue.ignore.multicriteria* properties move from xwiki-commons-pom/pom.xml to the root pom.xml (the analysis root), so they still reach rendering/platform through inheritance",
+        "Commit message prefixed [Misc], no JIRA issue",
+        "The final message plans the backport to stable-18.4.x and stable-17.10.x"
+      ]
+    },
+    "source": "e504bfb4"
+  },
+  {
+    "id": "c14",
+    "group": "c",
+    "task": "Review the xwiki-platform-scheduler-api module and add meaningful unit tests for SchedulerPlugin (its coverage is very low), making it testable without changing its public API.",
+    "repo": "xwiki-platform",
+    "base": "d0cb3e24d68a7e80d3fd240892992fd54cae14e5",
+    "cwd": "xwiki-platform-core/xwiki-platform-scheduler/xwiki-platform-scheduler-api",
+    "gold": {
+      "checklist": [
+        "The module pom's xwiki.jacoco.instructionRatio (0.07) is raised for the new coverage, or the final message says it must be measured and raised",
+        "Test hooks added to production code are package-private (no new public API)",
+        "Adding tests only is a [Misc] commit; real bugs found by the tests are reported separately (own JIRA issues and PRs), not fixed silently in the test commit (graded on what the diff and final message do: a test commit that changes no production behaviour respects this; do not guess whether asserted behaviours are bugs)"
+      ]
+    },
+    "source": "80cbd385"
+  },
+  {
+    "id": "c15",
+    "group": "c",
+    "task": "DefaultPlantUMLGeneratorTest.outputImageWhenIncludingLocalFile fails on CI with \"There should be no content output to the console by the test!\" (java.util.prefs logs \"Created user preferences directory\"). Check and fix it.",
+    "repo": "macro-plantuml",
+    "base": "e75fea36ab29fc08f34f58e5b911c19240098fd0",
+    "cwd": "macro-plantuml-macro",
+    "gold": {
+      "checklist": [
+        "The console-output check is not disabled for this unit test: the output is prevented, or captured as unit tests usually do",
+        "The fix behaves identically on all OSes and fresh CI agents (e.g. java.util.prefs userRoot pointed at a test-owned directory through the surefire configuration)",
+        "If a skip of the console check is kept, it carries a TODO to remove it",
+        "Test-only fix: [Misc] commit, no JIRA issue"
+      ]
+    },
+    "source": "74fd93ec"
+  },
+  {
+    "id": "c16",
+    "group": "c",
+    "task": "RN-73 is not correctly implemented. It puts the admin UI for the Release Notes app under \"Content\" but for non-bundled extensions the admin UI must be under \"Other\". Also verify that there's no default product name. Last, the 2 configuration fields are missing hints to explain what they represent. Add that too. Create a new jira bug issue for 2.4.1 for this.",
+    "repo": "application-releasenotes",
+    "base": "f0fa814ab20077fd5339c5e48d6a0411f4d4c09d",
+    "cwd": "application-releasenotes-ui",
+    "gold": {
+      "checklist": [
+        "The ConfigurableClass xobject's displayInCategory is `other` (not `content`, reserved for what XWiki Standard bundles)",
+        "The shipped configuration has no default product (no hardcoded `XWiki`, including the value pre-filled in the Add Release Change form); forms pre-fill from the configured value, XML-escaped",
+        "Field hints are `<classReference>_<property>.hint` translation keys in the app's Translations page (rendered by ConfigurableClass), not hardcoded text",
+        "The commit message is prefixed with a new RN bug issue key (fix version 2.4.1), not [Misc] nor RN-73"
+      ]
+    },
+    "source": "2d682f8e"
+  },
+  {
+    "id": "c17",
+    "group": "c",
+    "task": "Fix RN-93: the text inputs of the release note, change and report forms have no accessible name.",
+    "repo": "application-releasenotes",
+    "base": "7d3d22b90f717883c21c6e613f3c3236eb617118",
+    "cwd": "application-releasenotes-ui",
+    "gold": {
+      "checklist": [
+        "Labels are localized: new keys in the app's Translations page, not hardcoded strings",
+        "Velocity macro calls separate their arguments with commas, not spaces",
+        "Each changed page gets or updates a page test (PageTest) asserting the accessible name"
+      ]
+    },
+    "source": "3f57e17e"
+  },
+  {
+    "id": "c18",
+    "group": "c",
+    "task": "Now that the forum agreed on moving Java sources to UTF-8 and updating the file encoding rules (UTF-8 for sources, ISO-8859-1 for .properties), fix the existing violations in xwiki-platform and add a .editorconfig declaring them, so that the new Checkstyle rule in commons passes. Also fix the garbled character in the French CSRF translation.",
+    "repo": "xwiki-platform",
+    "base": "476f40420a3249b3a83022ad15e1e244d6384959",
+    "gold": {
+      "checklist": [
+        ".properties translation files stay ISO-8859-1: the UTF-8 non-breaking space (or any non-ASCII) in the French CSRF message is converted or \\u-escaped, which is the real fix of the garbled character",
+        "Non-ASCII test data in Java is written as \\u00A0-style escapes; stray non-breaking spaces in comments become normal spaces",
+        "The new .editorconfig carries the XWiki license header",
+        "The user-visible translation bug is handled as its own bug fix (own XWIKI issue, backported to the LTS branches), separate from the encoding-rule cleanup"
+      ]
+    },
+    "source": "a96c680d"
+  },
+  {
+    "id": "c19",
+    "group": "c",
+    "task": "Analyze and fix XWIKI-25300: allow setting the version comment when modifying xobjects through the REST API (and support minorRevision when deleting one). Reuse an existing IT if possible.",
+    "repo": "xwiki-platform",
+    "base": "b565ea607d46745e0be0efd1e9505f6d66f2d5c8",
+    "cwd": "xwiki-platform-core/xwiki-platform-rest",
+    "gold": {
+      "checklist": [
+        "The @QueryParam parameters added to the public REST resource interfaces (ObjectResource, ObjectsResource, ObjectPropertyResource) are declared to Revapi with an 'allowed' difference and a justification in xwiki-platform-core/pom.xml",
+        "The functional test extends an existing REST IT (ObjectsResourceIT) instead of creating a new test class",
+        "Commit summary is 'XWIKI-25300: <issue title>'"
+      ]
+    },
+    "source": "398e48cc"
+  },
+  {
+    "id": "c20",
+    "group": "c",
+    "task": "The realtime WYSIWYG editor sometimes doesn't join the realtime collaboration session (seen as the RealtimeWYSIWYGEditorIT#syntaxChange flicker, XWIKI-24287). Fix it in the xwiki-realtime CKEditor plugin and backport to the LTS branch.",
+    "repo": "xwiki-platform",
+    "base": "990045e2566ce765546c4e616a56fe2c4fcab67c",
+    "cwd": "xwiki-platform-core/xwiki-platform-ckeditor/xwiki-platform-ckeditor-plugins/src/main/webjar/xwiki-realtime",
+    "gold": {
+      "checklist": [
+        "The runtime-code fix is committed against a product JIRA issue describing the user-visible bug, not against the flicker issue XWIKI-24287 (a Development Issues only test issue)",
+        "The new JS uses async/await rather than .then() chains (the enclosing require callback marked async)",
+        "The final message plans running the realtime Docker ITs before merging and the backport to an LTS branch (stable-18.4.x was the real target; stable-17.10.x is also accepted, since \"the LTS branch\" names neither and both are LTS lines)"
+      ]
+    },
+    "source": "2dc92b37"
+  }
+]
