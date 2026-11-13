@@ -432,10 +432,28 @@ function workTreeAdditions(root, base, untracked) {
 }
 
 /**
+ * Whether HEAD reached its current commit from `from` only by commits made here (`git commit`, an
+ * amend), per HEAD's reflog. A checkout, pull, merge, rebase, reset or cherry-pick also moves HEAD,
+ * but the files it changes are not edits: seeing through it would point at every file that differs
+ * between the two commits. False when the reflog does not reach `from`.
+ */
+function movedByCommits(root, from) {
+  try {
+    for (const entry of git(root, ["reflog", "-n", "50", "--format=%H %gs", "HEAD"]).split("\n")) {
+      const [hash, ...subject] = entry.split(" ");
+      if (hash === from) return true;
+      if (!/^commit(?: \((?:amend|initial)\))?:/.test(subject.join(" "))) return false;
+    }
+  } catch { /* no reflog */ }
+  return false;
+}
+
+/**
  * The lines the shell added since a session's previous check: `{ changes: Map(absolute path → added
  * text), snapshot }`, the snapshot to keep for the next check (the repo, HEAD, and per file the
  * hashes of the lines its work tree adds). A commit since the previous check is seen through: the
- * work tree is then compared with the previous HEAD. Without a snapshot every uncommitted line
+ * work tree is then compared with the previous HEAD. Any other move of HEAD (a branch switch, a pull)
+ * is not: the work tree is compared with the new HEAD. Without a snapshot every uncommitted line
  * counts. Without `untracked` new files are not looked for, and the snapshot keeps their entries.
  * null when `cwd` is not in a git repo with a commit.
  */
@@ -448,7 +466,7 @@ export function shellChanges(cwd, snapshot, { untracked = true } = {}) {
     return null;
   }
   const previous = snapshot?.root === root ? snapshot : null;
-  const base = previous?.head ?? head;
+  const base = previous && previous.head !== head && movedByCommits(root, previous.head) ? previous.head : head;
   const now = workTreeAdditions(root, base, untracked);
   const files = base === head ? now : workTreeAdditions(root, head, untracked);
   const kept = untracked || !files ? {} : previous?.files ?? {};

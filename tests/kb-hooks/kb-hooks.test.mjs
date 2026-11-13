@@ -595,6 +595,33 @@ test('shell edits: a snapshot keeps line hashes, and a mass change points at not
   assert.equal(shellChanges(notGit, null), null);
 });
 
+test('shell edits: a checkout, pull or reset is not an edit, and a commit after it is still seen through', () => {
+  const repo = commitRepo();
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'A');
+  git(repo, 'checkout', '-qb', 'other');
+  writeFileSync(join(repo, 'core/src/main/java/B.java'), 'class B {}\n');
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'B');
+  git(repo, 'checkout', '-q', '-');
+  const before = shellChanges(repo, null).snapshot;
+  // What the branch adds over master is not this session's edit.
+  git(repo, 'checkout', '-q', 'other');
+  const switched = shellChanges(repo, before);
+  assert.equal(switched.changes.size, 0);
+  git(repo, 'reset', '-q', '--hard', 'HEAD~1');
+  assert.equal(shellChanges(repo, switched.snapshot).changes.size, 0);
+  // An edit then a commit on the new branch: the commit is seen through.
+  const now = shellChanges(repo, null).snapshot;
+  writeFileSync(join(repo, 'core/src/main/java/C.java'), 'class C {}\n');
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-qm', 'C');
+  writeFileSync(join(repo, 'core/src/main/java/C.java'), 'class C {}\n// more\n');
+  git(repo, 'commit', '-qam', 'C2', '--amend');
+  assert.deepEqual([...shellChanges(repo, now).changes.keys()],
+    [realpathSync(join(repo, 'core/src/main/java')) + '/C.java']);
+});
+
 test('opencode: a bash edit gets the shell-edit pointers appended', async () => {
   process.env.XWIKI_LLM_HOME = join(dirname(fileURLToPath(import.meta.url)), '../..');
   const plugin = (await import('../../xwiki/opencode/plugins/xwiki-kb-pointers.js')).default;
