@@ -164,6 +164,16 @@ test('edit: the hook on a real Write payload, in a scoped repo', () => {
   assert.match(text, /\n\[rule\] conventions\/frontend\.md#Bundling — Front-end: Use webjars\.$/);
 });
 
+test('edit: a file outside the session repo gets pointers only when its own repo is in scope', () => {
+  const stateDir = mkdtempSync(join(tmpdir(), 'kb-hooks-seen-'));
+  const opts = { root: EDIT_KB, cacheDir: null, stateDir, env: {} };
+  const write = (file) => runHook('edit', claudeEdit(scoped, file, 'x', `out-${Math.random()}`, 'Write'), opts);
+  assert.equal(write(join(notGit, 'ui/src/main/webapp/app.js')), '');
+  assert.equal(write(join(personal, 'ui/app.js')), '');
+  const other = gitRepo('git@github.com:xwiki/xwiki-commons.git');
+  assert.match(write(join(other, 'ui/src/main/webapp/app.js')), /\[rule\] conventions\/frontend\.md#Bundling/);
+});
+
 // applies-when: topics that matter only when the edit adds a given kind of text. Block-list
 // regexes, single-quoted, as a topic writes them; one does not compile and must be ignored.
 const whenTopic = (title, appliesTo, when, body) => `---\ntitle: ${title}\nstability: durable\n`
