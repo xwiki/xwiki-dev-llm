@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { checkCommit, nextRelease, pomVersion, previousReleases } from '../../xwiki/scripts/check-diff.mjs';
 
 const LICENSE = `/*
@@ -337,6 +337,21 @@ test('the trailer and the environment variable skip the check; other commands an
   assert.equal(run(dir, 'git status').deny, '');
   assert.equal(run(repo(base, withMethod('    public String getBar()\n    {\n        return null;\n    }\n'),
     { remote: 'https://github.com/someone/foo.git' })).deny, '');
+});
+
+test('a commit is checked in the repo it runs in, after cd or with git -C', () => {
+  const bad = repo(base, withMethod('    public String getBar()\n    {\n        return null;\n    }\n'));
+  const elsewhere = repo({});
+  const msg = "git commit -m 'XWIKI-1: Add foo'";
+  assert.equal(run(elsewhere).deny, '');
+  for (const c of [`cd ${bad} && ${msg}`, `cd ${bad}; git add -A && ${msg}`, `git -C ${bad} ${msg.slice(4)}`,
+    `cd ${dirname(bad)} && git -C ${basename(bad)} ${msg.slice(4)}`]) {
+    assert.deepEqual(rules(run(elsewhere, c)), ['backward-compatibility'], c);
+  }
+  // Out of scope where the commit runs: nothing, whatever the session's repo.
+  const personal = repo(base, withMethod('    public String getBar()\n    {\n        return null;\n    }\n'),
+    { remote: 'https://github.com/someone/foo.git' });
+  assert.equal(run(bad, `cd ${personal} && ${msg}`).deny, '');
 });
 
 test('a git add in the same command brings unstaged and untracked files in', () => {

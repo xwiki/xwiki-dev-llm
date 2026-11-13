@@ -4,6 +4,9 @@
 // enough for the shapes an agent writes, and every caller
 // treats a null (unbalanced quoting) as "cannot tell".
 
+import { homedir } from "node:os";
+import { resolve } from "node:path";
+
 // Placeholder left where a heredoc's `<<TAG` stood (control characters, which no command holds),
 // naming the body it fed.
 export const HEREDOC = /\u0001(\d+)\u0001/;
@@ -124,3 +127,35 @@ export const isGitCommit = (command) => typeof command === "string" && GIT_COMMI
 /** Whether the commit also takes changes not staged yet: `-a`/`--all`, or a `git add` in the same command. */
 export const takesUnstaged = (command) => /(?:^|[\s;&|(])git\s+add\b/.test(command)
   || /\scommit\b.*?\s(?:-[a-zA-Z]*a[a-zA-Z]*|--all)(?=\s|$)/.test(command);
+
+/** `path` resolved against `dir`, a leading `~` being the home directory. */
+export function resolvePath(dir, path) {
+  return resolve(dir, path.replace(/^~(?=\/|$)/, homedir()));
+}
+
+/**
+ * The directories a command line's `git commit`s run in, each once: `cwd` as moved by every `cd` or
+ * `pushd` before the commit, then by its own `git -C dir`s. Empty when the line does not parse or no
+ * commit is a simple command of it (one wrapped in `bash -c "…"`).
+ */
+export function commitDirs(command, cwd) {
+  const parsed = typeof command === "string" && simpleCommands(command);
+  if (!parsed) return [];
+  let dir = cwd;
+  const dirs = new Set();
+  for (const { tokens } of parsed.commands) {
+    if (/^(?:cd|pushd)$/.test(tokens[0]?.value) && tokens[1] && tokens[1].value !== "-") {
+      dir = resolvePath(dir, tokens[1].value);
+      continue;
+    }
+    let i = tokens.findIndex((t) => t.flag && t.value === "git");
+    if (i === -1) continue;
+    let here = dir;
+    for (i++; i < tokens.length && tokens[i].flag && tokens[i].value.startsWith("-"); i++) {
+      if (tokens[i].value === "-C" && tokens[i + 1]) here = resolvePath(here, tokens[++i].value);
+      else if (tokens[i].value === "-c") i++;
+    }
+    if (tokens[i]?.value === "commit") dirs.add(here);
+  }
+  return [...dirs];
+}

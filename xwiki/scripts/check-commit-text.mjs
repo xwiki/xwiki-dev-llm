@@ -32,11 +32,10 @@
 //
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 
 import { invokedDirectly } from "./invoked-directly.mjs";
-import { HEREDOC, simpleCommands } from "./shell-commands.mjs";
+import { HEREDOC, resolvePath, simpleCommands } from "./shell-commands.mjs";
 
 // A code span suppresses the autolink, so blank one out before looking for violations. Markdown
 // code spans do not span a blank line; stopping at one keeps a single stray backtick from masking
@@ -155,10 +154,6 @@ export function extractMessages(command, cwd = process.cwd()) {
 }
 
 // `path` resolved against `dir`, with a leading `~` expanded.
-function resolvePath(dir, path) {
-  return resolve(dir, path.replace(/^~(?=\/|$)/, homedir()));
-}
-
 // A commit can be wrapped in a shell invocation — `bash -c "git commit …"` — which hides it from
 // both the `if` filter and the parser above, since the outer command is `bash`. Match the inner
 // script so it can be parsed in its own right. The alternative considered was scanning the whole
