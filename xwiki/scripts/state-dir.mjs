@@ -1,7 +1,8 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
 // (plans, handoffs, drafts, extracted source), the Docker IT slot files, the knowledge-base
-// search index cache, the KB pointer hooks' per-session state and the commit skill gate's
-// per-session record of loaded skills. All are computed here
+// search index cache, the KB pointer hooks' per-session state, the commit skill gate's
+// per-session record of loaded skills and the Kimi Code sessions already given the org conventions.
+// All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
 
@@ -46,6 +47,11 @@ export function kbHookStateDir() {
 /** Directory holding the commit skill gate's per-session files: the skills a session loaded. */
 export function skillGateDir() {
   return join(stateRoot(), "skill-gate");
+}
+
+/** Directory marking the Kimi Code sessions already given the org conventions, one file per session. */
+export function orgInjectDir() {
+  return join(stateRoot(), "org-instructions");
 }
 
 /**

@@ -1,10 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { duplicateKeys } from "../../scripts/json-keys.mjs";
 
-test("a hook event named twice is reported (the hooks.json a merge left at 18c9a17)", () => {
-  const text = execFileSync("git", ["show", "18c9a17:xwiki/hooks/hooks.json"], { encoding: "utf8" });
+test("a hook event named twice is reported (the shape a merge once left in hooks.json)", () => {
+  const text = `{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node \\"\${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\\" prompt" }] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Skill", "hooks": [{ "type": "command", "command": "node \\"\${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\\"" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node \\"\${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\\"" }] }
+    ]
+  }
+}`;
   assert.deepEqual(duplicateKeys(text), ["hooks.UserPromptSubmit"]);
 });
 

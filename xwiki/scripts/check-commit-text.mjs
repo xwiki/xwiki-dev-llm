@@ -28,14 +28,14 @@
 // works on Windows, macOS and Linux with no shell dependency. Two consumers share checkCommitText():
 //   - Claude Code / Kimi Code: this file run directly as a PreToolUse hook (CLI section at bottom).
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-commit-text.js (tool.execute.before).
-// Kimi's hooks cannot block execution, so there the model must act on the message itself.
+// Kimi Code refuses the call on exit 2, as Claude Code does.
 //
-import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
+import { invokedDirectly } from "./invoked-directly.mjs";
 import { HEREDOC, simpleCommands } from "./shell-commands.mjs";
 
 // A code span suppresses the autolink, so blank one out before looking for violations. Markdown
@@ -308,8 +308,6 @@ function runAsHook() {
   process.exit(2);
 }
 
-const invokedDirectly =
-  process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   runAsHook();
 }

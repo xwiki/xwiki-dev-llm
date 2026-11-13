@@ -27,17 +27,12 @@
   },
   "hooks": [
     {
-      "event": "SessionStart",
-      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\""
+      "event": "UserPromptSubmit",
+      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\" prompt"
     },
     {
       "event": "UserPromptSubmit",
       "command": "node \"./xwiki/scripts/kb-hooks.mjs\" prompt"
-    },
-    {
-      "event": "PostToolUse",
-      "matcher": "Write|Edit",
-      "command": "node \"./xwiki/scripts/check-line-endings.mjs\""
     },
     {
       "event": "PreToolUse",

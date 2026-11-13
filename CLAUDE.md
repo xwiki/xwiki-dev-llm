@@ -75,7 +75,9 @@ Inside `xwiki/`:
   injects `xwiki-org.md` as `additionalContext`, **scoped by git remote**: it runs `git remote
   get-url origin` and only injects when the remote's org is `xwiki`, `xwiki-contrib`, or one the
   developer named in `XWIKI_LLM_ORGS` (comma/whitespace-separated, regex-escaped, matched
-  case-insensitively). Personal repos and non-git dirs get nothing. Written in Node (which Claude
+  case-insensitively). Personal repos and non-git dirs get nothing. Kimi Code discards `SessionStart` output, so
+  `kimi.plugin.json` runs the same script as a `UserPromptSubmit` hook in `prompt` mode instead,
+  which injects once per session id. Written in Node (which Claude
   Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
   `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`) and the commit
   diff check. The pointer hooks see an edit made through Bash (`sed -i`, a heredoc, a script) by a
@@ -84,7 +86,8 @@ Inside `xwiki/`:
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook), the Docker IT slot files (`itSlotDir()`, used
-  by `xwiki-it-slot.mjs`) and the commit skill gate's per-session files (`skillGateDir()`). Never recompute those paths in another script, and never restate the
+  by `xwiki-it-slot.mjs`), the commit skill gate's per-session files (`skillGateDir()`) and the Kimi
+  sessions already given the org conventions (`orgInjectDir()`). Never recompute those paths in another script, and never restate the
   platform rules in a doc — `docs/setup.md`'s `XWIKI_LLM_WORK` table row is the one human-readable copy,
   and the hook injects the resolved absolute path so `xwiki-org.md` and the skills can just say "the
   work directory". Run directly, the script prints that work root: that is how opencode gets it,
