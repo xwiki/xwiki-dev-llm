@@ -55,6 +55,7 @@ ROOT = "documentation.extensions.admin.antispam"
 ALL = [dict(
     space=["documentation", "extensions", "admin", "antispam"], page="WebHome",
     title="AntiSpam", type="explanation", target="administrator", ext=EXT,
+    # type: tutorial | howto | reference | explanation; target: user | administrator | developer
     attachments=["home-page.png"],          # files under SHOTS
     content="""The [[Foo application>>doc:extensions:Extension.Foo.WebHome]] …""",
     faq="""== A reader's question? ==\n\nThe answer.""",
@@ -114,7 +115,10 @@ procedure's entry step). A region already at the target width is saved unresampl
 
 ## What each step actually protects against
 
-**`lint`** — the traps that produce a *plausible-looking* page rather than an error: a scheme-like
+**`lint`** — the traps that produce a *plausible-looking* page rather than an error: a `type` or
+`target` that is a display label rather than a stored value (`how-to`, `admin`: the server stores
+it as is, the page gets no valid type or audience, and the How-to checks below silently skip it;
+`save` refuses it too), a scheme-like
 token followed by a colon (`image:` emits an empty image reference), an unmatched `--` striking
 through the rest of the block, a URL inside `##…##`, an inline `{{code}}` literal (the
 checker's missing-`language` violation), a single-brace `{macro}` (an f-string field
