@@ -48,6 +48,8 @@
 //  13. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
 //      outlives its topic. kb-search silently drops a sidecar whose `source_hash` no longer matches
 //      the topic body, so an edited topic would lose its generated questions and aliases unnoticed.
+//  14. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
+//      twice (as a merge can leave it) silently loses the first entry's hooks.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -61,6 +63,7 @@ import {
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
 import { corpus } from "./kb-pipeline/gen-metadata.mjs";
+import { duplicateKeys } from "./json-keys.mjs";
 import { loadSidecar, sidecarOf } from "../xwiki/scripts/kb-search.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -425,6 +428,14 @@ for (const abs of walk(join(kbRoot, "_meta"))) {
   const rel = relative(kbRoot, abs).split(sep).join("/");
   if (rel.endsWith(".json") && rel !== "_meta/skills.json" && !sidecars.has(rel)) {
     errors.push(`xwiki/kb/${rel}: its topic no longer exists — remove it`);
+  }
+}
+
+// ---- 14. No repeated key in a JSON manifest --------------------------------------------------
+for (const f of [".claude-plugin/marketplace.json", "xwiki/.claude-plugin/plugin.json", "kimi.plugin.json",
+  "xwiki/hooks/hooks.json", "xwiki/.mcp.json", "xwiki/kb/_meta/skills.json", "scripts/size-budgets.json"]) {
+  for (const key of duplicateKeys(read(f))) {
+    errors.push(`${f}: key '${key}' appears twice in one object — JSON keeps only the last; merge them`);
   }
 }
 

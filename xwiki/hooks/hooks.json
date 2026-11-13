@@ -17,6 +17,10 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" prompt",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\""
           }
         ]
       }
@@ -107,16 +111,6 @@
       },
       {
         "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\""
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
         "hooks": [
           {
             "type": "command",
