@@ -42,7 +42,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { isAbsolute, join, relative, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 import { defaultRoot, defaultSkillsRoot, loadIndex, promptToQuery, search, sectionHit, tagOf, tokenize }
   from "./kb-search.mjs";
@@ -183,6 +183,13 @@ export function matchPath(filePath, projectDir) {
     if (rel && !rel.startsWith("..") && !isAbsolute(rel)) p = rel;
   }
   return p.split(sep).join("/");
+}
+
+/** The nearest directory of `path` that exists: a file being created may be in a new directory. */
+function existingDir(path) {
+  let dir = dirname(path);
+  while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir);
+  return dir;
 }
 
 /** The lines of `text` whose trimmed form is not among `before`'s, joined back: what an edit adds. */
@@ -541,6 +548,11 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
   } else if (kind === "edit") {
     const input = payload.tool_input || {};
     if (!input.file_path) return "";
+    // A file outside the session's repo (a scratch script, another checkout) is in scope only when its
+    // own repo is: XWiki's rules do not apply to a file in /tmp or in a personal repo.
+    const target = isAbsolute(input.file_path) ? input.file_path : join(projectDir, input.file_path);
+    const rel = relative(projectDir, target);
+    if ((rel.startsWith("..") || isAbsolute(rel)) && !isScopedRepo(existingDir(target), env)) return "";
     subject = matchPath(input.file_path, projectDir);
     // Before a Write runs (Claude Code's PreToolUse), the file on disk is what it overwrites; after
     // it (opencode), it is the new content itself, so it is read only for the former.
