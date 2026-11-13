@@ -27,8 +27,8 @@
   },
   "hooks": [
     {
-      "event": "SessionStart",
-      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\""
+      "event": "UserPromptSubmit",
+      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\" prompt"
     },
     {
       "event": "PostToolUse",

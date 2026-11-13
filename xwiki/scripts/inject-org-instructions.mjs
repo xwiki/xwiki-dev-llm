@@ -4,12 +4,20 @@
 // belongs to the `xwiki` or `xwiki-contrib` GitHub org, or to an org the developer named in
 // XWIKI_LLM_ORGS. Personal repos get nothing.
 // Written in Node (ships with Claude Code and Kimi Code) so it works on Windows, macOS and Linux.
+//
+// `prompt` mode (first argument) is for Kimi Code, which runs SessionStart hooks but discards their
+// output, and appends a UserPromptSubmit hook's plain stdout to the context instead: the same text
+// goes out on a session's first prompt only, remembered by session id under orgInjectDir(). A
+// payload without a session id gets nothing rather than the text on every prompt. That mode never
+// breaks a prompt: any error exits 0 with nothing written.
 
-import { readdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { isScopedRepo } from "./repo-scope.mjs";
-import { LEGACY_WORK_ROOT, workRoot } from "./state-dir.mjs";
+import { LEGACY_WORK_ROOT, orgInjectDir, workRoot } from "./state-dir.mjs";
+
+const promptMode = process.argv[2] === "prompt";
 
 /** Whether `dir` exists and holds anything. A missing or unreadable directory counts as empty. */
 function hasEntries(dir) {
@@ -20,74 +28,116 @@ function hasEntries(dir) {
   }
 }
 
-// Kimi passes the project directory in the hook payload's `cwd`; Claude sets CLAUDE_PROJECT_DIR.
-// Fallback to the current working directory when neither is available.
-let projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-let payload = {};
-try {
-  payload = JSON.parse(readFileSync(0, "utf8"));
-} catch {
-  // ignore — not running as a piped hook
-}
-if (payload.cwd) {
-  projectDir = payload.cwd;
-}
+/** A prompt-mode session's marker file. */
+const markerFile = (dir, sessionId) => join(dir, String(sessionId).replace(/[^\w-]/g, "_").slice(0, 100));
 
-const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.env.KIMI_PLUGIN_ROOT;
-
-// Scope: the repo's origin remote must be in an org repo-scope.mjs accepts; a personal repo or a
-// non-git directory gets nothing.
-if (!isScopedRepo(projectDir)) {
-  process.exit(0);
-}
-
-// The plugin root differs by host: Claude points at the `xwiki/` subdirectory, Kimi points at the
-// repository root. Try both layouts so the same script works for both runtimes.
-let text;
-for (const relativePath of ["instructions/xwiki-org.md", "xwiki/instructions/xwiki-org.md"]) {
+/**
+ * Claims the session's injection: true the first time, false once the session has had it (or another
+ * process claimed it concurrently). Markers untouched for a month are pruned when a new one is made.
+ */
+function claimSession(sessionId, dir = orgInjectDir()) {
+  mkdirSync(dir, { recursive: true });
   try {
-    text = readFileSync(`${pluginRoot}/${relativePath}`, "utf8");
-    break;
-  } catch {
-    // try next candidate
+    writeFileSync(markerFile(dir, sessionId), "", { flag: "wx" });
+  } catch (e) {
+    if (e.code === "EEXIST") return false;
+    throw e;
   }
-}
-if (!text) {
-  process.exit(0);
+  const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
+  for (const name of readdirSync(dir)) {
+    try {
+      if (statSync(join(dir, name)).mtimeMs < cutoff) unlinkSync(join(dir, name));
+    } catch { /* raced with another session: harmless */ }
+  }
+  return true;
 }
 
-// Work directory: where every file a task needs but the repo must not hold (plans, handoffs,
-// extracted source, drafts) lives, so those files are all in one place instead of scattered over
-// the repo, the system temp dir and the home directory. The rule itself is in xwiki-org.md and the
-// root is resolved in state-dir.mjs; what is appended here is only the resolved absolute path,
-// which the model cannot compute on its own (env vars, `~` and the repo name). Nothing is created:
-// a session that writes no work file leaves no trace, and `mkdir -p` at first use also repairs a
-// directory the developer has since deleted.
-const root = workRoot();
-const repoWorkDir = join(root, basename(projectDir));
+try {
+  // Kimi passes the project directory in the hook payload's `cwd`; Claude sets CLAUDE_PROJECT_DIR.
+  // Fallback to the current working directory when neither is available.
+  let projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  let payload = {};
+  try {
+    payload = JSON.parse(readFileSync(0, "utf8"));
+  } catch {
+    // ignore — not running as a piped hook
+  }
+  if (payload.cwd) {
+    projectDir = payload.cwd;
+  }
+  if (promptMode && !payload.session_id) {
+    process.exit(0);
+  }
 
-text += `
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.env.KIMI_PLUGIN_ROOT;
+
+  // Scope: the repo's origin remote must be in an org repo-scope.mjs accepts; a personal repo or a
+  // non-git directory gets nothing.
+  if (!isScopedRepo(projectDir)) {
+    process.exit(0);
+  }
+
+  // The plugin root differs by host: Claude points at the `xwiki/` subdirectory, Kimi points at the
+  // repository root. Try both layouts so the same script works for both runtimes.
+  let text;
+  for (const relativePath of ["instructions/xwiki-org.md", "xwiki/instructions/xwiki-org.md"]) {
+    try {
+      text = readFileSync(`${pluginRoot}/${relativePath}`, "utf8");
+      break;
+    } catch {
+      // try next candidate
+    }
+  }
+  if (!text) {
+    process.exit(0);
+  }
+
+  // Work directory: where every file a task needs but the repo must not hold (plans, handoffs,
+  // extracted source, drafts) lives, so those files are all in one place instead of scattered over
+  // the repo, the system temp dir and the home directory. The rule itself is in xwiki-org.md and the
+  // root is resolved in state-dir.mjs; what is appended here is only the resolved absolute path,
+  // which the model cannot compute on its own (env vars, `~` and the repo name). Nothing is created:
+  // a session that writes no work file leaves no trace, and `mkdir -p` at first use also repairs a
+  // directory the developer has since deleted.
+  const root = workRoot();
+  const repoWorkDir = join(root, basename(projectDir));
+
+  text += `
 **This machine's work directory:** \`${repoWorkDir}\` — the repo-scoped root for the work files
 described under "Work files" above. \`mkdir -p\` the task subdirectory when one is first needed.
 `;
 
-// The work root used to be ~/.xwiki-llm/work on every OS. Moving what a developer left there is
-// their call, not ours — but going quiet about it would strand the state, so say so for as long as
-// anything is still in it.
-if (root !== LEGACY_WORK_ROOT && hasEntries(LEGACY_WORK_ROOT)) {
-  text += `
+  // The work root used to be ~/.xwiki-llm/work on every OS. Moving what a developer left there is
+  // their call, not ours — but going quiet about it would strand the state, so say so for as long as
+  // anything is still in it.
+  if (root !== LEGACY_WORK_ROOT && hasEntries(LEGACY_WORK_ROOT)) {
+    text += `
 **Work files left in the old location:** \`${LEGACY_WORK_ROOT}\` still holds files — it was the
 default before this plugin followed the platform's state directory, and nothing reads it any more.
 Early in the session, ask the developer to move its contents to \`${root}\` and delete it (or to set
 \`XWIKI_LLM_WORK\` to the old path if they would rather keep it). Do not move or delete it yourself.
 `;
-}
+  }
 
-process.stdout.write(
-  JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "SessionStart",
-      additionalContext: text
+  if (promptMode) {
+    if (!claimSession(payload.session_id)) {
+      process.exit(0);
     }
-  })
-);
+    if (process.env.KIMI_PLUGIN_ROOT && !process.env.CLAUDE_PLUGIN_ROOT) {
+      process.stdout.write(text);
+      process.exit(0);
+    }
+  }
+
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: promptMode ? "UserPromptSubmit" : "SessionStart",
+        additionalContext: text
+      }
+    })
+  );
+} catch (e) {
+  if (!promptMode) throw e;
+  process.exit(0);
+}
