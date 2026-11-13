@@ -82,12 +82,13 @@ function messageOptions(args, short, long) {
   return found;
 }
 
-// The text a command line writes as a commit message or PR body: one `{ summary, body }` per
+// The text a command line writes as a commit message or PR body: one `{ summary, body, dir }` per
 // `git commit` (the summary being its first line, exempt) and per `gh pr create`/`edit` (no summary:
 // a PR's title is passed separately and is not checked). Only the message is read — the -m/--message
 // values, the -F/--file content (a heredoc or the stdin fed to that command, a file the same command
 // line writes from a heredoc, or else the file on disk), and gh's --body/--body-file likewise — never
-// the rest of a compound command, whose heredocs and arguments may well hold `@Annotations`.
+// the rest of a compound command, whose heredocs and arguments may well hold `@Annotations`. `dir` is
+// where that command runs: `cwd` moved by each `cd` before it, then by a commit's `git -C`.
 export function extractMessages(command, cwd = process.cwd()) {
   const parsed = simpleCommands(command);
   if (!parsed) return [];
@@ -143,11 +144,18 @@ export function extractMessages(command, cwd = process.cwd()) {
     }
     const text = parts.map(([kind, value]) => (kind === "text" ? expand(value) : fileText(value, at))).join("\n");
     if (!text.trim()) return;
+    // The directory the command runs in: the `cd`s before it, then git's own `-C`s.
+    let dir = dirs[at];
+    const start = cmd.tokens.findIndex((t) => t.flag && t.value === "git");
+    for (let i = start + 1; commit && i < cmd.tokens.length && cmd.tokens[i].flag && cmd.tokens[i].value.startsWith("-"); i++) {
+      if (cmd.tokens[i].value === "-C" && cmd.tokens[i + 1]) dir = resolvePath(dir, cmd.tokens[++i].value);
+      else if (cmd.tokens[i].value === "-c") i++;
+    }
     if (commit) {
       const [summary, ...body] = text.split("\n");
-      messages.push({ summary, body: body.join("\n") });
+      messages.push({ summary, body: body.join("\n"), dir });
     } else {
-      messages.push({ summary: "", body: text });
+      messages.push({ summary: "", body: text, dir });
     }
   });
   return messages;
@@ -210,14 +218,15 @@ export function usesJiraIssues(dir) {
 }
 
 // Inspect a Bash command and return the autolink violations in the message it would write, or null
-// when there is nothing to enforce. `cwd` is the directory the command runs in, which locates the
-// repo for usesJiraIssues(); it is only read when the message holds a `#123`. Recurses into shell
+// when there is nothing to enforce. `cwd` is the directory the command line starts in; each message
+// is judged by usesJiraIssues() in the directory its own command runs in (after a `cd`, or with
+// `git -C`), read only when the message holds a `#123`. Recurses into shell
 // wrappers, bounded by MAX_WRAPPER_DEPTH so a deeply (or maliciously) nested command cannot turn
 // this into a long-running check.
 export function checkCommitText(command, { cwd = process.cwd() } = {}, depth = 0) {
   if (!command || typeof command !== "string") return null;
   for (const message of extractMessages(command, cwd)) {
-    const found = messageViolations(message, cwd);
+    const found = messageViolations(message, message.dir ?? cwd);
     if (found) return found;
   }
   // A clean message at this level does not settle it: the command may also carry a wrapped one.
