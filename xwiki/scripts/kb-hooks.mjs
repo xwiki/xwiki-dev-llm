@@ -121,6 +121,16 @@ const isSkill = (hit) => hit.tag === "[skill]";
 /** Up to SKILL_K skills, then up to `k` KB pointers, each in rank order. */
 const capKinds = (hits, k) => [...hits.filter(isSkill).slice(0, SKILL_K), ...hits.filter((h) => !isSkill(h)).slice(0, k)];
 
+// Blocks the host writes into a prompt turn, not the developer: a background task's completion
+// notice, a local command (`/reload-plugins`) with its output, a `!` shell command and its output,
+// reminders. None is a question; the developer's own text around them is.
+const MACHINE_BLOCKS = new RegExp("<(task-notification|local-command-caveat|local-command-stdout|local-command-stderr"
+  + "|command-name|command-message|command-args|system-reminder|bash-input|bash-stdout|bash-stderr)>[\\s\\S]*?</\\1>",
+"g");
+
+/** The text of a prompt turn the developer typed, the host's own blocks taken out. */
+export const typedText = (prompt) => String(prompt).replace(MACHINE_BLOCKS, " ").trim();
+
 /** Whether a prompt names what a skill is for: a word of its name, `xwiki-` aside. */
 const namesSkill = (terms, hit) => tokenize(hit.title.replace(/^xwiki-/, "")).some((t) => terms.has(t));
 
@@ -541,9 +551,10 @@ export function runHook(kind, payload, { root = defaultRoot(), skillsRoot, cache
     return "";
   } else if (kind === "prompt") {
     if (typeof payload.prompt !== "string") return "";
-    const loaded = namedSkills(index, payload.prompt);
+    const prompt = typedText(payload.prompt);
+    const loaded = namedSkills(index, prompt);
     for (const id of loaded) seen.add(id);
-    hits = promptPointers(index, payload.prompt, { seen });
+    hits = promptPointers(index, prompt, { seen });
     if (!hits.length && loaded.length) save();
   } else if (kind === "edit") {
     const input = payload.tool_input || {};
