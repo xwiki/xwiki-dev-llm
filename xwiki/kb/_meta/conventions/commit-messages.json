@@ -1,31 +1,32 @@
 {
   "file": {
     "questions": [
-      "What format should my git commit message follow for XWiki, and what goes in the subject line versus the body?",
+      "What format should my git commit message follow in XWiki?",
+      "What do I put in the first line of a commit for a JIRA issue in xwiki-platform?",
       "Do I need a JIRA issue for a small change, or can I commit it as [Misc]?",
-      "Why does my commit summary have to be the JIRA issue title word for word instead of my own wording?",
-      "How do I write the commit message for a security fix before the issue is publicly disclosed?",
-      "Does a dependency upgrade need a JIRA issue, or is it fine as [Misc]?"
+      "How do I write a commit for a security fix without revealing the vulnerability?"
     ],
     "aliases": [
+      "git commit format",
+      "commit message template",
       "commit subject line",
-      "commit title format",
-      "git commit message guidelines",
       "JIRA key in commit message",
-      "commit message template"
+      "XWIKI ticket reference in commit"
     ]
   },
   "sections": {
     "Commit message convention": {
       "questions": [
-        "How should I word the summary line of a commit that references a JIRA issue?",
-        "My umbrella issue has many commits with the same summary line; how do I tell them apart?",
-        "How do I stop GitHub from linking @since or #123 in my commit message to an unrelated account or repo?"
+        "Should the first line of my commit copy the JIRA ticket title, or can I write my own sentence?",
+        "How do I describe what this particular commit changes when several commits reference the same issue?",
+        "My change is trivial and has no JIRA issue. What tag goes in front of the commit message?",
+        "Does a dependency bump need a JIRA issue before I can commit it?"
       ],
       "aliases": [
-        "commit message format",
-        "commit summary rules",
-        "JIRA issue key in commit"
+        "commit summary line",
+        "commit title",
+        "[Misc] tag",
+        "commit body bullets"
       ]
     }
   },
@@ -38,5 +39,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "25b0f16695396f9d8799d96963a83e30f651798f3d538e353537cfa26f19c0ae"
+  "source_hash": "3d3569d8efbb8ba84447f86a4475b8e906a7f8ac400d445ab33c61d4b36a7359"
 }

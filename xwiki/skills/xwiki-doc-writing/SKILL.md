@@ -115,17 +115,13 @@ applies to everything a regex cannot decide.
    em dashes** (use the comma, period, colon or parentheses the sentence needs; quoted text keeps its
    dashes).
 9. **Give the page something to look at, wherever it earns its place** — **screenshots** on
-   User/Administrator pages (every UI element or screen the reader must find), **code examples** on
-   Developer pages, and on an Explanation about design/architecture a **PlantUML `bluegray` diagram**
-   (components and flows for developers; a lifecycle, workflow or decision diagram for users — be
-   creative about what clarifies the concept). An image replaces a paragraph of "click the menu at the top
-   right", a snippet replaces a paragraph of API prose. **Never screenshot text**: whenever what you are
-   showing is itself text — a configuration file, a command, a log line, a query — it goes in a **code
-   macro**, whatever the page's audience, and most of all when the reader has to edit or copy it, since
-   text cannot be selected out of an image (an Administrator How-to editing `xwiki.properties` shows code
-   blocks, not pictures of them). **Don't force it**: a short Explanation or a small
-   Reference table can be complete with no visual, and a decorative one costs the reader attention and a
-   maintainer an update. Capture screenshots on the local instance agreed above, using the
+   User/Administrator pages, **code examples** on Developer pages, a **PlantUML `bluegray` diagram
+   carrying `tools/plantuml-accessible-palette.puml`** on an Explanation with a structure to show.
+   **Never screenshot text**: a configuration file, a command, a log line or a query goes in a **code
+   macro**, whatever the page's audience. **Don't force it**: a visual must replace or clarify
+   something the prose does badly. Which page needs which, and why:
+   `kb/conventions/documentation.md` → *Show, don't only tell*. Capture screenshots on the local
+   instance agreed above, using the
    [Documentation Resources](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/)
    XARs for realistic content.
 10. **Handle attachments by the rules** — kebab-case name with a lowercase extension and **stop words
@@ -151,7 +147,7 @@ applies to everything a regex cannot decide.
     delete them. Then **cut verbosity**: take each sentence and ask *does the reader lose something they
     need in order to act if I delete it?* — if not, delete it rather than compress it. Readers skim, so
     length itself hides content. A How-to whose numbered list is wrapped in explanatory paragraphs, and
-    a hub page that narrates the feature instead of **linking every page it introduces**, both fail this
+    a hub page that narrates the feature or lists its children in prose (see "route, not narrate"), both fail this
     step.
 13. **Review, then save.** Apply the review checklist first (see "Review"). A new or substantially
     rewritten page is a **major** change: save it via a **Change Request**, adding to an existing open

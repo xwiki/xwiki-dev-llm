@@ -10,6 +10,8 @@ description: Capture the "before" screenshot of a fix to existing XWiki UI when 
 The deliverable is **the "before" screenshot** — the state your branch can no longer produce,
 because the fix is already in the working tree. Everything else here exists to reach that state
 safely. The "after" is trivial; you can shoot it at any time.
+A page walking a maintainer through several changes, before/after included, is
+`xwiki-review-help`'s; it calls this skill only for a missing "before".
 
 When the bug can still be shot — on a running instance, before applying the fix — do that
 instead: it needs none of the setup below. And do **not** run this for a new feature or a redesign:

@@ -137,8 +137,9 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    illustrated to the new tree's standard, so carrying its images over is the floor, not the goal: the
    converted User/Administrator pages want **screenshots** of the UI they describe (re-captured on the
    local instance, since legacy ones show old skins), the Developer pages **code examples**, and an
-   Explanation you extracted about design/architecture a **PlantUML `bluegray` diagram** where the legacy
-   page described the structure in prose. Don't add a visual that clarifies nothing. Then, by the new
+   Explanation you extracted about design/architecture a **PlantUML `bluegray` diagram carrying
+   `xwiki-doc-writing/tools/plantuml-accessible-palette.puml`** where the legacy page described the
+   structure in prose. Don't add a visual that clarifies nothing. Then, by the new
    tree's rules — images and videos are content. Re-upload
    them under **kebab-case, lowercase-extension** names, insert images with `{{image}}` + `alt`, and
    **re-encode a video to `webm` and display it with `{{embed}}`**. When the legacy page *embedded* a
@@ -150,8 +151,8 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    declaring the conversion done, hub prose included. Legacy pages are typically far more verbose than the
    new tree allows, and copying their prose across imports that verbosity: keep only what the reader needs
    in order to act. A **How-to/Tutorial** you extracted also gets its **result step** (legacy procedures
-   almost never have one), and the **hub page** you create over the split must **link every page it
-   introduces** rather than re-tell the legacy page's introduction.
+   almost never have one), and the **hub page** you create over the split routes through **Highlights**
+   and the More table rather than re-telling the legacy page's introduction or listing its children.
 10. **Handle the original page** — after the content is moved, follow the guide's
     [Handle Original Documentation Pages](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/)
     steps: strip the prose (leaving a link to the new location / adding the "Documentation" button),
@@ -201,8 +202,9 @@ only complete record of what the legacy page said — comparing legacy → new, 
   relationships between features; nothing was over-simplified into being wrong.
 - **Up to date** — no obsolete UI names, deprecated terminology, removed features, or references to
   unsupported versions survive; the `{{version}}` macro is used correctly.
-- **Diataxis respected** — each new page is exactly one type; no procedures inside an Explanation, no
-  conceptual essays inside a How-to, no configuration tables inside a Tutorial.
+- **Diataxis respected** — each new page is exactly one type, re-tested on the drafted page (the
+  How-to/Tutorial test in `documentation.md`); no procedures inside an Explanation, no conceptual essays
+  inside a How-to, no configuration tables inside a Tutorial.
 - **Placement & splitting** — content sits on the right page; a page covering several unrelated
   topics/goals should be split further; over-fragmented pages on one coherent topic should be merged.
 - **Nothing duplicated** — no fact appears on two of the new pages, or in both a page's intro and its
@@ -213,7 +215,7 @@ only complete record of what the legacy page said — comparing legacy → new, 
 - **Illustrated to the new standard** — the converted pages show as well as tell (screenshots for
   User/Administrator, code examples for Developer, a diagram where an Explanation describes a structure),
   whether or not the legacy page had any, and without adding visuals that clarify nothing; each
-  How-to/Tutorial ends on a **result step**; the hub page links every page below it.
+  How-to/Tutorial ends on a **result step**; no hub lists its children in prose.
 - **Not more verbose than it needs to be** — the rewrite cut the legacy prose rather than reflowing it;
   no sentence survives that the reader does not need in order to act.
 - **Nothing was live half-built** — the set went public in one pass, parents first, and no reader

@@ -43,7 +43,8 @@ The documented format is:
 - Use **`[Misc]`** when there is genuinely no issue. The dev wiki scopes this to trivial things —
   "adding a small javadoc, renaming a single variable, cosmetic changes, ignore files". The test for
   whether an issue is required is *"is my change going to affect any user or any extension developer
-  in any way?"*; if yes, an issue is mandatory. A batch refactoring that changes runtime behaviour
+  in any way?"*; if yes, an issue is mandatory. Changes to test code, test frameworks or page objects
+  need none ([[backward-compatibility]]). A batch refactoring that changes runtime behaviour
   across many files therefore needs an issue, referenced from every commit of the campaign — not
   `[Misc]`.
 - **Dependency upgrades split on the same test:** a dependency that only ever reaches developers —

@@ -50,12 +50,12 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **versioning** — which version string `@since` and `@Deprecated(since=…)` take, the version a
   change ships in on another branch, and an issue's affected version (JIRA and OpenProject).
 - **backward-compatibility** — what a public API may change, what Revapi checks, the `@Unstable`
-  lifecycle, evolving an interface with default methods, and who may use `internal` packages.
+  lifecycle, evolving an interface with default methods, who may use `internal` packages, and what
+  isn't API (test code).
 - **security** — writing scripts, templates and queries safely: escaping, untrusted input, the rights
   a script runs with and how to check them, injection, parsing XML.
-- **script-services** — how a script service reports an error (it throws, the caller uses `#try()`;
-  it does not return `null` for a `getLastError()` read-back) and takes arguments, and why an
-  existing signature cannot change.
+- **script-services** — writing a script service: its package (a non-internal `script` one, it is
+  API), errors (throw, the caller uses `#try()`), arguments, and why a signature cannot change.
 - **performance** — the memory rule for user-sized data: stream it, never buffer it.
 - **logging** — what to pass a log call and at which level, and why an explicit `toString()` is
   usually deliberate.
@@ -102,7 +102,7 @@ in the topic file. Read the entry to choose, then read the file — never act on
 - **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
   mechanics most flickers turn out to be, forcing a race to prove a fix, the realtime debug dump.
 - **manual-tests** — the manual tests on test.xwiki.org: where a test's steps, runs and automation
-  status are stored, finding a release's runs, and which automation flag to trust.
+  status are stored, finding a release's runs, and which automation fields are deprecated.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look

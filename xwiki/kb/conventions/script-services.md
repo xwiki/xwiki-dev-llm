@@ -1,10 +1,10 @@
 ---
-title: Script service conventions (errors, arguments)
+title: Script service conventions (package, errors, arguments)
 stability: durable
-summary: A new script service throws instead of returning null and stashing the error, callers handle
-  it with #try(), existing null-returning signatures must not be changed, and the Method Arguments
-  Uberspector means a service never needs bean-factory methods.
+summary: A script service is API in a non-internal `script` package; a new one throws (callers use
+  #try()), an existing signature never changes, and it needs no bean-factory methods.
 sources:
+  - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Script%20Module/#HBestPractices
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Velocity%20Module
 provenance: official
@@ -15,14 +15,18 @@ applies-to: ["**/*ScriptService.java"]
 
 # Script service conventions
 
+## Package: `script`, never `internal`
+
+A script service is **API**: it goes in a non-internal `org.xwiki.<module>.script` package, so Revapi
+checks it and it is in the Javadoc. The build fails on one in an `internal` package unless its name
+ends with `InternalScriptService`. The rule is about the package, not the Maven module: it may sit in
+an `-api`, `-script` or `-default` module.
+
 ## Errors: throw, do not stash
 
-A **new** script service method **throws**. The older convention — catch, return `null`, and set an
-xcontext property the caller reads back with `getLastError()` — predates the `#try()` directive and
-is no longer the best practice.
-
-Callers that want to handle the exception use `#try()`; callers that do not need do nothing, since
-the Macro Transformation or the template catches it and displays it.
+A **new** script service method **throws**, rather than returning `null` with an error read back via
+`getLastError()` (the pre-`#try()` convention). Callers that care use `#try()`; others do nothing, the
+Macro Transformation or the template displays the exception.
 
 ```velocity
 #try('creationException')
