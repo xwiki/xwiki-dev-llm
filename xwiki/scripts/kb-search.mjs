@@ -26,8 +26,9 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { kbIndexDir } from "./state-dir.mjs";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 // Bump whenever the index's shape or anything feeding it (tokenizer, fields, weights) changes.
 export const INDEX_FORMAT = 4;
@@ -586,7 +587,7 @@ export function parseArgs(argv) {
   return { ...opts, query: opts.query.join(" ") };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (invokedDirectly(import.meta.url)) {
   let opts;
   try {
     opts = parseArgs(process.argv.slice(2));

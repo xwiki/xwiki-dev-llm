@@ -42,13 +42,13 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { defaultRoot, defaultSkillsRoot, loadIndex, promptToQuery, search, sectionHit, tagOf, tokenize }
   from "./kb-search.mjs";
 import { isScopedRepo } from "./repo-scope.mjs";
 import { simpleCommands } from "./shell-commands.mjs";
 import { kbHookStateDir } from "./state-dir.mjs";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 export const PROMPT_K = 5;
 export const EDIT_K = 3;
@@ -559,7 +559,7 @@ export function hookOutput(kind, text, env = process.env) {
   });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (invokedDirectly(import.meta.url)) {
   try {
     const kind = process.argv[2];
     const out = hookOutput(kind, runHook(kind, JSON.parse(readFileSync(0, "utf8"))));
