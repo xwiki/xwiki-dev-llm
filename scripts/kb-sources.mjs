@@ -8,7 +8,9 @@
 //        node scripts/kb-sources.mjs --diff <url>  the page's wiki-syntax diff, pinned version -> current
 //        node scripts/kb-sources.mjs --pin [url[@version]…]
 //                                                  pin the listed pages (default: every cited one) to the
-//                                                  given or current version; drop pins no KB file cites
+//                                                  given or current version; drop pins no KB file cites.
+//                                                  Name each page with the version its KB text was written
+//                                                  from: a bare --pin hides every edit made since then.
 // Exits 2 when the wiki cannot be read at all. Node built-ins and git only; anonymous REST reads.
 
 import { execFileSync } from "node:child_process";
