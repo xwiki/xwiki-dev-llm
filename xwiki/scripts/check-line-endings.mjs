@@ -12,8 +12,8 @@
 //   - Claude Code / Kimi Code: this file run directly as a PostToolUse hook (CLI section at bottom).
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-line-endings.js from a tool.execute.after hook.
 //
-// Kimi Code note: Kimi's PostToolUse hooks are observation-only and cannot block execution. The same
-// stderr warning is emitted, but the model must act on it itself; the file is not rejected. opencode
+// Kimi Code note: Kimi runs PostToolUse hooks fire-and-forget and discards their result, and its
+// Write/Edit tools name the file `path`, not `file_path`: under Kimi this hook has no effect. opencode
 // surfaces the message by throwing from the tool hook.
 
 import { readFileSync } from "node:fs";

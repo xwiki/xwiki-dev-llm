@@ -110,8 +110,9 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-gates.js" ~/.config/o
 | **Commit diff check** (`xwiki/scripts/check-diff.mjs`) — refuses a commit whose diff breaks a rule it shows exactly: a malformed `@since` / `@Deprecated(since)`, or one not naming the next release of the root pom (the release line just before it is only a warning: it was right before a version bump), a version in a javadoc `@deprecated`, new public API without `@Unstable` (`xwiki` org only), a `.properties` file turned UTF-8, a new file without a license header (Maven projects); heuristics (coverage threshold untouched, page change with no test, `[Misc]` on production code) come back as advice. It also refuses, once per skill, a commit touching files whose rules live in a skill the session has not loaded (`xwiki/scripts/skill-gates.json`: tests, -legacy code, translations, XAR pages; loads recorded by `xwiki/scripts/skill-gate.mjs`). Kimi gets the diff refusals only | Every `git commit`, in the same repos as the org conventions; reads the staged diff (the work tree too after `-a` or a `git add` in the same command) | `Diff-Check: skip` trailer for a wrong finding; `XWIKI_LLM_COMMIT_GATES=off` |
 
 A pushed commit message cannot be fixed without rewriting a shared branch, and a CRLF diff hides the
-real change — which is why those two are hooks and not conventions. Both are Node (no bash, no `jq`),
-observation-only under Kimi Code, and available to opencode as plugins.
+real change — which is why those two are hooks and not conventions. Both are Node (no bash, no `jq`) and
+available to opencode as plugins. Kimi Code refuses on the commit/PR guard as Claude Code does, but
+discards a `PostToolUse` hook's result, so the line-ending guard has no effect there.
 
 ### When you ask — skills
 

@@ -28,7 +28,7 @@
 // works on Windows, macOS and Linux with no shell dependency. Two consumers share checkCommitText():
 //   - Claude Code / Kimi Code: this file run directly as a PreToolUse hook (CLI section at bottom).
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-commit-text.js (tool.execute.before).
-// Kimi's hooks cannot block execution, so there the model must act on the message itself.
+// Kimi Code refuses the call on exit 2, as Claude Code does.
 //
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
