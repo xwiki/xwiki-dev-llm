@@ -5,6 +5,7 @@ summary: How XWiki rates security issues (CVSS 4) and the rule that a vulnerabil
   publicly until disclosure — obfuscated commit messages and restricted JIRA security issues.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
 verify: |
   Every CVSS metric value and the Critical/Major threshold are set by policy and can be refined by
   the community. Do not score from this file: read the Security Policy's "Best practices for

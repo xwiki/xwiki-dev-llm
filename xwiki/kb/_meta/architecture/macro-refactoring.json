@@ -1,74 +1,73 @@
 {
   "file": {
     "questions": [
-      "How do I make links inside my macro's parameters update when a page is renamed or moved?",
-      "Why doesn't renaming a page update the image or include reference stored in my macro?",
-      "How does XWiki build backlinks for references that live inside a macro?",
-      "Do I need a custom Java component for my macro to handle page rename link updates?"
+      "When I rename or move a page, why are links inside my macro not updated?",
+      "My macro stores a page or attachment path in a parameter, and it breaks after a move. How do I make XWiki rewrite it?",
+      "How do I make references used by my macro appear in the page's backlinks list?",
+      "Do I need custom Java code so a wiki macro's links follow page renames?"
     ],
     "aliases": [
       "link refactoring",
-      "backlink extraction",
-      "rename page macro links",
-      "reference rewriting in macros",
-      "MacroRefactoring"
+      "backlinks",
+      "rename links in macros",
+      "reference rewriting on move",
+      "backlink extraction"
     ]
   },
   "sections": {
     "Macro reference refactoring and backlinks": {
       "questions": [
-        "How does XWiki update references inside a macro when I rename or move a page or attachment?",
-        "Where do backlinks come from for links written inside macros?",
-        "How do I control what a macro does when its references get renamed?"
+        "What happens to links inside a macro when a page is renamed, and who is responsible for updating them?",
+        "How do I get the references my macro uses to show up as backlinks?",
+        "Why does my macro's reference stay stale after an attachment is moved?"
       ],
       "aliases": [
-        "backlinks in macros",
-        "macro link update on move"
+        "link updates on rename",
+        "MacroRefactoring",
+        "macro link rewriting"
       ]
     },
     "Keyed by macro id": {
       "questions": [
-        "How do I register a component so my macro's references get refactored on rename?",
-        "Which @Named hint must the refactoring component use for my macro to be picked up?",
-        "Does the macro reference refactoring work for wiki macros as well as Java macros?"
+        "What name or hint do I register my custom link-updating component under for my macro?",
+        "Does a wiki macro written in wiki syntax need a Java component to handle renamed references?",
+        "How do I register a component that is specific to one macro and not to all macros?"
       ],
       "aliases": [
-        "macro id hint",
-        "@Named macro refactoring component"
+        "component hint",
+        "macro id registration",
+        "components.txt"
       ]
     },
     "The methods": {
       "questions": [
-        "What should replaceReference return when the macro's reference did not match the renamed entity?",
-        "How do I implement extractReferences so the links my macro uses show up as backlinks?",
-        "Which overload do I need to override to handle the updatedEntities map, and do I have to implement all of them?"
+        "Which methods must I implement for a macro's reference handling, and what should they return when nothing changed?",
+        "What is the difference between the replaceReference overloads and extractReferences, and which ones can I leave alone?",
+        "How do I write the method that rewrites a macro block after a page is renamed?"
       ],
       "aliases": [
         "replaceReference",
-        "extractReferences"
+        "extractReferences",
+        "default methods in MacroRefactoring"
       ]
     },
     "The DefaultMacroRefactoring fallback (content only)": {
       "questions": [
-        "Why isn't the parameter of my macro updated when a page is renamed, even though the content links are?",
-        "Do links inside wiki macro content get refactored on rename automatically without extra code?",
-        "When does XWiki fall back to the default refactoring and what does it skip?"
+        "Why does a rename update links in a macro's body but not in its parameters?",
+        "What does XWiki automatically refactor for a macro that has no custom reference handling?",
+        "Do I have to write code if my macro only puts links in its content?"
       ],
       "aliases": [
-        "default macro refactoring",
-        "content-only link refactoring"
+        "default refactoring",
+        "content-only refactoring"
       ]
     },
     "Where to go deeper": {
       "questions": [
-        "Where is the official tutorial section on backlinks and link refactoring in macros?",
-        "Which existing macro refactoring implementation can I copy as an example for a parameter-based reference?",
-        "Where is the MacroRefactoring interface Javadoc I should read?"
+        "Where can I find the official guide and example implementations for macro link refactoring?",
+        "Which existing macro refactoring classes should I copy as a model for a parameter-based or content-based reference?"
       ],
-      "aliases": [
-        "IncludeMacroRefactoring example",
-        "writing a macro tutorial"
-      ]
+      "aliases": []
     }
   },
   "proposed": {
@@ -78,9 +77,8 @@
       "architecture/platform-modules.md"
     ],
     "applies-to": [
-      "**/src/main/java/**/*MacroRefactoring*.java",
-      "**/src/main/resources/META-INF/components.txt"
+      "**/*MacroRefactoring*.java"
     ]
   },
-  "source_hash": "982edae31949cedb82f299e6e14df3efea3e2c854bc6bbc8777b18b9af84a78a"
+  "source_hash": "9bddaf756ce8713fb649e9e0e35fc8deaafa0e8c1be11b22bb5841aabe4cff5a"
 }

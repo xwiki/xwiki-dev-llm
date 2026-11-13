@@ -1,80 +1,78 @@
 {
   "file": {
     "questions": [
-      "How do I run Docker functional tests on my own machine instead of only in CI?",
-      "Why does my Docker functional test fail in setup before any test method runs?",
-      "Why do my local functional tests pass but fail on CI with a browser container problem?",
-      "How do I stop leftover browser containers and Docker networks from piling up after test runs?"
+      "How do I run the XWiki Docker functional tests on my own machine?",
+      "Why does my UI test pass locally but fail on CI with a networking error?",
+      "Why are testcontainers networks and browser containers piling up after my test runs?",
+      "Can I run several Docker functional tests or agents at the same time on one laptop?"
     ],
     "aliases": [
-      "Docker ITs",
-      "integration tests in Docker",
-      "UI tests",
+      "ryuk",
       "testcontainers",
-      "ryuk"
+      "docker ITs",
+      "UI tests in Docker",
+      "-Pdocker,integration-tests"
     ]
   },
   "sections": {
     "Running Docker functional tests on a developer machine": {
       "questions": [
-        "How do I run the Docker functional tests locally with the docker and integration-tests profiles?",
-        "Which servlet engine should I pick for running UI tests on my laptop?",
-        "Which Docker test configuration do I need before trusting a local green run?"
+        "Which servlet engine should I pick to run the XWiki UI tests locally?",
+        "When do I have to run the containerised Tomcat or Jetty config before trusting a green local run?",
+        "How do I run the Docker integration tests with mvn on my laptop?"
       ],
       "aliases": [
-        "local UI test run",
-        "-Pdocker,integration-tests"
+        "local UI test setup",
+        "docker integration tests",
+        "servlet engine choice"
       ]
     },
     "The browser is always a container; what changes is how it reaches XWiki": {
       "questions": [
-        "Why does my UI test pass locally but fail in CI when it uses a hostname or port?",
-        "How does the browser container reach the wiki under Jetty standalone versus Tomcat?",
-        "When do I have to test against the containerised servlet engine instead of the default?"
+        "Why can't the browser container reach localhost:8080 in my XWiki UI test?",
+        "Why does a hardcoded host name or port in my functional test pass locally and fail in CI?",
+        "What is the difference between JETTY_STANDALONE and a containerised servlet engine for UI tests?"
       ],
       "aliases": [
         "xwikiweb alias",
-        "JETTY_STANDALONE",
         "host-gateway",
-        "servlet engine networking"
+        "BrowserContainerExecutor"
       ]
     },
     "A setup failure is never evidence about your change": {
       "questions": [
-        "What does the error setting up the XWiki testing environment mean in my test log?",
-        "Why does my functional test fail with a 401 or a failed to start XWiki error before any test runs?",
-        "How do I tell a machine problem from a real failure in my Docker test run?"
+        "My test fails in beforeAll with 'Error setting up the XWiki testing environment', is my code broken?",
+        "What does a 401 when installing extensions during a Docker UI test mean?",
+        "Why does XWiki fail to start after 120 seconds in my functional test, and what do I check?"
       ],
       "aliases": [
+        "setup failure",
         "beforeAll failure",
-        "Error setting up the XWiki testing environment",
-        "failed to install extension 401"
+        "test environment error"
       ]
     },
     "Leftover containers and networks: ryuk has to reach the daemon": {
       "questions": [
-        "Why do my Docker test runs fail with address pools fully subnetted after many runs?",
-        "How do I clean up stale testcontainers browser containers and networks left behind?",
-        "How do I fix the old ryuk image that refuses to clean up containers with Docker API 1.29?"
+        "Docker says all predefined address pools have been fully subnetted, how do I clean up leftover networks?",
+        "Why are browser containers still running after my test run has finished?",
+        "How do I fix ryuk failing with 'client version 1.29 is too old'?"
       ],
       "aliases": [
-        "testcontainers ryuk",
-        "orphaned containers",
-        "docker network prune",
-        "client version 1.29 is too old"
+        "leaked containers",
+        "address pool exhausted",
+        "testcontainers ryuk"
       ]
     },
     "What several agents on one machine contend for": {
       "questions": [
-        "Why do my functional test runs break when two AI agents or worktrees run at the same time?",
-        "How many Docker integration test runs can I run in parallel on one machine?",
-        "Why does a second test run report a 401 or install into the wrong wiki?"
+        "Can two Docker functional tests run at the same time on one machine without clashing?",
+        "Two git worktrees running mvn install overwrite each other's SNAPSHOT jar, what should I do?",
+        "Why does my second UI test end up provisioning into another wiki and reporting a 401?"
       ],
       "aliases": [
-        "concurrent test runs",
-        "parallel Maven builds",
-        "~/.m2 shared SNAPSHOT",
-        "port 8080 conflict"
+        "parallel test runs",
+        "concurrent builds",
+        "shared m2 repository"
       ]
     }
   },
@@ -87,5 +85,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "520528c490ceb10016576d75b05454b027bbf1eb6ff130c41be5e03544320211"
+  "source_hash": "18fa9484cbf826dfd766f84691c0ee6726433537922f4b288776d30d15d75355"
 }

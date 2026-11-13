@@ -144,4 +144,5 @@ artifact from the Revapi analysis of its dependents, in the `<revapi.filter><arc
 parent pom they share (e.g. `<item>org\.xwiki\.platform:xwiki-platform-oldcore:.*</item>` in
 `xwiki-platform-core/pom.xml`), with a comment saying its API is checked by the legacy module that wraps it.
 Per-method `java.method.removed` ignores for moved methods are then useless — remove them. A green build on the changed
-module therefore never means "compatible".
+module therefore never means "compatible": build the modules depending on it before pushing, rather than waiting for CI
+to fail.

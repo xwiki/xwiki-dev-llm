@@ -1,45 +1,44 @@
 {
   "file": {
     "questions": [
-      "Where are the manual test steps and results stored on test.xwiki.org?",
-      "How do I find the manual test runs for a specific XWiki release?",
-      "How can I tell whether a manual test has already been automated?",
-      "Which automation flag on a manual test should I trust?",
-      "How do I search Solr for a release's manual test executions?"
+      "Where are the steps and results of a manual test stored on test.xwiki.org?",
+      "How do I find all the manual test runs for one XWiki release?",
+      "Which automation flag on a manual test can I trust, the status object or the automated yes/no?",
+      "How do I check whether a manual test has already been automated before writing a new one?"
     ],
     "aliases": [
-      "manual test strategy",
-      "test reporting application",
+      "Test Reporting Application",
+      "manual QA test cases",
       "QA.TestClass",
-      "manual test cases",
-      "test.xwiki.org test reports"
+      "manual test automation tracking",
+      "test.xwiki.org test pages"
     ]
   },
   "sections": {
     "Manual tests on test.xwiki.org — data model and automation status": {
       "questions": [
-        "Where does the manual test data live on test.xwiki.org?",
-        "How do I find every run of one manual test for a given major version?",
-        "Which object holds the expected result and the deprecated flag of a manual test?"
+        "Where do the results of a manual test run get saved on test.xwiki.org?",
+        "How is a manual test page structured, where are its steps and expected result?",
+        "How do I query Solr for all manual test executions of one release like 18.4.5?"
       ],
       "aliases": [
-        "TestReportingExecutions",
         "QA.ExecutionClass",
-        "test reporting app data model",
-        "manual test execution records"
+        "TestReportingExecutions space",
+        "manual test execution records",
+        "manual test results storage"
       ]
     },
     "Automation status": {
       "questions": [
-        "How do I record that a manual test has been automated on test.xwiki.org?",
-        "What do the Automated, Not Automatable and Needs Automated Test statuses mean?",
-        "Does a manual test with no automation status still need automating?",
-        "Should I search for an existing automated test before writing one for a manual test?"
+        "How do I tell whether a manual test has already been automated?",
+        "Which automation status field should I trust on a manual test page?",
+        "Why does the automated yes/no flag disagree with the status shown on this manual test?"
       ],
       "aliases": [
-        "QA.AutomatedTestStatusClass",
-        "automated test flag",
-        "manual test automation tracking"
+        "AutomatedTestStatusClass",
+        "Not Automatable tests",
+        "legacy automated flag",
+        "manual test automation status"
       ]
     }
   },
@@ -51,5 +50,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "387d59e67822e49aae4222c939391f911053f6a043cf10d63898931cd53227d8"
+  "source_hash": "92dd9b863ef858a7207f4c31847e35b596faaa0aa8f191bc8cdff338a674d39b"
 }

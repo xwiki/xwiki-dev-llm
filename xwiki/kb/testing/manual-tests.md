@@ -27,9 +27,10 @@ automated: the "Manual tests migration strategy" section of the Manual Test Stra
 
 ## Automation status
 
-- **The current record is a `QA.AutomatedTestStatusClass` object** on the test page: `status`
+- **The `QA.AutomatedTestStatusClass` object on the test page is the record to trust**: `status`
   (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),
   `tests` (GitHub links to the automated tests) and `notes`.
-- **`QA.TestClass.automated` (yes/no) is the legacy flag**, which upstream still asks to update. The
-  two disagree on many tests, and most tests have no status object at all — so neither proves a test
-  is *not* automated: search the code for an existing test before writing one.
+- **`QA.TestClass.automated` (yes/no) is the legacy flag**: never decide from it, though upstream
+  still asks to update it. The two disagree on many tests.
+- **Most tests have no status object at all**, and then the status is unknown: the test may already
+  be automated in the code or not. Search the code for an existing test before writing one.

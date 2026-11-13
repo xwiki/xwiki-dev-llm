@@ -1,66 +1,69 @@
 {
   "file": {
     "questions": [
-      "How do I tell if a new class I'm adding is too shallow or just a pass-through wrapper?",
-      "Is a reviewer's comment about my class design something I have to change before merging?",
-      "What should I check about a new class's design before opening a pull request?",
-      "When is it worth extracting a helper class instead of keeping the logic inline?"
+      "How do I know if a new class I'm adding is too thin and just passes calls through to something else?",
+      "Should I create a new helper class for this logic, or keep it inside the existing class?",
+      "Is it okay to add an interface with only one implementation so I can mock it in tests?",
+      "What should I check in code review for a new class's design without it turning into a rewrite of the module?",
+      "How do I tell whether a new extension point is actually needed or just speculative?"
     ],
     "aliases": [
       "deep module",
-      "shallow module",
-      "design review checklist",
+      "shallow class",
       "pass-through class",
-      "information hiding"
+      "hypothetical seam",
+      "class design review"
     ]
   },
   "sections": {
     "Module design — a review lens for the classes a change adds or reshapes": {
       "questions": [
-        "Is a design comment on my new class a blocking review finding or a suggestion I can decline?",
-        "What design criteria do reviewers apply when judging a class my change introduces?",
-        "How do I know whether the classes I'm adding are well-shaped for their callers?"
+        "What design questions should reviewers ask about a new class in my change?",
+        "Is there an XWiki rule on how deep a class should be or where logic goes?",
+        "Why did a reviewer say my class is shallow, and is that a blocking issue?"
       ],
       "aliases": [
         "design review lens",
-        "class design guidelines",
-        "Ousterhout deep and shallow modules"
+        "class depth review",
+        "module design guidelines"
       ]
     },
     "Scope: only what the change adds or reshapes": {
       "questions": [
-        "Does a design review of my PR cover the existing code my change only calls?",
-        "Can a reviewer ask me to redesign the whole module while I'm adding one class?",
-        "Which classes in my diff should I apply design criteria to?"
+        "Does the design review apply to existing code my change only calls?",
+        "Can a reviewer ask me to refactor the whole module while I'm in it?",
+        "Which classes should I check for design issues in my patch?"
       ],
       "aliases": [
-        "change scope",
-        "scope of design review"
+        "review scope",
+        "boy scout refactoring out of scope",
+        "patch scope design"
       ]
     },
     "The questions": {
       "questions": [
-        "How do I check whether a class is shallow, meaning its callers must know too much about it?",
-        "What is the deletion test for a helper class, and how do I run it on my code?",
-        "When is an interface or extension point a real seam rather than a hypothetical one?",
-        "Where should logic that only reads another object's state live, and why does placement matter?"
+        "What exactly do I check for depth, locality, seams and leaks in a new class?",
+        "How do I apply the deletion test to my helper class?",
+        "When is an interface with one implementation a hypothetical seam I should drop?",
+        "How do I tell if my new static state leaks a hidden lifecycle?"
       ],
       "aliases": [
-        "hypothetical seam",
-        "pass-through method",
-        "information leakage",
-        "feature envy"
+        "deletion test",
+        "seam review",
+        "locality of logic",
+        "leaky abstraction check"
       ]
     },
     "Turning it into a review point": {
       "questions": [
-        "How do I write a code review comment about class design that the author can act on?",
-        "What makes a design feedback comment on a pull request specific enough to be useful?",
-        "When should I drop a design concern because I cannot name a concrete alternative?"
+        "How do I write a design review comment that names the class, the failing question and the alternative?",
+        "When is a design comment on my code just speculation I can ignore?",
+        "Is a small or all-static class a design problem in review?"
       ],
       "aliases": [
-        "review comment",
-        "PR design feedback"
+        "writing review comments",
+        "design feedback format",
+        "actionable review point"
       ]
     }
   },
@@ -71,8 +74,8 @@
       "conventions/code-style.md"
     ],
     "applies-to": [
-      "**/src/main/java/**/*.java"
+      "**/*.java"
     ]
   },
-  "source_hash": "57876039373c8d9040fcb45b5c7126684b5f85ab1d2b91a9b2ebac2140be3004"
+  "source_hash": "f0126a68d8a1f3e8798e51636730f4578ffd1f9012a787b1396c9083ca0c750a"
 }

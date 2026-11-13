@@ -1,58 +1,55 @@
 {
   "file": {
     "questions": [
-      "How does XWiki version and release its projects, and do commons, rendering and platform ship together?",
-      "Which stable branches should I backport my bug fix to in XWiki?",
-      "Can a non-security fix go into an older LTS line, or only security fixes?",
-      "What is the high-level overview of XWiki's release cadence and long-term support branches?"
+      "Which XWiki branches should I backport my bug fix to?",
+      "How does XWiki number its releases, and do commons, rendering and platform share a version?",
+      "Does an ordinary fix go into the latest monthly stable release or wait for the next one?",
+      "Where are the steps for cutting an XWiki release?"
     ],
     "aliases": [
+      "XWiki release process",
       "release train",
-      "LTS branches",
       "backport policy",
-      "maintenance branch",
-      "version numbering"
+      "LTS policy",
+      "support strategy"
     ]
   },
   "sections": {
     "Release and versioning process (outline)": {
       "questions": [
-        "What is the high-level overview of how XWiki cuts and versions its releases?",
-        "Where do I start to understand XWiki's release process before I prepare a release?",
-        "How often does XWiki ship new stable versions?"
+        "How does XWiki number its versions and decide what goes into each release?",
+        "What is the high-level release cycle for XWiki before I start preparing a release?",
+        "Which XWiki projects get released together with the same version number?"
       ],
       "aliases": [
-        "release process overview",
-        "release cycle",
-        "release management"
+        "release overview",
+        "versioning overview"
       ]
     },
     "Durable facts": {
       "questions": [
-        "Which LTS branches should a bug fix be backported to in XWiki?",
-        "Do I need to backport my fix to the latest monthly stable release, or will it ship in the next one?",
-        "Are commons, rendering and platform always released with the same version number?",
-        "Can I backport a small non-security fix to an older LTS line?"
+        "Can I backport my fix to the current monthly stable release or does it have to wait for the next one?",
+        "Which LTS branches are maintained in parallel right now, and how do I work out their version numbers from the pom?",
+        "When is a fix allowed on an older LTS branch, and only for security issues?",
+        "Where are XWiki release artifacts and snapshots published so extensions can consume them?"
       ],
       "aliases": [
-        "LTS targets",
         "backport targets",
-        "stable branch",
-        "cherry-pick to stable"
+        "LTS branches",
+        "stable branch policy",
+        "maintenance branches"
       ]
     },
     "Volatile — follow the pointer, do not cache": {
       "questions": [
-        "Where do I find the current XWiki release steps to follow when I release?",
-        "Where can I see the current XWiki release plans and planned dates?",
-        "What is the current development version of XWiki, and where is it defined?",
-        "Who is the release manager for the current XWiki cycle?"
+        "Where do I find the current XWiki release plan, its dates, and who the release managers are?",
+        "What are the detailed steps to perform an XWiki release?",
+        "How do I find the current development version of XWiki in the root pom?"
       ],
       "aliases": [
-        "release runbook",
-        "release plan",
-        "release manager",
-        "dev version"
+        "release schedule",
+        "release managers",
+        "release plan"
       ]
     }
   },
@@ -65,5 +62,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "0f2323703b1ee7b413058221921aaddbec24b73551ed7d3f10a8961aefbae949"
+  "source_hash": "7a290b76151fb6138f68384b954a89cc81820d8edd23aa1dcbd15479296e1657"
 }

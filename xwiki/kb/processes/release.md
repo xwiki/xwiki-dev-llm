@@ -52,4 +52,5 @@ of truth and changes over time — fetch it when actually releasing.
   performing them through the version's Release Plan → the `xwiki-xs-release` skill.
 - **Current release plans / dates** → https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/
 - **The current dev version** → read the repo's root `pom.xml` (see [[versioning]]).
-- **Role holders** (release manager of the cycle, etc.) → the dev wiki; these rotate.
+- **Role holders** (release managers, who rotate) → the same Release Plans page: its "Next Release
+  Managers" section, and the "Release Managers" column of each plan.

@@ -45,7 +45,7 @@ execution across builds, branches and configurations. Server map and MCP: [[inde
 
 Lists every test that failed in the window (default 24 h) across XWiki builds, with its rate,
 branches and browsers, whether it is `new` or `known` (against `--baseline-days`, default 14; `0`
-saves a request per container), and ready-to-run commands for the most interesting ones. Trap: the
+saves a request per container but drops the baseline column and the new/known status), and ready-to-run commands for the most interesting ones. Trap: the
 baseline column covers the preceding days, `fails`/`flaky`/`runs` only the window — only the two
 percentages are comparable.
 

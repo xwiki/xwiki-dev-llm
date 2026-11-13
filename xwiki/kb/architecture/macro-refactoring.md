@@ -41,7 +41,8 @@ wiki macros: the id is what matters, not how the macro is implemented.
 
 The interface evolves via **default methods** (see [[backward-compatibility]]): the newer overloads
 taking a `Map<EntityReference, EntityReference> updatedEntities` are `default` and delegate to the
-simpler overloads, so an implementation only overrides what it needs.
+simpler overloads, and `extractReferences` defaults to an empty set. Only the two base
+`replaceReference` overloads (`DocumentReference`, `AttachmentReference`) are abstract: implement both.
 
 ## The DefaultMacroRefactoring fallback (content only)
 

@@ -153,6 +153,10 @@ discarded). Test-code lists built only for `assertEquals` or iteration are safe.
   make the setter copy — `this.x = x == null ? null : new ArrayList<>(x);`. That clears the Sonar issue
   *and* preserves the mutable-getter contract, so the escaping list no longer matters.
 
+Otherwise keep a mutable list explicitly: `collect(Collectors.toCollection(ArrayList::new))` is not
+flagged, S6204 matching only `Collectors.toList()` / `toUnmodifiableList()` (sonar-java
+`CollectorsToListCheck`).
+
 A REST JAXB response DTO (`*.rest.model.jaxb`) built once and only serialized is safe.
 
 `.toList()` is shorter than the original, so line length never breaches.

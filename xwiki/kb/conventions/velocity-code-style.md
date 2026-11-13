@@ -39,8 +39,8 @@ next such call overwrites it.
 - **Single quotes** for strings needing no interpolation — Velocity then skips parsing them.
 - Shorthand `$variable`; the formal `${variable}` only where required for correct parsing.
 - **Since 15.10RC1**, a macro not intended as an API is prefixed with an underscore, and an API macro
-  documents its parameters and its since version. Macros predating 15.10 count as APIs by default and
-  can only be renamed after a vote.
+  documents its parameters and its since version. Any macro without the underscore — those predating
+  15.10 included — counts as an API and can only be renamed after a vote.
 
 ## A macro declares the variables it writes
 

@@ -27,8 +27,6 @@ change what the regex matches.
   pattern built from the decoded `Ĳ` finds nothing.
 - Only single-character classes are flagged; leave the multi-character ones (`"[\u0136\u01e8]"`)
   alone, and do not "improve" the flagged call into `replace()` — that is S5361 and a separate issue.
-- The dense sites are the accent-stripping `replaceAll` tables duplicated in `XWiki.java` (platform)
-  and `XWikiSerializer2.java` (rendering).
 
 ## S1125 — redundant boolean literal
 

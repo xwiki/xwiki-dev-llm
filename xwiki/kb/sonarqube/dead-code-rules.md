@@ -176,23 +176,25 @@ declaration and that assignment. An `@Override` setter's now-unused parameter is
   it is pure noise — JUnit invokes it reflectively and nothing else calls it, so nothing can be
   broken. The compiler is the whole verification: had the exception actually been throwable, the
   build would not compile.
-- **A test-source method with NO such annotation is a different risk class — drop it unless you
-  prove otherwise.** A protected/public helper on an abstract test base is overridable, and when the
+- **A test-source method with NO such annotation is a different risk class — fix it only once you
+  prove it safe.** A protected/public helper on an abstract test base is overridable, and when the
   module publishes a `test-jar` the overriding subclass lives in *another* module: it may still
   declare the wider `throws`, which stops compiling once the parent narrows its clause — and the
-  in-module build you run will not catch it. Classify every site by the annotation above the flagged
+  in-module build you run will not catch it. Test code is not API, so the proof is a search of its
+  overrides and callers across xwiki-commons, xwiki-rendering and xwiki-platform: fix the helper and
+  any override found there, or drop the site. Classify every site by the annotation above the flagged
   line before batching (walking up over `@…`/comment/blank lines), not by "it is under `/src/test/`".
 - **`private` IS that proof, and it is most of the un-annotated pool.** A `private` helper cannot be
   overridden and cannot be called from outside its file, so it carries exactly the risk of an
   annotated test method — none. Bucket un-annotated sites into `private` (fix) and everything else
-  (drop) rather than dropping the whole bucket — that recovers most of the un-annotated sites, leaving
-  only the `public`/`protected` helpers on abstract test bases.
+  (search, then fix or drop) rather than dropping the whole bucket — that recovers most of the
+  un-annotated sites, leaving only the `public`/`protected` helpers on abstract test bases.
 - Add `@BeforeComponent` (and the other XWiki test-framework hooks) to the safe annotation set — they
   are invoked reflectively exactly like the JUnit ones.
-- **`src/main` is NOT the drop line — non-`private` is, in test and main sources alike.** Narrowing a
+- **In `src/main`, non-`private` is the drop line.** Narrowing a
   `throws` on a published or overridable method breaks every caller that catches it and every
-  subclass that declares the wider clause, so `public`/`protected`/package-private is a drop wherever
-  it lives. A `private` `src/main` method carries the same "none" risk as a `private` test helper, so
+  subclass that declares the wider clause, so `public`/`protected`/package-private is a drop there.
+  A `private` `src/main` method carries the same "none" risk as a `private` test helper, so
   fix it. Bucket on the modifier of the **declaration** line, not of the flagged line: Sonar
   attributes the issue to the line holding the `throws`, which under XWiki's wrapping is often a
   continuation line with no modifier on it.

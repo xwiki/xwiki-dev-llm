@@ -1,72 +1,71 @@
 {
   "file": {
     "questions": [
-      "Can I change or remove a public method in xwiki-platform without breaking extensions?",
-      "What compatibility rules apply when I change a Java API in XWiki?",
-      "Why did the build fail with a Revapi error after I changed a public class?",
-      "How do I know whether my API change breaks existing XWiki users?"
+      "How does XWiki handle backward compatibility when changing public APIs?",
+      "Which rules apply when I want to change or remove a public method in a library used by extensions?",
+      "Is it OK to import internal packages from another XWiki project?",
+      "What checks does the build run to catch breaking API changes?"
     ],
     "aliases": [
       "API compatibility",
       "binary compatibility",
+      "breaking changes",
       "Revapi",
-      "breaking change policy"
+      "API stability policy"
     ]
   },
   "sections": {
     "Backward compatibility policy": {
       "questions": [
-        "What counts as a breaking change in XWiki's public Java API?",
-        "Does the build check source compatibility or only binary compatibility?",
-        "Which kinds of public API changes are allowed between XWiki releases?"
+        "What does XWiki require when I change a public API that extensions might use?",
+        "Does the build fail if my change breaks binary or semantic compatibility?",
+        "Why doesn't the build check source compatibility?"
       ],
       "aliases": [
-        "breaking changes",
-        "API stability",
-        "Revapi check"
+        "compatibility rules",
+        "API change policy"
       ]
     },
     "Who may use `internal` packages": {
       "questions": [
         "Can my extension import classes from an internal package of xwiki-platform?",
-        "Can xwiki-rendering code use an internal class from xwiki-commons?",
-        "Can I use internal classes from another project in my unit tests?"
+        "Can I use internal classes from xwiki-rendering in xwiki-platform code?",
+        "Is it allowed to use internal classes in tests?"
       ],
       "aliases": [
         "internal API",
-        "non-public API",
-        "internal package"
+        "private packages"
       ]
     },
     "`@Unstable` annotation": {
       "questions": [
-        "How do I mark a new public method as experimental in XWiki?",
-        "How long can an API stay marked as unstable before it must be stabilized?",
-        "Why does the build fail complaining that my @Unstable annotation has expired?"
+        "How do I mark a new API as experimental or allowed to change in XWiki?",
+        "How long can an API stay @Unstable before it must become stable?",
+        "When should I remove @Unstable from an API?"
       ],
       "aliases": [
         "experimental API",
-        "beta API",
-        "@since"
+        "@Experimental",
+        "unstable API"
       ]
     },
     "Evolving an interface without breaking it": {
       "questions": [
-        "How do I add a method to an interface that other classes already implement without breaking them?",
-        "Should I add a default method to the existing interface or create a new interface?",
-        "What should the body of a default method do when I add it to an interface?"
+        "How do I add a method to an existing interface without breaking implementations?",
+        "Should I create a new interface instead of adding a method to an old one?",
+        "What should a default method throw or return when added to an interface?"
       ],
       "aliases": [
         "default methods",
         "interface evolution",
-        "adding a method to an interface"
+        "adding methods to interfaces"
       ]
     },
     "Deprecation": {
       "questions": [
-        "How do I deprecate an old XWiki Java method and what should the Javadoc say?",
-        "When can I move a deprecated class into the legacy module?",
-        "Can I delete a deprecated API from xwiki-platform yet?"
+        "What steps do I follow to deprecate a Java method or class in XWiki?",
+        "When can I move a deprecated API into the legacy module?",
+        "Can I remove a deprecated API from a -legacy module?"
       ],
       "aliases": [
         "@Deprecated",
@@ -76,35 +75,35 @@
     },
     "Choosing the `<criticality>` of a Revapi ignore": {
       "questions": [
-        "Should my Revapi ignore use highlight, documented, or allowed as its criticality?",
-        "How do I make sure a breaking change I accept shows up in the release notes?",
-        "My Revapi ignore is not taking effect and the build still fails, what am I doing wrong?"
+        "Which criticality should I give a Revapi ignore: highlight, documented or allowed?",
+        "Why does my Revapi ignore not take effect in the pom?",
+        "Can I add a Revapi ignore on my own to make the build pass?"
       ],
       "aliases": [
+        "revapi.differences",
         "revapi suppression",
-        "revapi exclusion",
-        "revapi.differences"
+        "revapi exclusion"
       ]
     },
     "Where Revapi does and does not look": {
       "questions": [
-        "Why does a downstream module fail to build after I moved a class to a legacy module when Revapi passed on the changed module?",
-        "How do I exclude a wrapped legacy artifact from Revapi analysis in dependent modules?",
-        "Does a green Revapi build mean my change is compatible with everything?"
+        "Why does the build fail in a downstream module after I moved a class to legacy?",
+        "How do I exclude a wrapped artifact from Revapi analysis of dependent modules?",
+        "Does a green build mean my change is backward compatible?"
       ],
       "aliases": [
-        "revapi.filter",
-        "revapi transitive dependencies",
-        "revapi coverage"
+        "revapi scope",
+        "revapi coverage",
+        "transitive dependencies"
       ]
     }
   },
   "proposed": {
     "related": [
       "conventions/versioning.md",
-      "decisions/check-binary-not-source-compatibility.md",
+      "conventions/code-style.md",
       "processes/release-notes.md",
-      "conventions/code-style.md"
+      "decisions/check-binary-not-source-compatibility.md"
     ],
     "applies-to": [
       "**/*.java",
@@ -112,5 +111,5 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "ebc8034bdb124986d5faa04093ac6d7fe07a409a9b87ad2842590a3faf7efda6"
+  "source_hash": "3bc759806e76f515ec0dde02a918b862264293ca116e46a8417dec03154ae652"
 }
