@@ -75,6 +75,9 @@ Then:
    and in the body — never a devs-list or forum thread, even the one where it was decided; that history
    goes in the PR description. For volatile facts add a `verify:` line and store the recipe, not the value.
    Cross-link related entries with `[[name]]` (the target file's basename without extension).
+   The search and pointer hooks also read `last-confirmed` (date; breaks near-ties), `related`
+   (topics shown beside a hit) and, when the rule concerns certain files, `applies-to` (path globs)
+   and `applies-when` (regexes over added text); copy their form from a sibling topic.
 2. **Update `kb/index.md`** — the topic line (`node scripts/validate.mjs` checks every topic is
    listed). Then, in this repo, **regenerate the topic's search sidecar** (`kb/_meta/`) with
    `node scripts/kb-pipeline/gen-metadata.mjs`: a sidecar whose topic body changed is ignored, so
