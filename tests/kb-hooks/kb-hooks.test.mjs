@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 process.env.XDG_STATE_HOME = mkdtempSync(join(tmpdir(), 'kb-hooks-state-'));
 const {
-  MAX_CHARS, MIN_SCORE, addedText, editPointers, formatPointers, globSpecificity, globToRegExp, hookOutput, loadSeen,
+  MAX_CHARS, MIN_SCORE, RELATIVE_MIN, addedText, editPointers, formatPointers, globSpecificity, globToRegExp, hookOutput, loadSeen,
   promptPointers, runHook, saveSeen,
 } = await import('../../xwiki/scripts/kb-hooks.mjs');
 const { buildIndex, defaultRoot, loadIndex } = await import('../../xwiki/scripts/kb-search.mjs');
@@ -417,7 +417,7 @@ test('skills: indexed by name and own description; sibling routing and explicit-
 });
 
 test('skills: a prompt\'s skill pointers lead, as a load instruction naming them, ahead of the KB block', () => {
-  const hits = promptPointers(skillIndex, 'how do I retire a deprecated method to the legacy module', { minScore: 0 });
+  const hits = promptPointers(skillIndex, 'how do I retire a deprecated method to the legacy module, then build it', { minScore: 0 });
   assert.equal(hits[0].id, 'skill:xwiki-legacy');
   assert.ok(hits.some((h) => h.id === 'conventions/compat.md#Deprecation'));
   assert.ok(promptPointers(skillIndex, 'retire deprecated legacy module', { minScore: 0, k: 0 }).every((h) => h.tag === '[skill]'));
@@ -468,6 +468,48 @@ test('skills on the shipped plugin: off-topic probes still get nothing; a task n
   assert.ok(ids('write javadoc for the new public interface').includes('skill:xwiki-javadoc'));
   const skills = Object.values(fullIndex.files).filter((f) => f.kind === 'skill');
   assert.ok(skills.length > 20 && !fullIndex.files['skill:xwiki-review'], 'explicit-only skills are left out');
+});
+
+// The probes behind the skill-name rule and RELATIVE_MIN (and kb-search's "a word counts once"): chat
+// about the session matched a skill's description (xwiki-doc-export, xwiki-xs-release, xwiki-knowledge)
+// and loaded it; a task names its skill; "xwiki-platform" scored three times and buried the answer.
+const SESSION_CHAT = [
+  'can we continue in a different session?',
+  'Continue the KB v2 work from HANDOFF.md, starting with step 1',
+  'can you remind me what the plan was for step 3?',
+  'Read the plan in PLAN.md and pick the next unchecked step',
+  'write a handoff so I can continue in a new session',
+  'continue with task 06',
+];
+const TASKS = {
+  'backport this fix to the 17.10.x branch': 'skill:xwiki-backport',
+  'open a pull request for this change': 'skill:xwiki-pull-request',
+  'create a JIRA issue for this bug': 'skill:xwiki-jira',
+};
+
+test('skills on the shipped plugin: a skill is pointed at only when the prompt uses a word of its name', () => {
+  for (const prompt of SESSION_CHAT) {
+    assert.deepEqual(promptPointers(fullIndex, prompt).filter((h) => h.tag === '[skill]'), [], prompt);
+  }
+  for (const [prompt, id] of Object.entries(TASKS)) {
+    assert.ok(promptPointers(fullIndex, prompt).some((h) => h.id === id), prompt);
+  }
+});
+
+test('prompt hook: a repo name does not bury the answer, and no pointer trails the best by more than RELATIVE_MIN', () => {
+  const files = (p) => promptPointers(fullIndex, p).map((h) => h.file);
+  assert.ok(files('where do I put a new data migration in xwiki-platform?').includes('architecture/data-migrations.md'));
+  assert.ok(files('what should the commit message look like for an xwiki-commons fix?')
+    .includes('conventions/commit-messages.md'));
+  // A long question's best section scores far above MIN_SCORE: the tail is cut relative to it, and
+  // stays cut when the prompt is sent again with its best sections already given.
+  const prompt = 'convert this JUnit4 functional test to the docker @UITest framework';
+  const first = promptPointers(fullIndex, prompt);
+  const best = Math.max(...first.filter((h) => h.tag !== '[skill]').map((h) => h.score));
+  const again = promptPointers(fullIndex, prompt, { seen: new Set(first.map((h) => h.id)) });
+  for (const h of [...first, ...again].filter((x) => x.tag !== '[skill]')) {
+    assert.ok(h.score >= RELATIVE_MIN * best, h.id);
+  }
 });
 
 test('skills on the shipped plugin: _meta/skills.json names real skills and its regexes compile', () => {

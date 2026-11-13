@@ -7,7 +7,8 @@
 // of a hook's KB pointers. The hooks:
 //
 //   node kb-hooks.mjs prompt   UserPromptSubmit — searches the KB with the prompt; ≤5 pointers, and
-//                              only those whose BM25 score clears MIN_SCORE.
+//                              only those whose BM25 score clears MIN_SCORE and RELATIVE_MIN of the
+//                              best section's; a skill only when the prompt uses a word of its name.
 //   node kb-hooks.mjs edit     PreToolUse on Edit/Write — matches the target path against the topics'
 //                              `applies-to:` globs and the text the edit adds against their
 //                              `applies-when:` regexes; ≤3 pointers. Advice only: it never blocks.
@@ -36,8 +37,8 @@
 // hooks are Claude's).
 // opencode reaches the same functions through xwiki/opencode/plugins/xwiki-kb-pointers.js.
 //
-// Every constant is set a priori (tests/kb-hooks/ records the probes behind MIN_SCORE), never tuned
-// on the benchmark's questions.
+// Every constant is set a priori (tests/kb-hooks/ records the probes behind MIN_SCORE, RELATIVE_MIN
+// and the skill-name rule), never tuned on the benchmark's questions.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
@@ -63,6 +64,10 @@ export const SKILL_K = 2;
 export const MIN_SCORE = 8;
 // A prompt with fewer distinct content terms is an acknowledgement ("ok continue", "yes do it").
 export const MIN_PROMPT_TERMS = 3;
+// A prompt-hook KB pointer must also score at least this share of the prompt's best section, given
+// or not: what trails the best by more is matched by the prompt's incidental words, and a repeated
+// prompt, its best sections already given, would otherwise surface them.
+export const RELATIVE_MIN = 0.5;
 // ~300 tokens: the whole block, header included, is cut to this many characters.
 export const MAX_CHARS = 1300;
 const FIRST_LINE_MAX = 110;
@@ -116,12 +121,23 @@ const isSkill = (hit) => hit.tag === "[skill]";
 /** Up to SKILL_K skills, then up to `k` KB pointers, each in rank order. */
 const capKinds = (hits, k) => [...hits.filter(isSkill).slice(0, SKILL_K), ...hits.filter((h) => !isSkill(h)).slice(0, k)];
 
-/** Prompt hook: the KB sections worth pointing at for a prompt, minus those already given. */
+/** Whether a prompt names what a skill is for: a word of its name, `xwiki-` aside. */
+const namesSkill = (terms, hit) => tokenize(hit.title.replace(/^xwiki-/, "")).some((t) => terms.has(t));
+
+/**
+ * Prompt hook: the KB sections worth pointing at for a prompt, minus those already given — each at
+ * least MIN_SCORE and RELATIVE_MIN of the best section — and the skills whose name the prompt uses: a
+ * skill load is the costliest pointer to follow, and session chat ("continue with step 1") matches a
+ * skill's description, never its name.
+ */
 export function promptPointers(index, prompt, { seen = new Set(), k = PROMPT_K, minScore = MIN_SCORE } = {}) {
   const query = promptToQuery(prompt);
-  if (new Set(tokenize(query)).size < MIN_PROMPT_TERMS) return [];
-  return capKinds(search(index, query, { k: (k + SKILL_K) * 3, skills: true })
-    .filter((h) => h.score >= minScore && usable(h) && !seen.has(h.id)), k);
+  const terms = new Set(tokenize(query));
+  if (terms.size < MIN_PROMPT_TERMS) return [];
+  const hits = search(index, query, { k: (k + SKILL_K) * 3, skills: true }).filter(usable);
+  const floor = Math.max(minScore, RELATIVE_MIN * (hits.find((h) => !isSkill(h))?.score ?? 0));
+  return capKinds(hits.filter((h) => !seen.has(h.id)
+    && (isSkill(h) ? h.score >= minScore && namesSkill(terms, h) : h.score >= floor)), k);
 }
 
 /** A glob (`**`, `*`, `?`) as an anchored RegExp over `/`-separated paths. */
