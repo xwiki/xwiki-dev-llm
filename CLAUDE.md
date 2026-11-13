@@ -26,6 +26,10 @@ pull request. There is no build step and no lint — JSON manifests and Markdown
 entire artifact. A tool whose logic is worth pinning (today `xwiki-ci-check`'s) keeps that logic in
 importable modules, tested from `tests/<skill>/` with real inputs: CI logs, pastes, room messages.
 
+The validator checks consistency, not effect. What a KB, hook or skill change does for an agent is
+measured by the benchmark in `eval/` (how to run and read it: `eval/README.md`), at the repo root so it
+is never shipped nor indexed by `kb-search`; its runs cost API usage and write outside the repo.
+
 Beyond the validator, a weekly Claude routine reviews the whole repo for duplication and conciseness
 and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/consolidation-routine.md`,
 its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget

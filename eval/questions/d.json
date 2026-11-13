@@ -1,0 +1,12 @@
+[
+  {"id": "d01", "group": "d", "question": "How do I send an email with an attachment from a Java component in XWiki, and how do I find out afterwards whether each recipient's mail was actually sent?", "absent_terms": ["MailSender", "mail"]},
+  {"id": "d02", "group": "d", "question": "I want to write a custom notification filter so users can mute events coming from one specific space. What do I need to implement and register?", "absent_terms": ["NotificationFilter"]},
+  {"id": "d03", "group": "d", "question": "Office document import fails on my dev instance with a timeout when starting the office server. Which configuration properties control where it looks for LibreOffice and how long it waits?", "absent_terms": ["office server", "jodconverter"]},
+  {"id": "d04", "group": "d", "question": "How do I add a custom extension repository (e.g. our company Nexus) so the Extension Manager can install extensions from it?", "absent_terms": ["extension repository"]},
+  {"id": "d05", "group": "d", "question": "Our users' PDF exports lose the table of contents numbering. Where is the PDF export's look controlled, and can I customize it per wiki?", "absent_terms": ["PDF export"]},
+  {"id": "d06", "group": "d", "question": "How do I define a new image style (e.g. 'thumbnail with border') that editors can pick in the image dialog?", "absent_terms": ["image style"]},
+  {"id": "d07", "group": "d", "question": "I need an in-memory cache in my component that evicts entries after 10 minutes. How do I create one with XWiki's cache API, and do I need to dispose of it?", "absent_terms": ["CacheManager", "infinispan"]},
+  {"id": "d08", "group": "d", "question": "What is the default session timeout of an XWiki instance and where do I change it?", "absent_terms": ["session timeout"]},
+  {"id": "d09", "group": "d", "question": "How do I configure XWiki to store attachments on the filesystem instead of in the database, and how do I migrate existing ones?", "absent_terms": ["attachment store", "filesystem"]},
+  {"id": "d10", "group": "d", "question": "Which HTTP header does XWiki use to support SSO behind a reverse proxy that already authenticated the user, and which authenticator do I enable for it?", "absent_terms": ["authenticator", "reverse proxy"]}
+]

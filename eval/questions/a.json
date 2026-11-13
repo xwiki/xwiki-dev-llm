@@ -1,0 +1,1129 @@
+[
+  {
+    "id": "a01",
+    "group": "a",
+    "question": "I'm about to remove an obsolete doc page on xwiki.org. I opened the page's info view, and the list of pages pointing to it shows only a couple of entries, which I've already fixed. Is that enough to go ahead and delete it, or could other pages still link to it without showing up there?",
+    "kind": "fact",
+    "key_points": [
+      "The incoming-links list is not complete: it misses links written as absolute URLs and links passed as macro parameters",
+      "Add a search across all the xwiki.org wikis (extensions.xwiki.org, dev.xwiki.org, etc.) for the page's name, its full reference, and its URL, using Solr or the REST search",
+      "After deleting, run the search again and check that the only hits left are the ones you chose to keep"
+    ],
+    "avoided_terms": [
+      "Backlinks",
+      "Information tab",
+      "viewer=information",
+      "farm-wide",
+      "Solr search (in the question)",
+      "xwiki-rest-api",
+      "Update links",
+      "triage",
+      "Procedure"
+    ],
+    "gold": {
+      "file": "conventions/page-deletion.md",
+      "section": "Procedure"
+    }
+  },
+  {
+    "id": "a02",
+    "group": "a",
+    "question": "I'm writing a new XWiki component and want to put an interface in front of it \"in case we need a different strategy later\". Right now there's only the default implementation, plus a mock of it in my unit tests. Does that justify the interface, or is it over-engineering? And separately: a colleague wants to write a new wrapper mechanism to override how an existing component behaves. When should I push back on that?",
+    "kind": "fact",
+    "key_points": [
+      "An XWiki component always has a role interface, so the real question is whether to make it public (outside an `internal` package); with a single production implementation that is speculative",
+      "A test implementation or mock does not justify a public interface, since tests may use `internal` packages",
+      "You should question a new abstraction point if nothing actually varies across it.",
+      "Push back on a new mechanism (such as a wrapper component) built to work around behaviour that an existing configuration property or component hint already lets you change: review the overall design first, and if only a workaround is possible, agree on the direction and the workaround with the other developers"
+    ],
+    "avoided_terms": [
+      "seam",
+      "hypothetical seam",
+      "real seam",
+      "extension point",
+      "configuration hook",
+      "Seams",
+      "module design",
+      "deletion test",
+      "depth",
+      "shallow"
+    ],
+    "gold": {
+      "file": "architecture/module-design.md",
+      "section": "The questions",
+      "reference": "## The questions\n\n- **Depth.** What must a caller know to use it — signature, preconditions, call order,\n  configuration, failure modes — against what it hides? A class whose methods each forward to one\n  call, or whose callers must assemble its inputs from someone else's internals, is shallow: it adds\n  a name to learn and hides nothing.\n- **Deletion test.** Imagine the new class gone and its body inlined at the callers. If the\n  complexity disappears, it was a pass-through; if the same logic would reappear at several call\n  sites, it earns its place. A class that only *moves* complexity one hop away fails.\n- **Locality.** Logic belongs with the data or object it interrogates and with the code that changes\n  together with it. Logic that only reads another object's state, placed far from that object, is\n  found by nobody who later changes that state.\n- **Seams.** An interface, extension point or configuration hook with one implementation is a\n  hypothetical seam; with two it is real, but a test double never justifies a public component role\n  (outside `internal`): tests may use `internal`. Question a new seam nothing varies across —\n  and a new mechanism (a wrapper component, say) working around behaviour an existing seam (a\n  configuration property, a component hint) already lets you change: rethink the design, and agree\n  any workaround with the committers.\n- **Leaks.** Does the new interface expose how it works — internal types, shared mutable state, an\n  order of calls the caller must respect? Mutable static state in particular ties every caller to one\n  hidden lifecycle.\n\n(Reviewer, XWiki committer: a wrapper component is not proper design in general; review the global design first, and if there is no clean way, agree on the good direction and on the hack with the other developers.)"
+    },
+    "key_points_pre_review": [
+      "An interface or hook with only one implementation is only speculative. With two implementations it is genuine, and a production implementation plus a test implementation counts as two.",
+      "You should question a new abstraction point if nothing actually varies across it.",
+      "Push back on a new mechanism built to work around behaviour that an existing configuration property or component hint already lets you change."
+    ]
+  },
+  {
+    "id": "a03",
+    "group": "a",
+    "question": "I'm adding some runtime stats (cache hit counts, queue sizes) to one of my XWiki components and I want ops to be able to watch them from a monitoring console like JConsole. Should I just grab the platform MBeanServer and register my bean there, and is there anything I need to do when the component goes away?",
+    "kind": "fact",
+    "key_points": [
+      "Expose the stats as a JMX MBean, which is how all XWiki monitoring APIs are exposed",
+      "Don't register directly with the platform MBeanServer; go through XWiki's JMXBeanRegistration component (registerMBean(mbean, \"type=…,domain=…,name=…\"))",
+      "Register in Initializable#initialize() and unregister in Disposable#dispose()"
+    ],
+    "avoided_terms": [
+      "Monitoring",
+      "JMX MBean",
+      "JMXBeanRegistration",
+      "registerMBean",
+      "Initializable",
+      "Disposable",
+      "unregister"
+    ],
+    "gold": {
+      "file": "architecture/component-system.md",
+      "section": "Monitoring: expose it as a JMX MBean"
+    }
+  },
+  {
+    "id": "a04",
+    "group": "a",
+    "question": "I'm going through the manual QA test pages on test.xwiki.org to pick one to automate. This one is flagged as not automated, so can I assume nobody has written a functional test for it yet and just start writing one? And which metadata on the page should I treat as the real source of truth for whether it's automated?",
+    "kind": "fact",
+    "key_points": [
+      "It depends on which record says so: the QA.AutomatedTestStatusClass object can be trusted (status Automated / Not Automatable / Needs Automated Test, plus jira, tests (GitHub links) and notes fields), so \"Needs Automated Test\" there means no automated test exists yet",
+      "The legacy QA.TestClass.automated (yes/no) flag must not be used to decide; it often disagrees with the status object",
+      "When the page has no QA.AutomatedTestStatusClass object (most pages), the status is unknown: the test may already be automated in the code or missing, so search the codebase for an existing test before writing one"
+    ],
+    "avoided_terms": [
+      "Automation status",
+      "AutomatedTestStatusClass",
+      "QA.TestClass",
+      "automated",
+      "Needs Automated Test",
+      "Not Automatable",
+      "legacy flag",
+      "manual-tests.md"
+    ],
+    "gold": {
+      "file": "testing/manual-tests.md",
+      "section": "Automation status",
+      "reference": "## Automation status\n\n- **The `QA.AutomatedTestStatusClass` object on the test page is the record to trust**: `status`\n  (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),\n  `tests` (GitHub links to the automated tests) and `notes`.\n- **`QA.TestClass.automated` (yes/no) is the legacy flag**: never decide from it, though upstream\n  still asks to update it. The two disagree on many tests.\n- **Most tests have no status object at all**, and then the status is unknown: the test may already\n  be automated in the code or not. Search the code for an existing test before writing one."
+    },
+    "key_points_pre_review": [
+      "No: neither the old yes/no flag nor the newer status object proves a test is not automated, so search the codebase for an existing automated test before writing one",
+      "The current record is the QA.AutomatedTestStatusClass object, with status (Automated / Not Automatable / Needs Automated Test), jira, tests (GitHub links) and notes fields",
+      "QA.TestClass.automated (yes/no) is the legacy flag, which upstream still asks you to update; the two often disagree",
+      "Most test pages have no status object at all"
+    ]
+  },
+  {
+    "id": "a05",
+    "group": "a",
+    "question": "I'm renaming a platform module's artifactId as part of a refactoring. Extensions that are already installed on people's wikis declare a dependency on the old artifact id. What do I need to put in the renamed module's pom so those existing dependencies still resolve when the Extension Manager installs or upgrades things? And is it safe to clean that up later?",
+    "kind": "fact",
+    "key_points": [
+      "Declare the old id as a provided feature using the xwiki.extension.features property in the renamed module's pom",
+      "The Extension Manager then treats the renamed artifact as providing the old id, so installed extensions that depend on the old id still resolve (the same mechanism lets a -legacy variant stand in for the module it re-exports)",
+      "Changing or removing a declared feature later breaks compatibility; it is not just a rename"
+    ],
+    "avoided_terms": [
+      "OSGi bundle",
+      "advertises",
+      "provides",
+      "xwiki.extension.features",
+      "features",
+      "Maven Bundle Plugin",
+      "manifest",
+      "stand in for",
+      "xwiki-platform-core/pom.xml"
+    ],
+    "gold": {
+      "file": "architecture/platform-modules.md",
+      "section": "Every JAR is an OSGi bundle, and advertises what it provides"
+    }
+  },
+  {
+    "id": "a06",
+    "group": "a",
+    "question": "In my XWiki app, the \"Add\" button runs an HQL query to find the highest existing numbered page (like Item042), adds one to it, and sends the user to the editor at that new name. Is that safe if several people add items at once? And is there anything wrong with the query itself?",
+    "kind": "fact",
+    "key_points": [
+      "The race window stays open for the whole editing session, because the page only exists once it is saved. Two authors can get the same name, and the second save silently overwrites the first with no conflict warning.",
+      "Fix: create the page from its template first, and only then give that name to the author.",
+      "Ordering by the space/name column descending is a string sort, so once the zero-padding is exceeded, Entry999 sorts above Entry1000.",
+      "The query must be filtered to the kind of entry being numbered, or sibling pages of other kinds get counted."
+    ],
+    "avoided_terms": [
+      "Allocate",
+      "generated page name",
+      "Entry001",
+      "order by doc.space desc",
+      "querying"
+    ],
+    "gold": {
+      "file": "architecture/wiki-application-data.md",
+      "section": "Allocate a generated page name by creating the page, not by querying"
+    }
+  },
+  {
+    "id": "a07",
+    "group": "a",
+    "question": "I'm writing a CI script that creates our release's notes page and pushes each feature entry into the wiki over HTTP. If a run fails partway through, the script might get run again. How do I make it safe to run twice? Can I check whether the version's page already exists by fetching its list of entries and looking for a 404? And will the server ignore an entry I send a second time?",
+    "kind": "fact",
+    "key_points": [
+      "Posting a change never deduplicates: sending the same change twice creates it twice, so a script that may run again must list the existing changes first and skip those already there.",
+      "GET on the changes listing for a release note that doesn't exist returns 200 with an empty list, not 404, so check whether the note exists with GET /releasenotes (optionally ?product=X) instead.",
+      "POST /releasenotes for a release note that already exists returns 409 with the page it lives in. If the first call gets a 409, the script has run before.",
+      "Don't create entry pages ahead of time to work around this: a page sitting at the next Entry### breaks the entry allocation."
+    ],
+    "avoided_terms": [
+      "REST endpoints",
+      "releasenotes",
+      "changes",
+      "deduplicate",
+      "409",
+      "Release Notes Application 2.7",
+      "aggregated",
+      "Entry###"
+    ],
+    "gold": {
+      "file": "processes/release-notes.md",
+      "section": "The REST endpoints (since Release Notes Application 2.7)"
+    }
+  },
+  {
+    "id": "a08",
+    "group": "a",
+    "question": "I'm writing an XWiki Velocity snippet where one inline piece of output (a link label built from a few variables and #if checks) is split over several lines so it's easier to read. Leading whitespace already gets stripped on this page. Do I have to put a trailing Velocity comment at the end of every one of those lines to keep stray newlines out of the rendered text, or only on some of them?",
+    "kind": "fact",
+    "key_points": [
+      "You don't need a trailing comment on every line. Only lines that end with output need one.",
+      "A line needs the trailing comment when it ends with literal text or a variable/property reference.",
+      "The filter strips the indentation, so leading whitespace is already handled. Only the line breaks after text or references can leak into the output."
+    ],
+    "avoided_terms": [
+      "indent filter",
+      "closing ##",
+      "line ending with content",
+      "## (literal)",
+      "server-side rendering"
+    ],
+    "gold": {
+      "file": "conventions/server-side-rendering.md",
+      "section": "Only a line ending with content needs a closing `##`"
+    }
+  },
+  {
+    "id": "a09",
+    "group": "a",
+    "question": "I'm rewriting the user docs for an extension. Four sibling task pages all start with the same \"go to the application from the Applications panel\" step, and each one has its own screenshot. I was going to move that step into a hidden page and include it in all four. Is that the right approach, or is there a better one?",
+    "kind": "fact",
+    "key_points": [
+      "Prefer giving the shared content a visible home when it answers a reader goal: e.g. turn the shared navigation step into its own How-to (\"Open the … Application\") that each sibling How-to links to from a single opening item",
+      "Otherwise make it a content fragment of the documentation page it belongs to, displayed on the other pages with the \"Content Fragment\" macro ({{fragment reference=… name=…/}})",
+      "Never a hidden page holding it (it still shows in navigation and search for users who display hidden pages), and never a second copy",
+      "Repeated steps are worth hunting first because the screenshots get copied with them and the copies drift apart"
+    ],
+    "avoided_terms": [
+      "How much belongs on one page",
+      "visible home",
+      "{{display}}",
+      "display macro",
+      "hidden fragment",
+      "One fact lives on one page",
+      "Explanation hub",
+      "documentation.md"
+    ],
+    "gold": {
+      "file": "conventions/documentation.md",
+      "section": "How much belongs on one page",
+      "reference": "- **Give the one copy a *visible* home before reaching for a hidden one.** The bullet above says what to\n  avoid; this one says where the surviving copy goes. A restructure that turns the shared material into a\n  page of the tree in its own right beats a hidden fragment: it is reachable from the navigation panel and\n  from search, it answers a reader goal on its own, and a later author cannot re-duplicate it by failing\n  to notice that it is shared. What the restructure is depends on the content — a navigation step every\n  sibling How-to opens with becomes **its own How-to** (\"Open the … Application\") that each one links to\n  from a single opening item; a page whose section is repeated elsewhere **splits into two smaller pages**,\n  the shared one linked from both. Repeated **steps** are worth hunting first, because a step drags its\n  screenshot with it and those copies drift apart while every page still passes its own checks.\n- When **no** restructure gives the shared content a page of its own (an info box, a warning, a short\n  procedure), make it a **content fragment** of the documentation page it belongs to, displayed on the others\n  with the \"Content Fragment\" macro. Never a second copy, however short, and never a hidden page holding it: a hidden page\n  still shows in the navigation and the search for users who display hidden pages. Mechanics:\n  [[documentation-mechanics]].\n\n## Content fragments (the `{{fragment}}` macro)\n\n[[documentation]] requires that shared content exist once and be displayed elsewhere rather than copied.\nThe one copy is a **content fragment** (Documentation application 1.18+) held by the page it belongs to.\n\n- Stored as a `DocApp.Code.ContentFragmentClass` xobject on the page holding it: `name` (lowercase words\n  separated by hyphens), `description`, `content`. The \"Content Fragments\" section of the page's edit form\n  adds and edits them, and its \"Used in:\" list shows the pages displaying each one.\n- Displayed with `{{fragment reference=\"<page holding it>\" name=\"<name>\"/}}`; `reference` defaults to the\n  current page, and the macro also works inline, inside a paragraph.\n- It renders as part of the displaying page (its headings join that page's table of contents), with the\n  rights of the author of the page holding it; the reader needs view right on that page.\n- Remove the macros displaying a fragment before removing it: they show an error once it is gone."
+    }
+  },
+  {
+    "id": "a10",
+    "group": "a",
+    "question": "I added the flag that makes a wiki page enforce its declared rights to an XML page file in my extension's sources. The root tag still says version=\"1.2\" from when the page was first exported. The build passes, including the format and verify checks on the packaged pages, and the flag works at runtime. Do I still need to change anything in that root tag?",
+    "kind": "fact",
+    "key_points": [
+      "Yes: the page's root <xwikidoc> element must declare version=\"1.6\", because enforceRequiredRights was added in XAR document model 1.6 (XarDocumentModel.VERSION_CURRENT)",
+      "The XAR filter maps elements by name and doesn't gate parsing on the declared version, so a 1.2 page still parses and enforces",
+      "xar:format and xar:verify don't catch the mismatch and nothing warns, so the version has to be bumped by hand"
+    ],
+    "avoided_terms": [
+      "enforceRequiredRights",
+      "XAR document version 1.6",
+      "XarDocumentModel.VERSION_CURRENT",
+      "xwikidoc",
+      "xar:format",
+      "xar:verify",
+      "required-rights.md",
+      "XAR filter"
+    ],
+    "gold": {
+      "file": "architecture/required-rights.md",
+      "section": "A page carrying the element must declare XAR document version 1.6"
+    }
+  },
+  {
+    "id": "a11",
+    "group": "a",
+    "question": "I'm cleaning up a Sonar finding in an old XWiki class where a method begins with something like `String name = \"\", value = \"\", hint = \"\";`, and the list already wraps onto a second line. Sonar only reports one issue for it, but the issue names the second variable and not the first. How should I rewrite the declarations? Should I keep the wrapped layout? And when I count fixed issues, how many is that: one, or one per variable?",
+    "kind": "fact",
+    "key_points": [
+      "Rewrite as one separate `Type x = ...;` statement per variable, at the same indentation",
+      "Sonar flags the second variable and 'all following' ones, so one issue can cover several variables; count resolved issues by issue key, not by variable",
+      "Fully un-wrap a declaration list that already spans a continuation line instead of leaving it half-split",
+      "Scoping and initialisation order don't change, so the only reason to skip it is a comment on that line"
+    ],
+    "avoided_terms": [
+      "S1659",
+      "declare each local variable on its own line",
+      "separate line",
+      "declaration preamble",
+      "half-split declaration",
+      "XWiki.java",
+      "DBListClass",
+      "StaticListClass",
+      "syntax-rules.md",
+      "drop condition"
+    ],
+    "gold": {
+      "file": "sonarqube/syntax-rules.md",
+      "section": "S1659 — declare each local variable on its own line"
+    }
+  },
+  {
+    "id": "a12",
+    "group": "a",
+    "question": "I'm phasing out an old public method in favour of a new one. The fix goes to the 14.10.x stable branch (ships in 14.10.12) and to master (ships in 15.5RC1). How should I mark it obsolete in the Java source and the doc comment? Which version or versions go where, and should I flag it as scheduled for deletion?",
+    "kind": "fact",
+    "key_points": [
+      "Use both the Java annotation and the Javadoc deprecation tag.",
+      "The annotation's since attribute lists every version it shipped in, comma-separated, e.g. since = \"14.10.12,15.5RC1\". Don't pick just one version.",
+      "Never set forRemoval, because XWiki doesn't break APIs.",
+      "The Javadoc tag gives the reason and the replacement (e.g. use {@link ...} instead) and must not repeat the version."
+    ],
+    "avoided_terms": [
+      "@Deprecated",
+      "@deprecated",
+      "Javadoc tag",
+      "annotation carries the version",
+      "since",
+      "forRemoval",
+      "versioning.md",
+      "several branches"
+    ],
+    "gold": {
+      "file": "conventions/versioning.md",
+      "section": "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason"
+    }
+  },
+  {
+    "id": "a13",
+    "group": "a",
+    "question": "I'm cleaning up a Velocity template and want to rename an old helper #macro that was written years ago (around XWiki 12.x) to something clearer, and I'm also adding a new helper that only this template uses. Can I just rename the old one, and how should I name and document the new internal one?",
+    "kind": "fact",
+    "key_points": [
+      "Any macro whose name doesn't start with an underscore counts as public API, including those written before 15.10, so it can't simply be renamed; a renaming needs a vote",
+      "Since 15.10RC1, a macro that isn't meant to be API should have a name starting with an underscore",
+      "A macro that is API must document its parameters and the version it was added in (since)",
+      "Macro names use camelCase"
+    ],
+    "avoided_terms": [
+      "Naming and references",
+      "15.10RC1",
+      "API macro",
+      "prefixed with an underscore",
+      "since version",
+      "camelCase",
+      "vote"
+    ],
+    "gold": {
+      "file": "conventions/velocity-code-style.md",
+      "section": "Naming and references",
+      "reference": "## Naming and references\n\n- **camelCase** for variable and macro names.\n- **Single quotes** for strings needing no interpolation — Velocity then skips parsing them.\n- Shorthand `$variable`; the formal `${variable}` only where required for correct parsing.\n- **Since 15.10RC1**, a macro not intended as an API is prefixed with an underscore, and an API macro\n  documents its parameters and its since version. Any macro without the underscore — those predating\n  15.10 included — counts as an API and can only be renamed after a vote."
+    },
+    "key_points_pre_review": [
+      "Macros that existed before 15.10 are treated as public API by default, so they can't simply be renamed; a renaming needs a vote",
+      "Since 15.10RC1, a macro that isn't meant to be API should have a name starting with an underscore",
+      "A macro that is API must document its parameters and the version it was added in (since)",
+      "Macro names use camelCase"
+    ]
+  },
+  {
+    "id": "a14",
+    "group": "a",
+    "question": "Sonar flagged a few hundred checked-exception declarations in our test code that the method bodies never actually raise. Most are on JUnit lifecycle and test methods, but some are on un-annotated helpers: a few private ones, and some protected ones on an abstract base test class in a module that also ships its test classes as a jar for other modules. Since it's all test code and my local build still compiles after stripping them, can I just batch-remove every one of them?",
+    "kind": "fact",
+    "key_points": [
+      "Annotated test/lifecycle methods (@Test, @BeforeEach, etc., plus XWiki hooks like @BeforeComponent) are safe to fix because they're invoked reflectively; the compiler is enough to verify them",
+      "Un-annotated public/protected helpers on abstract test bases need a check first: subclasses in other modules consuming the published test jar may still declare the wider clause and break, and the in-module build won't catch it. Since test code is not API, fix them after checking all their overrides and uses across xwiki-commons, xwiki-rendering and xwiki-platform (drop the site only if that check fails)",
+      "Private helpers are safe to fix because they can't be overridden or called from outside the file",
+      "Classify by the annotation and the modifier on the declaration line, not just by being under src/test (the flagged line may be a wrapped continuation line)"
+    ],
+    "avoided_terms": [
+      "S1130",
+      "throws",
+      "cannot be thrown",
+      "dead-code-rules",
+      "test-jar",
+      "src/test vs src/main split",
+      "drop rate"
+    ],
+    "gold": {
+      "file": "sonarqube/dead-code-rules.md",
+      "section": "S1130 — remove a `throws` for an exception that cannot be thrown",
+      "reference": "## S1130 — remove a `throws` for an exception that cannot be thrown\n\n**The `/src/test/` vs `/src/main/` split decides this rule, and it decides it completely.**\n\n- **Test sources, on a method carrying `@Test` / `@ParameterizedTest` / `@BeforeEach` /\n  `@AfterEach` / `@BeforeAll` / `@AfterAll`: fix, and expect a 0% drop rate.** A JUnit method\n  declaring `throws Exception` (or `IOException`, `ComponentLookupException`) whose body cannot throw\n  it is pure noise — JUnit invokes it reflectively and nothing else calls it, so nothing can be\n  broken. The compiler is the whole verification: had the exception actually been throwable, the\n  build would not compile.\n- **A test-source method with NO such annotation is a different risk class — fix it only once you\n  prove it safe.** A protected/public helper on an abstract test base is overridable, and when the\n  module publishes a `test-jar` the overriding subclass lives in *another* module: it may still\n  declare the wider `throws`, which stops compiling once the parent narrows its clause — and the\n  in-module build you run will not catch it. Test code is not API, so the proof is a search of its\n  overrides and callers across xwiki-commons, xwiki-rendering and xwiki-platform: fix the helper and\n  any override found there, or drop the site. Classify every site by the annotation above the flagged\n  line before batching (walking up over `@…`/comment/blank lines), not by \"it is under `/src/test/`\".\n- **`private` IS that proof, and it is most of the un-annotated pool.** A `private` helper cannot be\n  overridden and cannot be called from outside its file, so it carries exactly the risk of an\n  annotated test method — none. Bucket un-annotated sites into `private` (fix) and everything else\n  (search, then fix or drop) rather than dropping the whole bucket — that recovers most of the\n  un-annotated sites, leaving only the `public`/`protected` helpers on abstract test bases.\n- Add `@BeforeComponent` (and the other XWiki test-framework hooks) to the safe annotation set — they\n  are invoked reflectively exactly like the JUnit ones.\n- **In `src/main`, non-`private` is the drop line.** Narrowing a\n  `throws` on a published or overridable method breaks every caller that catches it and every\n  subclass that declares the wider clause, so `public`/`protected`/package-private is a drop there.\n  A `private` `src/main` method carries the same \"none\" risk as a `private` test helper, so\n  fix it. Bucket on the modifier of the **declaration** line, not of the flagged line: Sonar\n  attributes the issue to the line holding the `throws`, which under XWiki's wrapping is often a\n  continuation line with no modifier on it.\n- **Narrowing a private method can make an enclosing caller's `catch` unreachable**, which is a\n  compile error, so the fix sometimes includes deleting a now-dead `try`/`catch` and dedenting its\n  body. Check per site whether any *other* call inside that `try` still declares the exception; a\n  `catch (Exception …)` is never affected.\n\nTwo follow-ons: removing the exception usually orphans its import (drop it in the same edit), and a\nJavadoc `@throws` tag for the removed exception must go with it. When a signature loses two flagged\nexceptions it often fits back on one line — re-join it."
+    },
+    "key_points_pre_review": [
+      "Annotated test/lifecycle methods (@Test, @BeforeEach, etc., plus XWiki hooks like @BeforeComponent) are safe to fix because they're invoked reflectively; the compiler is enough to verify them",
+      "Un-annotated public/protected helpers on abstract test bases should be skipped: subclasses in other modules that consume the published test jar may still declare the wider clause and break, and the in-module build won't catch it",
+      "Private helpers are safe to fix because they can't be overridden or called from outside the file",
+      "Classify by the annotation and the modifier on the declaration line, not just by being under src/test (the flagged line may be a wrapped continuation line)"
+    ]
+  },
+  {
+    "id": "a15",
+    "group": "a",
+    "question": "I upgraded our XWiki to 16.6 and pointed it at our own external Solr server running in Docker (the official Solr image). Now the main search core won't load and the Solr log shows a class-loading/service-provider error about some Polish stemming filter. What's missing on the Solr side, and can I fix it by grabbing the prebuilt core package instead?",
+    "kind": "fact",
+    "key_points": [
+      "Since XWiki 16.6.0 the search core schema uses language analyzers (e.g. the Polish stemmer) that come from Solr's optional analysis-extras module",
+      "The analysis-extras module must be enabled on the standalone Solr, e.g. SOLR_MODULES=analysis-extras for the official Solr image",
+      "Without it the search core fails to load with an SPI class error",
+      "The pre-built core packages cannot bundle that module, so using them doesn't fix it"
+    ],
+    "avoided_terms": [
+      "analysis-extras",
+      "stempelPolishStem",
+      "SOLR_MODULES",
+      "version compatibility",
+      "SOLR_BASE_URL",
+      "solr-search.md"
+    ],
+    "gold": {
+      "file": "architecture/solr-search.md",
+      "section": "Solr version compatibility and the analysis-extras module"
+    }
+  },
+  {
+    "id": "a16",
+    "group": "a",
+    "question": "I wrote a component that fetches a wiki page, adds and updates a couple of objects on it, and then saves it. My first idea was to write the test with mocks for the document, the base object, and the XWiki instance, then verify the setters and the save call. Is that the right kind of test here, or should I do it differently?",
+    "kind": "fact",
+    "key_points": [
+      "Use an @OldcoreTest, which runs on MockitoOldcore's in-memory store, rather than a @ComponentTest that mocks XWikiDocument, BaseObject, or XWiki",
+      "After the code runs, assert on the stored document: its objects and its authors",
+      "Mocking those classes can only check that set and saveDocument were called, so it never confirms the saved result"
+    ],
+    "avoided_terms": [
+      "OldcoreTest",
+      "MockitoOldcore",
+      "ComponentTest",
+      "xobjects",
+      "in-memory store",
+      "Pick the level",
+      "kind of code changed",
+      "test-value.md"
+    ],
+    "gold": {
+      "file": "testing/test-value.md",
+      "section": "Pick the level by the kind of code changed"
+    }
+  },
+  {
+    "id": "a17",
+    "group": "a",
+    "question": "I'm changing a public method in xwiki-platform so it returns `List<DocumentReference>` instead of a raw `List`. Will the API compatibility check in the build fail on this, and will I have to add an exclusion for it? If it doesn't fail, why is the build set up to allow this kind of change?",
+    "kind": "fact",
+    "key_points": [
+      "Adding missing generics to a return type changes the source but does not break binary or semantic compatibility, so the check should not flag it.",
+      "XWiki enforces binary and semantic compatibility, not source compatibility, so code that was already compiled against the old version keeps linking and working after an upgrade.",
+      "Enforcing source compatibility would block reasonable changes like this one and fill the Revapi ignore configuration with unnecessary entries."
+    ],
+    "avoided_terms": [
+      "source compatibility",
+      "binary compatibility",
+      "check-binary-not-source-compatibility",
+      "Consequences",
+      "semantic break",
+      "Revapi ignore configuration",
+      "downstream binaries"
+    ],
+    "gold": {
+      "file": "decisions/check-binary-not-source-compatibility.md",
+      "section": "Consequences"
+    }
+  },
+  {
+    "id": "a18",
+    "group": "a",
+    "question": "My Velocity page loops over objects attached to other pages. For each one it pulls out a textarea field that holds wiki markup and drops it into the page output. A reviewer says this makes the field's content execute with my page's rights instead of the rights of the person who wrote it. Is the reviewer right, and how should I output it? Also, when I just want to compare the field against a string in an #if, which accessor should I use?",
+    "kind": "fact",
+    "key_points": [
+      "Putting the raw value from $object.getValue() into content that gets parsed or evaluated runs it with the rights of the rendering page's author, so the reviewer is right",
+      "Use $doc.display('property', $object), which runs the content with the rights of its own document's effective metadata author",
+      "$object.get('property') returns the displayed value, not the raw value, even though its name suggests otherwise",
+      "To read or compare the value, use getValue"
+    ],
+    "avoided_terms": [
+      "XObject",
+      "display",
+      "parse",
+      "raw value",
+      "effective metadata author",
+      "getValue",
+      "get"
+    ],
+    "gold": {
+      "file": "conventions/security.md",
+      "section": "Rendering an XObject property — display it, never parse its raw value"
+    }
+  },
+  {
+    "id": "a19",
+    "group": "a",
+    "question": "I'm going through Sonar's suggestions to swap stream collection into a list for Java 16's built-in stream-to-list method. In one place the resulting list is only handed to a setter on a public (non-internal) model bean, and nothing touches it locally afterwards, so I figured it's safe. Is that right? And if it's not, how can I still clear the Sonar issue without breaking anything?",
+    "kind": "fact",
+    "key_points": [
+      "Stream.toList() returns an unmodifiable list, while Collectors.toList() returned a mutable ArrayList",
+      "Passing the list to a setter isn't automatically safe: if the setter stores it by reference and the public getter returns it directly, external callers doing getX().add(...) will fail at runtime, so read both the setter and the getter",
+      "Preferred fix when the model class is XWiki-owned: keep .toList() and make the setter take a defensive copy (e.g. this.x = x == null ? null : new ArrayList<>(x)), which keeps the getter's mutable contract",
+      "Otherwise keep a mutable list, e.g. `collect(Collectors.toCollection(ArrayList::new))`, which Sonar does not flag (S6204 only matches Collectors.toList()/toUnmodifiableList(), per sonar-java CollectorsToListCheck)"
+    ],
+    "avoided_terms": [
+      "S6204",
+      "S6211",
+      "Collectors.toList()",
+      ".toList()",
+      "UNMODIFIABLE",
+      "escape",
+      "Defensive-copy setter",
+      "modernization-rules.md",
+      "by reference"
+    ],
+    "gold": {
+      "file": "sonarqube/modernization-rules.md",
+      "section": "S6204 / S6211 — `collect(Collectors.toList()/toSet())` → `.toList()` / `.toSet()`",
+      "reference": "## S6204 / S6211 — `collect(Collectors.toList()/toSet())` → `.toList()` / `.toSet()`\n\nMechanically trivial, but **`.toList()` returns an UNMODIFIABLE list** where `Collectors.toList()`\nreturned a mutable `ArrayList`. The question is therefore not \"is it mutated here\" but **\"can it\nescape into an API where an external caller could mutate it\"**. This is the number-one reviewer\nobjection on this rule.\n\n**Convert when the result stays confined:** returned, iterated, `isEmpty`/`size`/`get`/`toArray`-ed\nlocally, or used as the *source* of an `addAll` (the elements are copied out and the unmodifiable list\ndiscarded). Test-code lists built only for `assertEquals` or iteration are safe.\n\n**Drop when it escapes:**\n- The result is later `add`/`set`/`remove`/`sort`/`removeIf`-ed, or assigned to an `ArrayList`-typed\n  target.\n- **Script-exposed escape** — the characteristic XWiki drop. A `private` collector method whose result\n  is returned up through a public `ScriptService` method, or any `internal` method whose result reaches\n  a `@Component` role's return type callable from Velocity, must be dropped: Velocity callers are\n  untraceable and can `.add()` or `.sort()` the list. **Trace the return chain to the outermost\n  public or role-bearing method**, not just the immediate caller.\n- **\"Passed to a setter or constructor\" is not automatically safe.** If the setter stores the list *by\n  reference* (`this.x = x;`) on a non-`internal` public model class whose getter returns it directly,\n  the unmodifiable list becomes the live backing list of a public getter, and an extension calling\n  `obj.getX().add(…)` breaks at runtime. Read the target setter *and* getter before trusting it.\n\n**Two ways out of the escape case**, both accepted by reviewers:\n- **Sibling-branch signal (strong safe signal, even for a public method):** if another return branch of\n  the *same* method already returns an unmodifiable list (`Collections.emptyList()`, `List.of()`), the\n  method's contract is already read-only — a caller doing `getX().add(…)` would already break on that\n  branch. Converting the other branch is consistent with the existing contract, not a regression.\n- **Defensive-copy setter** (preferred when the model class is XWiki-owned): keep the `.toList()` and\n  make the setter copy — `this.x = x == null ? null : new ArrayList<>(x);`. That clears the Sonar issue\n  *and* preserves the mutable-getter contract, so the escaping list no longer matters.\n\nOtherwise keep a mutable list explicitly: `collect(Collectors.toCollection(ArrayList::new))` is not\nflagged, S6204 matching only `Collectors.toList()` / `toUnmodifiableList()` (sonar-java\n`CollectorsToListCheck`).\n\nA REST JAXB response DTO (`*.rest.model.jaxb`) built once and only serialized is safe.\n\n`.toList()` is shorter than the original, so line length never breaches.\n\n**Orphaned-import pitfall (build-breaker).** After converting a file, drop\n`import java.util.stream.Collectors;` only if `Collectors.` no longer appears **outside import lines**.\nA naive whole-file substring test is fooled by a surviving\n`import static java.util.stream.Collectors.joining;`, which literally contains `Collectors.` — the\nplain import is then wrongly kept and Checkstyle `UnusedImports` fails the build. The two import forms\ncan coexist, and the static one being used does *not* keep the plain one alive. Keep the plain import\nwhen a sibling `Collectors.toSet`/`joining`/`toMap`/`groupingBy` genuinely survives. The\n`import static …Collectors.toList;` variant shows up in code as a bare `.collect(toList())`."
+    },
+    "key_points_pre_review": [
+      "Stream.toList() returns an unmodifiable list, while Collectors.toList() returned a mutable ArrayList",
+      "Passing the list to a setter isn't automatically safe: if the setter stores it by reference and the public getter returns it directly, external callers doing getX().add(...) will fail at runtime, so read both the setter and the getter",
+      "Preferred fix when the model class is XWiki-owned: keep .toList() and make the setter take a defensive copy (e.g. this.x = x == null ? null : new ArrayList<>(x)), which keeps the getter's mutable contract",
+      "Otherwise, leave the conversion out (keep the mutable collector)"
+    ]
+  },
+  {
+    "id": "a20",
+    "group": "a",
+    "question": "I'm writing a script that finds which commits came in between two CI builds of an XWiki repo. I pull the built git SHA for each build from the Jenkins JSON API, picking the entry whose branch is master. But every build of every repo comes back with the same SHA, and there's no error. What's going wrong, and how should I get the right commit?",
+    "kind": "fact",
+    "key_points": [
+      "Every build has two built-revision actions, because each job also checks out the shared Jenkins pipeline library alongside the project.",
+      "The library is itself built from master, so selecting by branch name returns the library's constant SHA instead of the project's.",
+      "Select the action by its remote URL and keep the one that names the project repo (e.g. query actions[remoteUrls,lastBuiltRevision[SHA1]]), or use the shared client's buildRevision() in scripts/jenkins.mjs.",
+      "Then pass the two SHAs to GitHub's compare API to list the commits between them. Don't rely on Jenkins' change list, which can be empty (e.g. always on xwiki-commons)."
+    ],
+    "avoided_terms": [
+      "lastBuiltRevision",
+      "remoteUrls",
+      "xwiki-jenkins-pipeline",
+      "changeSets",
+      "buildRevision",
+      "scripts/jenkins.mjs",
+      "Traps when interpreting a build",
+      "shared library"
+    ],
+    "gold": {
+      "file": "servers/jenkins.md",
+      "section": "Traps when interpreting a build"
+    }
+  },
+  {
+    "id": "a21",
+    "group": "a",
+    "question": "I'm writing a quick script to bulk-fix Sonar's \"use the character itself instead of brackets\" warnings in the big accent-stripping replaceAll chains. My script searches for the actual accented letters (e.g. Ĳ) wrapped in square brackets, but it finds nothing, even though Sonar flags them. Why? And while I'm in there, is there anything I shouldn't touch or shouldn't 'improve'?",
+    "kind": "fact",
+    "key_points": [
+      "The patterns are written in the source as \\uXXXX escapes (e.g. \"[Ĳ]\", six literal characters), so the script must match the source text, not the decoded character",
+      "Only single-character bracket patterns are flagged; multi-character ones like \"[ĶǨ]\" must be left alone",
+      "Don't switch the call from replaceAll to replace() as part of this fix; that's a different rule (S5361) and a separate issue",
+      "Keep any escaping the brackets were doing: \"[\\\\.]\" becomes \"\\\\.\", not a bare \".\""
+    ],
+    "avoided_terms": [
+      "S6397",
+      "character class",
+      "redundant",
+      "single-character",
+      "transliteration tables",
+      "XWiki.java",
+      "XWikiSerializer2.java",
+      "Replace this character class by the character itself",
+      "decoded"
+    ],
+    "gold": {
+      "file": "sonarqube/simplification-rules.md",
+      "section": "S6397 — redundant single-character regex character class"
+    },
+    "question_pre_review": "I'm writing a quick script to bulk-fix Sonar's \"use the character itself instead of brackets\" warnings in the big accent-stripping replaceAll chains in XWiki core. My script searches for the actual accented letters (e.g. Ĳ) wrapped in square brackets, but it finds nothing, even though Sonar flags dozens of these. Why? And while I'm in there, is there anything I shouldn't touch or shouldn't 'improve'?"
+  },
+  {
+    "id": "a22",
+    "group": "a",
+    "question": "I need to coordinate with whoever is cutting the next XWiki release. Who's the release manager for this cycle, and when is the next release scheduled?",
+    "kind": "volatile-behaviour",
+    "key_points": [
+      "Don't give a remembered name or date from memory, because these values change and must be checked first",
+      "The Release Plans page (https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/) has a 'Next Release Managers' section and a 'Release Managers' column per plan; release managers rotate, so read them there",
+      "Get current release dates from the Release Plans pages at https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/"
+    ],
+    "avoided_terms": [
+      "Volatile",
+      "follow the pointer",
+      "do not cache",
+      "Role holders",
+      "Release Plan",
+      "ReleaseProcess",
+      "xwiki-xs-release",
+      "rotate"
+    ],
+    "gold": {
+      "file": "processes/release.md",
+      "section": "Volatile — follow the pointer, do not cache",
+      "reference": "## Volatile — follow the pointer, do not cache\n\n- The **detailed release steps** → https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess;\n  performing them through the version's Release Plan → the `xwiki-xs-release` skill.\n- **Current release plans / dates** → https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/\n- **The current dev version** → read the repo's root `pom.xml` (see [[versioning]]).\n- **Role holders** (release managers, who rotate) → the same Release Plans page: its \"Next Release\n  Managers\" section, and the \"Release Managers\" column of each plan."
+    },
+    "key_points_pre_review": [
+      "Don't give a remembered name or date from memory, because these values change and must be checked first",
+      "Release managers and other roles rotate between cycles, so check who holds the role now on the dev wiki (dev.xwiki.org)",
+      "Get current release dates from the Release Plans pages at https://dev.xwiki.org/xwiki/bin/view/ReleasePlans/"
+    ]
+  },
+  {
+    "id": "a23",
+    "group": "a",
+    "question": "I'm adding a debug log line in a job that sends emails, and I want it to show the SMTP settings being used. I was going to pass the mail settings object straight in as a {} parameter, since its toString() already hides the password. Is that safe, or should I do it differently?",
+    "kind": "fact",
+    "key_points": [
+      "Not safe: the object is kept as a log argument, and what gets stored is its fields, not its toString() output, so the SMTP password that the object holds in clear text could end up in the log",
+      "Convert it to a String when you make the log call (e.g. String.valueOf(config) or toString()) so that only the masked toString() output is logged",
+      "The same rule covers any object whose toString() shows less than its fields hold (e.g. Mail.toString() leaves out the body and attachments)",
+      "The object must also be serializable and resolvable when the log is read back: job log arguments are XStream-serialized into the job log and read back later by type, and an argument that fails on read becomes null"
+    ],
+    "avoided_terms": [
+      "MailConfiguration",
+      "Decision table",
+      "Force an eager String",
+      "Pass the object",
+      "deliberately narrower than its fields",
+      "logging.md",
+      "displayer"
+    ],
+    "gold": {
+      "file": "conventions/logging.md",
+      "section": "Decision table",
+      "reference": "## Why an argument is not just something to render\n\n- `AbstractJobStatus` pushes a `LoggerListener`, which forwards **any** `LogEvent` regardless of\n  level, so every log call *enabled at its level* on a job thread is captured into that job's log,\n  whatever class emitted it — a class needs to know nothing about jobs to end up in one. `warn` and\n  `error` are always enabled with the default configuration and so are **always** captured; a `debug`\n  call is captured too whenever debug is on, which is why an eager String under a `debug` guard still\n  has to follow the rules below.\n- The captured `LogEvent` keeps the raw `Object[]`; nothing is formatted at log time.\n- The job log is XStream-serialized to disk (`XStreamFileLoggerTail`) argument by argument in\n  `SafeMessageConverter.marshal()`: an argument whose class `XStreamUtils.isSerializable()` accepts is\n  written as a **full object graph**, and only the rest are reduced to `toString()`.\n  `isSerializable()` **defaults to `true`** — anything that is not a `@Component`, `Logger`,\n  `Provider` or stream is serialized completely, including everything that merely happens to\n  implement `java.io.Serializable`.\n- On read, `SafeArrayConverter.readBareItem()` turns **any failure into `null`** (logged at debug\n  only). An argument whose class can no longer be resolved is therefore lost, where a String would\n  have survived.\n- Consumers read arguments **by type**: the log displayers render some types richly (entity\n  references and extension ids as links), and `Importer` casts `log.getArgumentArray()[0]` to\n  `EntityReference`.\n\n## Decision table\n\n**Pass the object** when it is a small, stable, always-resolvable value type that a displayer can\nrender richly:\n\n- `EntityReference` / `DocumentReference` and other model references\n- `ExtensionId`, `Version`\n- enums, `String`, `Number`, `Boolean`, `File`\n- a `@Component` instance — the converter already stringifies it, so the plain object is equivalent\n- a `Collection`, whose `toString()` already brackets its content (so do not add `[]` in the message\n  for it either)\n\n**Force an eager String** when the argument is any of:\n\n- an **arbitrary `Object`** whose type is not known at compile time (an event `source`, a progress\n  step source) — nothing useful can be kept, and the graph is unbounded\n- a **live resource**: a Hibernate `Session`, a connection, a stream — several of these implement\n  `Serializable` and would be walked field by field\n- a **mutable builder**: a `StringBuilder` is serialized as its internal char array, and its value can\n  change between the log call and the rendering\n- a **request or plan-sized graph**: `Request` is `Serializable`, so a job logging its own request\n  puts a copy of it in its own log\n- an object whose `toString()` is **deliberately narrower than its fields** — e.g.\n  `MailConfiguration.toString()` masks the SMTP password that the object carries in clear text, and\n  `Mail.toString()` omits the body and the attachments\n- a `Class` or a `Type` **from an extension jar**, which may be unresolvable when the log is read back\n  (use `getName()` / `getTypeName()`)\n\nPrefer `String.valueOf(x)` over `x.toString()` when the value can be null, `getName()` /\n`getTypeName()` for a `Class` / `Type`, and a String local when one is needed anyway for another\npurpose."
+    },
+    "key_points_pre_review": [
+      "Not safe: the object is kept as a log argument, and what gets stored is its fields, not its toString() output, so the SMTP password that the object holds in clear text could end up in the log",
+      "Convert it to a String when you make the log call (e.g. String.valueOf(config) or toString()) so that only the masked toString() output is logged",
+      "The same rule covers any object whose toString() shows less than its fields hold (e.g. Mail.toString() leaves out the body and attachments)"
+    ]
+  },
+  {
+    "id": "a24",
+    "group": "a",
+    "question": "I moved some deprecated public constructors from a core oldcore class into its aspect-woven compatibility module. The module I changed builds green with the API compatibility check, so I'm planning to push. Is that enough? Could some other module break later, and if one does, what should I do about it?",
+    "kind": "fact",
+    "key_points": [
+      "A green build on the changed module does not prove compatibility: the main module wrapped by a weaving -legacy module skips Revapi (xwiki.revapi.skip), and the legacy module checks the woven jar in its place.",
+      "A downstream module that depends on the clean main jar can still fail with the API reported as removed, if its own API reaches that class (example: xwiki-platform-extension-script failed via XWiki.getHibernateStore() when XWikiHibernateStore constructors moved to legacy).",
+      "Revapi only reports differences on dependency classes that the artifact's own API reaches, so its coverage differs from module to module.",
+      "The fix for such a downstream failure is not a per-method ignore: exclude the wrapped main artifact from its dependents' Revapi analysis in the shared parent pom (the <revapi.filter><archives><exclude> of xwiki-platform-core/pom.xml, as already done for xwiki-platform-oldcore), with a comment that the legacy module checks its API; an ignore that is still needed goes in a <revapi.differences> with combine.children=\"append\"",
+      "Build the modules that depend on the changed module before pushing, rather than waiting for CI to fail"
+    ],
+    "avoided_terms": [
+      "Revapi",
+      "xwiki.revapi.skip",
+      "-legacy",
+      "transitive dependencies",
+      "reaches",
+      "XWikiHibernateStore",
+      "xwiki-platform-extension-script",
+      "allowed ignore",
+      "Where Revapi does and does not look"
+    ],
+    "gold": {
+      "file": "conventions/backward-compatibility.md",
+      "section": "Where Revapi does and does not look",
+      "reference": "## Where Revapi does and does not look\n\nRevapi analyses the primary artifact **and its transitive dependencies**, but only reports differences\non dependency classes the primary artifact's own API *reaches*. Its coverage is therefore **not uniform\nper module**: a module can opt out with `<xwiki.revapi.skip>true</xwiki.revapi.skip>`\n(every main module wrapped by a weaving `-legacy` module does, the legacy module checking the woven jar\nin its place). A downstream module that depends on the **clean** main jar still sees the dropped API as\nremoved when its own API *reaches* the class, and fails far from the change (moving the\n`XWikiHibernateStore` constructors to legacy failed `xwiki-platform-extension-script`, which reaches the\nclass via `XWiki.getHibernateStore()`). The fix is **not** a per-method ignore: exclude the wrapped main\nartifact from the Revapi analysis of its dependents, in the `<revapi.filter><archives><exclude>` of the\nparent pom they share (e.g. `<item>org\\.xwiki\\.platform:xwiki-platform-oldcore:.*</item>` in\n`xwiki-platform-core/pom.xml`), with a comment saying its API is checked by the legacy module that wraps it.\nPer-method `java.method.removed` ignores for moved methods are then useless — remove them. A green build on the changed\nmodule therefore never means \"compatible\": build the modules depending on it before pushing, rather than waiting for CI\nto fail.\n\n**Where the ignore goes** — two silent failures, both leaving the build failing with the ignore\napparently in place. `<revapi.differences>` needs `combine.children=\"append\"`, or Maven merges your\n`<item>`s *positionally* into the ones inherited from the parent and each takes on the parent's\n`<old>`/`<ignore>`, matching nothing; and it must sit inside the `revapi-check` `<execution>`, whose\nown configuration otherwise wins."
+    },
+    "key_points_pre_review": [
+      "A green build on the changed module does not prove compatibility: the main module wrapped by a weaving -legacy module skips Revapi (xwiki.revapi.skip), and the legacy module checks the woven jar in its place.",
+      "A downstream module that depends on the clean main jar can still fail with the API reported as removed, if its own API reaches that class (example: xwiki-platform-extension-script failed via XWiki.getHibernateStore() when XWikiHibernateStore constructors moved to legacy).",
+      "Revapi only reports differences on dependency classes that the artifact's own API reaches, so its coverage differs from module to module.",
+      "Only that downstream failure justifies an 'allowed' Revapi ignore for a legacy move. Add it only after the build actually fails, justify it by the move, and get it approved."
+    ]
+  },
+  {
+    "id": "a25",
+    "group": "a",
+    "question": "I just changed a HashMap keyed by an enum into the enum-specific map type to clear a static-analysis warning, and the module compiles fine. To save time, can I build with the test phases turned off to confirm the change, or do I actually have to run the module's tests for a change this mechanical?",
+    "kind": "fact",
+    "key_points": [
+      "No: never skip unit tests or integration tests (-DskipTests / -DskipITs) when verifying a Sonar fix; run the edited modules' tests",
+      "Mechanical fixes can change runtime behaviour that the compiler can't catch, e.g. EnumMap throws an NPE on a null key",
+      "Other examples of breakage that only shows up at runtime: a StringBuilder passed to a mock-verified call fails the argument-equality check, and removing a callback that is invoked via reflection means it silently stops firing",
+      "If a test fails because of the change, fix the change or drop the issue and pick another one; never skip tests just to get a green build"
+    ],
+    "avoided_terms": [
+      "Run the tests",
+      "never skip them",
+      "skipTests",
+      "skipITs",
+      "EnumMap",
+      "Sonar",
+      "verification",
+      "modernization-rules",
+      "dead-code-rules"
+    ],
+    "gold": {
+      "file": "sonarqube/verification.md",
+      "section": "Run the tests — never skip them"
+    }
+  },
+  {
+    "id": "a26",
+    "group": "a",
+    "question": "I've attached a stylesheet object to a wiki page with Velocity parsing turned on, so I can pull the border and link colours from the current colour theme through its Velocity binding, with a hard-coded fallback for each. The CSS compiles without errors, but every rule ends up with the fallback colour. What's going on, and what should I use to theme these colours instead?",
+    "kind": "fact",
+    "key_points": [
+      "The $theme Velocity variable is not bound in wiki-page Velocity, and that includes a Velocity-parsed stylesheet extension, so using it there fails silently and only the fallbacks are emitted",
+      "Use the CSS custom properties instead (e.g. var(--brand-primary), available since 17.3.0), which are preferred in plain CSS because LESS costs more to compile",
+      "LESS variables such as @xwiki-border-color only work in a stylesheet extension whose content type is set to LESS; inside LESS, write var() as ~\"var(--x)\", and var() can't be used in a media query",
+      "Colours must never be hard-coded; they must come from style variables"
+    ],
+    "avoided_terms": [
+      "$theme",
+      "Skin Extension",
+      "SSX",
+      "XWiki.StyleSheetExtension",
+      "parse=1",
+      "style variables",
+      "variablelist.vm",
+      "$xwiki.ssx.use",
+      "HTML, CSS, accessibility"
+    ],
+    "gold": {
+      "file": "conventions/frontend.md",
+      "section": "HTML, CSS, accessibility"
+    }
+  },
+  {
+    "id": "a27",
+    "group": "a",
+    "question": "I'm adding French labels with accented characters (é, à, ç) to a module's translation bundle. Can I just type the accented characters directly into the file the way I would in a Java class, or do I have to do something special? My editor config seems to handle encoding already.",
+    "kind": "fact",
+    "key_points": [
+      "Translation .properties files must be ISO-8859-1, because that is the encoding they are loaded with; they are not UTF-8 like Java sources",
+      "Any character outside ISO-8859-1 must be written as a \\uXXXX escape",
+      "Checkstyle fails the build if a .properties file is UTF-8 encoded",
+      "The repo's .editorconfig declares the encoding, but agents do not honor it, so the encoding has to be checked explicitly"
+    ],
+    "avoided_terms": [
+      "File encoding",
+      "ISO-8859-1",
+      "UTF-8",
+      ".properties",
+      "\\uXXXX",
+      ".editorconfig",
+      "Checkstyle"
+    ],
+    "gold": {
+      "file": "conventions/code-style.md",
+      "section": "File encoding"
+    }
+  },
+  {
+    "id": "a28",
+    "group": "a",
+    "question": "Sonar wants me to remove `public` from a JUnit 5 test class in oldcore. The class has a `@BeforeEach` setUp() that overrides a public setUp() from its abstract parent test, plus a `@BeforeComponent` method and a few plain helper methods. Which declarations can I actually make non-public? And what should I do if the overriding setUp ends up being the only flagged thing I can't fix?",
+    "kind": "fact",
+    "key_points": [
+      "Remove `public` from the class declaration and from methods with a real JUnit annotation (@Test, @BeforeEach, etc.), keeping other modifiers like static",
+      "A JUnit-annotated method that also overrides a public parent method must stay public: reducing its visibility won't compile",
+      "XWiki-specific lifecycle methods (@BeforeComponent/@AfterComponent), fields and unannotated helper methods stay as they are",
+      "If the override is the only public thing left, the issue can't be cleared, so drop it instead of shipping a partial fix"
+    ],
+    "avoided_terms": [
+      "S5786",
+      "package-private",
+      "Remove this 'public' modifier",
+      "Remove redundant visibility modifiers",
+      "test-code-rules",
+      "half fix"
+    ],
+    "gold": {
+      "file": "sonarqube/test-code-rules.md",
+      "section": "S5786 — a JUnit 5 test class or method should be package-private"
+    }
+  },
+  {
+    "id": "a29",
+    "group": "a",
+    "question": "I have two agents, each in its own worktree, running functional UI tests against the standalone Jetty setup on my laptop at the same moment. One of them keeps failing during setup with an HTTP 401 that I can't reproduce when it runs by itself. What's happening, and how should I run these tests in parallel without this happening?",
+    "kind": "fact",
+    "key_points": [
+      "With the standalone Jetty the wiki runs on the host on port 8080, so only one can run at a time on the machine (it also collides with a locally running wiki): the second run's wiki does not start properly",
+      "The second run does not fail cleanly: its setup provisions into the first run's wiki, which is where the 401 comes from",
+      "To run in parallel, use a containerised servlet engine (e.g. Tomcat): the Docker test framework then maps the ports automatically, so the instances do not clash",
+      "Memory is the real limit: each run holds a servlet engine, a database and a browser container, and nothing in Maven or testcontainers serialises runs, so cap concurrent runs (a laptop rarely fits more than two wikis and their databases; the xwiki-build skill's wrapper defaults to 2)"
+    ],
+    "avoided_terms": [
+      "contend",
+      "JETTY_STANDALONE",
+      "8080",
+      "ryuk",
+      "daemon budget",
+      "~/.m2 is shared",
+      "running-docker-its.md",
+      "machine-wide resource",
+      "collisions"
+    ],
+    "gold": {
+      "file": "testing/running-docker-its.md",
+      "section": "What several agents on one machine contend for",
+      "reference": "- **`JETTY_STANDALONE` (the framework default)** — XWiki runs on the **host**, and the framework\n  gives the browser container an `/etc/hosts` entry mapping the servlet engine's network aliases to\n  `host-gateway` (`BrowserContainerExecutor`, logged as `Mapping servlet engine network aliases [..]\n  to [..]`). No name resolution goes through Docker's embedded DNS. It binds host ports 8080/8079,\n  and `start_xwiki.sh` spawns the wiki's JVM using `java` from `PATH`.\n- **A containerised engine (`tomcat`, `jetty`, `wildfly`)** — the servlet container joins a\n  user-defined testcontainers network under the alias `xwikiweb`, and the browser container resolves\n  that alias through Docker's embedded DNS. Nothing binds a fixed host port; testcontainers maps\n  random ones.\n\n## What several agents on one machine contend for\n\nDocker ITs are a machine-wide resource, and nothing in Maven or testcontainers serialises them. Three\ndistinct collisions, in the order they bite:\n\n- **Host port 8080 is global.** Only one `JETTY_STANDALONE` run can exist at a time, and it also\n  collides with the wiki the developer keeps running. The second run's wiki does not start, yet the\n  run does not fail cleanly: it provisions into the first one's wiki and reports a `401`. A\n  containerised engine has no such limit, its host ports being mapped at random.\n- **The daemon has a finite budget.** Each run holds a servlet engine, a database, a browser container\n  of a couple of gigabytes, and a ryuk; memory runs out first, and a laptop rarely fits more than two\n  wikis and their databases at once. A few concurrent runs starve it, and starvation never announces\n  itself as such — it surfaces as the setup failures in the table above. Long-lived containers that\n  are nobody's test (MCP servers, leftovers from killed runs or from a ryuk that cannot reach the\n  daemon) count against the same budget.\n- **`~/.m2` is shared.** Two `mvn install` of the same SNAPSHOT from different worktrees interleave,\n  so a run can install the artifact another agent has just written. Serialising the whole Maven\n  invocation, not merely the failsafe phase, is what removes this one. Related: an extension whose\n  version has not changed is *not* re-imported, so a test database that survives a run serves the\n  previous run's pages.\n\nThe practical rule is to cap concurrent runs rather than forbid them — the `xwiki-build` skill has\nthe wrapper that does it, defaulting to 2."
+    },
+    "key_points_pre_review": [
+      "Host port 8080 is global: only one standalone-Jetty test run can exist at a time on the machine, and it also conflicts with a wiki the developer keeps running locally",
+      "The second run does not fail cleanly; it provisions into the first run's wiki, which is where the 401 comes from",
+      "Nothing in Maven or testcontainers serialises these runs, so concurrency has to be limited explicitly",
+      "Cap the number of concurrent runs rather than forbidding them, using the xwiki-build skill's wrapper (default cap of 2)"
+    ]
+  },
+  {
+    "id": "a30",
+    "group": "a",
+    "question": "My component gets a generic XWiki component through a javax.inject provider declared without any type arguments. In its JUnit 5 component test I mocked that component as `MyComponent<?>` with the XWiki mock annotation, but when the code under test calls the provider's get(), it receives a different mock and none of my stubbing applies. Why does this happen, and how should I declare the mock so the provider returns it?",
+    "kind": "fact",
+    "key_points": [
+      "A provider with no type arguments looks up the role with no type arguments; component lookups match the registered role type exactly, so the mock registered for the parameterized role is not what it returns",
+      "The injection of mocks into the component under test quietly creates a second mock for the role the provider asks for, and that is the one the provider returns",
+      "Fix the production code, not the mock: declare the Provider with the role's type arguments, as the role is registered; a raw mock (and raw Provider) is only right for a role registered raw"
+    ],
+    "avoided_terms": [
+      "@MockComponent",
+      "@InjectMockComponents",
+      "raw type",
+      "raw Provider",
+      "raw role",
+      "parameterized role"
+    ],
+    "gold": {
+      "file": "testing/strategy.md",
+      "section": "Durable rules",
+      "reference": "- **Role** — an interface annotated `@Role` (in `org.xwiki.component.annotation`). The role is the\n  contract other code depends on. A role can be parameterized by a generic type, and lookups match\n  the registered role type exactly: inject `Provider<SomeRole<String>>` for a role registered\n  parameterized, a raw `Provider<SomeRole>` only for one registered raw (`@Component(roles = …)`).\n- **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked\n  the role the provider asks for, which differs from the registered one: fix the provider in the\n  production code ([[component-system]]), not the mock's type."
+    }
+  },
+  {
+    "id": "a31",
+    "group": "a",
+    "question": "I'm writing a REST endpoint that rejects attachments and uploaded parts over a size limit. Right now I pull the whole content into memory and check its length before saving. Is that OK, and if not, how should I get the size and then handle the content?",
+    "kind": "fact",
+    "key_points": [
+      "Don't read the content just to count its bytes. Get the size from metadata instead: Part#getSize() for uploads, XWikiAttachment#getLongSize() for attachments.",
+      "Loading the whole upload or attachment into a byte[] or String (for example IOUtils.toByteArray/toString or readAllBytes) is only acceptable for small, bounded data. It is never acceptable for attachments, uploads, or message bodies.",
+      "Process the content through InputStream/OutputStream pipelines (for example InputStream#transferTo) so heap usage stays flat regardless of payload size.",
+      "Close streamed resources (part streams, temp files) right away with try-with-resources."
+    ],
+    "avoided_terms": [
+      "Stream, don't buffer",
+      "Measure without reading",
+      "IOUtils.toByteArray",
+      "IOUtils.toString",
+      "readAllBytes",
+      "getLongSize",
+      "getSize",
+      "unbounded input",
+      "one-liners",
+      "performance.md"
+    ],
+    "gold": {
+      "file": "conventions/performance.md",
+      "section": "Rules"
+    }
+  },
+  {
+    "id": "a32",
+    "group": "a",
+    "question": "A Selenium-based docker functional test failed on CI and I've downloaded the screen recording. I grabbed frames from the final few seconds, but every one shows the same static error page, so I can't see what happened just before the failure. How should I find the frames that actually matter, and can I rely on where the mouse pointer is to tell where the test clicked?",
+    "kind": "fact",
+    "key_points": [
+      "The recording ends with a long, almost static tail (element-lookup timeout plus teardown), so the last N seconds only show the frozen failure page",
+      "Run ffmpeg scene-change detection first (select on scene > ~0.01 with showinfo, then read the pts_time values) to find the last changes, then look just before them; a 0.02 threshold misses subtle changes",
+      "Build a single tiled contact sheet of that time window instead of dumping individual frames",
+      "The cursor doesn't move because the drivers synthesise clicks, so compare element positions and sizes across frames instead"
+    ],
+    "avoided_terms": [
+      "Reading the video",
+      "flv",
+      "scene",
+      "contact sheet",
+      "flickers",
+      "dv-test-history",
+      "cursor does not move",
+      "synthesise clicks",
+      "tile"
+    ],
+    "gold": {
+      "file": "testing/flickers.md",
+      "section": "Reading the video"
+    }
+  },
+  {
+    "id": "a33",
+    "group": "a",
+    "question": "I'm writing a component so that my custom macro's page/attachment parameter gets updated when the target page is renamed or moved. The interface has several overloads, including some that take a map of all the entities that were moved. Do I have to implement every one of them? And what should I return when my macro's parameter doesn't point at the renamed thing?",
+    "kind": "fact",
+    "key_points": [
+      "The newer overloads that take the Map<EntityReference, EntityReference> are default methods delegating to the simpler overloads; the two base `replaceReference` overloads (`DocumentReference` and `AttachmentReference`) are abstract and must both be implemented; `extractReferences` is default and returns an empty set",
+      "Return Optional.empty() when nothing changed. Return an Optional of the updated MacroBlock when the reference matched and was rewritten.",
+      "Typical approach: resolve the parameter to an absolute reference and compare it with the source. On a match, clone the block and write back the (compact-)serialized target reference.",
+      "There are separate overloads for a renamed DocumentReference and a renamed AttachmentReference."
+    ],
+    "avoided_terms": [
+      "replaceReference",
+      "extractReferences",
+      "MacroRefactoring",
+      "updatedEntities",
+      "default methods",
+      "backward-compatibility",
+      "Optional<MacroBlock>"
+    ],
+    "gold": {
+      "file": "architecture/macro-refactoring.md",
+      "section": "The methods",
+      "reference": "## The methods\n\n- `replaceReference(...)` — overloads for a renamed **`DocumentReference`** and a renamed\n  **`AttachmentReference`** (plus `relative`). Each returns `Optional<MacroBlock>`: the updated\n  macro block when the reference matched and was rewritten, or `Optional.empty()` when nothing\n  changed. A typical implementation reads a reference parameter, resolves it to an absolute entity\n  reference, compares it to the source, and on a match clones the block and writes back the\n  (compact-)serialized target.\n- `extractReferences(MacroBlock)` — returns the `ResourceReference`s the macro uses (in its\n  parameters and/or content), so they can become backlinks.\n\nThe interface evolves via **default methods** (see [[backward-compatibility]]): the newer overloads\ntaking a `Map<EntityReference, EntityReference> updatedEntities` are `default` and delegate to the\nsimpler overloads, and `extractReferences` defaults to an empty set. Only the two base\n`replaceReference` overloads (`DocumentReference`, `AttachmentReference`) are abstract: implement both."
+    },
+    "key_points_pre_review": [
+      "The newer overloads that take the Map<EntityReference, EntityReference> are default methods. By default they delegate to the simpler overloads, so you only override what you need.",
+      "Return Optional.empty() when nothing changed. Return an Optional of the updated MacroBlock when the reference matched and was rewritten.",
+      "Typical approach: resolve the parameter to an absolute reference and compare it with the source. On a match, clone the block and write back the (compact-)serialized target reference.",
+      "There are separate overloads for a renamed DocumentReference and a renamed AttachmentReference."
+    ]
+  },
+  {
+    "id": "a34",
+    "group": "a",
+    "question": "I'm closing an issue on the XWiki issue tracker and need to set which release the fix lands in. Also, a reviewer is asking whether to backport it to the long-term-support branch. How do I work out the right target release, which release names already exist or have shipped, and which LTS lines are still maintained? I don't want to rely on numbers I remember.",
+    "kind": "volatile-behaviour",
+    "key_points": [
+      "Don't quote a cached/remembered version; verify live",
+      "Current dev version comes from the repo root pom.xml <version> (or SNAPSHOT jar names in ~/.m2 / nexus)",
+      "GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions (name, released, releaseDate) shows existing and released versions; it has no LTS marker",
+      "Which versions are supported: xwiki.org Main/Support § Supported Versions (https://www.xwiki.org/xwiki/bin/view/Main/Support#HSupportedVersions), which links to VersioningAndReleasePractices for the current LTS lines"
+    ],
+    "avoided_terms": [
+      "volatile values",
+      "Fix Version",
+      "JIRA",
+      "SupportStrategy",
+      "pom.xml",
+      "SNAPSHOT",
+      "rest/api/2/project/XWIKI/versions",
+      "released",
+      "releaseDate"
+    ],
+    "gold": {
+      "file": "servers/jira.md",
+      "section": "Verifying the volatile values",
+      "reference": "## Verifying the volatile values\n\n- **Current dev version** (drives Fix Version) → read the repo root `pom.xml` `<version>`, or SNAPSHOT\n  jar names under `~/.m2` / nexus (see [[index]] and [[versioning]]).\n- **Which JIRA version names exist / are released** →\n  `GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions` (each entry has `name`, `released`\n  and `releaseDate`); the latest released feature line is read from there, but it has no LTS marker.\n- **Which versions are supported** → the \"Supported Versions\" section of xwiki.org's Support page\n  (https://www.xwiki.org/xwiki/bin/view/Main/Support#HSupportedVersions), which links to\n  VersioningAndReleasePractices for the current LTS lines."
+    },
+    "key_points_pre_review": [
+      "Don't quote a cached/remembered version; verify live",
+      "Current dev version comes from the repo root pom.xml <version> (or SNAPSHOT jar names in ~/.m2 / nexus)",
+      "Existing/released version names come from GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions (released and releaseDate fields), which also shows the latest released feature line and the current LTS",
+      "Which LTS lines are supported comes from curling the SupportStrategy page in the sources: wiki"
+    ]
+  },
+  {
+    "id": "a35",
+    "group": "a",
+    "question": "Our Velocity-facing service has a method that catches failures, returns null, and puts the error in the context so callers can fetch it afterwards with a getter. I'd like to change it so it raises the exception instead. Can I just change that method in place? And how should Velocity callers that care about the failure handle it once it raises?",
+    "kind": "fact",
+    "key_points": [
+      "Don't change the existing method in place. Switching it from returning null to throwing breaks backward compatibility.",
+      "Add a new method signature that throws, deprecate the old one and move it to legacy.",
+      "Callers that want to handle the failure wrap the call in the #try() directive and can name the exception variable (default $exception). Callers that don't need to handle it do nothing, because the Macro Transformation or template catches the exception and displays it.",
+      "Throwing is the current best practice for new methods. The older null-plus-getLastError() pattern came before #try() (available since 6.3M1)."
+    ],
+    "avoided_terms": [
+      "Errors: throw, do not stash",
+      "getLastError",
+      "S2447",
+      "script-services.md",
+      "stash",
+      "$discard"
+    ],
+    "gold": {
+      "file": "conventions/script-services.md",
+      "section": "Errors: throw, do not stash"
+    }
+  },
+  {
+    "id": "a36",
+    "group": "a",
+    "question": "I'm moving the docs for one of our extensions off its extensions.xwiki.org page into the repo. I wrote a script that pulls the main description text from the page's extension object, converted it, and my diff check against the old page says nothing is missing. Can I trust that, or could some of the page's documentation be stored somewhere else?",
+    "kind": "fact",
+    "key_points": [
+      "The page's own content is empty; the prose is spread across several xproperties of its xobjects, not just description",
+      "The installation field (ExtensionCode.ExtensionClass) and the compatibility field (EXOExtensionCode.ExtensionClass) must also be migrated; installation often holds a mandatory setup step found nowhere else",
+      "The completeness check is misleading because it compares against an already-incomplete source; enumerate all xproperties of all xobjects and filter for prose instead",
+      "Obsolete rows in compatibility/installation (unsupported XWiki versions) should be dropped, after checking them against the repo's real minimum version"
+    ],
+    "avoided_terms": [
+      "content field",
+      "xproperties",
+      "installation",
+      "compatibility",
+      "EXOExtensionCode.ExtensionClass",
+      "ExtensionCode.ExtensionClass",
+      "prose",
+      "e.x.o",
+      "documentation-migration"
+    ],
+    "gold": {
+      "file": "conventions/documentation-migration.md",
+      "section": "Where an e.x.o extension page keeps its prose"
+    }
+  },
+  {
+    "id": "a37",
+    "group": "a",
+    "question": "I've got a chunk of explanatory text that two of our extension doc pages both need, and I don't want to copy-paste it. Where should that shared text be stored, how do I pull it into each page, and is there anything to watch out for in how it renders there or when I later remove it?",
+    "kind": "fact",
+    "key_points": [
+      "Store it as a `DocApp.Code.ContentFragmentClass` xobject on the page it belongs to, never a hidden page; its `name` is lowercase hyphen-separated words",
+      "Display it with `{{fragment reference=\"…\" name=\"…\"/}}`; `reference` defaults to the current page and the macro also works inline",
+      "It renders as part of the displaying page: its headings join that page's TOC, it runs with the rights of the author of the page holding it, and the reader needs view right on that page",
+      "Remove the macros displaying it before removing the fragment"
+    ],
+    "avoided_terms": [
+      "fragment",
+      "{{fragment}}",
+      "ContentFragmentClass",
+      "Content Fragments",
+      "hidden page",
+      "{{display}}",
+      "documentation-mechanics.md"
+    ],
+    "gold": {
+      "file": "conventions/documentation-mechanics.md",
+      "section": "Content fragments (the `{{fragment}}` macro)",
+      "reference": "## Content fragments (the `{{fragment}}` macro)\n\n[[documentation]] requires that shared content exist once and be displayed elsewhere rather than copied.\nThe one copy is a **content fragment** (Documentation application 1.18+) held by the page it belongs to.\n\n- Stored as a `DocApp.Code.ContentFragmentClass` xobject on the page holding it: `name` (lowercase words\n  separated by hyphens), `description`, `content`. The \"Content Fragments\" section of the page's edit form\n  adds and edits them, and its \"Used in:\" list shows the pages displaying each one.\n- Displayed with `{{fragment reference=\"<page holding it>\" name=\"<name>\"/}}`; `reference` defaults to the\n  current page, and the macro also works inline, inside a paragraph.\n- It renders as part of the displaying page (its headings join that page's table of contents), with the\n  rights of the author of the page holding it; the reader needs view right on that page.\n- Remove the macros displaying a fragment before removing it: they show an error once it is gone.\n\nFrom [[documentation]]: shared content is a content fragment of the documentation page it belongs to — never a second copy, and never a hidden page holding it (a hidden page still shows in the navigation and the search for users who display hidden pages)."
+    },
+    "question_pre_review": "I've got a chunk of explanatory text that two of our extension doc pages both need, and I don't want to copy-paste it. My plan is to put it in its own page and pull it into both via a macro. How should I set up that shared page — where does it live, how do I keep it out of the docs listing, should it carry the same doc xobjects as the real pages, and how do I write the reference and the section headings inside it?",
+    "key_points_pre_review": [
+      "The shared page is an ordinary hidden page nested under one of the pages that uses it; hiding it uses the plain page-level hidden field, not an xobject",
+      "It must not carry DocumentationClass / DocumentationExtensionClass objects (it is not a documentation page itself)",
+      "The reference passed to the display macro has no doc: prefix",
+      "Headings keep their level when displayed in the host page, so write them at the level they will appear at in the host"
+    ],
+    "gold_pre_review": {
+      "file": "conventions/documentation-mechanics.md",
+      "section": "Hidden fragment pages (the `{{display}}` pattern)"
+    },
+    "avoided_terms_pre_review": [
+      "hidden fragment pages",
+      "fragment",
+      "{{display}}",
+      "display pattern",
+      "documentation-mechanics.md",
+      "DocumentationClass",
+      "DocumentationExtensionClass",
+      "doc: prefix"
+    ]
+  },
+  {
+    "id": "a38",
+    "group": "a",
+    "question": "I'm splitting a module and want some UI labels that currently live in one extension's ApplicationResources.properties to belong to the new extension instead. Can I just cut the entries over to the new module's resource file, and what should I do about the translations that already exist for them?",
+    "kind": "fact",
+    "key_points": [
+      "Don't move keys from one file or extension to another, because existing extensions reference them; deprecate the old key and create a new one instead",
+      "The old key isn't deleted. It moves to the deprecated block at the end of the file (#@deprecatedstart), under a '## until <version>' header, with a '#@deprecated <new.key>' comment pointing to the replacement",
+      "Copy the existing translated values to the new key in the source files and commit them. A commit hook syncs them to l10n.xwiki.org"
+    ],
+    "avoided_terms": [
+      "deprecating",
+      "renaming",
+      "never moving",
+      "deprecated section",
+      "#@deprecatedstart",
+      "#@deprecated",
+      "Weblate",
+      "translations.md"
+    ],
+    "gold": {
+      "file": "conventions/translations.md",
+      "section": "Deprecating, renaming, never moving"
+    }
+  },
+  {
+    "id": "a39",
+    "group": "a",
+    "question": "I'm using our Develocity helper script to get a list of tests that broke in XWiki CI over the last day. The output shows one test with 3 failures and 2 flaky runs, and next to that a much larger count from the comparison period. Can I compare those raw numbers directly to tell whether the test got worse? Also, is there a way to make the command run faster?",
+    "kind": "fact",
+    "key_points": [
+      "The fails/flaky/runs counts cover only the recent window (24 h by default), while the baseline column covers the preceding days (14 by default), so the raw counts can't be compared.",
+      "Only the two percentages (the window rate and the baseline rate) are comparable.",
+      "`--baseline-days 0` saves one request per container but drops the baseline column and the new/known status",
+      "Tests are marked new or known based on the baseline period."
+    ],
+    "avoided_terms": [
+      "--recent-failures",
+      "--baseline-days",
+      "Finding candidates",
+      "new/known",
+      "develocity.md",
+      "window"
+    ],
+    "gold": {
+      "file": "servers/develocity.md",
+      "section": "Finding candidates: `--recent-failures [HOURS]`",
+      "reference": "## Finding candidates: `--recent-failures [HOURS]`\n\nLists every test that failed in the window (default 24 h) across XWiki builds, with its rate,\nbranches and browsers, whether it is `new` or `known` (against `--baseline-days`, default 14; `0`\nsaves a request per container but drops the baseline column and the new/known status), and ready-to-run commands for the most interesting ones. Trap: the\nbaseline column covers the preceding days, `fails`/`flaky`/`runs` only the window — only the two\npercentages are comparable."
+    },
+    "key_points_pre_review": [
+      "The fails/flaky/runs counts cover only the recent window (24 h by default), while the baseline column covers the preceding days (14 by default), so the raw counts can't be compared.",
+      "Only the two percentages (the window rate and the baseline rate) are comparable.",
+      "Setting the baseline to 0 days skips the baseline comparison and saves one request per container.",
+      "Tests are marked new or known based on the baseline period."
+    ]
+  },
+  {
+    "id": "a40",
+    "group": "a",
+    "question": "An outside contributor (not a committer) opened a fix for a vulnerability inside the GitHub advisory's private workspace repo. Can I just hit the green merge button there? If not, how should I bring their change into xwiki-platform and still give them credit?",
+    "kind": "fact",
+    "key_points": [
+      "Don't merge it through the GitHub UI, because the UI doesn't give enough control over the commit message, and that message has to stay obfuscated",
+      "Merge it by hand: add the advisory fork as a remote, fetch it, run git merge --squash on the branch, adjust things like @since tags, then commit and push (and remove the remote afterwards)",
+      "Credit the contributor with git commit --author, and replace the default squash message (all the original messages joined together) with one clean, obfuscated message",
+      "When you're done, use 'Delete temporary private fork' on the GitHub advisory"
+    ],
+    "avoided_terms": [
+      "non-committer",
+      "security pull request",
+      "temporary private fork",
+      "merge --squash",
+      "obfuscated",
+      "Delete temporary private fork",
+      "ghsa"
+    ],
+    "gold": {
+      "file": "processes/security-policy.md",
+      "section": "Merging a non-committer's security pull request"
+    }
+  }
+]
