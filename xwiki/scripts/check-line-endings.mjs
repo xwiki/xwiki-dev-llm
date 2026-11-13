@@ -16,10 +16,10 @@
 // stderr warning is emitted, but the model must act on it itself; the file is not rejected. opencode
 // surfaces the message by throwing from the tool hook.
 
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 // Inspect filePath and return { eol, problem } when it violates the repo's declared line-ending
 // policy, or null when there is nothing to enforce (not a git repo, binary file, no eol declared,
@@ -114,8 +114,6 @@ function runAsHook() {
   process.exit(2);
 }
 
-const invokedDirectly =
-  process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   runAsHook();
 }

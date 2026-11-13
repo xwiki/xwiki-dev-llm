@@ -32,11 +32,11 @@
 // the bottom: exit 2 refuses; advice goes out as additionalContext, which Kimi's tool hooks cannot
 // carry, so there it is dropped); opencode imports it from xwiki/opencode/plugins/xwiki-commit-gates.js.
 import { execFileSync } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { extractMessages } from "./check-commit-text.mjs";
+import { invokedDirectly } from "./invoked-directly.mjs";
 import { isScopedRemote, originRemote } from "./repo-scope.mjs";
 import { isGitCommit, takesUnstaged } from "./shell-commands.mjs";
 import { skillGate } from "./skill-gate.mjs";
@@ -474,9 +474,7 @@ export function checkCommit(command, { cwd = process.cwd(), env = process.env, s
 }
 
 // ---- CLI (Claude Code / Kimi Code PreToolUse hook) ----------------------------------------------
-const invokedDirectly = process.argv[1]
-  && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   let result = { deny: "", context: "" };
   try {
     const payload = JSON.parse(readFileSync(0, "utf8"));

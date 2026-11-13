@@ -17,10 +17,11 @@
 // UserPromptSubmit for a skill the developer invokes as `/xwiki-…`, which runs no Skill tool. opencode
 // records them from xwiki-commit-gates.js. Kimi Code records none, so check-diff.mjs skips the gate
 // there.
-import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { invokedDirectly } from "./invoked-directly.mjs";
 import { skillGateDir } from "./state-dir.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -142,9 +143,7 @@ export function skillGate(sessionId, files, read, { stateDir = skillGateDir(), g
 }
 
 // ---- CLI (Claude Code PostToolUse on Skill, UserPromptSubmit): record the loads, never block --------
-const invokedDirectly = process.argv[1]
-  && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   try {
     const payload = JSON.parse(readFileSync(0, "utf8"));
     recordLoaded(payload?.session_id, loadedBy(payload));
