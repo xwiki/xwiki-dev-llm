@@ -5,16 +5,16 @@
 // via an explicit `eol` attribute. On a mismatch it reports a clear message so the model rewrites
 // the file correctly. This enforces line endings deterministically and at near-zero token cost (it
 // only speaks up on a real violation) instead of relying on a skill being consulted on every write.
-// Written in Node (ships with Claude Code and Kimi Code, and runs under opencode's Bun) so it works
-// on Windows, macOS and Linux.
+// Written in Node (ships with Claude Code, and runs under opencode's Bun) so it works on Windows,
+// macOS and Linux.
 //
 // Two consumers share the checkLineEndings() function below:
-//   - Claude Code / Kimi Code: this file run directly as a PostToolUse hook (CLI section at bottom).
+//   - Claude Code: this file run directly as a PostToolUse hook (CLI section at bottom).
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-line-endings.js from a tool.execute.after hook.
 //
-// Kimi Code note: Kimi runs PostToolUse hooks fire-and-forget and discards their result, and its
-// Write/Edit tools name the file `path`, not `file_path`: under Kimi this hook has no effect. opencode
-// surfaces the message by throwing from the tool hook.
+// Not wired into Kimi Code: Kimi runs PostToolUse hooks fire-and-forget and discards their result,
+// and its Write/Edit tools name the file `path`, not `file_path`. opencode surfaces the message by
+// throwing from the tool hook.
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -96,7 +96,7 @@ export function formatLineEndingMessage(filePath, { eol, problem }) {
   );
 }
 
-// ---- CLI entrypoint (Claude Code / Kimi Code PostToolUse hook) --------------------------------
+// ---- CLI entrypoint (Claude Code PostToolUse hook) ---------------------------------------------
 // Only runs when this file is executed directly, not when imported (e.g. by the opencode plugin).
 function runAsHook() {
   // Read the hook payload from stdin.
