@@ -17,7 +17,7 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB index, KB search metadata current, no repeated JSON key, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB index, KB search metadata current, no repeated JSON key or hook, size budgets, copied paragraphs)
 node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
