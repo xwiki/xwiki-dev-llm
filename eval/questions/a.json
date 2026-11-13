@@ -106,7 +106,7 @@
     "gold": {
       "file": "testing/manual-tests.md",
       "section": "Automation status",
-      "reference": "## Automation status\n\n- **The `QA.AutomatedTestStatusClass` object on the test page is the record to trust**: `status`\n  (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),\n  `tests` (GitHub links to the automated tests) and `notes`.\n- **`QA.TestClass.automated` (yes/no) is the legacy flag**: never decide from it, though upstream\n  still asks to update it. The two disagree on many tests.\n- **Most tests have no status object at all**, and then the status is unknown: the test may already\n  be automated in the code or not. Search the code for an existing test before writing one."
+      "reference": "## Automation status\n\n- **The `QA.AutomatedTestStatusClass` object on the test page is the record to trust**: `status`\n  (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),\n  `tests` (GitHub links to the automated tests) and `notes`.\n- **`QA.TestClass.automated` and `automatedLinkSourceCode` are deprecated: never fill them**; record\n  automation only in the status object. They disagree with it on many tests, and most tests have no\n  status object at all — so neither proves a test is *not* automated: search the code for an\n  existing test before writing one."
     },
     "key_points_pre_review": [
       "No: neither the old yes/no flag nor the newer status object proves a test is not automated, so search the codebase for an existing automated test before writing one",
@@ -822,7 +822,7 @@
     ],
     "gold": {
       "file": "testing/strategy.md",
-      "section": "Durable rules",
+      "section": "A mocked component that the code's `Provider` does not return",
       "reference": "- **Role** — an interface annotated `@Role` (in `org.xwiki.component.annotation`). The role is the\n  contract other code depends on. A role can be parameterized by a generic type, and lookups match\n  the registered role type exactly: inject `Provider<SomeRole<String>>` for a role registered\n  parameterized, a raw `Provider<SomeRole>` only for one registered raw (`@Component(roles = …)`).\n- **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked\n  the role the provider asks for, which differs from the registered one: fix the provider in the\n  production code ([[component-system]]), not the mock's type."
     }
   },
