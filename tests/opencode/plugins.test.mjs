@@ -3,6 +3,9 @@
 // it at import time leaves its plugin with no hooks, and the guard silently does nothing.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -29,4 +32,20 @@ test('every opencode plugin registers its hooks under the opencode binary argv',
     const registered = await plugin.server({ directory: HOME });
     assert.deepEqual(Object.keys(registered).sort(), hooks.sort(), file);
   }
+});
+
+test('the line-ending guard reads the file from the args opencode 1.x passes after the call', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'oc-eol-'));
+  execFileSync('git', ['-C', dir, 'init', '-q']);
+  writeFileSync(join(dir, '.gitattributes'), '* text=auto eol=lf\n');
+  writeFileSync(join(dir, 'notes.txt'), 'alpha\r\nbeta\r\n');
+  process.env.XWIKI_LLM_HOME = HOME;
+  const plugin = (await import(pathToFileURL(join(HOME, 'xwiki', 'opencode', 'plugins', 'xwiki-line-endings.js')).href)).default;
+  const hooks = await plugin.server({ directory: dir });
+  const filePath = join(dir, 'notes.txt');
+  // The shape opencode 1.18 hands tool.execute.after: args on input, the tool result as output.
+  await assert.rejects(
+    hooks['tool.execute.after']({ tool: 'edit', sessionID: 's', callID: 'c', args: { filePath } },
+      { title: 'notes.txt', metadata: {}, output: 'Edit applied successfully.' }),
+    /Line-ending mismatch/);
 });
