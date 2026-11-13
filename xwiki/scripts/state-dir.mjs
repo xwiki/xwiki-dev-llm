@@ -8,7 +8,7 @@
 
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 /**
  * The plugin's state root, following each platform's convention for state a tool keeps for itself
@@ -64,6 +64,6 @@ export const LEGACY_WORK_ROOT = join(homedir(), ".xwiki-llm", "work");
 // Also runnable, printing the work root: opencode reads instructions/xwiki-org.md verbatim and has
 // no SessionStart hook to append the resolved path, so that file points at this command instead of
 // repeating the platform rules.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (invokedDirectly(import.meta.url)) {
   process.stdout.write(`${workRoot()}\n`);
 }

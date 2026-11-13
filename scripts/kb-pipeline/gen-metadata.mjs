@@ -17,7 +17,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { pathToFileURL } from "node:url";
+import { invokedDirectly } from "../../xwiki/scripts/invoked-directly.mjs";
 import {
   bodyHash, defaultRoot, isCorpusFile, loadSidecar, parseFrontmatter, sidecarOf, splitSections,
 } from "../../xwiki/scripts/kb-search.mjs";
@@ -256,7 +256,7 @@ function applyFrontmatter(o) {
   console.log(`frontmatter updated in ${changed} topics`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (invokedDirectly(import.meta.url)) {
   const o = parseArgs(process.argv.slice(2));
   if (!existsSync(o.root)) throw new Error(`no KB at ${o.root}`);
   if (o.apply) applyFrontmatter(o);
