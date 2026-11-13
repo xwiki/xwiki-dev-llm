@@ -105,6 +105,13 @@ export const editsSince = (summaries, from) =>
       comment: e.comment ?? "",
     }));
 
+// The cited pages no pin covers, as { file, key }, from [{ file, markdown }]. validate.mjs fails on
+// them: only the author knows which version a new source was written from, so it is pinned in the
+// same change — the routine pinning it later could only guess the version it found then.
+export const unpinnedSources = (files, pins) =>
+  files.flatMap(({ file, markdown }) =>
+    devSources(markdown).filter((key) => pins[key] === undefined).map((key) => ({ file, key })));
+
 // "url@1.2" → [key, "1.2"]; "url" → [key, undefined].
 export const pinArg = (arg) => {
   const m = String(arg).match(/^(.*?)@(\d+\.\d+)$/);

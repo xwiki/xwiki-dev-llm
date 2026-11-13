@@ -2,7 +2,7 @@
 // keeps them, and which ones the routine must read.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { changesUrl, classify, devSources, editsSince, pageKey, pinArg, restPaths, versionCmp }
+import { changesUrl, classify, devSources, editsSince, pageKey, pinArg, restPaths, unpinnedSources, versionCmp }
   from '../../scripts/kb-sources.mjs';
 
 const VIEW = 'https://dev.xwiki.org/xwiki/bin/view/';
@@ -91,4 +91,18 @@ test('the edits since a pin, newest first, with the author\'s short name', () =>
 test('a pin argument may name the exact version read', () => {
   assert.deepEqual(pinArg(`${VIEW}Community/CodeStyle/@27.1`), [`${VIEW}Community/CodeStyle`, '27.1']);
   assert.deepEqual(pinArg(`${VIEW}Community/CodeStyle#HComments`), [`${VIEW}Community/CodeStyle`, undefined]);
+});
+
+test('a cited page without a pin is reported, once per citing file', () => {
+  const md = (...urls) => ['---', 'sources:', ...urls.map((u) => `  - ${u}`), '---', 'Body'].join('\n');
+  const pins = { [`${VIEW}Community/Pinned`]: '3.1' };
+  const files = [
+    { file: 'a.md', markdown: md(`${VIEW}Community/Pinned/#HX`, `${VIEW}Community/New`, `${VIEW}Community/New#HY`) },
+    { file: 'b.md', markdown: md(`${VIEW}Community/New`, 'https://www.xwiki.org/xwiki/bin/view/Documentation/') },
+    { file: 'c.md', markdown: 'No frontmatter' },
+  ];
+  assert.deepEqual(unpinnedSources(files, pins), [
+    { file: 'a.md', key: `${VIEW}Community/New` },
+    { file: 'b.md', key: `${VIEW}Community/New` },
+  ]);
 });

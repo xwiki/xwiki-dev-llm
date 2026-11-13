@@ -51,6 +51,10 @@
 //  14. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
 //      twice (as a merge can leave it) silently loses the first entry's hooks. Nor does a hook
 //      manifest declare one hook twice (same event, matcher, `if`, command), which runs it twice.
+//  15. Every dev.xwiki.org page a KB file cites in `sources:` has a pin in scripts/kb-source-pins.json
+//      (the page version the KB reflects). The weekly source sync diffs each page from its pin; a
+//      page pinned only when that routine first meets it gets the version current then, so any
+//      edit made between writing the KB text and that run would never be reviewed.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -66,6 +70,7 @@ import {
 import { corpus } from "./kb-pipeline/gen-metadata.mjs";
 import { duplicateHooks, duplicateKeys } from "./json-keys.mjs";
 import { loadSidecar, sidecarOf } from "../xwiki/scripts/kb-search.mjs";
+import { PINS_FILE, unpinnedSources } from "./kb-sources.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -443,6 +448,15 @@ for (const f of ["xwiki/hooks/hooks.json", "kimi.plugin.json"]) {
   for (const hook of duplicateHooks(JSON.parse(read(f)))) {
     errors.push(`${f}: hook declared twice (${hook}) — it runs twice per call; remove one`);
   }
+}
+
+// ---- 15. Every cited dev.xwiki.org page is pinned ---------------------------------------------------
+const pins = JSON.parse(read(PINS_FILE));
+const kbFiles = (git(["ls-files", "--", "xwiki/kb/*.md"]) ?? "").split("\n").filter(Boolean)
+  .map((file) => ({ file, markdown: read(file) }));
+for (const { file, key } of unpinnedSources(kbFiles, pins)) {
+  errors.push(`${file}: cites ${key}, which has no pin in ${PINS_FILE} — run ` +
+    `\`node scripts/kb-sources.mjs --pin ${key}@<version>\` with the page version the text was written from`);
 }
 
 // ---- Report ----------------------------------------------------------------------------------
