@@ -36,7 +36,7 @@ curl -s -H "Authorization: Bearer $JIRA_API_TOKEN" -H "Accept: application/json"
 ```
 
 Each entry has `name`, `released` (bool) and `releaseDate` — sort by `releaseDate` to find the latest
-released feature line, and read the current LTS line off the `X.10` versions (see `kb/servers/jira.md`).
+released feature line; which `N.10`/`N.4` lines are the LTS ones is in `kb/servers/jira.md`.
 
 ## Create an issue
 

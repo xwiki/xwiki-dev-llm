@@ -29,11 +29,9 @@ Each finding cites the rule it relates to; confirm against the live guide when b
 - [ ] **Shows — Explanation** — a **diagram** where there is a component structure, a request or data
       flow, a lifecycle or a decision between alternatives; none for a risk narrative, a
       single-concept definition or a FAQ-shaped page.
-- [ ] **Shows — Reference** — member-by-member data is **one table**, not a section per member
-      (heading + signature + a line of prose) and not a `name: meaning` bullet list. A bare signature
-      is a column, not a code example; the code example is for what a cell cannot hold. Check this
-      **even on a page whose facts are all correct** — the observed miss was a review that pronounced a
-      seven-member API reference "complete and correct" and never asked about its shape.
+- [ ] **Shows — Reference** — member-by-member data is a table, or a section with a code macro per
+      API element, each giving purpose, parameters, types, supported/default values and return
+      value — not a `name: meaning` bullet list.
 - [ ] **No gratuitous visual** — flag a decorative screenshot, a diagram of something that is not a
       structure, or a snippet added to satisfy a rule. The test is whether it replaces or clarifies
       something the prose does badly.
@@ -85,7 +83,8 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       not a whole window repeated on every step; the box marks what the step asks for; only the entry
       step keeps the surrounding chrome.
 - [ ] **Technical ID** — prefixed: `xwiki:<extension id>` (or `npm:<package id>`), empty only when no
-      extension applies. An unprefixed id is the defect; do not "fix" a prefixed one.
+      extension applies. An unprefixed id is the defect, fixed together with the extension page's
+      Website field (they must match); do not "fix" a prefixed one.
 
 Report findings as a list of concrete, actionable items. Do **not** flag a pure style preference:
 every finding must be justified by a rule violation (type/title/page-name/structure/style/link/

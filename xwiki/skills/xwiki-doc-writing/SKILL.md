@@ -19,7 +19,7 @@ new tree, use the **`xwiki-doc-convert`** skill instead — it builds on this on
 
 Well-structured **page content in XWiki syntax** plus, when reviewing, a list of concrete findings.
 Documentation pages are wiki pages, not files in a git repo: this skill does not commit files — the
-developer creates/edits the page on the wiki and submits a Change Request.
+developer creates/edits the page on the wiki, usually through a Change Request.
 
 ## Before writing anything — ask the developer these four things
 
@@ -105,8 +105,8 @@ applies to everything a regex cannot decide.
    every child — see `kb/conventions/documentation.md`.
 6. **End a How-to / Tutorial with a result step** — the last numbered item shows the reader *what they
    should now see*; its form is in `kb/conventions/documentation.md` → *Content rules per type*.
-7. **Put a Reference's members in one table** (`|=Member |=Returns |=Default |=What it does`), never
-   with a `Since` / `Version` column — version information is a `{{version}}` badge on the rows that
+7. **Document every member of a Reference** — in a table, or a section with a code macro per API
+   element — never with a `Since` / `Version` column — version information is a `{{version}}` badge on the rows that
    need one, and only for versions at or after the LTS (step 11). The rule and its exceptions are in
    `kb/conventions/documentation.md` → *Content rules per type*.
 8. **Apply the style rules** — `"quotes"` for UI elements, uppercase-first XWiki terminology,
@@ -150,8 +150,8 @@ applies to everything a regex cannot decide.
     a hub page that narrates the feature or lists its children in prose (see "route, not narrate"), both fail this
     step.
 13. **Review, then save.** Apply the review checklist first (see "Review"). A new or substantially
-    rewritten page is a **major** change: save it via a **Change Request**, adding to an existing open
-    one on that page if there is one. A pure typo, broken-link
+    rewritten page is a **major** change: save it as the developer chose in `Save mode` (a **Change
+    Request** is recommended, adding to an existing open one on that page if there is one). A pure typo, broken-link
     or small-rephrasing fix is a **minor** change: save it **directly**, ticked "minor", with a short
     summary — do **not** open a Change Request for it. See `kb/conventions/documentation.md`.
     Then read any automatic documentation-check violations the save reports.

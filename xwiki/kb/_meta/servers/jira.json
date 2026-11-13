@@ -1,192 +1,199 @@
 {
   "file": {
     "questions": [
-      "How do I access the XWiki issue tracker at jira.xwiki.org from the terminal or a script?",
-      "Should I open a new JIRA ticket for a bug in code that hasn't been released yet?",
-      "Which JIRA fields do I need to fill in when I file an XWiki issue?",
-      "How do I call the jira.xwiki.org REST API with a token instead of using jira-cli?"
+      "How do I access the XWiki issue tracker from the command line or a script?",
+      "When should I open a Jira issue versus just committing the fix?",
+      "Which fields do I have to fill in when filing or curating a bug on XWiki's Jira?",
+      "How do I add comments, attachments or a description to a jira.xwiki.org issue through the REST API?"
     ],
     "aliases": [
-      "XWiki issue tracker",
       "jira.xwiki.org",
-      "jira-cli",
-      "Atlassian JIRA",
-      "XWiki bug tracker"
+      "XWiki Jira",
+      "XWiki bug tracker",
+      "Atlassian Jira Server",
+      "issue tracker"
     ]
   },
   "sections": {
     "JIRA (jira.xwiki.org) — access and issue-field conventions": {
       "questions": [
-        "How do I log into jira.xwiki.org from a script or the terminal?",
-        "Which JIRA fields must I set on an XWiki issue before it gets triaged?",
-        "How do I set up jira-cli against the self-hosted XWiki JIRA server?"
+        "How do I connect to jira.xwiki.org from the terminal with an API token?",
+        "Which Jira tool should I use for reading issues versus writing descriptions?",
+        "How do I set up jira-cli for the self-hosted XWiki Jira?"
       ],
       "aliases": [
-        "jira.xwiki.org access",
-        "JIRA personal access token",
-        "XWiki JIRA setup"
+        "jira-cli",
+        "Jira REST API",
+        "Jira personal access token",
+        "Jira bearer token"
       ]
     },
     "Project keys": {
       "questions": [
-        "Which JIRA project key do I use for an XWiki Commons or Rendering issue?",
-        "What issue key format do xwiki-contrib extensions use?",
-        "Which project does a change to the xwiki-docker image go under?"
+        "What is the Jira project key for XWiki platform, commons or rendering issues?",
+        "How do I reference a Jira issue in a commit message or PR title?",
+        "Which key does an xwiki-contrib extension use in Jira?"
       ],
       "aliases": [
         "issue key",
-        "JIRA project key",
-        "XWIKI-123 prefix"
+        "project prefix",
+        "XWIKI ticket number"
       ]
     },
     "Whether to file an issue at all": {
       "questions": [
-        "Do I need a JIRA ticket for a refactoring that doesn't change any behaviour?",
-        "I found a bug in code added during this dev cycle. Should I open a new issue or reuse the existing one?",
-        "My fix was merged but turned out incomplete. Can I reopen the issue or do I need a new one?"
+        "I introduced a bug in code that is not released yet, should I open a new Jira ticket for it?",
+        "Does a refactoring or build-only change need a Jira issue?",
+        "I found a bug in an already-released version, when do I file a new issue instead of reopening?",
+        "Can I reopen an issue whose fix was already merged and released?"
       ],
       "aliases": [
-        "reopen JIRA issue",
-        "when to create a JIRA ticket",
+        "when to create a ticket",
+        "reopen issue",
         "Development Issue Only component"
       ]
     },
     "Issue-field conventions (every issue type)": {
       "questions": [
-        "Which Component, Affects Version and Fix Version should I pick for a new bug?",
-        "How do I write a version number in JIRA differently from the @since tag in code?",
-        "How do I link a related issue in JIRA so it shows in both tickets?"
+        "Which Component and Affects Version should I set on a new Jira bug?",
+        "What Fix Version do I pick for a change going into the next release?",
+        "How do I link a related issue in Jira so it shows up on both tickets?"
       ],
       "aliases": [
-        "Affects Version",
         "Fix Version",
-        "Component/s",
-        "JIRA issue links"
+        "Affects Version",
+        "Jira components field",
+        "issue links"
       ]
     },
     "Dependency-upgrade issues": {
       "questions": [
-        "How do I file a ticket for bumping a third-party library version?",
-        "What should go in the description of a dependency upgrade issue?"
+        "How do I file a Jira ticket for upgrading a third-party library?",
+        "What should the description of a dependency upgrade issue contain?"
       ],
       "aliases": [
-        "library upgrade ticket",
-        "Dependency Upgrades component",
-        "bump dependency version"
+        "library bump",
+        "dependency bump",
+        "Dependency Upgrades component"
       ]
     },
     "Flickering tests": {
       "questions": [
-        "How do I track a functional test that fails randomly on CI in JIRA?",
-        "Which label and custom field should I set on a flaky test ticket?"
+        "How do I track a functional test that fails randomly in Jira?",
+        "How do I make CI failures link to the Jira issue for a flaky test?"
       ],
       "aliases": [
         "flaky test",
         "intermittent test failure",
-        "flickering label"
+        "flickering label",
+        "Flickering Test field"
       ]
     },
     "The documentation fields": {
       "questions": [
-        "Where do I record the URL of the docs page for a fixed issue?",
-        "What do I put in the Documentation in Release Notes field when nothing needs documenting?",
-        "Why does my JQL with != fail on the Documentation field?"
+        "Where do I record the link to the documentation for my Jira fix?",
+        "What goes in the Documentation in Release Notes field, and can it be N/A?",
+        "Why does my JQL query fail when I filter on the Documentation field with !=?"
       ],
       "aliases": [
-        "release notes link on issue",
-        "N/A documentation field",
-        "customfield_10270",
-        "customfield_10273"
+        "documentation custom field",
+        "release note link field",
+        "customfield_10270"
       ]
     },
     "Starting work on an issue": {
       "questions": [
-        "Should I assign the JIRA issue to myself before I start coding the fix?",
-        "Someone else is already assigned to this issue. What should I do before I touch it?"
+        "Should I assign the Jira issue to myself before I start writing the fix?",
+        "The issue I want to work on is already assigned to someone else, what should I do?"
       ],
       "aliases": [
-        "take a JIRA issue",
-        "assign ticket to me",
-        "claim issue"
+        "claim an issue",
+        "take a ticket",
+        "assignee"
       ]
     },
     "Linking the pull request": {
       "questions": [
         "How do I link my GitHub pull request to the OpenProject work package?",
-        "Where should I put the PR URL so the team can find it from the issue?"
+        "Where do I post the PR URL so the issue points to my change?"
       ],
       "aliases": [
-        "PR link on work package",
-        "OpenProject GitHub tab",
-        "pull request URL"
+        "OpenProject work package",
+        "PR link",
+        "GitHub tab"
       ]
     },
     "Resolving / closing an issue": {
       "questions": [
-        "Which resolution should I pick when a different change already fixed the issue?",
-        "What is the difference between Duplicate, Cannot Reproduce and Fixed when closing a JIRA ticket?",
-        "How do I close a JIRA ticket from the command line or the REST API?"
+        "Which resolution should I pick when a different ticket's change fixed this issue?",
+        "The reported bug no longer happens but no commit fixed it, how do I close the issue?",
+        "How do I close a Jira issue through the API with the right transition?",
+        "When closing an issue, what documentation fields do I need to fill in?"
       ],
       "aliases": [
-        "close JIRA issue",
-        "Solved By resolution",
-        "transition JIRA issue"
+        "resolution",
+        "Solved By",
+        "Cannot Reproduce",
+        "Duplicate",
+        "close transition"
       ]
     },
     "Bulk edits": {
       "questions": [
-        "How do I update many JIRA issues at once without emailing every watcher?",
-        "Can I skip notification emails when I change issues through the REST API?"
+        "How do I update many Jira issues at once without emailing every watcher?",
+        "Can I edit closed issues silently with notifyUsers disabled?"
       ],
       "aliases": [
-        "mass update JIRA issues",
-        "notifyUsers parameter",
-        "bulk edit JIRA"
+        "mass update",
+        "notifyUsers",
+        "watchers notification"
       ]
     },
     "Attachments (screenshots)": {
       "questions": [
-        "How do I attach a screenshot to a JIRA issue with curl?",
-        "When should I add before and after images to a ticket?"
+        "How do I attach a screenshot to a Jira issue from the command line?",
+        "When does a Jira issue need before and after screenshots?"
       ],
       "aliases": [
-        "upload image to JIRA",
-        "attach file to JIRA issue",
-        "X-Atlassian-Token header"
+        "upload image",
+        "screenshot",
+        "attachment API"
       ]
     },
     "Wiki-markup gotchas (descriptions and comments)": {
       "questions": [
-        "Why do stray backslashes show up in my JIRA description?",
-        "Why doesn't my issue key auto-link when I wrap it in monospace?",
-        "How do I preview JIRA wiki markup before I save a comment?"
+        "Why does my Jira comment show a stray backslash or literal braces?",
+        "How do I put a code snippet in a Jira description without it being mangled?",
+        "Why is my issue key not turning into a link in Jira?"
       ],
       "aliases": [
-        "JIRA wiki renderer",
-        "Jira markup escaping",
-        "Atlassian wiki markup"
+        "Jira wiki markup",
+        "Atlassian wiki renderer",
+        "jira monospace",
+        "code block escaping"
       ]
     },
     "Identifying the current LTS (for the Affects-Version fallback)": {
       "questions": [
-        "Which XWiki version is the current LTS right now?",
-        "What should I put in Affects Version when I don't know which release the bug hit?"
+        "Which version should I use for Affects Version when I don't know which one is affected?",
+        "What are the current supported LTS versions of XWiki?"
       ],
       "aliases": [
-        "current LTS version",
-        "long term support version",
-        "supported XWiki versions"
+        "LTS version",
+        "long term support",
+        "supported versions",
+        "Cycle LTS"
       ]
     },
     "Verifying the volatile values": {
       "questions": [
-        "How do I check the current XWiki dev version from the repository?",
-        "How can I list which JIRA versions are already released?"
+        "How do I find the current development version of XWiki?",
+        "How do I check which Jira versions exist and which are released?"
       ],
       "aliases": [
-        "released versions in JIRA",
-        "current dev version",
-        "pom.xml version"
+        "pom version",
+        "released versions",
+        "SNAPSHOT version"
       ]
     }
   },
@@ -199,5 +206,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "7d1aca9d9cb2aa9df7e5b017ce47399ba7c45becc4ad04fdc2bc0ffba4f97dbc"
+  "source_hash": "f1a09d30f8e456c2afcea719625c4b05f74f9ab30f5321eae9d2b2f2ac4433be"
 }

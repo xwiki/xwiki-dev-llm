@@ -82,8 +82,8 @@ to support both interfaces.
 
 Deprecating happens in **two steps**:
 
-1. Add `@Deprecated` **and** the `@deprecated` Javadoc tag naming the replacement, with the version
-   ([[versioning]] format). The code stays where it is.
+1. Add `@Deprecated(since = "<version>")` **and** the `@deprecated` Javadoc tag giving why and the
+   replacement. The version goes in the annotation only ([[versioning]]). The code stays where it is.
 2. Once no XWiki code uses the deprecated API any more — which can be immediately — move it to the
    repo's `-legacy` module.
 

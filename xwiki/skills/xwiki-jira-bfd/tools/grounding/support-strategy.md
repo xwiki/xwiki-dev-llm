@@ -5,11 +5,11 @@ https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
 
 Durable facts:
 
-- XWiki development runs in yearly **cycles** `X.0 → X.10`. The final **`X.10`** line of the
-  **last completed** cycle is the current **LTS**; the previous cycle's `X.10` typically
-  still receives overlap patches for a while.
-- Only the current LTS line and the in-progress dev line are actively supported. Every
-  older feature line is **EOL** (end-of-life).
+- XWiki development runs in yearly **cycles** `N.0 → N.10`. At most two **LTS** lines are
+  supported: the Cycle LTS `N.10.x` of the last completed cycle and, mid-year, the Intermediate
+  LTS `N.4.x` of the in-progress cycle (replaced by that cycle's `N.10.x`).
+- Only those LTS lines and the in-progress dev line are actively supported. Every other
+  feature line is **EOL** (end-of-life).
 
 Consequence for this campaign (from NEW-BFD-STRATEGY.md):
 
