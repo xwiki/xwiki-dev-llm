@@ -1,0 +1,53 @@
+{
+  "file": {
+    "questions": [
+      "How do I restrict which users and groups a subwiki can see: only local ones, only global ones, or both?",
+      "Why does my new subwiki only show global users and groups in the user picker?",
+      "How do I make a subwiki use both local and global users and groups?",
+      "Where is the user scope setting stored for a subwiki in XWiki?"
+    ],
+    "aliases": [
+      "user scope",
+      "wiki user scope",
+      "local users global users",
+      "subwiki users",
+      "UserScope"
+    ]
+  },
+  "sections": {
+    "Subwiki user scope (local vs global users and groups)": {
+      "questions": [
+        "Can a subwiki have its own users, or does it only use the main wiki's users?",
+        "How do I choose whether a subwiki sees local users, global users, or both in a user or group picker?",
+        "What do LOCAL_ONLY, GLOBAL_ONLY and LOCAL_AND_GLOBAL mean for the users shown in a subwiki?"
+      ],
+      "aliases": [
+        "local users",
+        "global users",
+        "multiwiki user visibility",
+        "wiki-level user accounts"
+      ]
+    },
+    "Where the scope is stored — and the non-obvious default": {
+      "questions": [
+        "Where do I change the user scope of a subwiki, and why does editing the main wiki descriptor have no effect?",
+        "Why does my freshly created subwiki only list global users, even though I expected local ones?",
+        "How do I set the user scope in code or in a functional test, and what value do I write?"
+      ],
+      "aliases": [
+        "WikiUserClass",
+        "userScope field",
+        "setUserScope",
+        "wiki descriptor"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/wiki-application-data.md",
+      "architecture/platform-modules.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "9f96993e515356361093831610e2847e1d381ac1e8a59628b4dfb7a23e41b392"
+}

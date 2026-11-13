@@ -6,6 +6,15 @@ summary: Prefer streaming over buffering when handling potentially large data (r
   memory.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
+provenance: official
+last-confirmed: 2026-07-02
+related: [conventions/code-style.md, conventions/security.md]
+applies-to: ["**/src/main/java/**/*.java"]
+applies-when:
+  - '\breadAllBytes\('
+  - '\bIOUtils\.(?:toByteArray|toString|readLines)\('
+  - '\bnew ByteArrayOutputStream\('
+  - '\bFiles\.(?:readString|readAllLines)\('
 ---
 
 # Resource efficiency (memory and streaming)

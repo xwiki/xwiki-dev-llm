@@ -1,0 +1,103 @@
+{
+  "file": {
+    "questions": [
+      "What should I name the groupId and artifactId for a new XWiki Maven module?",
+      "How do I pick the right suffix like -ui, -api or -test-docker for a new module?",
+      "What naming rules apply to npm packages inside xwiki-platform?",
+      "What should I call a new UI extension point and its extension?"
+    ],
+    "aliases": [
+      "artifact naming",
+      "module naming",
+      "pom naming convention",
+      "xwiki naming rules",
+      "maven coordinates"
+    ]
+  },
+  "sections": {
+    "Maven coordinates, directories, Java packages": {
+      "questions": [
+        "What groupId and artifactId should my new XWiki Maven module use?",
+        "Why is my module directory name so long, and must it match the artifactId?",
+        "Which Java package should my new classes live in?",
+        "What do the -ui, -api, -webjar or -test suffixes mean in an artifactId?"
+      ],
+      "aliases": [
+        "artifactId convention",
+        "groupId",
+        "package naming",
+        "pom display name",
+        "xwiki.extension.name"
+      ]
+    },
+    "npm packages": {
+      "questions": [
+        "How do I name the package.json of a new frontend module in xwiki-platform?",
+        "When can an npm package be published publicly and what should it be called?",
+        "Why does my package.json need private true and version 0.0.0?"
+      ],
+      "aliases": [
+        "npm package name",
+        "package.json naming",
+        "@xwiki scope",
+        "private npm package",
+        "platform-node"
+      ]
+    },
+    "Configuration properties": {
+      "questions": [
+        "Which file should I add a new configuration property to, xwiki.cfg or xwiki.properties?",
+        "How should I name a new configuration property key for my module?",
+        "What format do module property keys follow, like rendering.linkLabelFormat?"
+      ],
+      "aliases": [
+        "config key naming",
+        "xwiki.properties keys",
+        "configuration option name",
+        "xwiki.cfg"
+      ]
+    },
+    "UI Extension Points (UIXP) and UI Extensions (UIX)": {
+      "questions": [
+        "How do I name a new UI extension point so other modules can extend my page?",
+        "What id should my UI extension get when it contributes to an existing extension point?",
+        "When do I need a qualifier suffix on a UIX id to avoid clashes?"
+      ],
+      "aliases": [
+        "extension point id",
+        "UIX id",
+        "UIXP naming",
+        "ui extension naming",
+        "extensionPointId"
+      ]
+    },
+    "Skins and icons": {
+      "questions": [
+        "What name should I give a new XWiki skin?",
+        "How do I choose an icon name for a new icon in the XWiki icon set?",
+        "How do I add or retire an icon without breaking existing content?"
+      ],
+      "aliases": [
+        "bird name skin",
+        "icon naming",
+        "icon set",
+        "Silk Font Awesome Glyphicons mapping",
+        "deprecated icon"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/platform-modules.md",
+      "processes/module-lifecycle.md",
+      "conventions/translations.md"
+    ],
+    "applies-to": [
+      "**/pom.xml",
+      "**/package.json",
+      "**/xwiki.properties",
+      "**/src/main/resources/**/*.xml"
+    ]
+  },
+  "source_hash": "f3ea9bc0e5fd8466d4011fa43d95bc4a53fcc3e5e3640a97bc539c00a9b8506d"
+}

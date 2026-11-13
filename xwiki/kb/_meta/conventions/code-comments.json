@@ -1,0 +1,46 @@
+{
+  "file": {
+    "questions": [
+      "What should a code comment say when the reason for the code is a past bug fix or an old implementation?",
+      "Can I mention a JIRA issue or a forum thread in a code comment, and what should go with the link?",
+      "Should a comment describe what I changed in this commit, or why the code is the way it is now?",
+      "How do I write a comment that still makes sense after the issue tracker is gone or the link is dead?"
+    ],
+    "aliases": [
+      "comment guidelines",
+      "commenting rules",
+      "comment style",
+      "XWiki comment conventions"
+    ]
+  },
+  "sections": {
+    "Code comment policy": {
+      "questions": [
+        "Can I write 'like the previous implementation did' or 'to keep the old behavior' in a code comment?",
+        "How do I reference an XWiki JIRA issue in a source comment without relying on the link?",
+        "Where should a comment's change history go instead of the code itself?"
+      ],
+      "aliases": [
+        "comment rules",
+        "JIRA reference in comments",
+        "no history in comments"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/commit-messages.md",
+      "conventions/code-style.md",
+      "conventions/velocity-code-style.md"
+    ],
+    "applies-to": [
+      "**/*.java",
+      "**/*.js",
+      "**/*.vm",
+      "**/*.xml",
+      "**/*.properties",
+      "**/*.sh"
+    ]
+  },
+  "source_hash": "669e3ad7176decd2d7f2640e9b5fd277549d803aac4fbbbcc910a1992d41a10a"
+}

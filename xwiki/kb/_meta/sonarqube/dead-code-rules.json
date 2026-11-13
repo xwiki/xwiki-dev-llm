@@ -1,0 +1,141 @@
+{
+  "file": {
+    "questions": [
+      "Sonar reports unused code in my Java class, which parts can I safely delete?",
+      "When is it safe to remove an unused private method, field, or parameter flagged by SonarQube in XWiki?",
+      "Why does my dead-code cleanup break reflection, Hibernate mappings, or Revapi in the build?",
+      "Which SonarQube dead-code fixes are false positives I should leave alone?"
+    ],
+    "aliases": [
+      "dead code",
+      "unused code",
+      "unused private method",
+      "Sonar dead code false positive",
+      "Revapi unused code"
+    ]
+  },
+  "sections": {
+    "SonarQube dead-code and unused-code rules": {
+      "questions": [
+        "Sonar reports unused code in my Java class, which parts can I safely delete?",
+        "Why does my dead-code cleanup break reflection, Hibernate mappings, or Revapi in the build?",
+        "Which SonarQube dead-code fixes are false positives I should leave alone?"
+      ],
+      "aliases": [
+        "dead code",
+        "unused code",
+        "Sonar dead code false positive"
+      ]
+    },
+    "S1118 — add a private constructor to a utility class": {
+      "questions": [
+        "Sonar says to add a private constructor to my helper class, but the build fails with FinalClass. What do I do?",
+        "How do I hide the implicit public constructor of a static-only class without breaking its users?",
+        "Is making a constructor private safe if the class is part of a public API checked by Revapi?"
+      ],
+      "aliases": [
+        "utility class constructor",
+        "private constructor",
+        "FinalClass checkstyle",
+        "hide public constructor"
+      ]
+    },
+    "S1185 — remove an override that only calls `super`": {
+      "questions": [
+        "Sonar says this override only calls super, can I delete the method?",
+        "I removed an override that just calls the parent method and my plugin callback stopped firing. Why?",
+        "Is it safe to delete a public method that only delegates to its superclass?"
+      ],
+      "aliases": [
+        "redundant override",
+        "useless override",
+        "super-only method",
+        "XWikiPluginManager initPlugin"
+      ]
+    },
+    "S1144 — remove an unused private method": {
+      "questions": [
+        "Sonar flags a private getter on my entity as unused, can I remove it?",
+        "How do I safely delete an unused private helper along with anything only it was calling?",
+        "A private method in my reflection test looks unused, but is it really?"
+      ],
+      "aliases": [
+        "unused private method",
+        "dead private method",
+        "hbm.xml mapped accessor",
+        "Hibernate getter removal"
+      ]
+    },
+    "S1172 — remove an unused method parameter": {
+      "questions": [
+        "Sonar says a parameter is unused, can I drop it from a private method and its callers?",
+        "After removing an unused argument, the build fails on an unused local variable. Why?",
+        "When is removing an unused method parameter not safe in XWiki?"
+      ],
+      "aliases": [
+        "unused parameter",
+        "unused argument",
+        "dead parameter"
+      ]
+    },
+    "S1068 / S1481 / S1854 — unused field, unused local, dead store": {
+      "questions": [
+        "Sonar reports an unused field and an unused local on the same line, which lines do I delete?",
+        "The right-hand side of this assignment calls addAttachment or newXObject. Can I delete the whole line?",
+        "Removing an unused variable leaves other variables and an import behind. How far should I clean up?"
+      ],
+      "aliases": [
+        "unused field",
+        "unused local variable",
+        "dead store",
+        "write-only field"
+      ]
+    },
+    "S1130 — remove a `throws` for an exception that cannot be thrown": {
+      "questions": [
+        "Sonar says this throws clause declares an exception that is never thrown. Can I remove it from my test?",
+        "I narrowed a throws clause on a protected test helper and a subclass in another module stopped compiling. How do I avoid that?",
+        "After removing a throws clause, my try/catch became unreachable. What should I change?"
+      ],
+      "aliases": [
+        "unnecessary throws clause",
+        "unthrown exception",
+        "declared exception never thrown"
+      ]
+    },
+    "S125 — remove a block of commented-out code": {
+      "questions": [
+        "Sonar flags a commented-out block of code, is it safe to delete it?",
+        "There is a TODO above commented-out code linking a JIRA issue. Should I remove the comment?",
+        "How do I tell leftover debug code from commented-out code that must stay?"
+      ],
+      "aliases": [
+        "commented-out code",
+        "commented code",
+        "dead comments",
+        "TODO commented code"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where do I read the drop conditions that apply to every Sonar rule before fixing one?",
+        "How do I check that a dead-code fix passes the coverage and Revapi gates?",
+        "Which compatibility rules decide whether removing a method from a public class is allowed?",
+        "Why can a component implementation's method look unused when it is actually called through its role?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "sonarqube/verification.md",
+      "conventions/backward-compatibility.md",
+      "architecture/component-system.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "ecd3e6388b95fef6a6bb419818c32d8c0a835cd12ef5a3addb171e5cb14938c1"
+}

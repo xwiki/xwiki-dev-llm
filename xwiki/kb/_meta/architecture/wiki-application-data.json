@@ -1,0 +1,84 @@
+{
+  "file": {
+    "questions": [
+      "Why does a query with >= or < on a list property in my XWiki application return the wrong rows?",
+      "How do I avoid bugs when storing and querying data in a wiki application built from XClasses and wiki pages?",
+      "What should I watch for when writing a data migration over wiki pages in an XAR application?",
+      "My entries get numbered wrong or collide when two people create them at once, what's the fix?"
+    ],
+    "aliases": [
+      "AWM",
+      "Application Manager application",
+      "XAR application data pitfalls",
+      "XClass data gotchas",
+      "stored data traps"
+    ]
+  },
+  "sections": {
+    "A list property is a VARCHAR, so range filters on it are lexicographic": {
+      "questions": [
+        "Why does my XWQL filter with greater-than on a dropdown or list field skip rows like 10 and 9?",
+        "How do I filter a list property numerically in a wiki application query when values have different lengths?",
+        "My query on a static list field returns wrong results for values like 10.0 and 9.0, what's happening?"
+      ],
+      "aliases": [
+        "StringProperty",
+        "StaticListClass",
+        "DBListClass",
+        "string comparison",
+        "lexicographic sort"
+      ]
+    },
+    "Allocate a generated page name by creating the page, not by querying": {
+      "questions": [
+        "How do I auto-number new wiki pages like Entry001 without two users getting the same name?",
+        "Two authors creating entries at the same time overwrite each other in XWiki, how do I generate unique page names?",
+        "How do I find the next free sequence number for a new page from the existing page names?"
+      ],
+      "aliases": [
+        "auto-increment page name",
+        "sequence number for pages",
+        "race condition on page creation",
+        "unique page id generation"
+      ]
+    },
+    "A wiki-page migration is idempotent only if it drops what it matched on": {
+      "questions": [
+        "How do I write a page migration that is safe to run again without a has-run flag?",
+        "My migration over xobjects times out partway, how can I tell it did not finish?",
+        "Which old object should a migration delete when it saves the new one so re-running does nothing?"
+      ],
+      "aliases": [
+        "re-runnable migration",
+        "xobject upgrade script",
+        "batch data migration",
+        "safe-to-rerun upgrade"
+      ]
+    },
+    "An entry's template must carry the class its queries locate it by": {
+      "questions": [
+        "Entries I create from my template don't show up in my list or search query, why?",
+        "What object must a page template contain so that queries can find the pages created from it?",
+        "Pages created from my creation template are invisible to the query that lists them, how do I fix the template?"
+      ],
+      "aliases": [
+        "creation template",
+        "archetype template",
+        "marker XClass",
+        "blank page template"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/data-migrations.md",
+      "conventions/performance.md",
+      "architecture/platform-modules.md"
+    ],
+    "applies-to": [
+      "**/src/main/resources/**/*.xml",
+      "**/*.vm"
+    ]
+  },
+  "source_hash": "b307b7acb88c6b2acda8b046c0ae62bcc2bdfc8c34b47b51e6e2786f5aa0f089"
+}

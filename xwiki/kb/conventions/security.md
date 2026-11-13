@@ -9,6 +9,10 @@ summary: How to escape user input and other untrusted values for each output con
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Security/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Scripting/
+provenance: official
+last-confirmed: 2026-10-13
+related: [processes/security-policy.md, conventions/script-services.md, conventions/server-side-rendering.md, conventions/translations.md]
+applies-to: ["**/*.vm", "**/src/main/resources/**/*.xml", "**/*ScriptService.java", "**/*.groovy"]
 ---
 
 # Secure-coding conventions

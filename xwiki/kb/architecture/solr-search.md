@@ -10,6 +10,13 @@ summary: XWiki indexes into Solr and runs an embedded Solr by default; it can be
 sources:
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Solr%20Search%20API
   - https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Installation/InstallationViaAPT/#HStandaloneSolrsetup
+provenance: official
+last-confirmed: 2026-07-22
+related: [architecture/component-system.md, servers/index.md]
+applies-to: ["**/xwiki.properties*", "**/*.java"]
+applies-when:
+  - '^#?\s*solr\.'
+  - '\bSolrCoreInitializer\b'
 ---
 
 # Solr search backend

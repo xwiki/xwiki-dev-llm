@@ -6,6 +6,9 @@ summary: Where a manual test's steps, results and automation status are stored o
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy
   - https://github.com/xwiki-contrib/application-testreporting
+provenance: official
+last-confirmed: 2026-10-17
+related: [testing/strategy.md, testing/test-value.md, servers/jira.md]
 ---
 
 # Manual tests on test.xwiki.org
@@ -24,7 +27,7 @@ automated: the "Manual tests migration strategy" section of the Manual Test Stra
 
 ## Automation status
 
-- **The current record is a `QA.AutomatedTestStatusClass` object** on the test page: `status`
+- **The `QA.AutomatedTestStatusClass` object on the test page is the record to trust**: `status`
   (`Automated`, `Not Automatable`, `Needs Automated Test`), `jira` (the issue for automating it),
   `tests` (GitHub links to the automated tests) and `notes`.
 - **`QA.TestClass.automated` and `automatedLinkSourceCode` are deprecated: never fill them**; record

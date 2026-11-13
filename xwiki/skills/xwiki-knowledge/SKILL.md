@@ -1,34 +1,33 @@
 ---
 name: xwiki-knowledge
-description: Find and extend XWiki declarative knowledge held in the plugin's knowledge base (KB), under its kb/ directory — conventions (code style, comments, commit format, versioning, backward compatibility), architecture (the component system), the dev-server ecosystem (JIRA, CI, Nexus, SonarCloud, forum), and release process. Use when a question is about how XWiki works or what its rules are rather than performing a task, or when you have learned a durable, generic XWiki fact worth saving for future sessions. For performing a task use the specific skill instead — building (xwiki-build), tests (xwiki-test-guidelines, xwiki-convert-tests, xwiki-convert-tests-docker), PRs (xwiki-pull-request), Sonar (xwiki-fix-sonarqube-issue), docs (xwiki-doc-writing, xwiki-doc-convert), translations (xwiki-translations), deploy (xwiki-deploy-extension).
+description: Search and extend XWiki declarative knowledge held in this plugin's knowledge base (KB, the kb/ directory) — conventions (code style, comments, commit format, versioning, backward compatibility), architecture (the component system), the dev-server ecosystem (JIRA, CI, Nexus, SonarCloud, forum), and release process. Use when a question is about how XWiki works or what its rules are rather than performing a task, or when you have learned a durable, generic XWiki fact worth saving for future sessions. For performing a task use the specific skill instead — building (xwiki-build), tests (xwiki-test-guidelines, xwiki-convert-tests, xwiki-convert-tests-docker), PRs (xwiki-pull-request), Sonar (xwiki-fix-sonarqube-issue), docs (xwiki-doc-writing, xwiki-doc-convert), translations (xwiki-translations), deploy (xwiki-deploy-extension).
 ---
 
 # Using and extending the XWiki KB
 
-The **KB** is the curated, LLM-oriented knowledge base of XWiki *declarative* knowledge. It lives
-in this plugin at `kb/` (resolve it from this skill's directory: `../../kb/` — in Kimi Code
-that is `${KIMI_SKILL_DIR}/../../kb/`, in Claude Code `${CLAUDE_PLUGIN_ROOT}/kb/`, in opencode
-`$XWIKI_LLM_HOME/xwiki/kb/`). Procedures
-live in the other `xwiki-*` skills; the KB holds facts,
-conventions, architecture, the server ecosystem and process orientation.
-
-The map of everything in the KB is `kb/index.md` — a slimmed copy is injected into every XWiki
-session via `instructions/xwiki-org.md`, so you usually already know the topic list.
+The **KB** (the `kb/` directory) is the curated, LLM-oriented knowledge base of XWiki
+*declarative* knowledge: facts, conventions, architecture, the server ecosystem, process orientation
+and ADRs. Procedures live in the other `xwiki-*` skills. Resolve paths from this skill's directory:
+the KB is `../../kb/` and its search engine `../../scripts/kb-search.mjs` (Claude Code
+`${CLAUDE_PLUGIN_ROOT}/…`, Kimi Code `${KIMI_SKILL_DIR}/../../…`, opencode `$XWIKI_LLM_HOME/xwiki/…`).
 
 ## READ — answering a knowledge question
 
-1. **Locate the topic** in `kb/index.md`, then **Read the specific file** (e.g.
-   `kb/conventions/backward-compatibility.md`).
-2. **Respect the `stability:` frontmatter:**
-   - `durable` → the inline content is the answer; use it directly.
-   - `volatile` → **never quote a value written in the file**; follow its `verify:` recipe instead.
+1. **Search, don't browse.** Hooks may already have given you pointers; otherwise run
+   `node <kb-search.mjs> "<query>"` with **2–3 reformulations** (the developer's words, the XWiki
+   term, the symptom). Each hit is `[tag] file#Section — Title: first line`, plus `related:` files;
+   follow a `related:` pointer when the hit is close but not it. `--version X` drops entries whose
+   `versions:` excludes the branch's version. `kb/index.md` is no longer the entry point.
+2. **Read only the named `## Section`** of the file, not the whole file.
+3. **Respect the tag and the frontmatter:**
+   - `[rule]` (`stability: durable`) → the inline content is the answer; use it directly.
+   - `[volatile]` → **never quote a value written in the file**; follow its `verify:` recipe instead.
      Typical recipes: read the repo root `pom.xml` `<version>` for the current dev version; query the
      `sonarqube` MCP for quality/issues; use the `discourse` MCP for forum content; `curl` the
      listed dev-wiki `sources:` for anything else that changes.
-3. The dev wiki (dev.xwiki.org) is the upstream source of truth. When a detail is missing or a file
+   - `[ADR]` → an accepted decision; `[proposed: under discussion]` → **not a rule**, say so.
+4. The dev wiki (dev.xwiki.org) is the upstream source of truth. When a detail is missing or a file
    says the guide is evolving, **fetch the `sources:` URL and prefer it** over the KB summary.
-4. **Optional accelerator:** if context-mode is installed, index a fetched page once and search it
-   for repeated lookups. The KB must never *depend* on context-mode.
 
 ## EXTEND — saving new knowledge (self-improvement)
 
@@ -42,7 +41,7 @@ When a session establishes a fact worth keeping, run the **gate checklist** befo
       values like the current version belong as a *pointer + verify recipe*, never a cached value.)
 - [ ] **Generic** — true for XWiki developers in general, with no personal paths, machine state,
       credentials, or secrets. De-personalise it.
-- [ ] **Not already present** — search `kb/` (and the relevant skills) first; if it exists, improve
+- [ ] **Not already present** — search the KB with `kb-search` (and the relevant skills) first; if it exists, improve
       that entry instead of adding a duplicate. A fact has exactly one home.
 - [ ] **Right home** — a convention/architecture/process *fact* → the matching `kb/` subdirectory;
       an *architectural decision* (a choice made between options, with rationale) → an **ADR** in
@@ -62,9 +61,8 @@ When a session establishes a fact worth keeping, run the **gate checklist** befo
       JQL quirks of one CI lookup failed that test and belonged next to the code that hits them.
 - [ ] **Nothing extra in the always-on file** — `instructions/xwiki-org.md` is injected into *every*
       session of every XWiki repo, so a line there is paid for by every task that never needed it.
-      Its KB map is **routing only**: the topic name, plus a clause only where the name does not say
-      what is inside. Never copy a rule, a trap or an example into it — describing a topic is
-      `kb/index.md`'s job, and a skill's own `description` is already always visible. The one
+      It lists no topic: the KB is found by search. Never copy a rule, a trap or an example into
+      it — a skill's own `description` is already always visible. The one
       exception is a rule that must be obeyed *without* opening the KB file: promote it to a real
       bullet in the section it belongs to (folding it into the bullet it qualifies), and only when it
       bears on nearly every session.
@@ -77,10 +75,13 @@ Then:
    and in the body — never a devs-list or forum thread, even the one where it was decided; that history
    goes in the PR description. For volatile facts add a `verify:` line and store the recipe, not the value.
    Cross-link related entries with `[[name]]` (the target file's basename without extension).
-2. **Update `kb/index.md`** — the topic line, described in full; this is the map that gets read.
-   Then add the topic's **name** to the mirrored map in `instructions/xwiki-org.md`, and nothing
-   more (see the always-on gate above). `node scripts/validate.mjs` checks both that every topic is
-   listed and that the mirror has stayed within its size budget.
+   The search and pointer hooks also read `last-confirmed` (date; breaks near-ties), `related`
+   (topics shown beside a hit) and, when the rule concerns certain files, `applies-to` (path globs)
+   and `applies-when` (regexes over added text); copy their form from a sibling topic.
+2. **Update `kb/index.md`** — the topic line (`node scripts/validate.mjs` checks every topic is
+   listed). Then, in this repo, **regenerate the topic's search sidecar** (`kb/_meta/`) with
+   `node scripts/kb-pipeline/gen-metadata.mjs`: a sidecar whose topic body changed is ignored, so
+   the topic is found less well until it is regenerated.
 3. **Leave what you touched shorter than you found it.** Cut what has gone stale, what your new
    entry now says better, and what is stated twice — a knowledge base that only ever grows stops
    being read. List those cuts in the PR so they get reviewed alongside the addition.
@@ -118,11 +119,10 @@ Superseding instead of deleting: when a decision changes, set the old ADR's `sta
 Self-improvement only happens if learnings flow back. Run the capture check whenever **either**:
 
 - **(a)** the task *relied on or fetched* a durable, generic XWiki fact — a convention, policy,
-  architecture point, or a dev-wiki / xwiki.org doc page — whose topic is **absent from the KB map,
-  or contradicts it**. *Absence is itself the signal; the fact need not be new to you.* In
-  particular, **if you fetch an authoritative XWiki doc page to perform a task and its topic isn't
-  in the KB map, offer to capture it.** A whole topic area you needed but the map lacks is a strong
-  signal.
+  architecture point, or a dev-wiki / xwiki.org doc page — that **a KB search does not find,
+  or that contradicts it**. *Absence is itself the signal; the fact need not be new to you.* In
+  particular, **if you fetch an authoritative XWiki doc page to perform a task and the KB lacks its
+  topic, offer to capture it.** A whole topic area you needed but the KB lacks is a strong signal.
 - **(b)** the developer **corrects** you on an XWiki convention, architecture point, or an existing
   KB/skill statement.
 

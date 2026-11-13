@@ -1,0 +1,58 @@
+{
+  "file": {
+    "questions": [
+      "Velocity output in my wiki page is missing line breaks, how do I fix it?",
+      "How do I write Velocity code in a page, sheet or template that generates wiki syntax without breaking paragraphs?",
+      "Why does my generated wiki markup nest paragraphs or fail with a standalone macro inline error?",
+      "What rules apply to server-side Velocity that produces wiki syntax or HTML?"
+    ],
+    "aliases": [
+      "velocity whitespace handling",
+      "bc space gobbling",
+      "velocity wiki page output formatting",
+      "server-side rendering velocity"
+    ]
+  },
+  "sections": {
+    "Blocks in generated wiki syntax are separated by blank lines": {
+      "questions": [
+        "Why does doc.display output lose the newline after it in my Velocity page?",
+        "My Velocity if statement at the end of a line eats the line break, how do I keep the next text on its own line?",
+        "Why does the gallery macro say it is a standalone macro and cannot be used inline?",
+        "Why does my generated wiki syntax render as one paragraph when the blank lines are missing?"
+      ],
+      "aliases": [
+        "velocity newline stripping",
+        "missing line break in generated wiki syntax",
+        "doc.display newline",
+        "velocity directive eats newline",
+        "standalone macro used inline"
+      ]
+    },
+    "Only a line ending with content needs a closing `##`": {
+      "questions": [
+        "When do I need a double hash at the end of a Velocity line in a wiki page?",
+        "Inline Velocity output split across lines gets joined or spaced wrongly, what is the rule for ##?",
+        "Do I have to put ## at the end of every line in my Velocity template?"
+      ],
+      "aliases": [
+        "velocity line continuation",
+        "velocity double hash comment",
+        "velocity indentation filter"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/velocity-code-style.md",
+      "conventions/security.md",
+      "conventions/frontend.md",
+      "testing/test-value.md"
+    ],
+    "applies-to": [
+      "**/*.vm",
+      "**/src/main/resources/**/*.xml"
+    ]
+  },
+  "source_hash": "df16041bb55731a6e52343a01a0fe123985dafa1ca7080c9dbf3781ac31061e2"
+}

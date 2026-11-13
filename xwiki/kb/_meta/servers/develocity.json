@@ -1,0 +1,97 @@
+{
+  "file": {
+    "questions": [
+      "How do I see how often a test has failed across all XWiki CI builds, not just the last few?",
+      "Is this flaky functional test really broken, or just flickering, and which configurations does it fail on?",
+      "Where can I find the failure history of a test on XWiki's Develocity server?",
+      "How do I query Develocity for test failures from the command line or through the MCP?"
+    ],
+    "aliases": [
+      "Gradle Enterprise",
+      "Gradle Develocity",
+      "build scans",
+      "test analytics",
+      "community.develocity.cloud"
+    ]
+  },
+  "sections": {
+    "Develocity (community.develocity.cloud) — a test's failure history across CI builds": {
+      "questions": [
+        "Where can I see every run of a test across XWiki CI builds, branches and browsers?",
+        "Why does Jenkins only show a few recent runs of a test, and where is the longer history?",
+        "How do I set up the access key so I can query Develocity for test failures?"
+      ],
+      "aliases": [
+        "Gradle Enterprise",
+        "build scans",
+        "test history"
+      ]
+    },
+    "One test: `dv-test-history`": {
+      "questions": [
+        "How can I tell whether a test is flickering or really broken, and since when it has been failing?",
+        "Is there a script that summarizes one test's failures by browser, database and branch?",
+        "How do I get a compact failure report for one test without flooding my context with data?"
+      ],
+      "aliases": [
+        "dv-test-history script",
+        "xwiki-dev-tools bash script",
+        "test failure report"
+      ]
+    },
+    "Finding candidates: `--recent-failures [HOURS]`": {
+      "questions": [
+        "How do I list every test that failed in the last day across XWiki builds?",
+        "How can I tell which failing tests are new this week and which were already known?",
+        "After a bad night of CI, which failing tests should I investigate first?"
+      ],
+      "aliases": [
+        "recent failures",
+        "failing tests last 24 hours",
+        "baseline comparison"
+      ]
+    },
+    "A test's output has no server log": {
+      "questions": [
+        "Why is the XWiki server log missing from the failed test output on Develocity?",
+        "Where do I find the STDOUT server log lines for a docker functional test failure?",
+        "How do I get the console log of a failed build to see the server errors behind a test failure?"
+      ],
+      "aliases": [
+        "ServletContainerExecutor STDOUT",
+        "console log",
+        "server log missing"
+      ]
+    },
+    "A `flaky` outcome is a failure": {
+      "questions": [
+        "Develocity marks a test as flaky, so does it still count as a failure?",
+        "Why does a test show as failed even though it passed on retry?",
+        "Can I ignore a test reported as flaky because it eventually passed?"
+      ],
+      "aliases": [
+        "flaky test",
+        "flakiness",
+        "passed on retry"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which skill should I use to fix a flickering functional test once I know its failure history?",
+        "How do I triage all the failures on a release branch at once?",
+        "Is there a wrapper that prints only the key findings of a test's history?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jenkins.md",
+      "testing/flickers.md",
+      "testing/ci-watch.md",
+      "servers/index.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "9fa717aa66118914354391b6e151c59f54babe9709f4167c3cdff2c00720c414"
+}

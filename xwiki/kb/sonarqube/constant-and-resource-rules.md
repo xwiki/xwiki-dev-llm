@@ -6,6 +6,9 @@ summary: Correct fixes and XWiki-specific drop conditions for the constant, reso
   be), try-with-resources, which in XWiki is usually a state restore rather than a close, the
   throwing finally, charset constants, combined catch clauses, and the constant interface, whose
   answer depends on whether the interface is published API.
+provenance: official
+last-confirmed: 2026-09-16
+related: [sonarqube/index.md, conventions/versioning.md, conventions/code-comments.md, sonarqube/verification.md]
 ---
 
 # SonarQube constant, resource and exception rules

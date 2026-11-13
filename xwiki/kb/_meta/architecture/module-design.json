@@ -1,0 +1,81 @@
+{
+  "file": {
+    "questions": [
+      "How do I know if a new class I'm adding is too thin and just passes calls through to something else?",
+      "Should I create a new helper class for this logic, or keep it inside the existing class?",
+      "Is it okay to add an interface with only one implementation so I can mock it in tests?",
+      "What should I check in code review for a new class's design without it turning into a rewrite of the module?",
+      "How do I tell whether a new extension point is actually needed or just speculative?"
+    ],
+    "aliases": [
+      "deep module",
+      "shallow class",
+      "pass-through class",
+      "hypothetical seam",
+      "class design review"
+    ]
+  },
+  "sections": {
+    "Module design — a review lens for the classes a change adds or reshapes": {
+      "questions": [
+        "What design questions should reviewers ask about a new class in my change?",
+        "Is there an XWiki rule on how deep a class should be or where logic goes?",
+        "Why did a reviewer say my class is shallow, and is that a blocking issue?"
+      ],
+      "aliases": [
+        "design review lens",
+        "class depth review",
+        "module design guidelines"
+      ]
+    },
+    "Scope: only what the change adds or reshapes": {
+      "questions": [
+        "Does the design review apply to existing code my change only calls?",
+        "Can a reviewer ask me to refactor the whole module while I'm in it?",
+        "Which classes should I check for design issues in my patch?"
+      ],
+      "aliases": [
+        "review scope",
+        "boy scout refactoring out of scope",
+        "patch scope design"
+      ]
+    },
+    "The questions": {
+      "questions": [
+        "What exactly do I check for depth, locality, seams and leaks in a new class?",
+        "How do I apply the deletion test to my helper class?",
+        "When is an interface with one implementation a hypothetical seam I should drop?",
+        "How do I tell if my new static state leaks a hidden lifecycle?"
+      ],
+      "aliases": [
+        "deletion test",
+        "seam review",
+        "locality of logic",
+        "leaky abstraction check"
+      ]
+    },
+    "Turning it into a review point": {
+      "questions": [
+        "How do I write a design review comment that names the class, the failing question and the alternative?",
+        "When is a design comment on my code just speculation I can ignore?",
+        "Is a small or all-static class a design problem in review?"
+      ],
+      "aliases": [
+        "writing review comments",
+        "design feedback format",
+        "actionable review point"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/component-system.md",
+      "architecture/platform-modules.md",
+      "conventions/code-style.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "f0126a68d8a1f3e8798e51636730f4578ffd1f9012a787b1396c9083ca0c750a"
+}

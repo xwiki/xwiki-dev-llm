@@ -1,0 +1,147 @@
+{
+  "file": {
+    "questions": [
+      "How do I fix SonarCloud issues in my JUnit and Mockito test code without breaking the build?",
+      "Which Sonar test-code warnings are safe to fix mechanically, and which ones should I suppress or leave alone?",
+      "Sonar flagged my assertTrue(a.equals(b)) line, but is changing it to assertEquals safe in an equals test?"
+    ],
+    "aliases": [
+      "Sonar test rules",
+      "SonarCloud test issues",
+      "JUnit Sonar fixes",
+      "Mockito Sonar warnings"
+    ]
+  },
+  "sections": {
+    "SonarQube test-code rules": {
+      "questions": [
+        "Which SonarCloud rules can I fix in test code safely, and which fixes can still break the build?",
+        "Why do my Sonar test fixes fail the build when I did not touch production code?",
+        "What are the exceptions to fixing SonarQube issues in test files?"
+      ],
+      "aliases": [
+        "Sonar test rules",
+        "SonarCloud test issues"
+      ]
+    },
+    "S5786 — a JUnit 5 test class or method should be package-private": {
+      "questions": [
+        "Sonar says remove the public modifier from my JUnit test class or method, so what exactly do I change?",
+        "Why does SonarCloud want my @Test methods package-private, and can that break a subclass in another module?",
+        "Can I make a JUnit test method package-private if it overrides a public setUp method?"
+      ],
+      "aliases": [
+        "S5786",
+        "JUnit package-private test",
+        "remove public from test method",
+        "redundant visibility modifier Sonar"
+      ]
+    },
+    "S5785 — use `assertEquals` instead of `assertTrue(a.equals(b))`": {
+      "questions": [
+        "Sonar wants assertEquals instead of assertTrue(a.equals(b)), but should I convert it inside an equals or hashCode test?",
+        "How do I rewrite assertTrue with equals, ==, or != into assertEquals, assertNotEquals, or assertNull?",
+        "Why does my converted assertEquals call break a custom equals test after the operands moved?"
+      ],
+      "aliases": [
+        "S5785",
+        "assertTrue equals to assertEquals",
+        "use assertEquals rule"
+      ]
+    },
+    "S3415 — swap the expected and actual arguments": {
+      "questions": [
+        "Sonar says to swap expected and actual in assertEquals, so when is that unsafe for a regex or asymmetric equals?",
+        "When can I reverse the arguments of assertEquals in JUnit without changing what the test checks?",
+        "Sonar flags only some reversed assertions in my test file, so should I swap the rest too?"
+      ],
+      "aliases": [
+        "S3415",
+        "expected and actual swap",
+        "assertEquals argument order",
+        "reversed assertEquals"
+      ]
+    },
+    "S8924 — use a static import for a Mockito method": {
+      "questions": [
+        "Sonar says use a static import for mock, so how do I replace Mockito.mock calls cleanly?",
+        "How do I switch Mockito.when and Mockito.verify to static imports in my test class?",
+        "Can I delete the import org.mockito.Mockito line after moving to static imports?"
+      ],
+      "aliases": [
+        "S8924",
+        "Mockito static import rule",
+        "Mockito.mock static import"
+      ]
+    },
+    "S6068 — remove a useless Mockito `eq()` matcher": {
+      "questions": [
+        "Sonar says remove this useless eq invocation in my Mockito verify, so how do I unwrap it safely?",
+        "Why does Mockito throw InvalidUseOfMatchersException after I removed an eq() call?",
+        "When do I have to keep eq() in a Mockito stubbing that also uses any() or argThat()?"
+      ],
+      "aliases": [
+        "S6068",
+        "Mockito eq useless",
+        "ArgumentMatchers eq removal"
+      ]
+    },
+    "S2133 — an object instantiated only to get its class": {
+      "questions": [
+        "Sonar says remove this object instantiation and use the class instead, so what do I do in a test that builds an event just to get its class?",
+        "How do I replace any(event.getClass()) in a Mockito verify with a class literal?",
+        "Will switching to a class literal change what my Mockito verification matches?"
+      ],
+      "aliases": [
+        "S2133",
+        "object created just for getClass",
+        "use class literal instead of getClass"
+      ]
+    },
+    "S5778 / S5783 — only one method invocation may throw inside an `assertThrows` lambda": {
+      "questions": [
+        "Sonar says only one invocation may throw inside my assertThrows lambda, so how do I move the other calls out?",
+        "My assertThrows test fails after I moved a call out of the lambda, so which call is the one that throws?",
+        "How do I clear multiple possibly-throwing calls in an assertThrows lambda without changing what the test asserts?"
+      ],
+      "aliases": [
+        "S5778",
+        "S5783",
+        "assertThrows lambda multiple invocations",
+        "hoist call out of assertThrows"
+      ]
+    },
+    "S8714 — replace a try/catch/`fail` with `assertThrows`": {
+      "questions": [
+        "Sonar says replace my try, catch, and fail with assertThrows, so how do I convert that block?",
+        "How do I change a try block that calls fail to assertDoesNotThrow?",
+        "My S8714 fix created a new S5783 issue because of a new URL inside the try block, so what should I do?"
+      ],
+      "aliases": [
+        "S8714",
+        "try catch fail to assertThrows",
+        "assertDoesNotThrow conversion"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where is the list of Sonar drop conditions that apply to every rule before I touch test code?",
+        "Where is the convention for suppressing a Sonar rule with a rationale comment when I cannot fix it?",
+        "How do I check that my Sonar test-code fixes still compile and pass?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "conventions/code-style.md",
+      "testing/strategy.md",
+      "sonarqube/verification.md"
+    ],
+    "applies-to": [
+      "**/src/test/**/*.java"
+    ]
+  },
+  "source_hash": "98e62f61194d7d6b08173c1dfa16230f0315c57d47d7de8f1d90af9a3126dfe4"
+}

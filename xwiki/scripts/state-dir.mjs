@@ -1,5 +1,6 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
-// (plans, handoffs, drafts, extracted source), the Docker IT slot files and the commit skill gate's
+// (plans, handoffs, drafts, extracted source), the Docker IT slot files, the knowledge-base
+// search index cache, the KB pointer hooks' per-session state and the commit skill gate's
 // per-session record of loaded skills. All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
@@ -30,6 +31,16 @@ export function workRoot() {
 /** Directory holding the Docker IT slot files. `XWIKI_LLM_IT_SLOT_DIR` overrides it. */
 export function itSlotDir() {
   return process.env.XWIKI_LLM_IT_SLOT_DIR || join(stateRoot(), "it-slots");
+}
+
+/** Directory holding kb-search.mjs's index cache, rebuilt from the KB whenever it is missing. */
+export function kbIndexDir() {
+  return join(stateRoot(), "kb-index");
+}
+
+/** Directory holding the KB pointer hooks' per-session files: which pointers a session was given. */
+export function kbHookStateDir() {
+  return join(stateRoot(), "kb-hooks");
 }
 
 /** Directory holding the commit skill gate's per-session files: the skills a session loaded. */

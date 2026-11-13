@@ -7,6 +7,15 @@ summary: How XWiki names Maven groupIds/artifactIds and their qualifiers (and th
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
+provenance: official
+last-confirmed: 2026-11-03
+related: [architecture/platform-modules.md, processes/module-lifecycle.md, conventions/translations.md]
+applies-to: ["**/xwiki.properties*", "**/pom.xml", "**/package.json"]
+applies-when:
+  - '^\s*<name>[^<]+</name>'
+  - '<xwiki\.extension\.name>'
+  - '^\s*"name"\s*:'
+  - '^#?\s*[a-z]\w*(?:\.[a-zA-Z]\w*)+\s*='
 ---
 
 # Naming conventions

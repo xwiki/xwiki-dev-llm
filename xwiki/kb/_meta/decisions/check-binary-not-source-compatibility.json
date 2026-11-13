@@ -1,0 +1,66 @@
+{
+  "file": {
+    "questions": [
+      "Can I remove a method parameter or change a return type in a public XWiki API without breaking the build?",
+      "Why does Revapi not complain when I only add generics to a return type?",
+      "Should I enforce source compatibility on XWiki public Java APIs?",
+      "How strict is the XWiki compatibility check on pom.xml, binary versus source changes?"
+    ],
+    "aliases": [
+      "Revapi",
+      "API compatibility check",
+      "binary compatibility",
+      "source compatibility",
+      "semantic versioning Java API"
+    ]
+  },
+  "sections": {
+    "Context": {
+      "questions": [
+        "Why does XWiki's build fail when I change a public Java API method signature?",
+        "What compatibility rules apply to public classes and interfaces that downstream extensions use?",
+        "How does the Revapi plugin in the default Maven build check for breaking API changes?"
+      ],
+      "aliases": [
+        "Revapi Maven plugin",
+        "public API breakage",
+        "downstream extensions"
+      ]
+    },
+    "Decision": {
+      "questions": [
+        "Does XWiki enforce source compatibility or only binary compatibility for its Java API?",
+        "Can I make a source-only change like adding generics without the Revapi build failing?",
+        "What exactly does the XWiki project check with Revapi: binary, semantic, or source?"
+      ],
+      "aliases": [
+        "binary compatibility policy",
+        "semantic compatibility",
+        "source-only change"
+      ]
+    },
+    "Consequences": {
+      "questions": [
+        "What happens to downstream compiled extensions when I upgrade XWiki after an API change?",
+        "How do I handle a new public API that is not yet stable in XWiki?",
+        "Do I need to add Revapi ignore entries for generics-only changes in pom.xml?"
+      ],
+      "aliases": [
+        "Revapi ignore configuration",
+        "@Unstable annotation",
+        "default methods for interface evolution"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/backward-compatibility.md",
+      "conventions/versioning.md",
+      "architecture/module-design.md"
+    ],
+    "applies-to": [
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "72351824fe9f74a097e01a9d6c832fce368d6c94a1efbfa839736d49cbe212c3"
+}

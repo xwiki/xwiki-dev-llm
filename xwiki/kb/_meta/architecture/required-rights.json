@@ -1,0 +1,99 @@
+{
+  "file": {
+    "questions": [
+      "How do I restrict who can edit a wiki page that my extension installs?",
+      "My page in the extension needs Script right to run its Velocity, so what required rights level should I declare?",
+      "Why does my wiki macro show Unknown macro after I enforce required rights on its page?",
+      "My page includes another page and that included page's Velocity stops working once I enforce rights, why?",
+      "How do I check which rights a page will enforce, in a unit test?"
+    ],
+    "aliases": [
+      "enforceRequiredRights",
+      "XWiki.RequiredRightClass",
+      "RequiredRightAnalyzer",
+      "XWIKI-24822",
+      "XAR xwikidoc version 1.6"
+    ]
+  },
+  "sections": {
+    "Required rights on a page an extension ships (analyzer blind spots, XAR version, reading them back)": {
+      "questions": [
+        "How do I restrict who can edit a wiki page that my extension installs?",
+        "My page in the extension needs Script right to run its Velocity, so what required rights level should I declare?",
+        "Where do I put enforceRequiredRights in the XML of a page I ship in my extension's resources?"
+      ],
+      "aliases": [
+        "enforce required rights on an extension page",
+        "page rights declaration in a XAR",
+        "required rights in extension resources"
+      ]
+    },
+    "The analyzer is a recommendation, and it is blind to some privileged objects": {
+      "questions": [
+        "The required rights analyzer says script but my wiki macro does not register, what is going on?",
+        "Should I override the analyzer's suggested rights for a page with a wiki macro object, and why?",
+        "How can I validate a macro page that enforces rights when that page is already installed on my wiki?"
+      ],
+      "aliases": [
+        "WikiMacroClass required right",
+        "analyzer under-reports rights",
+        "Unknown macro with enforced rights"
+      ]
+    },
+    "A page carrying the element must declare XAR document version 1.6": {
+      "questions": [
+        "I added the required rights element to my XML page but nothing warns me, what version attribute must the xwikidoc root have?",
+        "Which XAR format version does my page need to hold the enforce flag, and how can I confirm it is right?"
+      ],
+      "aliases": [
+        "XAR format version",
+        "xwikidoc version attribute",
+        "XarDocumentModel VERSION_CURRENT"
+      ]
+    },
+    "Enforcement is per-document, and reaches further only through a script save": {
+      "questions": [
+        "If my page enforces rights, does that limit the page it includes or the macro it calls?",
+        "When my script creates a new page from a template, does the new page inherit my page's rights limit?",
+        "My page title shows raw Velocity source instead of rendering after I enforce rights, why?"
+      ],
+      "aliases": [
+        "include macro permissions",
+        "Document#save required rights propagation",
+        "raw Velocity title"
+      ]
+    },
+    "Reading the enforced rights back in a test": {
+      "questions": [
+        "How do I assert in a PageTest which rights my page enforces, instead of checking the XML?",
+        "My test that injects DefaultDocumentRequiredRightsManager fails with a missing SimpleDocumentCache, what do I do?",
+        "How do I write a unit test that checks my page's required rights are declared correctly?"
+      ],
+      "aliases": [
+        "DocumentRequiredRightsManager",
+        "DocumentRequiredRights record",
+        "MockitoOldcore required rights stub"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which page explains the script and programming right checks that go along with required rights?",
+        "Where can I find other data traps when my extension ships pages and XClass objects?",
+        "What is a good way to structure a test for a page's rights so it is worth keeping?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/security.md",
+      "architecture/wiki-application-data.md",
+      "testing/test-value.md"
+    ],
+    "applies-to": [
+      "**/src/main/resources/**/*.xml",
+      "**/src/test/**/*.java"
+    ]
+  },
+  "source_hash": "c72a4cb64d4447a7176830dde556718cdb73cc3abdaaa2dbba229d6de956a028"
+}

@@ -1,0 +1,135 @@
+{
+  "file": {
+    "questions": [
+      "How do I get build results and failing test names from ci.xwiki.org without opening the web UI?",
+      "How can I script queries against the XWiki Jenkins server to check whether my branch is green?",
+      "Why does reading the XWiki CI build log take forever, and what should I fetch instead?",
+      "How do I figure out why an xwiki-platform Jenkins build failed without downloading the whole console?"
+    ],
+    "aliases": [
+      "Jenkins",
+      "ci.xwiki.org",
+      "Jenkins JSON API",
+      "Jenkins remote access API",
+      "XWiki CI server"
+    ]
+  },
+  "sections": {
+    "Jenkins CI (ci.xwiki.org) — REST API access and reading a build": {
+      "questions": [
+        "Can I query ci.xwiki.org from a script without logging in or creating a token?",
+        "What is the structured JSON way to read a Jenkins build instead of scraping the HTML page?",
+        "How do I find the API documentation for a specific Jenkins job or build on XWiki's server?"
+      ],
+      "aliases": [
+        "Jenkins REST API",
+        "Jenkins remote access API",
+        "Jenkins anonymous API access"
+      ]
+    },
+    "The Cloudflare User-Agent trap": {
+      "questions": [
+        "Why does my curl request to ci.xwiki.org return a 'Just a moment' page instead of JSON?",
+        "Why does fetching Jenkins JSON from a headless browser or scraper get blocked even with credentials?"
+      ],
+      "aliases": [
+        "Cloudflare bot challenge",
+        "Just a moment page",
+        "Cloudflare User-Agent block"
+      ]
+    },
+    "URL shape": {
+      "questions": [
+        "How do I build the URL for a specific branch build of a repo in a Jenkins folder?",
+        "Why does my Jenkins URL 404 when the folder name has spaces, and how should I encode it?",
+        "What does the job/ segment repeated in a Jenkins multibranch URL stand for?"
+      ],
+      "aliases": [
+        "multibranch pipeline URL",
+        "Jenkins job path",
+        "percent-encoding Jenkins folder names"
+      ]
+    },
+    "Endpoints worth knowing": {
+      "questions": [
+        "Which Jenkins API call gives me the last 20 builds with their result and test counts?",
+        "How do I fetch only the failing test names and error messages from a Jenkins build without the noise?",
+        "How do I list the artifacts or screenshots archived by a Jenkins build?"
+      ],
+      "aliases": [
+        "Jenkins tree parameter",
+        "Jenkins testReport API",
+        "Jenkins API filter"
+      ]
+    },
+    "The two functional-test jobs": {
+      "questions": [
+        "Which Jenkins job runs the functional tests against MySQL, PostgreSQL and Oracle?",
+        "Why does my commit with a new functional test fail in the Environment Tests job but pass in the main build?",
+        "Why are some functional tests skipped in one Jenkins job but passing in another?"
+      ],
+      "aliases": [
+        "XWiki Environment Tests job",
+        "docker functional test job",
+        "database matrix tests"
+      ]
+    },
+    "Traps when interpreting a build": {
+      "questions": [
+        "What does an UNSTABLE versus FAILURE result on a Jenkins build actually mean?",
+        "Why does a test case show age 1 and failedSince for the current build when earlier builds passed?",
+        "Why does the Jenkins changeset show author noreply, and how do I find the real committer?",
+        "Why does every xwiki-platform build report the same revision SHA when I ask for the commit built?"
+      ],
+      "aliases": [
+        "Jenkins build result UNSTABLE",
+        "lastBuiltRevision",
+        "Jenkins changeSets empty"
+      ]
+    },
+    "Build cadence, and what it does to a blame window": {
+      "questions": [
+        "How long does a full xwiki-platform master build take, and how many commits does each one contain?",
+        "How do I narrow down which commit caused a Jenkins failure when the build window spans several commits?",
+        "Should I bisect Jenkins builds to find a regression, or is that too slow?",
+        "Why is the main branch almost always red on Jenkins, and how do I tell if a failure is new?"
+      ],
+      "aliases": [
+        "git blame window",
+        "bisecting builds",
+        "build frequency"
+      ]
+    },
+    "Diagnosing a functional (docker) test failure": {
+      "questions": [
+        "Where do I find the screenshot or video from a failed Selenium docker test on Jenkins?",
+        "Why does a functional test start failing after I only changed the parent POM version?",
+        "How do I check which XWiki platform version a Jenkins functional test run actually used?",
+        "Why can't Selenium find a UI element after the platform version changed?"
+      ],
+      "aliases": [
+        "Selenium screenshot on CI",
+        "Testcontainers functional test failure",
+        "docker integration test debugging"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where can I see the test failure history and build scans for a test across CI builds?",
+        "Which tool should I use to see why a Jenkins build failed in more detail than the REST API shows?",
+        "What should I read next if a functional test fails intermittently instead of consistently?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/develocity.md",
+      "testing/flickers.md",
+      "testing/ci-watch.md",
+      "testing/running-docker-its.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "599db347d899ffd0cfec0588a2b8943d661d5b4a93727f7756d4890de6f1d07d"
+}

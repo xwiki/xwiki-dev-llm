@@ -1,0 +1,89 @@
+{
+  "file": {
+    "questions": [
+      "How should I write JavaScript for XWiki: modules, loading, naming, and what I must not do?",
+      "Where do I put my JavaScript file so XWiki loads it without a CDN?",
+      "Can I use inline script tags or onclick attributes in an XWiki template or page?",
+      "What front-end rules apply to CSS, icons, and accessibility when I contribute to XWiki?"
+    ],
+    "aliases": [
+      "frontend guidelines",
+      "JS style guide",
+      "client-side conventions",
+      "web UI coding standards",
+      "front end rules"
+    ]
+  },
+  "sections": {
+    "JavaScript modules": {
+      "questions": [
+        "How do I write a JavaScript module in XWiki with RequireJS and AMD define?",
+        "Why does my XWiki JavaScript module need an xwiki- prefix in its name?",
+        "How do I get my JavaScript loaded on a page: WebJar, JSX, or skin file?",
+        "Why does my JavaScript fail the linter with line length or complexity errors?"
+      ],
+      "aliases": [
+        "AMD module",
+        "RequireJS define",
+        "JSX",
+        "JavaScript Skin Extension",
+        "jsHint"
+      ]
+    },
+    "Never mix server-side scripting into JavaScript": {
+      "questions": [
+        "My Velocity code inside a JavaScript file breaks after minification, what do I do?",
+        "How do I pass server-side values like paths or translations into my JavaScript file?",
+        "Can I put Velocity inside a WebJar JavaScript file?"
+      ],
+      "aliases": [
+        "Velocity in JavaScript",
+        "minifier breaks Velocity",
+        "mixing Velocity and JS",
+        "jsontool serialize"
+      ]
+    },
+    "JavaScript backward compatibility": {
+      "questions": [
+        "How do I deprecate a JavaScript method without breaking existing wiki apps?",
+        "Where do old JavaScript APIs go when I rename or replace them in XWiki?",
+        "Can I remove an old JavaScript function from XWiki Standard?"
+      ],
+      "aliases": [
+        "compatibility.js",
+        "JS API deprecation",
+        "legacy JavaScript API",
+        "JavaScript breaking change"
+      ]
+    },
+    "HTML, CSS, accessibility": {
+      "questions": [
+        "How do I show an icon or caret in my XWiki page without a CSS background image?",
+        "How do I set colors in my stylesheet without hardcoding hex values?",
+        "How do I label a form control inside a wiki page so screen readers can read it?",
+        "My image in a wiki page shows its filename as alt text, how do I set proper alt text?"
+      ],
+      "aliases": [
+        "a11y",
+        "WCAG 2.2 AA",
+        "style variables",
+        "Skin Extension SSX"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/server-side-rendering.md",
+      "conventions/backward-compatibility.md",
+      "conventions/naming.md",
+      "conventions/translations.md"
+    ],
+    "applies-to": [
+      "**/*.js",
+      "**/*.css",
+      "**/*.less",
+      "**/*.vm"
+    ]
+  },
+  "source_hash": "5605203d3d5403c765a43310ee79d1efdc3ae79920b5d6b485ffe4583a041a8f"
+}

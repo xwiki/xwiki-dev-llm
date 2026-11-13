@@ -1,0 +1,76 @@
+{
+  "file": {
+    "questions": [
+      "How do I move XWiki search from the embedded Solr to a separate Solr server?",
+      "Should a large wiki run the built-in Solr or an external standalone Solr?",
+      "XWiki search breaks after I point it at a standalone Solr, what cores do I need to create?",
+      "How do I configure XWiki to talk to a remote Solr with several cores?"
+    ],
+    "aliases": [
+      "Apache Solr",
+      "external Solr",
+      "standalone Solr",
+      "remote Solr server"
+    ]
+  },
+  "sections": {
+    "Solr search backend (embedded vs remote/standalone, multi-core setup)": {
+      "questions": [
+        "Should I keep the embedded Solr or run a separate Solr server for a big wiki?",
+        "Where does XWiki store its search index by default?",
+        "What is the difference between XWiki's embedded Solr and a standalone Solr setup?"
+      ],
+      "aliases": [
+        "embedded Solr",
+        "search index",
+        "Solr multi-core"
+      ]
+    },
+    "A remote Solr needs several cores, and XWiki does not create them": {
+      "questions": [
+        "Why does XWiki fail to start against my Solr server, and do I have to create the cores myself?",
+        "Which Solr cores must I create by hand for search, extensions, ratings and events?",
+        "Where can I get the configuration files for XWiki's Solr cores?"
+      ],
+      "aliases": [
+        "Solr core",
+        "core configuration",
+        "minimal core",
+        "full core"
+      ]
+    },
+    "Configuring a remote Solr (xwiki.properties)": {
+      "questions": [
+        "Which properties in xwiki.properties do I set to use a remote Solr server?",
+        "What is the difference between solr.remote.baseURL and solr.remote.url?",
+        "How do I tell XWiki the address of my Solr server in its configuration file?"
+      ],
+      "aliases": [
+        "solr.remote.baseURL",
+        "solr.remote.url",
+        "solr.type",
+        "xwiki.properties"
+      ]
+    },
+    "Solr version compatibility and the analysis-extras module": {
+      "questions": [
+        "Which Solr version works with my version of XWiki?",
+        "Why does my standalone Solr fail to load the search core with an SPI class error?",
+        "How do I enable the analysis-extras module on Solr in Docker?"
+      ],
+      "aliases": [
+        "analysis-extras",
+        "SOLR_MODULES",
+        "Solr language analyzers"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/component-system.md",
+      "servers/index.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "c126b60e35b0bb9c56623320c168c3133b8e88f30135626e0a31290d7fe2c2b6"
+}

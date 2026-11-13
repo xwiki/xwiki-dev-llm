@@ -1,0 +1,95 @@
+{
+  "file": {
+    "questions": [
+      "what kinds of tests does a change to XWiki need, and what level should each one be",
+      "what testing rules must a XWiki pull request satisfy before it can be merged",
+      "how do I know whether my fix needs a unit test, a functional test or nothing new",
+      "where do I find the overview of how testing works in XWiki"
+    ],
+    "aliases": [
+      "XWiki test guidelines",
+      "testing conventions",
+      "test strategy",
+      "test policy"
+    ]
+  },
+  "sections": {
+    "XWiki testing strategy (overview)": {
+      "questions": [
+        "what is the overall testing approach for xwiki-platform changes",
+        "which skill or guide should I follow when writing a test for XWiki",
+        "how do I convert old unit tests to JUnit 5 and Mockito in XWiki"
+      ],
+      "aliases": [
+        "testing overview",
+        "XWiki test approach"
+      ]
+    },
+    "Test kinds and naming": {
+      "questions": [
+        "how do I name a test class so Maven runs it as a unit test",
+        "why is my integration test class not run by Failsafe in XWiki",
+        "what is the difference between a *Test.java and a *IT.java class in XWiki"
+      ],
+      "aliases": [
+        "Surefire vs Failsafe",
+        "IT class naming",
+        "unit test vs integration test",
+        "Test suffix convention"
+      ]
+    },
+    "Durable rules": {
+      "questions": [
+        "does my bug fix need a test that fails without the fix",
+        "my functional test prints to the console and the build fails, how do I fix that",
+        "how do I avoid waiting for the full Selenium timeout when an element should not appear",
+        "why does my groovy macro in a functional test fail with a Programming Rights error"
+      ],
+      "aliases": [
+        "PRChecker",
+        "CaptureConsole",
+        "wiki descriptor target",
+        "AllIT",
+        "Selenium wait timeout"
+      ]
+    },
+    "Functional-test module layout": {
+      "questions": [
+        "where should I put the functional tests for a new feature module in xwiki-platform",
+        "how do I set up the pom for a new xwiki-platform test-docker module",
+        "which pom lists my feature's test module and under which Maven profile"
+      ],
+      "aliases": [
+        "test-docker module",
+        "pageobjects module",
+        "Docker IT module structure"
+      ]
+    },
+    "Where the test frameworks live (per repo checkout)": {
+      "questions": [
+        "where is the test base framework source code in xwiki-platform",
+        "which repository holds the rendering test framework for xwiki-rendering",
+        "where do I find the Docker functional test framework in the code"
+      ],
+      "aliases": [
+        "xwiki-platform-test",
+        "xwiki-commons-tool-test",
+        "xwiki-rendering-test",
+        "test framework location"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/test-value.md",
+      "testing/running-docker-its.md",
+      "testing/flickers.md",
+      "testing/ci-watch.md"
+    ],
+    "applies-to": [
+      "**/src/test/**/*.java",
+      "**/*-test-pageobjects/**/*.java"
+    ]
+  },
+  "source_hash": "b0a179007cebcc0550c4a0d17d60eef56b44f9741d2d1541063bdc35b9c54927"
+}

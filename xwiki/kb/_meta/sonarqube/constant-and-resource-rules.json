@@ -1,0 +1,154 @@
+{
+  "file": {
+    "questions": [
+      "How do I fix SonarQube issues about duplicated strings, try-with-resources, charsets and catch blocks in XWiki code?",
+      "Sonar flagged my XWiki change for a throw in finally or identical catch blocks, which fixes are safe to apply here?"
+    ],
+    "aliases": [
+      "SonarCloud rules",
+      "Sonar code smells",
+      "static analysis fixes",
+      "Sonar S-rules"
+    ]
+  },
+  "sections": {
+    "SonarQube constant, resource and exception rules": {
+      "questions": [
+        "Which SonarQube rules about constants, resources and exceptions should I expect on my XWiki change?",
+        "Sonar reports several small issues in one Java class, which of the constant or exception fixes are actually worth making?"
+      ],
+      "aliases": [
+        "Sonar constant rules",
+        "Sonar exception rules"
+      ]
+    },
+    "S1192 — define a constant instead of duplicating a literal": {
+      "questions": [
+        "Sonar says I repeat the same string several times, should I turn it into a private static final constant?",
+        "How do I replace a duplicated string literal with a constant without breaking the build or the line length limit?",
+        "Where should I declare a constant for a property name that appears in several places in my class?"
+      ],
+      "aliases": [
+        "duplicated string literal",
+        "magic string",
+        "MultipleStringLiterals",
+        "S1192"
+      ]
+    },
+    "S2093 — use try-with-resources": {
+      "questions": [
+        "Sonar wants try-with-resources, but my finally only pops the rendering context, should I convert it?",
+        "When is it correct to replace a finally block that calls close with try-with-resources in XWiki code?"
+      ],
+      "aliases": [
+        "try-with-resources",
+        "automatic resource management",
+        "close in finally",
+        "S2093"
+      ]
+    },
+    "S2119 — reuse `Random`": {
+      "questions": [
+        "Sonar says I create a new Random on every call, how do I reuse one instance?",
+        "Should I hold a SecureRandom in a static field instead of creating it in the method?"
+      ],
+      "aliases": [
+        "SecureRandom reuse",
+        "random number generator field",
+        "S2119"
+      ]
+    },
+    "S1143 + S1163 — a `finally` block that throws": {
+      "questions": [
+        "Sonar complains about a throw inside finally, how do I log the close failure instead?",
+        "My finally block throws and hides the original exception, what should I write there in an XWiki component?"
+      ],
+      "aliases": [
+        "throw in finally",
+        "jump statement in finally",
+        "S1143",
+        "S1163"
+      ]
+    },
+    "S5361 — `replaceAll` → `replace`": {
+      "questions": [
+        "Sonar says I should use replace instead of replaceAll, when is that safe to change?",
+        "I call replaceAll with a plain string and a replacement containing a dollar sign, can I switch to replace?"
+      ],
+      "aliases": [
+        "replaceAll vs replace",
+        "regex replace versus literal replace",
+        "String.replace",
+        "S5361"
+      ]
+    },
+    "S2147 — combine catch clauses with identical bodies": {
+      "questions": [
+        "Sonar says two catch blocks have the same body, how do I merge them into one multi-catch?",
+        "Can I combine catch clauses when one exception type is a subclass of the other?"
+      ],
+      "aliases": [
+        "multi-catch",
+        "catch union",
+        "identical catch blocks",
+        "S2147"
+      ]
+    },
+    "S3626 — remove a redundant jump": {
+      "questions": [
+        "Sonar flags a return or continue as redundant, is it safe to delete it?",
+        "How do I remove a useless jump at the end of a void method or a loop body without leaving an empty block?"
+      ],
+      "aliases": [
+        "redundant return",
+        "unnecessary continue",
+        "S3626"
+      ]
+    },
+    "S4719 — use a `StandardCharsets` constant instead of a charset name": {
+      "questions": [
+        "Sonar wants StandardCharsets.UTF_8 instead of the string \"UTF-8\", what do I need to change?",
+        "After switching to a Charset constant my catch for UnsupportedEncodingException no longer compiles, how do I fix that?"
+      ],
+      "aliases": [
+        "StandardCharsets",
+        "charset name string",
+        "UnsupportedEncodingException",
+        "Charset.forName",
+        "S4719"
+      ]
+    },
+    "S1214 — move the constants defined in this interface to another class or enum": {
+      "questions": [
+        "Sonar says constants defined in an interface should move elsewhere, can I just move them?",
+        "An interface full of constants that classes implement is flagged by Sonar, should I refactor it or suppress the warning?",
+        "Moving constants out of a published interface would break users, how do I record that decision for Sonar?"
+      ],
+      "aliases": [
+        "constants interface",
+        "constant interface anti-pattern",
+        "S1214",
+        "IWemConstants"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which other SonarQube rule guides should I read after fixing constants and exceptions?",
+        "How do I confirm a Sonar fix passes the build and the quality gate before I push?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "conventions/versioning.md",
+      "conventions/code-comments.md",
+      "sonarqube/verification.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "ac2643d49bae5edb65fd752a18e0b9759eedc8696e028d7a764867b7f289d678"
+}

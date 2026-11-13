@@ -8,6 +8,10 @@ summary: The org.xwiki.rendering.macro.MacroRefactoring role (keyed by macro id)
 sources:
   - https://rendering.xwiki.org/xwiki/bin/view/Main/ExtendingMacro#HBacklinksandlinksrefactoringinmacros
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-rendering/xwiki-platform-rendering-xwiki/src/main/java/org/xwiki/rendering/macro/MacroRefactoring.java
+provenance: official
+last-confirmed: 2026-07-01
+related: [architecture/component-system.md, conventions/backward-compatibility.md, architecture/platform-modules.md]
+applies-to: ["**/*MacroRefactoring*.java"]
 ---
 
 # Macro reference refactoring and backlinks
@@ -37,7 +41,8 @@ wiki macros: the id is what matters, not how the macro is implemented.
 
 The interface evolves via **default methods** (see [[backward-compatibility]]): the newer overloads
 taking a `Map<EntityReference, EntityReference> updatedEntities` are `default` and delegate to the
-simpler overloads, so an implementation only overrides what it needs.
+simpler overloads, and `extractReferences` defaults to an empty set. Only the two base
+`replaceReference` overloads (`DocumentReference`, `AttachmentReference`) are abstract: implement both.
 
 ## The DefaultMacroRefactoring fallback (content only)
 

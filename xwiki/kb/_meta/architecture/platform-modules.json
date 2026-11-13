@@ -1,0 +1,100 @@
+{
+  "file": {
+    "questions": [
+      "Which module should my new Java class go in when I'm working on xwiki-platform?",
+      "Can I put my new code in xwiki-platform-oldcore, or do I need to create a new module?",
+      "How is the xwiki-platform repository organized into modules, and what does each top-level folder contain?",
+      "Why does each xwiki-platform jar need an OSGi manifest, and how do I make a renamed module still satisfy existing dependencies?"
+    ],
+    "aliases": [
+      "xwiki code structure",
+      "legacy core",
+      "project layout",
+      "CodeStructure"
+    ]
+  },
+  "sections": {
+    "How xwiki-platform is laid out, and where new code goes": {
+      "questions": [
+        "Where does a new feature belong in the xwiki-platform source tree?",
+        "I'm starting a change in xwiki-platform and don't know which folder or module to touch, what should I check first?",
+        "Which parts of the xwiki-platform repo are safe to add code to, and which should I avoid?"
+      ],
+      "aliases": [
+        "module layout",
+        "xwiki-platform structure",
+        "where to put code"
+      ]
+    },
+    "The three top-level trees": {
+      "questions": [
+        "What are the main top-level folders in xwiki-platform and what goes in each?",
+        "What's the difference between xwiki-platform-tools, xwiki-platform-core and xwiki-platform-distribution?",
+        "If my change touches the distribution or tools folder, how far will it affect the build?"
+      ],
+      "aliases": [
+        "xwiki-platform-tools",
+        "xwiki-platform-distribution",
+        "repository folders"
+      ]
+    },
+    "The modules worth knowing by name": {
+      "questions": [
+        "Which xwiki-platform modules do I need to know about for rendering, security, the editors or the default skin?",
+        "Where is the livedata table component or the Flamingo skin code located?",
+        "What does the xwiki-platform-extension module family cover?"
+      ],
+      "aliases": [
+        "flamingo skin",
+        "CKEditor",
+        "BlockNote",
+        "livedata"
+      ]
+    },
+    "New code goes in a feature module, never in oldcore": {
+      "questions": [
+        "Why can't I add my class to oldcore, and what should I do instead?",
+        "My code needs something from oldcore but my module is new, how do I handle the dependency direction?",
+        "How do I know which domain module owns the concern my new class handles?"
+      ],
+      "aliases": [
+        "com.xpn.xwiki",
+        "legacy core",
+        "XWikiContext"
+      ]
+    },
+    "Every JAR is an OSGi bundle, and advertises what it provides": {
+      "questions": [
+        "How do I make my module's jar expose a feature so a renamed or legacy artifact still resolves?",
+        "Where is the OSGi manifest for a module generated and do I need to write one myself?",
+        "Is it safe to rename or remove a feature listed in xwiki.extension.features?"
+      ],
+      "aliases": [
+        "Maven Bundle Plugin",
+        "xwiki.extension.features",
+        "OSGi manifest"
+      ]
+    },
+    "Where to go deeper": {
+      "questions": [
+        "Where can I read more about declaring components and the oldcore rule in full?",
+        "Which document covers what public API changes are allowed and when to use -legacy?",
+        "Where do I find the rules for which third-party dependencies a module may take?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/component-system.md",
+      "conventions/backward-compatibility.md",
+      "conventions/dependencies.md",
+      "processes/module-lifecycle.md"
+    ],
+    "applies-to": [
+      "**/src/main/java/**/*.java",
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "2a1e828c0f8d86681b0427ad53a7b52cfddd155c00bb6ac77fc0112084d2f287"
+}

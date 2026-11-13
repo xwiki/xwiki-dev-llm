@@ -6,11 +6,12 @@
 //   2. Each SKILL.md frontmatter `name:` equals its directory name.
 //   3. The plugin version fields are identical across all hosts (Claude marketplace + plugin, Kimi
 //      plugin, opencode config comment).
-//   4. Every KB topic file is referenced in xwiki/kb/index.md AND in the injected mirror
-//      xwiki/instructions/xwiki-org.md.
-//   5. The injected mirror stays within its size budget. Invariant 4 can only ever demand *more*
-//      text in a file that is loaded into every session; without a ceiling the map grows by
-//      accretion, because each extension appends and none ever cuts.
+//   4. Every KB topic file is referenced in xwiki/kb/index.md. The injected
+//      xwiki/instructions/xwiki-org.md no longer mirrors that map: the KB is reached by search
+//      (kb-search.mjs and the pointer hooks), so listing every topic there would only cost tokens.
+//   5. The injected xwiki-org.md, and its knowledge-base block, stay within their size budgets: a
+//      file loaded into every session grows by accretion, because each extension appends and none
+//      ever cuts.
 //   6. A branch does NOT change any version field, compared against its *merge base* with the base
 //      branch. The bump is not a pull request's job: five manifest fields carry the version, so
 //      every concurrent PR used to conflict with every other one on the same five lines over
@@ -44,6 +45,11 @@
 //      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
 //      a loaded skill body — and the budget of one already above the cap may only go down: detail
 //      past it moves into a file the skill opens on demand.
+//  13. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
+//      outlives its topic. kb-search silently drops a sidecar whose `source_hash` no longer matches
+//      the topic body, so an edited topic would lose its generated questions and aliases unnoticed.
+//  14. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
+//      twice (as a merge can leave it) silently loses the first entry's hooks.
 // Node built-ins only. Run from anywhere: `node scripts/validate.mjs`.
 // Exit 0 = all invariants hold; exit 1 = violations (each printed on its own line).
 
@@ -56,6 +62,9 @@ import {
   SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock,
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
+import { corpus } from "./kb-pipeline/gen-metadata.mjs";
+import { duplicateKeys } from "./json-keys.mjs";
+import { loadSidecar, sidecarOf } from "../xwiki/scripts/kb-search.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -121,7 +130,7 @@ if (new Set(Object.values(versions)).size !== 1) {
   errors.push(`Plugin version mismatch across manifests: ${JSON.stringify(versions)}`);
 }
 
-// ---- Invariant 4: KB topic map completeness -------------------------------------------------
+// ---- Invariant 4: KB index completeness -----------------------------------------------------
 const orgMd = read("xwiki/instructions/xwiki-org.md");
 const kbRoot = join(repoRoot, "xwiki/kb");
 const walk = (dir) =>
@@ -138,15 +147,12 @@ for (const abs of walk(kbRoot)) {
   if (!kbIndex.includes(base)) {
     errors.push(`xwiki/kb/index.md: KB topic '${base}' is not referenced in the map`);
   }
-  if (!orgMd.includes(base)) {
-    errors.push(`xwiki/instructions/xwiki-org.md: KB topic '${base}' is not referenced in the mirror map`);
-  }
 }
 
 // ---- Invariant 5: the always-on file stays small ---------------------------------------------
 // xwiki-org.md is injected at the start of every session in every xwiki/* repo, so each line is
-// paid for by every task, including the ones that never needed it. The map is routing only —
-// topic names; kb/index.md is where a topic gets described. Raise a budget only with a reason.
+// paid for by every task, including the ones that never needed it. The knowledge-base block says how
+// to reach the KB, never what is in it — search finds that. Raise a budget only with a reason.
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
@@ -156,15 +162,15 @@ if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
 const mapBlock = orgMapBlock(orgMd);
 if (mapBlock === null) {
   errors.push(
-    `xwiki/instructions/xwiki-org.md: cannot locate the KB map block ` +
-      `(expected "KB map" … "**Capturing learnings:**")`
+    `xwiki/instructions/xwiki-org.md: cannot locate the knowledge-base block ` +
+      `(expected "## Knowledge base" … "**Capturing learnings:**")`
   );
 } else {
   const mapBytes = Buffer.byteLength(mapBlock);
   if (mapBytes > ORG_MAP_MAX_BYTES) {
     errors.push(
-      `xwiki/instructions/xwiki-org.md: the KB map block is ${mapBytes} bytes, over the ${ORG_MAP_MAX_BYTES}-byte ` +
-        `budget — the mirror lists topic *names*; describe the topic in xwiki/kb/index.md instead`
+      `xwiki/instructions/xwiki-org.md: the knowledge-base block is ${mapBytes} bytes, over the ` +
+        `${ORG_MAP_MAX_BYTES}-byte budget — it says how to reach the KB; what is in it is found by search`
     );
   }
 }
@@ -407,6 +413,32 @@ for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
   }
 }
 
+// ---- Invariant 13: KB search metadata is current -------------------------------------------
+const topics = corpus(kbRoot);
+for (const t of topics) {
+  if (!loadSidecar(kbRoot, t.rel, t.text)) {
+    errors.push(
+      `xwiki/kb/${sidecarOf(t.rel)}: missing or stale for kb/${t.rel} — regenerate it with ` +
+        `\`node scripts/kb-pipeline/gen-metadata.mjs --only ${t.rel}\` and commit it with the topic`
+    );
+  }
+}
+const sidecars = new Set(topics.map((t) => sidecarOf(t.rel)));
+for (const abs of walk(join(kbRoot, "_meta"))) {
+  const rel = relative(kbRoot, abs).split(sep).join("/");
+  if (rel.endsWith(".json") && rel !== "_meta/skills.json" && !sidecars.has(rel)) {
+    errors.push(`xwiki/kb/${rel}: its topic no longer exists — remove it`);
+  }
+}
+
+// ---- 14. No repeated key in a JSON manifest --------------------------------------------------
+for (const f of [".claude-plugin/marketplace.json", "xwiki/.claude-plugin/plugin.json", "kimi.plugin.json",
+  "xwiki/hooks/hooks.json", "xwiki/.mcp.json", "xwiki/kb/_meta/skills.json", "scripts/size-budgets.json"]) {
+  for (const key of duplicateKeys(read(f))) {
+    errors.push(`${f}: key '${key}' appears twice in one object — JSON keeps only the last; merge them`);
+  }
+}
+
 // ---- Report ----------------------------------------------------------------------------------
 if (errors.length) {
   console.error(`validate.mjs: ${errors.length} consistency violation(s):`);
@@ -414,4 +446,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync at ` +
-    `${versions["marketplace.metadata.version"]}, KB map complete).`);
+    `${versions["marketplace.metadata.version"]}, KB index complete).`);

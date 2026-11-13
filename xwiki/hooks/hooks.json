@@ -10,6 +10,21 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" prompt",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -18,6 +33,12 @@
             "type": "command",
             "if": "Bash(git commit*)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(git *)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-diff.mjs\"",
+            "timeout": 15
           },
           {
             "type": "command",
@@ -46,9 +67,39 @@
             "timeout": 15
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" edit",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" skill",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-hooks.mjs\" bash",
+            "timeout": 10
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [
@@ -60,16 +111,6 @@
       },
       {
         "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-gate.mjs\""
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
         "hooks": [
           {
             "type": "command",

@@ -1,0 +1,67 @@
+{
+  "file": {
+    "questions": [
+      "What version do I write in @since for a new class or method I'm adding to XWiki?",
+      "Which version string goes in @Deprecated(since=...) when I deprecate a method, and what format is it in?",
+      "Do I need @since on a test helper, page object, or @UITest annotation I add in a test module?",
+      "Which version should I put in the affected version field when I file a JIRA bug?"
+    ],
+    "aliases": [
+      "@since tag",
+      "@since version format",
+      "API version annotation",
+      "deprecation version",
+      "Affects Version/s"
+    ]
+  },
+  "sections": {
+    "Versions in code and issues (@since / @Deprecated, affected version)": {
+      "questions": [
+        "What version number should I write in @since when my code is not released yet?",
+        "Why does XWiki require three segments like 18.3.0RC1 in @since and @Deprecated?",
+        "How do I find the current development version to put in @since?"
+      ],
+      "aliases": [
+        "version format",
+        "RC1 version number",
+        "since version string"
+      ]
+    },
+    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": {
+      "questions": [
+        "How do I deprecate a Java method in XWiki, and what goes in the @deprecated Javadoc tag?",
+        "Should I set forRemoval = true on @Deprecated when I replace an old API?",
+        "When a deprecation is backported to several stable branches, how do I list the versions in since?"
+      ],
+      "aliases": [
+        "forRemoval",
+        "@deprecated javadoc tag",
+        "deprecating a method",
+        "Deprecated annotation since"
+      ]
+    },
+    "Affected version of an issue": {
+      "questions": [
+        "Which affected version should I pick for a JIRA bug that has existed for many releases?",
+        "What affected version do I set for a new feature or improvement with no released version to point at?",
+        "How do I find the oldest release that contains a bug when the fix was cherry-picked to stable branches?"
+      ],
+      "aliases": [
+        "Observed in versions",
+        "Affects Version",
+        "oldest affected release"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/backward-compatibility.md",
+      "servers/jira.md",
+      "processes/release.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "231437150fa9cfbc298d2ded73593d8345fa09a6e93f2f75648b1df8966cdd13"
+}

@@ -9,6 +9,9 @@ summary: How the browser container reaches XWiki under each servlet engine and w
   machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
+provenance: official
+last-confirmed: 2026-10-17
+related: [testing/strategy.md, servers/jenkins.md, testing/ci-watch.md, testing/flickers.md]
 ---
 
 # Running Docker functional tests on a developer machine
@@ -135,10 +138,12 @@ Docker ITs are a machine-wide resource, and nothing in Maven or testcontainers s
 distinct collisions, in the order they bite:
 
 - **Host port 8080 is global.** Only one `JETTY_STANDALONE` run can exist at a time, and it also
-  collides with the wiki the developer keeps running. The second run does not fail cleanly: it
-  provisions into the first one's wiki and reports a `401`.
-- **The daemon has a finite budget.** Each run holds a servlet engine, a browser container of a
-  couple of gigabytes, and a ryuk. A few concurrent runs starve it, and starvation never announces
+  collides with the wiki the developer keeps running. The second run's wiki does not start, yet the
+  run does not fail cleanly: it provisions into the first one's wiki and reports a `401`. A
+  containerised engine has no such limit, its host ports being mapped at random.
+- **The daemon has a finite budget.** Each run holds a servlet engine, a database, a browser container
+  of a couple of gigabytes, and a ryuk; memory runs out first, and a laptop rarely fits more than two
+  wikis and their databases at once. A few concurrent runs starve it, and starvation never announces
   itself as such — it surfaces as the setup failures in the table above. Long-lived containers that
   are nobody's test (MCP servers, leftovers from killed runs or from a ryuk that cannot reach the
   daemon) count against the same budget.

@@ -7,6 +7,10 @@ summary: xwiki-platform splits into tools, core (100+ feature modules) and distr
   xwiki.extension.features.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStructure/
+provenance: official
+last-confirmed: 2026-10-15
+related: [architecture/component-system.md, conventions/backward-compatibility.md, conventions/dependencies.md, processes/module-lifecycle.md]
+applies-to: ["**/xwiki-platform-oldcore/src/main/java/**"]
 ---
 
 # The xwiki-platform module structure
