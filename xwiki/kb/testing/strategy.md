@@ -42,7 +42,7 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
 - **Integration / functional tests** — class names end with `*IT.java`, run by Failsafe, activated
   by the `integration-tests` profile (Docker-based functional tests also need the `docker` profile).
 
-## Durable rules
+## Every change has a test; tests stay silent
 
 - **A change comes with an automated test, and a fix's test fails without the fix** — "Code
   committed must have associated automated tests" (Testing page), by PR or direct commit alike, and
@@ -62,8 +62,6 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   injected `LogCaptureConfiguration`; an unexpected error is fixed, `registerExcludes(...)` being
   technical debt.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HStdout2Fstderrvalidationerrors)
-- **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
-  oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
 - **Assertions: the JUnit 5 one where it fits, Hamcrest `assertThat` where it reports better** —
   JUnit 5 has no substring or collection matcher, and `assertTrue(content.contains(x))` fails with
   `expected: <true> but was: <false>`, never showing `content`, where
@@ -72,6 +70,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   restates the matcher is then noise — keep one only where it says something the matcher does not,
   as `assertThat(reason, actual, matcher)`.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices)
+
+## Functional tests: scenarios and the page-object boundary
+
 - **A functional test is a scenario, not a unit test — never pay for the same fixture twice** — a
   `*IT` pays a wiki start, a browser start and a page load per navigation, so what drives its runtime
   is the number of *fixtures*, not the number of assertions. Write scenarios: a method builds its
@@ -136,6 +137,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   `ViewPage` (`BasePage`) already waits for the window `load` event and every pending request, so
   images and async content (anything filled in by a request after the page loads) are in place —
   don't add a wait of your own for them.
+
+## Functional tests: waits, cleanup and containers
+
 - **Don't pay the timeout (Docker functional tests)** — never wait on a timer (`Thread.sleep()`),
   and never burn the full Selenium wait timeout waiting for something that will not appear. The waiting APIs (`findElement`, `findElements`, and
   the `waitUntil…` helpers) are for elements *expected to be present*; to assert an element's
@@ -156,6 +160,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   run beside it (Docker out of Docker), so a host path is not the agent's. Copy files in and out (`withCopyFileToContainer(MountableFile.forHostPath(…), …)`,
   `copyFileFromContainer`).
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDockeroutofDocker)
+
+## URLs and runtime configuration in functional tests
+
 - **A URL generated outside a request uses the wiki descriptor** (XWiki 18.8.0+) — a scheduler mail
   or a reset-password link takes its host/port from the main wiki descriptor, which the framework
   points at the browser's address. Change it for the whole instance with the `wikiDescriptorTarget`
@@ -189,6 +196,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   patterns of several merged `@UITest`s are OR-ed together. A pattern anchored on the test class's
   own name must allow a prefix (`.*:.*MyIT\..*`), the page being `NestedMyIT…` inside an `AllIT`
   (see `TestReference` above).
+
+## Functional-test classes: rights checks, `AllIT` and `@Order`
+
 - **Asserting whose rights code runs with — use Script Right, not Programming Right** — to check
   in a functional test that some stored code runs with the rights of the right author (not a more
   privileged author's), have the unprivileged author's code output a value that only executed
@@ -212,6 +222,11 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   without `@Order` run in an order JUnit leaves unspecified. Keep the source order of the methods
   aligned with their `@Order` values, and place a new method according to its value rather than
   appending it. (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios)
+
+## Unit tests: the lightest base and oldcore
+
+- **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
+  oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
 - **A mandatory class in an `@OldcoreTest`** — to get a real XClass from its
   `MandatoryDocumentInitializer` (rather than mocking `BaseObject`s), list the initializer in
   `@ComponentList` and call `oldcore.getSpyXWiki().initializeMandatoryDocuments(context)` in the
@@ -223,9 +238,14 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   effective metadata author only when the content is dirty. A change made only through objects
   dirties the metadata, so after one user saves a page and another modifies its objects, the content
   author is still the first user and only the metadata author is the second.
+## A mocked component that the code's `Provider` does not return
+
 - **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked
   the role the provider asks for, which differs from the registered one: fix the provider in the
   production code ([[component-system]]), not the mock's type.
+
+## Done once CI proves it; coverage
+
 - **A functional test is done once CI has proven it, not when its PR is merged** — a new or modified
   `*IT`, a flicker fix included, must have run and passed on CI on **every branch** it was merged or
   backported to, in N (default 3) builds of distinct commits containing the merge. What counts as
