@@ -112,7 +112,7 @@ Inside `xwiki/`:
   file rather than on the command line, keeping it out of the process list.
 - **`skills/*/SKILL.md`** — one skill per directory; the `name`/`description` frontmatter is what
   Claude matches against, and what the KB pointer hooks search to name a skill (the files an edit
-  points at a skill for are in `okf/_meta/skills.json`). Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
+  points at a skill for are in `kb/_meta/skills.json`). Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
   cross-reference each other (e.g. `xwiki-convert-tests` vs `xwiki-convert-tests-docker`,
   `xwiki-test-guidelines` building on the others), so when editing one, check the others' "use X
   instead" pointers stay accurate. What only one branch of a run needs — or only a sub-agent reads —
@@ -144,7 +144,7 @@ Inside `xwiki/`:
   it has a byte budget the validator enforces. It lists no KB topic — the KB is reached by search
   (`xwiki/scripts/kb-search.mjs`, the pointer hooks). Put a rule there only when it must be obeyed
   without opening any KB file.
-- **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
+- **Each fact has one home** — a skill, a KB topic, `xwiki-org.md` or README.md — and other places
   point to it instead of restating it. The validator fails a paragraph copied across files and a skill
   or KB file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the
   file. A `SKILL.md` stops at 20,000 bytes (Anthropic's 500-line / 5,000-token guideline); one already

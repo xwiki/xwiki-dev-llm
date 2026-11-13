@@ -47,7 +47,7 @@ node scripts/consolidation-candidates.mjs --exclude <files of open PRs, comma-se
 
 It lists near-duplicate paragraphs (25–50% shared, below the validator's 50%), files at ≥95% of
 their size budget, similar skill descriptions, one-way skill pointers, KB text restated in skills,
-orphan KB topics and `references/` files, and split candidates. **It narrows, it does not decide**:
+KB topics no skill cites and orphan `references/` files, and split candidates. **It narrows, it does not decide**:
 open both sides of every candidate you consider and judge whether they really state the same rule.
 These overlaps are intended and stay:
 
@@ -57,7 +57,9 @@ These overlaps are intended and stay:
 - the same practice in two skills that never load together (e.g. "pipe REST output through `jq`" in
   the JIRA and the OpenProject references), and a file's one-line boilerplate header;
 - a skill that already points to the topic in another form ("see `xwiki-knowledge` → versioning")
-  although `kb-restated` says "does not cite it".
+  although `kb-restated` says "does not cite it";
+- a KB topic no skill cites — search and the pointer hooks reach it; only one missing from
+  `kb/index.md` (or its sub-index) is an orphan.
 
 ### 3. Pick this week's batch
 
@@ -69,7 +71,7 @@ A fix is one of:
 - **Move a rule to its one home and point to it.** The home is the narrowest file every reader of
   the rule already opens: a KB topic for an XWiki fact, the skill for a procedure step,
   `xwiki-org.md` only for what must be obeyed without opening anything. The other place keeps a
-  pointer naming the file (and the section, when the file is long) — never a summary of the rule.
+  pointer naming the file and, for a KB topic, its `##` section — never a summary of the rule.
 - **Tighten wording** — same facts, fewer words. No new facts, no softened or hardened "must".
 - **Cut a procedure to its goal** — replace steps the model would get right unaided (ordinary git,
   shell or Maven mechanics) with what must hold and the non-obvious fact behind it. Keep the steps of
@@ -80,8 +82,9 @@ A fix is one of:
   is below the current entry. Never raise one.
 
 Never: change a version field; edit a manifest, `.mcp.json`, a hook, a `.mjs`/`.js`/`.sh` script, a
-validator threshold or this file; rename or delete a skill, KB topic or `references/` file; change a
-skill's `name`; change what a description routes to; add a "changed on…" note — records state
+validator threshold, a test or this file; rename or delete a skill, KB topic or `references/` file;
+rename a KB `##` heading (search, pointers and the eval gold sections name it: propose it with the
+splits); change a skill's `name`; change what a description routes to; add a "changed on…" note — records state
 current facts, not history. A skill description is edited only to complete a pointer.
 
 ### 4. Split candidates: propose, never perform
@@ -96,12 +99,20 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   move to `references/`, handed over by path; `SKILL.md` keeps the decision flow.
 - **KB topic:** do its sections belong to different topics of `kb/index.md`
   (`foreignSections`), or do different skills each read only one part (`sectionReaders`)?
+- **KB section:** the `##` section is what kb-search retrieves, and one far above the KB's p90
+  section size (`splitSections` in `xwiki/scripts/kb-search.mjs`; about 2.6 KB today) gets skipped,
+  because its pointer cannot say what is inside. Propose splitting it by subject, each heading and
+  first line saying what is inside and naming a trap by its symptom. A large file made of small,
+  well-named sections is not a split candidate, whatever the finder's file-size ranking says.
 - **Global fit:** does the content belong in an *existing* KB topic or reference file? Reuse it
   before creating a file — but not one whose readers differ (a topic on *running* tests is not the
   home of rules for *writing* them), and not where `foreignSections` merely echoes a deliberate
   rules-vs-storage split. Check a new name against its siblings, and list what must follow: the
   `kb/index.md` entry (≤240 bytes each); the topic's search sidecar (`kb/_meta/`, regenerated
-  by `scripts/kb-pipeline/gen-metadata.mjs`); the skill pointers; the README row; and any open PR on those files.
+  by `scripts/kb-pipeline/gen-metadata.mjs`); its `sources:` pins and `applies-to:`/`related:`
+  frontmatter (the edit hooks match on these); the eval gold sections naming a moved heading
+  (`eval/questions/a.json`, `a-sections.json`); the skill pointers; the README row; and any open PR
+  on those files.
 - **How much would really move?** `conditionalSections` is a keyword match on titles and openings
   ("Mode", "Phase", "only when"): open each section and check that most runs skip it — one that most
   runs read is the main path, whatever its title. Subtract what must stay in `SKILL.md` (the
@@ -115,13 +126,14 @@ Follow the finder's ranking; for each higher-ranked candidate you pass over, say
 For each, write in the PR body: the file and why; each target file and which sections move there;
 which skills or sub-agents read each part; and the check a committer runs — move the text by script,
 then `node scripts/consolidation-candidates.mjs --lossless` (every removed sentence must be found
-elsewhere) and both validators, then one trial run of each affected skill, old vs new.
+elsewhere), the step 5 checks and `eval/tools/recall.mjs` old vs new, then one trial run of each
+affected skill, old vs new.
 
 ### 5. Make the changes and verify them
 
 - Branch `claude/weekly-consolidation-<YYYY-MM-DD>`. Keep each file's line endings and its existing
   wrap width; never re-wrap text you did not change.
-- After editing, run all three, and fix or drop a fix until all pass:
+- After editing, run these checks, and fix or drop a fix until all pass:
   - `node scripts/consolidation-candidates.mjs --lossless` — for every sentence it prints, either
     show where its fact is stated now (file and the sentence there; a script's comments count) or
     restore it. A pointer-only replacement is always printed, since the wording at the home differs:
@@ -129,6 +141,18 @@ elsewhere) and both validators, then one trial run of each affected skill, old v
     dropped rule: undo that fix.
   - `node scripts/validate.mjs`
   - `claude plugin validate ./xwiki`
+  - `node --test` — it asserts retrieval on the live KB and skill descriptions. A fix that turns it
+    red is dropped; a test is never edited.
+  - When a KB topic changed: `node eval/tools/recall.mjs` (no model call) for `origin/master` (its
+    `git archive` as `--plugin`) and for your branch. A fix that drops a gold section out of the
+    top 5 changed what is found: drop it.
+- A failure already on `origin/master` (run the checks there first) is not yours to fix: name it in
+  the PR body or run log, and judge only what your change adds.
+- A KB topic whose body you changed fails `validate.mjs` until its search sidecar is regenerated:
+  run `node scripts/kb-pipeline/gen-metadata.mjs --only <path under kb/>` (Haiku through `claude -p`)
+  for each, in the same commit and before the recall check — it rewrites the topic's generated
+  questions, so it too changes what search finds. If it fails, never drop the edit for that alone:
+  keep it and list the topic and that command under `## For a committer`.
 - Re-read each diff hunk against the rule it touched: same trigger, same scope, same strength.
 
 ### 6. Have a critic review the batch
@@ -186,10 +210,12 @@ PR and `--lossless` does not apply.
   means the wiki cannot be read: skip this step and say so in the run log. Take at most **5** changed
   pages whose citing files are not off limits; the rest wait.
 - For each page, read its diff against every citing file:
-  - **It changes or adds a rule** that a citing file states, or that every reader of that file needs:
-    edit the file to say what the page now says, at the same strength. CLAUDE.md's conventions hold —
-    the KB summarizes, detail stays upstream where `sources:` sends the reader; one home per fact; a
-    size budget is raised only under its three tests, stated in the PR body.
+  - **It changes a rule a citing file states:** edit the file to say what the page now says, at the
+    same strength. CLAUDE.md's conventions hold — the KB summarizes, detail stays upstream where
+    `sources:` sends the reader; one home per fact; a size budget is raised only under its three
+    tests, stated in the PR body.
+  - **It adds a rule the KB lacks:** no KB edit. New facts enter the KB in benchmarked extraction
+    batches, so list it under `## For a committer` as a candidate for the next one.
   - **Anything else** — wording, layout, examples, detail the KB leaves upstream, or the page catching
     up with what the KB already says (a KB rule written back upstream): no KB edit.
   - **It contradicts the KB**: no KB edit; quote both texts under `## For a committer`. The KB may
@@ -199,15 +225,21 @@ PR and `--lossless` does not apply.
   Then `node scripts/kb-sources.mjs --pin <url>@<version>…` pins each handled page to the version
   you read (never a later one the diff did not show), flagged ones included: the committer settles
   those in review.
-- Pin an **unpinned** page with no KB edit: a newly cited source was written from the page as it
-  stood. A **moved** page (its version fell below the pin) or one **unreachable** with `no such page`
-  is a dead source: when the wiki's search finds where it went, fix the `sources:` URL and read the
-  new page whole against the citing files before pinning it — no diff spans a move; otherwise list it
-  under `## For a committer`. Any other unreachable reason is transient: leave it. `--pin` also drops
-  unused pins.
-- Run step 5's validators, then one fresh critic as in step 6, given the diff, the page diffs and this
+- An **unpinned** page means `validate.mjs` already fails on master. Pin it to the version the citing
+  text was written from — the one current when the commit adding the URL to `sources:` was made (the
+  page history's dates against `git log -S<url>`), never today's, which would hide the edits made
+  since. When that cannot be told, list it under `## For a committer`.
+- A **moved** page (its version fell below the pin) or one **unreachable** with `no such page` is a
+  dead source: look for its content on dev.xwiki.org, www.xwiki.org (`documentation/`,
+  `Documentation/DevGuide/`) and extensions.xwiki.org — it may have moved, or the URL may never have
+  been right. When found, fix the `sources:` URL and read the new page whole against the citing files
+  — no diff spans a move — then pin it if it is on dev.xwiki.org (`kb-sources.mjs` tracks no other
+  wiki, so a source elsewhere stays unpinned). Otherwise list it under `## For a committer`. Any
+  other unreachable reason is transient: leave it. `--pin` also drops unused pins.
+- Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given the diff, the page diffs and this
   step, asking: does each KB edit state what the page now says — no more, no less, same strength; was
-  a pin moved past a rule change the KB states but was not edited; does an edit copy upstream detail.
+  a pin moved past a rule change the KB states but was not edited; does an edit copy upstream detail;
+does the edited text sit in a section whose heading and first line name it.
 - Nothing to edit or pin: open nothing. Otherwise branch `claude/kb-source-sync-<YYYY-MM-DD>`, one
   commit and the PR as in step 7, titled `[Misc] Weekly KB source sync: <what changed, in a few
   words>`. The body: a table — page | versions (the `viewer=changes` link the finder prints) | edit
