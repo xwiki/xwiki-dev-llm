@@ -180,6 +180,9 @@ function stem(t) {
   return t;
 }
 
+/** A word: letters and digits, joined by `.`, `_`, `'` or `-` into one identifier. */
+const WORD = /[\p{L}\p{N}]+(?:[._'-][\p{L}\p{N}]+)*/gu;
+
 /**
  * Lowercased terms: identifiers are split into their camelCase and `.`/`_`/`-` parts while the
  * joined whole is kept too (`ScriptService` → scriptservice, script, service); stopwords dropped;
@@ -187,7 +190,7 @@ function stem(t) {
  */
 export function tokenize(text) {
   const out = [];
-  const words = String(text).match(/[\p{L}\p{N}]+(?:[._'-][\p{L}\p{N}]+)*/gu) || [];
+  const words = String(text).match(WORD) || [];
   for (const word of words) {
     const parts = word.split(/[._'-]/).flatMap(
       (p) => p.match(/\p{Lu}+(?=\p{Lu}\p{Ll})|\p{Lu}?\p{Ll}+|\p{Lu}+|\p{N}+|[\p{L}\p{N}]+/gu) || []);
@@ -428,15 +431,23 @@ export function promptToQuery(prompt) {
   return space > QUERY_MAX / 2 ? cut.slice(0, space) : cut;
 }
 
-/** Weighted query terms: the query's own at 1, glossary synonyms of a matched group at 0.5. */
+/**
+ * Weighted query terms, `term → { weight, word }`: the query's own at 1, glossary synonyms of a matched
+ * group at 0.5. `word` is the query word a term comes from (a synonym is a word of its own), so that
+ * an identifier counts once: `xwiki-platform` scores as the best of xwikiplatform, xwiki and platform,
+ * not their sum.
+ */
 export function queryTerms(query, glossary = []) {
   const terms = new Map();
-  const tokens = tokenize(query);
-  for (const t of tokens) terms.set(t, 1);
-  const present = new Set(tokens);
+  (String(query).match(WORD) || []).forEach((word, i) => {
+    for (const t of tokenize(word)) if (!terms.has(t)) terms.set(t, { weight: 1, word: i });
+  });
+  const present = new Set(terms.keys());
   for (const group of glossary) {
     if (!group.some((member) => member.every((t) => present.has(t)))) continue;
-    for (const member of group) for (const t of member) if (!terms.has(t)) terms.set(t, GLOSSARY_WEIGHT);
+    for (const member of group) {
+      for (const t of member) if (!terms.has(t)) terms.set(t, { weight: GLOSSARY_WEIGHT, word: `=${t}` });
+    }
   }
   return terms;
 }
@@ -494,19 +505,23 @@ function resolveRelated(index, ref) {
  */
 export function search(index, query, { k = DEFAULT_K, version, skills = false } = {}) {
   const N = index.sections.length;
-  const scores = new Map();
-  for (const [term, qw] of queryTerms(query, index.glossary)) {
+  const byWord = new Map(); // query word → (section → its best term's score)
+  for (const [term, { weight, word }] of queryTerms(query, index.glossary)) {
     if (!Object.hasOwn(index.postings, term)) continue;
     const posting = index.postings[term];
     const df = posting.length / 2;
     const idf = Math.log(1 + (N - df + 0.5) / (df + 0.5));
+    if (!byWord.has(word)) byWord.set(word, new Map());
+    const best = byWord.get(word);
     for (let i = 0; i < posting.length; i += 2) {
       const s = posting[i];
       const tf = posting[i + 1];
       const norm = K1 * (1 - B + (B * index.sections[s].length) / index.avgLength);
-      scores.set(s, (scores.get(s) || 0) + qw * idf * ((tf * (K1 + 1)) / (tf + norm)));
+      best.set(s, Math.max(best.get(s) || 0, weight * idf * ((tf * (K1 + 1)) / (tf + norm))));
     }
   }
+  const scores = new Map();
+  for (const best of byWord.values()) for (const [s, v] of best) scores.set(s, (scores.get(s) || 0) + v);
   let ranked = [...scores]
     .filter(([s]) => skills || index.files[index.sections[s].file].kind !== "skill")
     .filter(([s]) => !version || versionMatches(index.files[index.sections[s].file].versions, version))
