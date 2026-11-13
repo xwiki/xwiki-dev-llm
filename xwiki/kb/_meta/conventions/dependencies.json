@@ -1,0 +1,56 @@
+{
+  "file": {
+    "questions": [
+      "What checks must a third-party library pass before we can add it to XWiki?",
+      "Can we use a library with a GPL or other non-LGPL license in an XWiki distribution?",
+      "When does adding a dependency that misses one of the criteria need a community vote?",
+      "How do I judge whether an open source project is maintained well enough to depend on it?"
+    ],
+    "aliases": [
+      "dependency approval process",
+      "library acceptance criteria",
+      "new library policy",
+      "license check for dependencies"
+    ]
+  },
+  "sections": {
+    "Accepting a new third-party dependency": {
+      "questions": [
+        "What criteria does an open source library have to meet before I add it to the XWiki distribution?",
+        "How do I check whether a library project is active and responsive enough to rely on?",
+        "The library I want is missing one requirement but nothing else fits, can a vote approve it anyway?"
+      ],
+      "aliases": [
+        "adding a new library",
+        "vetting an open source jar",
+        "dependency approval checklist",
+        "new jar approval"
+      ]
+    },
+    "Upgrading a JavaScript dependency": {
+      "questions": [
+        "Why does pnpm rewrite pnpm-lock.yaml after I bump an npm package and CI fails?",
+        "Which pnpm version should I use to regenerate the lockfile when upgrading a node module?",
+        "How do I remove duplicated package versions from the lockfile after updating a JavaScript dependency?"
+      ],
+      "aliases": [
+        "npm package upgrade",
+        "bump a node module",
+        "pnpm lockfile update",
+        "pnpm dedupe"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/commit-messages.md",
+      "servers/jira.md"
+    ],
+    "applies-to": [
+      "**/pom.xml",
+      "**/package.json",
+      "**/pnpm-lock.yaml"
+    ]
+  },
+  "source_hash": "69b7bcc03285ee22ee188a95db8e87381c024325d138264c7d2b7c472fc8c927"
+}

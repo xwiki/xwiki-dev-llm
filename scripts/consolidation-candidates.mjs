@@ -135,7 +135,7 @@ for (const p of tracked.filter(isBudgeted)) press(p, "file", bytes(read(p)), bud
 const orgMd = read("xwiki/instructions/xwiki-org.md");
 const kbIndex = read("xwiki/kb/index.md");
 press("xwiki/instructions/xwiki-org.md", "always-on file", bytes(orgMd), ORG_MAX_BYTES);
-press("xwiki/instructions/xwiki-org.md", "KB map block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
+press("xwiki/instructions/xwiki-org.md", "knowledge-base block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
 press("xwiki/kb/index.md", "file", bytes(kbIndex), KB_INDEX_MAX_BYTES);
 for (const e of kbIndexEntries(kbIndex)) press("xwiki/kb/index.md", `entry '${e.name}'`, bytes(e.text), KB_ENTRY_MAX_BYTES);
 

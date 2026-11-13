@@ -1,0 +1,113 @@
+{
+  "file": {
+    "questions": [
+      "Which SonarCloud issues can I safely fix in xwiki-platform, and which look mechanical but break something?",
+      "How do I tell whether a Sonar warning in XWiki Java code is a real defect or a false positive before I change it?",
+      "Which static analysis rules should I never bulk-fix in XWiki code?",
+      "Can I just mark a SonarCloud issue as accepted instead of changing the code?"
+    ],
+    "aliases": [
+      "SonarCloud",
+      "Sonar",
+      "static analysis warnings",
+      "code smells",
+      "sonar rules"
+    ]
+  },
+  "sections": {
+    "SonarQube rule fixes — index / map": {
+      "questions": [
+        "Where do I start when I want to fix a SonarCloud issue in XWiki code?",
+        "Which doc tells me what makes a Sonar fix correct for xwiki-platform and not just technically valid?",
+        "What is the overall map of Sonar rules and the caveats for each in XWiki?"
+      ],
+      "aliases": [
+        "sonar fix guide",
+        "sonar rules overview",
+        "sonar fix entry point"
+      ]
+    },
+    "How to use this (READ)": {
+      "questions": [
+        "I have a specific Sonar rule number in front of me, which file do I open to fix it?",
+        "How do I avoid loading the whole Sonar guide when I only need one rule's fix details?",
+        "What should I check besides the rule-specific notes before I apply a Sonar change?"
+      ],
+      "aliases": [
+        "rule lookup",
+        "sonar rule key"
+      ]
+    },
+    "Rule map": {
+      "questions": [
+        "Which family file covers rule S1116 or S1192 in XWiki?",
+        "I got a Sonar rule key like S1488 or S6208, where is its transform and its drop conditions written up?"
+      ],
+      "aliases": [
+        "rule key table",
+        "rule index",
+        "sonar rule to file"
+      ]
+    },
+    "Rules not worth fixing (denylist)": {
+      "questions": [
+        "Should I try to reduce the cognitive complexity of a method Sonar flags with S3776?",
+        "Why does Sonar want me to remove a toString() in a log call, and why should I leave it?",
+        "Is it safe to make a public constructor or method protected to clear a Sonar issue?",
+        "Why is the transient keyword on a job or request class something Sonar must not change?"
+      ],
+      "aliases": [
+        "false positives",
+        "wontfix sonar rules",
+        "do not fix list"
+      ]
+    },
+    "Universal drop conditions": {
+      "questions": [
+        "When should I throw away a Sonar fix even if the change looks correct?",
+        "My Sonar fix pushes a line over 120 characters, what do I do?",
+        "What makes a fix fail the Revapi or JaCoCo gate, so I should drop it?"
+      ],
+      "aliases": [
+        "fix rejection criteria",
+        "120 character limit",
+        "when to drop a fix"
+      ]
+    },
+    "Retiring an issue that should not be fixed": {
+      "questions": [
+        "How do I deal with a Sonar issue that is a genuine false positive?",
+        "What is the right way to suppress a SonarCloud warning so the next developer understands why?",
+        "Is it enough to mark the issue as accepted or won't fix in the SonarCloud UI?"
+      ],
+      "aliases": [
+        "suppress sonar issue",
+        "mark accepted",
+        "wontfix",
+        "false positive"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "After I read the Sonar index, which other docs should I open to verify a fix or write the suppression comment?",
+        "Where are the verification steps and the style rules for a Sonar change?"
+      ],
+      "aliases": [
+        "see also",
+        "further reading"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/verification.md",
+      "conventions/code-style.md",
+      "conventions/backward-compatibility.md",
+      "conventions/logging.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "be90a00065996888e6e379567e030ded1079754643f5ac0abcda53d4da93f17d"
+}

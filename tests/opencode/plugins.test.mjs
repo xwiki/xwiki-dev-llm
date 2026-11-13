@@ -26,6 +26,7 @@ test('every opencode plugin registers its hooks under the opencode binary argv',
     'xwiki-commit-text.js': ['tool.execute.before'],
     'xwiki-commit-gates.js': ['tool.execute.before', 'tool.execute.after'],
     'xwiki-line-endings.js': ['tool.execute.after'],
+    'xwiki-kb-pointers.js': ['chat.message', 'tool.execute.after'],
   };
   for (const [file, hooks] of Object.entries(expected)) {
     const plugin = (await import(pathToFileURL(join(HOME, 'xwiki', 'opencode', 'plugins', file)).href)).default;

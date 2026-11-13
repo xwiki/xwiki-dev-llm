@@ -1,0 +1,168 @@
+{
+  "file": {
+    "questions": [
+      "What coding style rules apply to XWiki Java code before I open a pull request?",
+      "Do new XWiki source files need a license header, and which comment syntax do I use for each file type?",
+      "Where are the XWiki code conventions written down, and which one wins if they disagree?",
+      "Why does the build fail on my Java change even though it compiles?"
+    ],
+    "aliases": [
+      "CodeStyle",
+      "coding conventions",
+      "coding guidelines",
+      "LGPL header",
+      "copyright header"
+    ]
+  },
+  "sections": {
+    "Code style and structural conventions": {
+      "questions": [
+        "What structural rules should I follow when adding new classes to XWiki Java code?",
+        "Is there a checklist of XWiki code style rules to check before submitting a contribution?",
+        "How do I keep my XWiki Java change consistent with the rest of the codebase?"
+      ],
+      "aliases": [
+        "code structure rules",
+        "XWiki Java conventions"
+      ]
+    },
+    "Formatting": {
+      "questions": [
+        "What is the maximum line length in XWiki Java source files, and what happens if I exceed it?",
+        "Which license header goes at the top of a new file, and how do I add it to a dotfile or XML file?",
+        "Should I hard-wrap long text in commit messages or documentation I write for XWiki?"
+      ],
+      "aliases": [
+        "Checkstyle line length",
+        "license-maven-plugin",
+        "license:format"
+      ]
+    },
+    "Comment formatting": {
+      "questions": [
+        "Why does review reject my one-line Javadoc comment on a private constant?",
+        "How should I format a short Javadoc, even in a test class, so it matches XWiki style?",
+        "When I touch a file with one-line Javadoc comments, should I convert them?"
+      ],
+      "aliases": [
+        "one-line javadoc",
+        "multi-line javadoc",
+        "Javadoc style"
+      ]
+    },
+    "File encoding": {
+      "questions": [
+        "What encoding should a .properties translation file use in XWiki, and how do I write accented characters in it?",
+        "How do I put non-ASCII characters in a Java string without Checkstyle failing on invisible characters?",
+        "Why does the build reject a zero-width space or BOM in my source file?"
+      ],
+      "aliases": [
+        "ISO-8859-1",
+        "unicode escape",
+        "\\uXXXX",
+        "bidi characters",
+        "UTF-8 source"
+      ]
+    },
+    "Rendering macros": {
+      "questions": [
+        "Should I write a new XWiki macro as a wiki page or as Java code?",
+        "Why can't I build a full platform macro with wiki script alone?"
+      ],
+      "aliases": [
+        "wiki macro vs Java macro",
+        "macro implementation",
+        "script macro"
+      ]
+    },
+    "Use the component system, not context passing": {
+      "questions": [
+        "Should I pass the XWikiContext through method parameters or inject a service in new XWiki code?",
+        "How do I get a service or helper in XWiki without threading the context object through every call?",
+        "How do I declare a new injectable class with @Component in XWiki?"
+      ],
+      "aliases": [
+        "dependency injection",
+        "context passing",
+        "@Inject",
+        "components.txt"
+      ]
+    },
+    "javax → jakarta migration": {
+      "questions": [
+        "Which package should I import @Inject, @Named and Provider from in new XWiki code, javax or jakarta?",
+        "Why does my XWiki change import javax.inject and what should I replace it with?",
+        "How do I move a class from javax to jakarta namespaces in XWiki?"
+      ],
+      "aliases": [
+        "jakarta EE migration",
+        "javax.inject",
+        "jakarta.inject",
+        "Jakarta namespace"
+      ]
+    },
+    "-legacy modules": {
+      "questions": [
+        "Can I add new logic or a new feature to an xwiki legacy module?",
+        "Is it allowed for a regular XWiki module to depend on a -legacy module?",
+        "What is the legacy Maven profile and when do I need to activate it?"
+      ],
+      "aliases": [
+        "legacy module",
+        "deprecated API wrapper",
+        "xwiki-*-legacy"
+      ]
+    },
+    "Backward compatibility": {
+      "questions": [
+        "Will my change to a public API break existing extensions, and how does the build check it?",
+        "How can I evolve an interface without breaking classes that already implement it?",
+        "What does Revapi report in my pull request and how do I deal with it?"
+      ],
+      "aliases": [
+        "API compatibility",
+        "binary compatibility",
+        "Revapi",
+        "breaking change",
+        "@Unstable"
+      ]
+    },
+    "Suppressing a static-analysis warning": {
+      "questions": [
+        "How do I silence a SonarQube or SonarCloud issue in the code instead of marking it accepted in the UI?",
+        "Where does the @SuppressWarnings annotation go for a Sonar rule, and what should the comment above it say?",
+        "How do I suppress one Sonar rule across many files, for example in the -legacy modules?"
+      ],
+      "aliases": [
+        "sonar suppression",
+        "java:S rule suppression",
+        "sonar.issue.ignore.multicriteria",
+        "accepted issue"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which other convention pages should I read after the code style rules?",
+        "Where can I find the rules on @since, @Deprecated versions and comment content?"
+      ],
+      "aliases": [
+        "see also",
+        "further reading"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/backward-compatibility.md",
+      "architecture/component-system.md",
+      "conventions/code-comments.md",
+      "sonarqube/index.md"
+    ],
+    "applies-to": [
+      "**/*.java",
+      "**/*.properties",
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "f5c120af65c999efe1046ae79e2522c1c22f2350f18bde44a0e896f2a5553eff"
+}

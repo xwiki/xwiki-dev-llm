@@ -1,6 +1,7 @@
 // Shell command-line parsing shared by the hooks that read a Bash command: check-commit-text.mjs
-// (which part of a compound command is the commit message) and check-diff.mjs (whether a command
-// commits, and what). Not a shell: good enough for the shapes an agent writes, and every caller
+// (which part of a compound command is the commit message), check-diff.mjs (whether a command
+// commits, and what) and kb-hooks.mjs (whether a command can have written a file). Not a shell: good
+// enough for the shapes an agent writes, and every caller
 // treats a null (unbalanced quoting) as "cannot tell".
 
 // Placeholder left where a heredoc's `<<TAG` stood (control characters, which no command holds),

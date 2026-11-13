@@ -6,6 +6,9 @@ summary: Analyse a test's failures across CI builds with `dv-test-history` (xwik
   finding candidates with `--recent-failures`, and why a `flaky` outcome is a plain failure in XWiki.
 sources:
   - https://github.com/xwiki/xwiki-dev-tools/blob/master/bash/dv-test-history
+provenance: official
+last-confirmed: 2026-10-17
+related: [servers/jenkins.md, testing/flickers.md, testing/ci-watch.md, servers/index.md]
 ---
 
 # Develocity: a test's failure history
@@ -42,7 +45,7 @@ execution across builds, branches and configurations. Server map and MCP: [[inde
 
 Lists every test that failed in the window (default 24 h) across XWiki builds, with its rate,
 branches and browsers, whether it is `new` or `known` (against `--baseline-days`, default 14; `0`
-saves a request per container), and ready-to-run commands for the most interesting ones. Trap: the
+saves a request per container but drops the baseline column and the new/known status), and ready-to-run commands for the most interesting ones. Trap: the
 baseline column covers the preceding days, `fails`/`flaky`/`runs` only the window — only the two
 percentages are comparable.
 

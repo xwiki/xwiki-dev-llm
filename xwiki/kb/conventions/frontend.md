@@ -13,6 +13,10 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/use-css-properties/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
+provenance: official
+last-confirmed: 2026-11-03
+related: [conventions/server-side-rendering.md, conventions/backward-compatibility.md, conventions/naming.md, conventions/translations.md]
+applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css"]
 ---
 
 # Front-end conventions

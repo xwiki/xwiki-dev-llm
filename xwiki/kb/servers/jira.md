@@ -8,6 +8,10 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
+  - https://www.xwiki.org/xwiki/bin/view/Main/Support/
+provenance: official
+last-confirmed: 2026-11-01
+related: [conventions/versioning.md, conventions/commit-messages.md, processes/release-notes.md, testing/flickers.md]
 ---
 
 # JIRA (`jira.xwiki.org`)
@@ -268,6 +272,8 @@ cycle is the current LTS (the in-progress cycle's `.10` does not exist yet), and
 - **Current dev version** (drives Fix Version) → read the repo root `pom.xml` `<version>`, or SNAPSHOT
   jar names under `~/.m2` / nexus (see [[index]] and [[versioning]]).
 - **Which JIRA version names exist / are released** →
-  `GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions` (each entry has `released` and
-  `releaseDate`); the latest released feature line and the current LTS are read from there.
-- **Support strategy / which lines are supported LTS** → `curl` the `sources:` SupportStrategy page.
+  `GET https://jira.xwiki.org/rest/api/2/project/XWIKI/versions` (each entry has `name`, `released`
+  and `releaseDate`); the latest released feature line is read from there, but it has no LTS marker.
+- **Which versions are supported** → the "Supported Versions" section of xwiki.org's Support page
+  (https://www.xwiki.org/xwiki/bin/view/Main/Support#HSupportedVersions), which links to
+  VersioningAndReleasePractices for the current LTS lines.

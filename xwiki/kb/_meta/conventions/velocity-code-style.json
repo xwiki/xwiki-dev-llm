@@ -1,0 +1,116 @@
+{
+  "file": {
+    "questions": [
+      "How do I write Velocity templates that follow XWiki's code style?",
+      "What formatting and naming rules apply to .vm files in XWiki?",
+      "How do I avoid leaking return values into output when calling a Java method from Velocity?",
+      "Should I prefix a Velocity macro with an underscore if it is internal only?"
+    ],
+    "aliases": [
+      "VTL style guide",
+      "Velocity coding conventions",
+      "Velocity template conventions",
+      "xwiki velocity style"
+    ]
+  },
+  "sections": {
+    "Velocity code style": {
+      "questions": [
+        "What is the coding style guide for Velocity templates in XWiki?",
+        "How should I format and name things in a .vm file or a wiki page script?"
+      ],
+      "aliases": [
+        "VTL conventions",
+        "Velocity style guide"
+      ]
+    },
+    "Capture unused return values in `$discard`": {
+      "questions": [
+        "How do I stop a Java method call in Velocity from printing its return value into the page?",
+        "Why does my Velocity template output a blank line or a stray value when I call a method without using the result?",
+        "How do I call a setter-like method from Velocity and discard what it returns?"
+      ],
+      "aliases": [
+        "velocity discard variable",
+        "suppress velocity output",
+        "velocity void method call"
+      ]
+    },
+    "Formatting": {
+      "questions": [
+        "Do I put a space between #if and the parenthesis in Velocity?",
+        "Why does #template or #error not follow the usual directive spacing in Velocity?",
+        "How many spaces should I indent Velocity code by?"
+      ],
+      "aliases": [
+        "velocity indentation",
+        "velocity whitespace rules",
+        "velocity directive spacing"
+      ]
+    },
+    "Naming and references": {
+      "questions": [
+        "What naming convention should I use for variables and macros in Velocity?",
+        "When do I need curly braces around a variable name in Velocity?",
+        "Should I use single or double quotes for strings in Velocity templates?",
+        "How do I name a Velocity macro that is only meant for internal use in XWiki?"
+      ],
+      "aliases": [
+        "velocity macro naming",
+        "private velocity macro",
+        "velocity variable naming",
+        "velocity string quotes"
+      ]
+    },
+    "A macro declares the variables it writes": {
+      "questions": [
+        "How do I make a Velocity macro return a value to the caller?",
+        "Why does my Velocity macro not change the variable I expected at the call site?",
+        "How should a Velocity macro receive a variable it modifies?"
+      ],
+      "aliases": [
+        "velocity macro output variable",
+        "velocity macro side effects",
+        "velocity macro return value"
+      ]
+    },
+    "Comments": {
+      "questions": [
+        "How do I write a multi-line comment in a Velocity template?",
+        "What should a comment at the top of a Velocity script say?",
+        "Should Velocity comments start with a capital letter and end with a period?"
+      ],
+      "aliases": [
+        "velocity comment syntax",
+        "velocity block comment",
+        "vm file comments"
+      ]
+    },
+    "Related — the Velocity rules that live in another topic": {
+      "questions": [
+        "Where are the rules about blank lines and space gobbling in Velocity templates?",
+        "How do I call a script service from Velocity without checking getLastError?",
+        "How do I escape a translation parameter in Velocity?",
+        "Where do I find the Java-side code style rules that match the Velocity ones?"
+      ],
+      "aliases": [
+        "velocity related rules",
+        "velocity whitespace gobbling",
+        "velocity script service errors"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/server-side-rendering.md",
+      "conventions/script-services.md",
+      "conventions/security.md",
+      "conventions/code-style.md"
+    ],
+    "applies-to": [
+      "**/*.vm",
+      "**/src/main/resources/**/*.xml"
+    ]
+  },
+  "source_hash": "9b66f9799e83ac27b313f248a2d358ebc9c6d83491c66d400326352de4673811"
+}

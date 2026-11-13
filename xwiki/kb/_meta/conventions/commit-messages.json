@@ -1,0 +1,43 @@
+{
+  "file": {
+    "questions": [
+      "What format should my git commit message follow in XWiki?",
+      "What do I put in the first line of a commit for a JIRA issue in xwiki-platform?",
+      "Do I need a JIRA issue for a small change, or can I commit it as [Misc]?",
+      "How do I write a commit for a security fix without revealing the vulnerability?"
+    ],
+    "aliases": [
+      "git commit format",
+      "commit message template",
+      "commit subject line",
+      "JIRA key in commit message",
+      "XWIKI ticket reference in commit"
+    ]
+  },
+  "sections": {
+    "Commit message convention": {
+      "questions": [
+        "Should the first line of my commit copy the JIRA ticket title, or can I write my own sentence?",
+        "How do I describe what this particular commit changes when several commits reference the same issue?",
+        "My change is trivial and has no JIRA issue. What tag goes in front of the commit message?",
+        "Does a dependency bump need a JIRA issue before I can commit it?"
+      ],
+      "aliases": [
+        "commit summary line",
+        "commit title",
+        "[Misc] tag",
+        "commit body bullets"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jira.md",
+      "processes/security-policy.md",
+      "processes/release-notes.md",
+      "conventions/dependencies.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "3d3569d8efbb8ba84447f86a4475b8e906a7f8ac400d445ab33c61d4b36a7359"
+}

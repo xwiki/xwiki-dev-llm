@@ -1,0 +1,66 @@
+{
+  "file": {
+    "questions": [
+      "Which XWiki branches should I backport my bug fix to?",
+      "How does XWiki number its releases, and do commons, rendering and platform share a version?",
+      "Does an ordinary fix go into the latest monthly stable release or wait for the next one?",
+      "Where are the steps for cutting an XWiki release?"
+    ],
+    "aliases": [
+      "XWiki release process",
+      "release train",
+      "backport policy",
+      "LTS policy",
+      "support strategy"
+    ]
+  },
+  "sections": {
+    "Release and versioning process (outline)": {
+      "questions": [
+        "How does XWiki number its versions and decide what goes into each release?",
+        "What is the high-level release cycle for XWiki before I start preparing a release?",
+        "Which XWiki projects get released together with the same version number?"
+      ],
+      "aliases": [
+        "release overview",
+        "versioning overview"
+      ]
+    },
+    "Durable facts": {
+      "questions": [
+        "Can I backport my fix to the current monthly stable release or does it have to wait for the next one?",
+        "Which LTS branches are maintained in parallel right now, and how do I work out their version numbers from the pom?",
+        "When is a fix allowed on an older LTS branch, and only for security issues?",
+        "Where are XWiki release artifacts and snapshots published so extensions can consume them?"
+      ],
+      "aliases": [
+        "backport targets",
+        "LTS branches",
+        "stable branch policy",
+        "maintenance branches"
+      ]
+    },
+    "Volatile — follow the pointer, do not cache": {
+      "questions": [
+        "Where do I find the current XWiki release plan, its dates, and who the release managers are?",
+        "What are the detailed steps to perform an XWiki release?",
+        "How do I find the current development version of XWiki in the root pom?"
+      ],
+      "aliases": [
+        "release schedule",
+        "release managers",
+        "release plan"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/backward-compatibility.md",
+      "processes/security-policy.md",
+      "processes/release-notes.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "7a290b76151fb6138f68384b954a89cc81820d8edd23aa1dcbd15479296e1657"
+}

@@ -1,0 +1,80 @@
+{
+  "file": {
+    "questions": [
+      "I've moved my old wiki page content into the new documentation tree. What do I do with the original page now?",
+      "How do I clean up an extension page on extensions.xwiki.org after I've moved its docs to xwiki.org?",
+      "When is it safe to publish a batch of migrated documentation pages on xwiki.org?",
+      "Should I delete the old documentation page after migrating its content somewhere else?"
+    ],
+    "aliases": [
+      "documentation migration cleanup",
+      "e.x.o extension page after migration",
+      "source page after moving docs",
+      "xwiki-doc-convert leftover page",
+      "old Documentation space page"
+    ]
+  },
+  "sections": {
+    "Handling the original page after a documentation migration": {
+      "questions": [
+        "I finished moving a documentation page to the new tree, what's left to do on the old one?",
+        "Should I delete the old Documentation space page once its content is in the new location?",
+        "How do I keep old anchor links working after I split a page and move only part of it?"
+      ],
+      "aliases": [
+        "source page",
+        "legacy documentation page",
+        "anchor preservation with id macro",
+        "old page after migration"
+      ]
+    },
+    "Deleting the original page's attachments": {
+      "questions": [
+        "The old page's images are still attached after I removed the text. Can I delete them?",
+        "How do I check that an attachment was copied before I remove it from the original extension page?",
+        "My migrated video was re-encoded to webm with a new name. How do I confirm the old attachment is safe to remove?"
+      ],
+      "aliases": [
+        "orphaned attachments",
+        "leftover images and videos",
+        "delete attachments after migration",
+        "re-encoded video"
+      ]
+    },
+    "Repointing backlinks": {
+      "questions": [
+        "Which backlinks on the old documentation page do I need to update after moving its content?",
+        "Should I change every link to the old extension page once its docs have moved?",
+        "How do I find all pages that link to a page I'm migrating away from?"
+      ],
+      "aliases": [
+        "incoming links",
+        "inbound links",
+        "back references",
+        "link triage"
+      ]
+    },
+    "Where an e.x.o extension page keeps its prose": {
+      "questions": [
+        "Besides the description field, where is the documentation text stored on an extension page?",
+        "My migrated extension docs are missing an installation section. Where else does the text live?",
+        "Which xproperties on an extension page hold documentation I need to migrate?"
+      ],
+      "aliases": [
+        "xproperty",
+        "ExtensionClass fields",
+        "extension description field",
+        "compatibility field"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/page-deletion.md",
+      "conventions/documentation.md",
+      "conventions/documentation-mechanics.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "b495cf7c42731a2b99aafb473277ad4790d4b5387f1f3de758a31c629ca55426"
+}

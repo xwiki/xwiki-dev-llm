@@ -17,7 +17,7 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB map, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB index, KB search metadata current, no repeated JSON key, size budgets, copied paragraphs)
 node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
@@ -79,7 +79,10 @@ Inside `xwiki/`:
   `kimi.plugin.json` runs the same script as a `UserPromptSubmit` hook in `prompt` mode instead,
   which injects once per session id. Written in Node (which Claude
   Code ships) so it is cross-platform with no bash/`jq` dependency. The scoping rule lives in
-  `scripts/repo-scope.mjs`, shared with the commit diff check.
+  `scripts/repo-scope.mjs`, shared with the KB pointer hooks (`scripts/kb-hooks.mjs`) and the commit
+  diff check. The pointer hooks see an edit made through Bash (`sed -i`, a heredoc, a script) by a
+  `PostToolUse` hook that diffs the work tree against a per-session snapshot; `scripts/shell-commands.mjs`
+  is the shell-command parser they share with the commit/PR text guard and the commit diff check.
 - **`scripts/state-dir.mjs`** — the only place that decides where the plugin keeps per-machine state
   outside a repo (`XDG_STATE_HOME`/`LOCALAPPDATA` and their fallbacks): the work directory
   (`workRoot()`, used by the `SessionStart` hook), the Docker IT slot files (`itSlotDir()`, used
@@ -104,7 +107,8 @@ Inside `xwiki/`:
   which a static MCP manifest cannot express; the credential goes into a temporary 0600 profile
   file rather than on the command line, keeping it out of the process list.
 - **`skills/*/SKILL.md`** — one skill per directory; the `name`/`description` frontmatter is what
-  Claude matches against. Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
+  Claude matches against, and what the KB pointer hooks search to name a skill (the files an edit
+  points at a skill for are in `okf/_meta/skills.json`). Every skill's `name` (and its directory) is prefixed `xwiki-`. The skills
   cross-reference each other (e.g. `xwiki-convert-tests` vs `xwiki-convert-tests-docker`,
   `xwiki-test-guidelines` building on the others), so when editing one, check the others' "use X
   instead" pointers stay accurate. What only one branch of a run needs — or only a sub-agent reads —
@@ -112,10 +116,11 @@ Inside `xwiki/`:
   be opened; a rule that must be in view at an irreversible write (a post, a comment, a PR) stays in
   SKILL.md.
 - **`opencode/plugins/*.js`** — opencode plugins (host-specific wrappers). Currently
-  `xwiki-line-endings.js`, `xwiki-commit-text.js` and `xwiki-commit-gates.js`, which port the
-  line-ending and commit/PR text guards and the commit gates to opencode and reuse
-  `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs` and `scripts/check-diff.mjs`
-  (each exports a shared check function; run directly it is still the Claude/Kimi CLI hook). Each
+  `xwiki-line-endings.js`, `xwiki-commit-text.js`, `xwiki-commit-gates.js` and `xwiki-kb-pointers.js`,
+  which port the line-ending and commit/PR text guards, the commit gates and the KB pointer hooks to
+  opencode and reuse `scripts/check-line-endings.mjs`, `scripts/check-commit-text.mjs`,
+  `scripts/check-diff.mjs` and `scripts/kb-hooks.mjs` (each exports a shared function; run directly it
+  is still the Claude/Kimi CLI hook). Each
   plugin's default export carries both APIs: `server` for opencode 1.x (`tool.execute.*` hooks) and
   `setup` for opencode 2.x (`ctx.tool.hook("execute.*")`), which refuses a module without it. opencode resolves the shared assets
   through the `XWIKI_LLM_HOME` env var (which points at the checkout), since it has no plugin
@@ -132,9 +137,10 @@ Inside `xwiki/`:
   each other. The release — including which segment moves — is cut on `master` afterwards; see
   **Release** above.
 - **`xwiki/instructions/xwiki-org.md` is injected into every session** in every `xwiki/*` repo, so
-  it has a byte budget the validator enforces. Its KB map lists topic *names*; a topic is described
-  in `xwiki/kb/index.md`. Put a rule there only when it must be obeyed without opening any KB file.
-- **Each fact has one home** — a skill, a KB topic, `xwiki-org.md` or README.md — and other places
+  it has a byte budget the validator enforces. It lists no KB topic — the KB is reached by search
+  (`xwiki/scripts/kb-search.mjs`, the pointer hooks). Put a rule there only when it must be obeyed
+  without opening any KB file.
+- **Each fact has one home** — a skill, an OKF topic, `xwiki-org.md` or README.md — and other places
   point to it instead of restating it. The validator fails a paragraph copied across files and a skill
   or KB file over its entry in `scripts/size-budgets.json`; lower an entry when a cleanup shrinks the
   file. A `SKILL.md` stops at 20,000 bytes (Anthropic's 500-line / 5,000-token guideline); one already

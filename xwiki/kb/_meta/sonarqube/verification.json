@@ -1,0 +1,109 @@
+{
+  "file": {
+    "questions": [
+      "How do I know a SonarCloud fix is actually correct and not just compiling?",
+      "Why did CI fail after my Sonar cleanup even though the local build passed?",
+      "What checks should I run before pushing a fix for a SonarQube issue?",
+      "Can I skip tests to speed up the build while fixing Sonar findings?"
+    ],
+    "aliases": [
+      "SonarCloud fix validation",
+      "Sonar issue fix checks",
+      "sonar rule fix testing",
+      "jacoco coverage ratio failure"
+    ]
+  },
+  "sections": {
+    "Verifying a SonarQube fix": {
+      "questions": [
+        "What makes a Sonar fix verified rather than just compiling?",
+        "Which gates decide whether my SonarCloud fix is correct before I open a PR?",
+        "How do I check a Sonar fix against the rules and build that CI will run?"
+      ],
+      "aliases": [
+        "sonar fix verification",
+        "SonarCloud fix checklist"
+      ]
+    },
+    "Run the tests — never skip them": {
+      "questions": [
+        "Can I pass -DskipTests or -DskipITs when fixing a Sonar issue to save time?",
+        "My unit tests fail after a Sonar cleanup; should I fix the test or the change?",
+        "Why do some mechanical Sonar fixes break at runtime even though they compile?"
+      ],
+      "aliases": [
+        "skipTests maven flag",
+        "skip unit tests sonar fix"
+      ]
+    },
+    "`-Plegacy,quality` is mandatory": {
+      "questions": [
+        "Which Maven profiles do I need to build a module when fixing a Sonar issue?",
+        "Why does jacoco:check fail in CI when my local install was green?",
+        "What does the quality profile enable, and do I need the legacy modules too?"
+      ],
+      "aliases": [
+        "-Pquality profile",
+        "legacy profile maven"
+      ]
+    },
+    "Removing covered instructions always lowers the ratio": {
+      "questions": [
+        "Why did my cleanup drop the module's coverage below its threshold without adding code?",
+        "Removing dead or redundant code made the jacoco percentage go down, is that a bug in my change?",
+        "What should I do when a simplification pushes a module under its instruction coverage ratio?"
+      ],
+      "aliases": [
+        "jacoco ratio drop after removal",
+        "instruction coverage threshold"
+      ]
+    },
+    "Reactor semantics when something fails": {
+      "questions": [
+        "A Maven multi-module build failed in a module I never touched; is that my problem?",
+        "How do I tell a pre-existing Revapi failure from one my change caused?",
+        "After one module fails in the reactor, which modules do I need to rebuild?"
+      ],
+      "aliases": [
+        "maven reactor failure",
+        "revapi visibilityReduced failure"
+      ]
+    },
+    "The quality gate measures NEW code — and a rewrite re-dates old findings": {
+      "questions": [
+        "Why did the Sonar quality gate fail on old issues after I rewrote one line?",
+        "My PR is red on new code reliability even though the bug was there for years, why?",
+        "How do I check whether editing a region will bring old SonarCloud findings back into the new-code period?",
+        "How do I run a pull request analysis so Sonar sees only my real changes?"
+      ],
+      "aliases": [
+        "sonar new code period",
+        "sonar issue re-dated",
+        "sonar quality gate red"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where do I go next for other Sonar rule fix guides after this one?",
+        "Which docs cover test strategy and backward compatibility when changing code for Sonar?"
+      ],
+      "aliases": [
+        "sonar rules index",
+        "sonar fix map"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "testing/strategy.md",
+      "sonarqube/dead-code-rules.md",
+      "sonarqube/modernization-rules.md"
+    ],
+    "applies-to": [
+      "**/src/main/java/**/*.java",
+      "**/src/test/java/**/*.java"
+    ]
+  },
+  "source_hash": "7e8e4bab75c8ecc0aa532dbee0b5f2e214ebb3ff9ae34cf97f9eeef200128307"
+}

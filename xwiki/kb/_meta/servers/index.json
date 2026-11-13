@@ -1,0 +1,102 @@
+{
+  "file": {
+    "questions": [
+      "Which XWiki servers do I need to access for code, issues, CI builds, forum, and artifacts?",
+      "How do I know whether an XWiki server has an MCP tool or whether I have to use curl or REST?",
+      "Where do I find the list of XWiki dev infrastructure servers and their URLs?",
+      "How do I attribute a forum post or JIRA comment that I wrote with an AI assistant?"
+    ],
+    "aliases": [
+      "xwiki infrastructure",
+      "xwiki dev servers",
+      "xwiki server list",
+      "xwiki developer tools",
+      "dev.xwiki.org servers"
+    ]
+  },
+  "sections": {
+    "XWiki development server ecosystem": {
+      "questions": [
+        "Which XWiki servers do I need to access for code, issues, CI builds, forum, and artifacts?",
+        "What is the overview of the XWiki dev infrastructure and which server handles what?",
+        "Where is the canonical list of XWiki dev servers and how do they interact?"
+      ],
+      "aliases": [
+        "xwiki infrastructure",
+        "xwiki dev ecosystem"
+      ]
+    },
+    "Server map": {
+      "questions": [
+        "What is each XWiki dev server for, and what is its URL?",
+        "Which XWiki server hosts JIRA, Jenkins, Sonar, and the forum, and how do I reach it?",
+        "How do I check whether an XWiki server has an MCP tool or only a REST API?"
+      ],
+      "aliases": [
+        "xwiki server list",
+        "xwiki dev servers",
+        "xwiki service URLs"
+      ]
+    },
+    "What has MCP today vs. `curl`-only": {
+      "questions": [
+        "Which XWiki servers have an MCP integration, and which ones need curl or gh instead?",
+        "Why does curl with a browser User-Agent fail on xwiki.org and how do I fix the 403?",
+        "Can I use Python urllib or Node fetch to read xwiki.org pages?"
+      ],
+      "aliases": [
+        "xwiki MCP servers",
+        "cloudflare 403 xwiki",
+        "xwiki user agent"
+      ]
+    },
+    "Accessing / writing to the XWiki-run sites via REST": {
+      "questions": [
+        "How do I write a page or object to xwiki.org through the REST API with authentication?",
+        "Why does my REST PUT or POST to an XWiki site return 403 invalid form token?",
+        "Why does my attachment upload to xwiki.org return a 400 error?",
+        "How do I pick the right wiki id when calling the REST API on dev.xwiki.org or extensions.xwiki.org?"
+      ],
+      "aliases": [
+        "xwiki rest api",
+        "xwiki write api",
+        "xwiki credentials file",
+        "xwiki csrf token"
+      ]
+    },
+    "Posts an LLM co-wrote": {
+      "questions": [
+        "How do I attribute a forum post I wrote with Claude Code?",
+        "What signature must a JIRA comment have when an AI assistant helped write it?",
+        "Do commits and pull requests need the same AI attribution as forum posts?"
+      ],
+      "aliases": [
+        "ai attribution",
+        "co-written with claude",
+        "llm disclosure"
+      ]
+    },
+    "Verifying volatile facts": {
+      "questions": [
+        "How do I find the current development version of XWiki without trusting a cached number?",
+        "How do I check the latest build or test status on ci.xwiki.org?",
+        "Where can I verify current infrastructure managers or release plans on the dev wiki?"
+      ],
+      "aliases": [
+        "xwiki current version",
+        "xwiki build status",
+        "xwiki release plan"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jenkins.md",
+      "servers/jira.md",
+      "servers/develocity.md",
+      "sonarqube/verification.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "457ace64e2daed5aa89c442bece014409768e5e98e06c8ecdf22e1f33b87c519"
+}

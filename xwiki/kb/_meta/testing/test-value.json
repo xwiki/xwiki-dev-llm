@@ -1,0 +1,112 @@
+{
+  "file": {
+    "questions": [
+      "What kind of test should I write for my XWiki change, and how do I keep it from breaking on every refactor?",
+      "How do I avoid brittle Mockito tests in xwiki-platform?",
+      "When should I use a functional test instead of a unit test?",
+      "Is code coverage enough to show my tests are good?"
+    ],
+    "aliases": [
+      "unit test best practices",
+      "test quality",
+      "mock-heavy tests",
+      "mutation testing",
+      "test pyramid"
+    ]
+  },
+  "sections": {
+    "Writing a test worth having — level, outcome assertions, mocks": {
+      "questions": [
+        "What makes a unit test worth keeping instead of just adding coverage?",
+        "How do I write a test that doesn't fail when I restructure code without changing behaviour?",
+        "What is the right level for a test of my change: unit, oldcore, page or functional?"
+      ],
+      "aliases": [
+        "change-detector test",
+        "unit vs integration test",
+        "test design"
+      ]
+    },
+    "Pick the level by the kind of code changed": {
+      "questions": [
+        "Should my new logic get a plain unit test, an OldcoreTest or a functional test?",
+        "Which test type fits a change to a wiki page, a Velocity template or a macro?",
+        "How do I test a REST resource or listener that mostly calls other components?",
+        "Where do I put a test for code that loads, edits and saves documents and objects?"
+      ],
+      "aliases": [
+        "OldcoreTest",
+        "ComponentTest",
+        "PageTest",
+        "rendering test",
+        "integration test"
+      ]
+    },
+    "Assert outcomes, not calls": {
+      "questions": [
+        "When is it acceptable to use Mockito verify() in a test?",
+        "My test only checks that save() was called, should it assert the stored document instead?",
+        "Should I mock DocumentReference or model objects in my unit test?",
+        "How do I test a query result without verifying the getter was called?"
+      ],
+      "aliases": [
+        "Mockito verify",
+        "interaction testing",
+        "behaviour vs implementation testing"
+      ]
+    },
+    "A hard-to-write unit test is design feedback": {
+      "questions": [
+        "My unit test needs many mocks and an ArgumentCaptor, what does that say about my code?",
+        "Should I add an interface only so I can mock a class in my test?",
+        "When should I extract logic into its own class to make it testable?",
+        "How do I test code that calls a static method or sets private fields with reflection?"
+      ],
+      "aliases": [
+        "ArgumentCaptor",
+        "doAnswer",
+        "testability",
+        "mock hell",
+        "code smell in tests"
+      ]
+    },
+    "What needs no test of its own": {
+      "questions": [
+        "Do getters, constructors, logging or simple delegation need a test?",
+        "How do I justify in a PR that my change has no new test?",
+        "Which changes are already covered by existing tests or a functional test, so I can skip writing one?"
+      ],
+      "aliases": [
+        "trivial code",
+        "untested code justification",
+        "PR without tests"
+      ]
+    },
+    "Coverage is a floor, not a target": {
+      "questions": [
+        "Is it okay to add a test only to raise the JaCoCo coverage number?",
+        "My coverage dropped after I replaced mocks with real objects, is that a problem?",
+        "How do I check that a test would actually catch a bug in the line it covers?"
+      ],
+      "aliases": [
+        "JaCoCo",
+        "code coverage",
+        "mutation testing",
+        "PIT",
+        "pitest"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "architecture/module-design.md",
+      "architecture/component-system.md",
+      "sonarqube/test-code-rules.md"
+    ],
+    "applies-to": [
+      "**/src/test/**/*.java"
+    ]
+  },
+  "source_hash": "4eb71578823b109ce821a00c2567e74b92e0add58ebe5f4f9d06508b3a6df1d7"
+}

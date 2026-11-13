@@ -1,0 +1,152 @@
+{
+  "file": {
+    "questions": [
+      "what security rules do I need to follow when writing wiki scripts, Velocity templates or script services?",
+      "how do I keep user input from causing XSS or code injection in my XWiki page or extension?",
+      "which right does my script need, and which right does its author need, to run safely?",
+      "how do I escape values correctly for HTML, attributes, JavaScript and XWiki syntax?"
+    ],
+    "aliases": [
+      "XSS",
+      "injection",
+      "security guidelines",
+      "script right",
+      "programming right"
+    ]
+  },
+  "sections": {
+    "Secure-coding conventions (escaping, untrusted input, right checks)": {
+      "questions": [
+        "what security rules apply when I write wiki scripts, templates or script services?",
+        "how do I avoid XSS and code injection in an XWiki extension I am building?"
+      ],
+      "aliases": [
+        "security dev guide",
+        "secure coding rules",
+        "security guidelines"
+      ]
+    },
+    "Everything from a user — and every translation — is untrusted": {
+      "questions": [
+        "is it safe to print a request parameter directly into the content of a page?",
+        "can a translation containing wiki markup like {{groovy}} run macros, and should I escape translated text?",
+        "why does a user-scope translation with a macro in it matter for admins viewing the page?"
+      ],
+      "aliases": [
+        "untrusted input",
+        "user input",
+        "XWiki syntax injection"
+      ]
+    },
+    "Escaping mechanisms — pick the one matching the output context": {
+      "questions": [
+        "which escape function should I use for text in HTML, an attribute, or a JavaScript string?",
+        "how do I escape a user-supplied link label in XWiki syntax so it cannot inject markup?",
+        "why does escapetool.html leave the single quote in an attribute, and does that matter?"
+      ],
+      "aliases": [
+        "escapetool",
+        "output encoding",
+        "html escaping"
+      ]
+    },
+    "Structural interpolation — bind covers values, never identifiers or references": {
+      "questions": [
+        "how do I pass a variable into a query's where clause without opening an injection hole?",
+        "can I build the page reference for an include or display macro from a variable?",
+        "how do I make the class or space in a query dynamic without making it unsafe?"
+      ],
+      "aliases": [
+        "parameterized query",
+        "query binding",
+        "XWQL injection"
+      ]
+    },
+    "Only Velocity runs on Script Right — every other language also needs Programming Right": {
+      "questions": [
+        "what rights does someone need to put a Groovy or Python script in a wiki page?",
+        "I have script right but my Groovy macro is refused, why?",
+        "does a Velocity script need the same right as a Groovy one?"
+      ],
+      "aliases": [
+        "programming right",
+        "script right",
+        "secure groovy customizer"
+      ]
+    },
+    "Right checks in script services — check the context *author*, not only the user": {
+      "questions": [
+        "my script service checks the current user's rights, but what about the author of the page that calls it?",
+        "how do I check wiki admin rights in a service method, not just space admin rights?",
+        "when do I pass an entity to hasAccess and when can I leave it out?"
+      ],
+      "aliases": [
+        "contextual authorization",
+        "CSRF escalation",
+        "hasAdminRights"
+      ]
+    },
+    "Rendering an XObject property — display it, never parse its raw value": {
+      "questions": [
+        "how do I print an object property in a template without it being evaluated as wiki syntax?",
+        "what is the difference between getValue and get on an object property?",
+        "why does a macro stored in an object property run with the wrong rights when I render it?"
+      ],
+      "aliases": [
+        "BaseObject",
+        "display property",
+        "xobject property"
+      ]
+    },
+    "Parsing XML — use the XML Module helpers": {
+      "questions": [
+        "how do I parse an XML string safely in a Java class of an XWiki extension?",
+        "which parser should I use so that external entities cannot be loaded?",
+        "should I create a DocumentBuilder myself, or call a helper instead?"
+      ],
+      "aliases": [
+        "XXE",
+        "xml external entity",
+        "StAXUtils"
+      ]
+    },
+    "HTML cleaning is not escaping; sanitization is configurable": {
+      "questions": [
+        "does clean=true in an html macro protect me from script injection?",
+        "where do I configure which HTML tags and attributes the cleaner keeps?",
+        "I already escaped the value inside an html macro, is the cleaning still needed?"
+      ],
+      "aliases": [
+        "html sanitizer",
+        "html cleaner",
+        "allow list"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "where do I find the severity and disclosure rules for a security fix?",
+        "is it okay to describe a live vulnerability in a code comment?"
+      ],
+      "aliases": [
+        "security disclosure",
+        "see also"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "processes/security-policy.md",
+      "conventions/script-services.md",
+      "conventions/server-side-rendering.md",
+      "conventions/translations.md"
+    ],
+    "applies-to": [
+      "**/*.vm",
+      "**/*.groovy",
+      "**/*.java",
+      "**/*.xml",
+      "**/*.js"
+    ]
+  },
+  "source_hash": "ba8b6651db352ec672949d7b9527eb250e60af5b87fd08e7e4c7c239dcf0f2b2"
+}

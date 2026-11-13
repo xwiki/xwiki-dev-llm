@@ -6,6 +6,13 @@ summary: The checklist a third-party project must pass before it can be added to
   contributors, documentation, security; a VOTE can waive everything but the license.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HAddinganewDependency
+provenance: official
+last-confirmed: 2026-09-01
+related: [conventions/commit-messages.md, servers/jira.md]
+applies-to: ["**/pom.xml", "**/package.json"]
+applies-when:
+  - '<groupId>(?!org\.xwiki\b|\$\{|org\.apache\.maven\.plugins<|org\.codehaus\.mojo<|org\.junit\b|org\.mockito<|org\.hamcrest<|org\.testcontainers<|org\.seleniumhq\b|org\.openclover<)[^<]+</groupId>'
+  - '^\s*"(?!version"|name"|node"|pnpm"|npm")(?:@(?!xwiki/)[\w.-]+/)?[\w.-]+"\s*:\s*"(?:[\^~]|\d|npm:)'
 ---
 
 # Accepting a new third-party dependency

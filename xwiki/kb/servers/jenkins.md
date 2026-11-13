@@ -9,6 +9,9 @@ sources:
   - https://ci.xwiki.org/api/
   - https://www.jenkins.io/doc/book/using/remote-access-api/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
+provenance: official
+last-confirmed: 2026-10-17
+related: [servers/develocity.md, testing/flickers.md, testing/ci-watch.md, testing/running-docker-its.md]
 ---
 
 # Jenkins CI (`ci.xwiki.org`)

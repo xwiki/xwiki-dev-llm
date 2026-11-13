@@ -9,6 +9,17 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HBackwardCompatibility
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCodeThatIsNotAPI
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HPackagenames
+provenance: official
+last-confirmed: 2026-10-17
+related: [conventions/versioning.md, conventions/code-style.md, processes/release-notes.md, decisions/check-binary-not-source-compatibility.md]
+applies-to: ["**/*.java", "**/*.aj", "**/pom.xml"]
+applies-when:
+  - '@Unstable\b'
+  - '^\s*default\s+(?!:)[\w<>?,.\[\] ]+\s+\w+\s*\('
+  - '@Deprecated\b'
+  - '<revapi\.differences\b'
+  - '<xwiki\.revapi\.skip>'
+  - '\bdeclare\s+parents\b'
 ---
 
 # Backward compatibility policy
@@ -139,6 +150,10 @@ per module**: a module can opt out with `<xwiki.revapi.skip>true</xwiki.revapi.s
 in its place). A downstream module that depends on the **clean** main jar still sees the dropped API as
 removed when its own API *reaches* the class, and fails far from the change (moving the
 `XWikiHibernateStore` constructors to legacy failed `xwiki-platform-extension-script`, which reaches the
-class via `XWiki.getHibernateStore()`). That, and only that, warrants an `allowed` ignore for a legacy
-move — added when that build actually fails, justified by the move, and approved (see above). A green build on the changed
-module therefore never means "compatible".
+class via `XWiki.getHibernateStore()`). The fix is **not** a per-method ignore: exclude the wrapped main
+artifact from the Revapi analysis of its dependents, in the `<revapi.filter><archives><exclude>` of the
+parent pom they share (e.g. `<item>org\.xwiki\.platform:xwiki-platform-oldcore:.*</item>` in
+`xwiki-platform-core/pom.xml`), with a comment saying its API is checked by the legacy module that wraps it.
+Per-method `java.method.removed` ignores for moved methods are then useless — remove them. A green build on the changed
+module therefore never means "compatible": build the modules depending on it before pushing, rather than waiting for CI
+to fail.

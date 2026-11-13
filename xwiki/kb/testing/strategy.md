@@ -20,6 +20,10 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HBestPractices
+provenance: official
+last-confirmed: 2026-11-01
+related: [testing/test-value.md, testing/running-docker-its.md, testing/flickers.md, testing/ci-watch.md]
+applies-to: ["**/src/test/**/*.java", "**/*-test-pageobjects/**/*.java"]
 ---
 
 # XWiki testing strategy (overview)

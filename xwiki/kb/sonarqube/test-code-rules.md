@@ -6,6 +6,9 @@ summary: Correct fixes and XWiki-specific drop conditions for the test-code rule
   when the expected/actual swap is safe and the two shapes that must be dropped, how far a Mockito
   eq() unwrap may reach, and why hoisting out of an assertThrows lambda must never move the throwing
   call.
+provenance: official
+last-confirmed: 2026-10-20
+related: [sonarqube/index.md, conventions/code-style.md, testing/strategy.md, sonarqube/verification.md]
 ---
 
 # SonarQube test-code rules

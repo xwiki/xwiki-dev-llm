@@ -1,0 +1,95 @@
+{
+  "file": {
+    "questions": [
+      "How do I handle a security fix in XWiki without leaking the vulnerability in the public repos?",
+      "Can I mention a vulnerability in a commit message, branch name or PR before it is officially disclosed?",
+      "What is the process for rating the severity of an XWiki security issue with CVSS 4?",
+      "How do I merge a pull request from an outside contributor that was submitted to a GitHub security advisory?",
+      "Which JIRA labels should a security issue carry to describe the attacker and what the attack achieves?"
+    ],
+    "aliases": [
+      "security policy",
+      "vulnerability disclosure process",
+      "GHSA private fork",
+      "CVSS rating",
+      "security advisory process"
+    ]
+  },
+  "sections": {
+    "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": {
+      "questions": [
+        "Can I put a description of the security bug in the commit message of the fix?",
+        "What should I name the branch for a security fix so it doesn't give the vulnerability away?",
+        "Is it okay to open a public GitHub issue or forum thread about a security bug that isn't published yet?",
+        "Where do I track an unpublished security bug in JIRA so only the security team can see it?"
+      ],
+      "aliases": [
+        "embargo",
+        "responsible disclosure",
+        "zero-day",
+        "obfuscated commit message",
+        "non-public vulnerability"
+      ]
+    },
+    "Merging a non-committer's security pull request": {
+      "questions": [
+        "How do I merge a pull request from an outside contributor on a GitHub security advisory?",
+        "The GitHub merge button doesn't let me set the commit message, so how do I squash-merge a private fork PR by hand?",
+        "How do I credit the external contributor as the author when I merge their security fix?",
+        "What do I clean up after merging a security PR from a temporary private fork?"
+      ],
+      "aliases": [
+        "GHSA pull request",
+        "temporary private fork",
+        "squash merge",
+        "contributor credit",
+        "security advisory PR"
+      ]
+    },
+    "Severity scoring — CVSS 4 (read the source before scoring)": {
+      "questions": [
+        "How do I work out the CVSS 4 score and vector for an XWiki vulnerability?",
+        "Which Privileges Required value should I pick when the attacker is a guest versus a registered user?",
+        "Why does my CVSS calculator's default attack vector differ from what XWiki expects for this issue?",
+        "How do I store the CVSS vector and score on the JIRA security issue through the REST API?"
+      ],
+      "aliases": [
+        "CVSS 4.0",
+        "CVSS calculator",
+        "vulnerability severity score",
+        "CVSS vector",
+        "critical vs major severity"
+      ]
+    },
+    "JIRA security labels": {
+      "questions": [
+        "Which labels do I add to a JIRA security issue to say who the attacker is and what they can do?",
+        "Which attacker label applies when the attacker needs the script right?",
+        "How do I tag a security ticket as an XSS or data leak issue in JIRA?"
+      ],
+      "aliases": [
+        "JIRA security tags",
+        "security issue labels",
+        "attack type labels"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where are the secure-coding rules that prevent escaping and right-check bugs like these?",
+        "Apart from the obfuscated exception for security fixes, what is the normal commit message format?",
+        "Which other files explain the JIRA field conventions I need when filing a security issue?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/security.md",
+      "conventions/commit-messages.md",
+      "servers/jira.md",
+      "servers/index.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "4d7a98fc583972c0a75a4cf4cc8ade80a3bd360be8b00d59fedce1732ebc93e2"
+}

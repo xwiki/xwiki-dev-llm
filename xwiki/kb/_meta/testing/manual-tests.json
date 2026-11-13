@@ -1,0 +1,55 @@
+{
+  "file": {
+    "questions": [
+      "Where are manual test steps and results stored on test.xwiki.org?",
+      "How do I find all the manual test runs for a given XWiki release?",
+      "How do I record that a manual test has been automated?",
+      "Which field should I fill in when a manual test gets automated?"
+    ],
+    "aliases": [
+      "Test Reporting Application",
+      "manual test reporting",
+      "QA manual tests",
+      "test.xwiki.org QA wiki"
+    ]
+  },
+  "sections": {
+    "Manual tests on test.xwiki.org — data model and automation status": {
+      "questions": [
+        "How are manual test cases and their execution results modeled on test.xwiki.org?",
+        "Where do I find the results of a manual test run for a release?",
+        "How do I search test.xwiki.org in Solr for all manual test runs of version 18.4.5?",
+        "Why are the dots escaped in the product value of a manual test run?"
+      ],
+      "aliases": [
+        "QA.TestClass",
+        "QA.ExecutionClass",
+        "TestReportingExecutions",
+        "Test Reporting Application"
+      ]
+    },
+    "Automation status": {
+      "questions": [
+        "How do I mark a manual test as automated on test.xwiki.org?",
+        "Which automation status values can a manual test page have?",
+        "Should I still fill in the automated checkbox or source code link on a manual test page?",
+        "How do I link a manual test to its automation JIRA issue and the automated test code?"
+      ],
+      "aliases": [
+        "AutomatedTestStatusClass",
+        "automation status object",
+        "Needs Automated Test",
+        "QA.TestClass.automated"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "testing/test-value.md",
+      "servers/jira.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "9a315f26949396acc30c12769ed85a91fe162ec3c50d167a7b29d025392f2c35"
+}

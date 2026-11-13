@@ -1,0 +1,85 @@
+{
+  "file": {
+    "questions": [
+      "How do I add a new translation key to an XWiki extension without it getting lost?",
+      "Where should translation strings for a Java or Velocity extension go, ApplicationResources.properties or a Translations page?",
+      "What's the right way to rename a translation key that other extensions use?",
+      "Can I move translation keys from one extension to another?",
+      "Why does my translated text not appear in other languages after I added a new bundle?"
+    ],
+    "aliases": [
+      "i18n",
+      "l10n",
+      "localization",
+      "ApplicationResources.properties",
+      "Weblate"
+    ]
+  },
+  "sections": {
+    "Translation key lifecycle (en_US only, registration, deprecation, moving)": {
+      "questions": [
+        "What rules apply when I change translation keys in an XWiki extension?",
+        "Do I need to translate keys into other languages myself when I add them?"
+      ],
+      "aliases": [
+        "translation key rules",
+        "i18n key policy"
+      ]
+    },
+    "What committers maintain": {
+      "questions": [
+        "Do I edit the French or German translation files when I add a message in XWiki?",
+        "Should I use American or British spelling in XWiki translation strings?",
+        "Where do community translators contribute translations for XWiki?"
+      ],
+      "aliases": [
+        "en_US bundle",
+        "source language",
+        "Weblate contributions",
+        "US spelling"
+      ]
+    },
+    "Where a translation resource lives": {
+      "questions": [
+        "Where do I put translations for wiki page content versus Java or Velocity code?",
+        "How do I register a new translation bundle so it gets translated on l10n.xwiki.org?",
+        "Where does the Translations page go for an extension made only of macros?"
+      ],
+      "aliases": [
+        "translation file location",
+        "Translations page",
+        "TranslationDocumentClass",
+        "Macros space translations"
+      ]
+    },
+    "Deprecating, renaming, never moving": {
+      "questions": [
+        "How do I remove an old translation key without breaking extensions that still use it?",
+        "What is the proper way to rename a message key in a properties file?",
+        "Why can't I just move a translation key to another file in XWiki?",
+        "How do I mark a deprecated translation key and point to its replacement?"
+      ],
+      "aliases": [
+        "deprecated section",
+        "#@deprecatedstart",
+        "renaming keys",
+        "removing translation keys"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/documentation.md",
+      "conventions/naming.md",
+      "conventions/backward-compatibility.md",
+      "conventions/server-side-rendering.md"
+    ],
+    "applies-to": [
+      "**/ApplicationResources.properties",
+      "**/Translations.xml",
+      "**/*Translations.xml",
+      "**/src/main/resources/**/*.properties"
+    ]
+  },
+  "source_hash": "c57a33a3e57c4d95b535f578892bd588ccb6cff23676a5e1741d41710852ddff"
+}

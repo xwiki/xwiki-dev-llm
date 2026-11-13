@@ -1,0 +1,79 @@
+{
+  "file": {
+    "questions": [
+      "How do I write a new service that Velocity templates can call, and which Java package should it go in?",
+      "My script service method returns null and I check getLastError, what should a new one do instead?",
+      "How do I let a wiki page script pass a map literal to a Java method that takes my own bean class?",
+      "Why does the build fail when I put my ScriptService class in an internal package?"
+    ],
+    "aliases": [
+      "script service",
+      "Velocity service API",
+      "$services binding",
+      "#try macro",
+      "Method Arguments Uberspector"
+    ]
+  },
+  "sections": {
+    "Package: `script`, never `internal`": {
+      "questions": [
+        "Why does the build fail for my ScriptService class when it sits in an internal package?",
+        "Where should a new Velocity-exposed service class go in the xwiki-platform module layout?",
+        "Does a class I expose to scripts need to show up in the Javadoc and pass Revapi checks?"
+      ],
+      "aliases": [
+        "InternalScriptService naming",
+        "internal package script service",
+        "Revapi script API"
+      ]
+    },
+    "Errors: throw, do not stash": {
+      "questions": [
+        "Should my new script method return null on failure or throw an exception?",
+        "How do I catch an exception from a script service call inside a Velocity template?",
+        "How do I show an error message in the page when a script service call fails?"
+      ],
+      "aliases": [
+        "getLastError pattern",
+        "#try directive",
+        "Velocity try block"
+      ]
+    },
+    "Arguments: no bean factories": {
+      "questions": [
+        "Do I need a createFooObject factory method on the script service to build a parameter from a template?",
+        "How do I make a Velocity map literal convert automatically into my Java bean argument?",
+        "How do @PropertyMandatory and @PropertyDescription report missing fields when called from scripts?"
+      ],
+      "aliases": [
+        "Properties module converter",
+        "AbstractConverter",
+        "BeanManager converter"
+      ]
+    },
+    "Rights": {
+      "questions": [
+        "My script service checks rights for the current user, but the script runs as the page author, so what else must I check?",
+        "If a script has the Script Right, can it still call my service and skip the author's permission checks?",
+        "How do I make sure a script service does not let page authors do things they should not?"
+      ],
+      "aliases": [
+        "Script Right",
+        "programming right check",
+        "context author rights"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/security.md",
+      "conventions/backward-compatibility.md",
+      "conventions/velocity-code-style.md",
+      "conventions/server-side-rendering.md"
+    ],
+    "applies-to": [
+      "**/*ScriptService.java"
+    ]
+  },
+  "source_hash": "766a651c7f5df659e5741bfd77521598f6920a8e853da330a4371f43027abc05"
+}

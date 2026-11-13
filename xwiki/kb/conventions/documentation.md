@@ -49,6 +49,9 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/?syntax=2.1&section=Links
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/?syntax=2.0&section=Links
   - https://diataxis.fr/
+provenance: official
+last-confirmed: 2026-10-30
+related: [conventions/documentation-mechanics.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
 # XWiki documentation conventions

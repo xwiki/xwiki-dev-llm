@@ -1,0 +1,42 @@
+{
+  "file": {
+    "questions": [
+      "How do I run a data migration that queues documents for reindexing in XWiki?",
+      "My Hibernate migration reports success but the data never changes, what am I missing?",
+      "How do I write an XWiki migration that touches every page, using the task queue?",
+      "Why are my subwiki pages skipped by my XWiki data migration?"
+    ],
+    "aliases": [
+      "Hibernate migration",
+      "schema upgrade",
+      "XWikiDBVersion",
+      "AbstractDocumentsMigration",
+      "TaskConsumer"
+    ]
+  },
+  "sections": {
+    "Data migrations and the document-queueing pattern": {
+      "questions": [
+        "How do I write a data migration in XWiki that updates existing pages on upgrade?",
+        "My migration says it queued 0 documents, why?",
+        "How do I test that a Hibernate migration really works before release?"
+      ],
+      "aliases": [
+        "store migration",
+        "upgrade script for pages"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/wiki-application-data.md",
+      "architecture/component-system.md",
+      "testing/strategy.md"
+    ],
+    "applies-to": [
+      "**/src/main/java/**/*Migration*.java",
+      "**/src/test/**/*Migration*.java"
+    ]
+  },
+  "source_hash": "4433da9da4edb10fde85e8fc2c816adca7b5a77513d5f8103fc9fdce805f31f4"
+}

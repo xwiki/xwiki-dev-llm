@@ -82,12 +82,13 @@ ln -s "$XWIKI_LLM_HOME/xwiki/skills" ~/.config/opencode/skills
 - *Per project.* Copy `opencode.jsonc` to `opencode.json` in an XWiki repo (it needs no editing —
   it reads `XWIKI_LLM_HOME`). This scopes the config to that repo only.
 
-**Guard plugins (optional).** Symlink them into an opencode plugin directory:
+**Guard and KB pointer plugins (optional).** Symlink them into an opencode plugin directory:
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-line-endings.js" ~/.config/opencode/plugins/xwiki-line-endings.js
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-text.js" ~/.config/opencode/plugins/xwiki-commit-text.js
+ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-kb-pointers.js" ~/.config/opencode/plugins/xwiki-kb-pointers.js
 ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-gates.js" ~/.config/opencode/plugins/xwiki-commit-gates.js
 ```
 
@@ -106,6 +107,8 @@ ln -s "$XWIKI_LLM_HOME/xwiki/opencode/plugins/xwiki-commit-gates.js" ~/.config/o
 | **Org conventions** (`xwiki/instructions/xwiki-org.md`) — the shared "CLAUDE.md for all repos": build commands, commit format, code conventions, `@since` rules | Every session, in `xwiki/*` and `xwiki-contrib/*` repos only (scoped by git remote); Kimi Code, which discards a `SessionStart` hook's output, gets them on the session's first prompt | `XWIKI_LLM_ORGS` to add your own orgs. No scoping in opencode — see the install note above |
 | **Work directory** — plans, handoffs, drafts and notes go to one root instead of the repo, `/tmp` and your home | The first time a task needs a file that must outlive the session | `XWIKI_LLM_WORK` ([defaults](docs/setup.md)) |
 | **Line-ending guard** (`xwiki/scripts/check-line-endings.mjs`) — blocks a write whose endings contradict the repo's `.gitattributes`, so no spurious whole-file diffs | Every `Write`/`Edit`; silent unless violated. Not in Kimi Code, which runs a `PostToolUse` hook without waiting for its result and names the edited file `path` | — |
+| **KB prompt pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 5 `file#Section` pointers into the KB, plus up to 2 skills to load, that match your prompt, so the model reads just that section; nothing when no match is strong enough, never a pointer twice per session nor to a skill already loaded | Every prompt of 3+ words, in the same repos as the org conventions | — (opencode 2.x has no prompt hook, so none there) |
+| **KB edit pointers** (`xwiki/scripts/kb-hooks.mjs`) — up to 3 pointers to the topics, plus up to 2 skills (their globs and regexes in `xwiki/kb/_meta/skills.json`), whose `applies-to:` globs match the file being edited and, for topics with `applies-when:` regexes, whose regex matches the text the edit adds (ranked first); advice only, never blocks | Every `Edit`/`Write`, and every Bash command that may have changed files (`sed -i`, a heredoc, a script: the lines it added since the previous check), same repos; after the write in opencode | — (not in Kimi Code, whose tool hooks cannot add context) |
 | **Commit/PR text guard** (`xwiki/scripts/check-commit-text.mjs`) — blocks a message body holding a bare `@name`, or a `#123` in a repo whose issues live in JIRA (read from its `pom.xml` or remote), which GitHub turns into a mention of a stranger or the wrong issue | Every `git commit`, `gh pr create`/`edit`; only the message (`-m`, `-F` file or stdin, `--body`/`--body-file`) is read, not the rest of a compound command; summary line exempt | — |
 | **Commit diff check** (`xwiki/scripts/check-diff.mjs`) — refuses a commit whose diff breaks a rule it shows exactly: a malformed `@since` / `@Deprecated(since)`, or one not naming the next release of the root pom (the release line just before it is only a warning: it was right before a version bump), a version in a javadoc `@deprecated`, new public API without `@Unstable` (`xwiki` org only), a `.properties` file turned UTF-8, a new file without a license header (Maven projects); heuristics (coverage threshold untouched, page change with no test, `[Misc]` on production code) come back as advice. It also refuses, once per skill, a commit touching files whose rules live in a skill the session has not loaded (`xwiki/scripts/skill-gates.json`: tests, -legacy code, translations, XAR pages; loads recorded by `xwiki/scripts/skill-gate.mjs`). Kimi gets the diff refusals only | Every `git commit`, in the same repos as the org conventions; reads the staged diff (the work tree too after `-a` or a `git add` in the same command) | `Diff-Check: skip` trailer for a wrong finding; `XWIKI_LLM_COMMIT_GATES=off` |
 
@@ -134,7 +137,7 @@ means it needs nothing.
 
 | Skill | What it does | Needs | Example |
 |---|---|---|---|
-| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" from the KB, and extend it by PR | — | "what's our policy on comments in code?" |
+| [`xwiki-knowledge`](xwiki/skills/xwiki-knowledge/) | Answer "what is the rule here?" by searching the KB, and extend it by PR | — | "what's our policy on comments in code?" |
 | [`xwiki-javadoc`](xwiki/skills/xwiki-javadoc/) | Write Javadoc per the XWiki code style | — | "javadoc this class" |
 | [`xwiki-fix-deprecation`](xwiki/skills/xwiki-fix-deprecation/) | Move every caller of a deprecated API — Java, Velocity, wiki pages, JS — to its replacement, then retire the API to legacy; proposes easy candidates | — | "fix some easy deprecations" |
 | [`xwiki-legacy`](xwiki/skills/xwiki-legacy/) | Move a deprecated API with no caller left to its `-legacy` module: remove, re-add, Revapi | — | "retire `XWikiRightService`" |
@@ -190,7 +193,7 @@ means it needs nothing.
 
 | | |
 |---|---|
-| **KB** (`xwiki/kb/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Extended only through a reviewed PR. |
+| **KB** (`xwiki/kb/`) | XWiki's declarative knowledge — conventions, architecture, servers, testing, SonarQube rule correctness, processes. Durable facts inline; volatile ones (versions, build status) stored as "where to look and how to verify", never cached. Found by search (`xwiki/scripts/kb-search.mjs`, BM25 over `##` sections), not by a map. Extended only through a reviewed PR. |
 | **`discourse` MCP** | forum.xwiki.org: search and read with no credential, post with one ([setup](docs/setup.md#forum-write-access-for-the-discourse-mcp-server)) |
 | **`develocity` MCP** | community.develocity.cloud: build scans, test outcomes, flaky history, cache hit rates ([setup](docs/setup.md#develocity-access-for-the-develocity-mcp-server-and-dv-test-history)) |
 | **`sonarqube` MCP** | SonarCloud issues and quality gates, per repo ([setup](docs/setup.md)) |
@@ -206,7 +209,7 @@ credentials for JIRA, the forum, Develocity, SonarCloud and xwiki.org.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, KB map, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skill inventory, version untouched + in sync, KB index, size budgets, copied paragraphs)
 ```
 
 `scripts/validate.mjs` also runs automatically in CI (GitHub Actions) on every push and pull request.

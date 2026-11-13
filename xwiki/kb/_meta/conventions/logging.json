@@ -1,0 +1,88 @@
+{
+  "file": {
+    "questions": [
+      "Why does a value I log from a background job show up as a serialized object dump in the job log?",
+      "Should I pass an object or a String to the logger when my code runs inside a job?",
+      "Why does Sonar flag my logger call, and what is the proper fix for S2629?",
+      "Why is a log argument missing or null when I open an old job log?"
+    ],
+    "aliases": [
+      "job log serialization",
+      "SLF4J parameterized logging XWiki",
+      "Sonar S2629 lazy argument evaluation",
+      "LogEvent arguments",
+      "logger arguments toString"
+    ]
+  },
+  "sections": {
+    "Logging — a log argument is an object, not text": {
+      "questions": [
+        "Why does a log argument end up as a serialized object in the job log instead of plain text?",
+        "What happens to the objects I pass to a logger call when it runs inside a background job?",
+        "Why does my job log show an unreadable XML blob for a value I logged?"
+      ],
+      "aliases": [
+        "job log",
+        "background job logging",
+        "XStream log arguments"
+      ]
+    },
+    "Why an argument is not just something to render": {
+      "questions": [
+        "How does a log call from any class on a job thread end up in that job's own log?",
+        "Why would a logged value vanish or become null when a finished job's log is reloaded?",
+        "Why do some logged values show as clickable links in the job log while others are plain text?"
+      ],
+      "aliases": [
+        "LoggerListener",
+        "SafeMessageConverter",
+        "job log deserialization"
+      ]
+    },
+    "Decision table": {
+      "questions": [
+        "Which types can I pass straight to a logger, and which should I convert to a String first?",
+        "When do I need String.valueOf or toString() before logging an argument?",
+        "Is it safe to log a Hibernate session, a mail configuration, or a StringBuilder directly?"
+      ],
+      "aliases": [
+        "log argument type rules",
+        "eager string logging",
+        "logger toString when"
+      ]
+    },
+    "Never silently remove an explicit toString()": {
+      "questions": [
+        "Sonar or a reviewer says my explicit toString() in a log call is redundant, can I remove it?",
+        "Why keep an explicit toString() in logger.warn when SLF4J already calls toString()?",
+        "Can I clean up a toString() in a log statement that would throw a NullPointerException on null?"
+      ],
+      "aliases": [
+        "redundant toString removal",
+        "SLF4J implicit toString"
+      ]
+    },
+    "java:S2629 interaction": {
+      "questions": [
+        "How do I fix Sonar S2629 for a logger call that uses String.valueOf or toString()?",
+        "Why does Sonar not flag my logger call that passes an object, and how do I suppress S2629 properly?",
+        "Does calling getName() inside a logging argument trigger the lazy evaluation warning?"
+      ],
+      "aliases": [
+        "S2629",
+        "LazyArgEvaluationCheck",
+        "Preconditions logging arguments evaluation"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/code-comments.md",
+      "conventions/code-style.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "2cd1e6adca797e76aa278667b063e47c2d10ca1537f29fcb54c8503027b5c8ac"
+}

@@ -8,6 +8,9 @@ sources:
   - John Ousterhout, "A Philosophy of Software Design" (deep and shallow modules)
   - Michael Feathers, "Working Effectively with Legacy Code" (seams)
   - https://github.com/mattpocock/skills (codebase-design skill, MIT) — the ideas, reworded here
+provenance: official
+last-confirmed: 2026-10-21
+related: [architecture/component-system.md, architecture/platform-modules.md, conventions/code-style.md]
 ---
 
 # Module design
@@ -36,9 +39,11 @@ to refactor the surrounding module: "while you are here, redesign X" is out of s
   together with it. Logic that only reads another object's state, placed far from that object, is
   found by nobody who later changes that state.
 - **Seams.** An interface, extension point or configuration hook with one implementation is a
-  hypothetical seam; with two (production and test count) it is real. Question a new seam nothing
-  varies across — and, the other way round, a new mechanism built to work around behaviour that an
-  existing seam (a configuration property, a component hint) already lets you change.
+  hypothetical seam; with two it is real, but a test double never justifies a public component role
+  (outside `internal`): tests may use `internal`. Question a new seam nothing varies across —
+  and a new mechanism (a wrapper component, say) working around behaviour an existing seam (a
+  configuration property, a component hint) already lets you change: rethink the design, and agree
+  any workaround with the committers.
 - **Leaks.** Does the new interface expose how it works — internal types, shared mutable state, an
   order of calls the caller must respect? Mutable static state in particular ties every caller to one
   hidden lifecycle.

@@ -15,6 +15,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/LandingPages/
   - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/reuse-content-fragment/
   - https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/content-fragment-macro/
+provenance: official
+last-confirmed: 2026-08-23
+related: [conventions/documentation.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
 # Programming against the xwiki.org documentation tree

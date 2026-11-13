@@ -1,0 +1,60 @@
+{
+  "file": {
+    "questions": [
+      "how do I confirm a functional test I merged actually passed on CI?",
+      "my merged IT is green on CI but did it really run?",
+      "how to track CI results for a test across backport branches after merging"
+    ],
+    "aliases": [
+      "backport verification",
+      "post-merge CI monitoring",
+      "functional test watch",
+      "IT verification on Jenkins",
+      "integration test proof"
+    ]
+  },
+  "sections": {
+    "Watching a merged functional test on CI": {
+      "questions": [
+        "how do I prove a merged functional test is stable on every branch it landed on",
+        "what do I do after merging a functional test to master and backporting it"
+      ],
+      "aliases": []
+    },
+    "What counts as \"it ran and passed\"": {
+      "questions": [
+        "how do I tell if a functional test really ran on Jenkins or was skipped",
+        "my CI build is green but the test class isn't in the output, is that a pass?",
+        "why does Develocity show 0 tests for my failsafe goal"
+      ],
+      "aliases": [
+        "test not executed",
+        "cached failsafe result",
+        "AllIT nested test check"
+      ]
+    },
+    "The in-session watch": {
+      "questions": [
+        "how do I keep checking CI builds for my merged test over several hours",
+        "how to schedule recurring checks on a merged PR's functional test in Claude Code",
+        "how do I record which branches and builds I've verified for a backport"
+      ],
+      "aliases": [
+        "CI polling",
+        "recurring CI check",
+        "state file for test verification",
+        "CronCreate schedule"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "servers/jenkins.md",
+      "servers/develocity.md",
+      "servers/jira.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "e9ae27b5ba2a0f90e1ce0c2277fa3e924d0662a22d2c92c4608bce6019b4ef1b"
+}

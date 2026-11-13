@@ -31,6 +31,10 @@
       "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\" prompt"
     },
     {
+      "event": "UserPromptSubmit",
+      "command": "node \"./xwiki/scripts/kb-hooks.mjs\" prompt"
+    },
+    {
       "event": "PreToolUse",
       "matcher": "Bash",
       "command": "node \"./xwiki/scripts/check-commit-text.mjs\""

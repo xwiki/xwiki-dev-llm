@@ -1,0 +1,221 @@
+{
+  "file": {
+    "questions": [
+      "Which SonarQube issues can I fix in XWiki Java code without any risk of changing behaviour?",
+      "How do I fix the simple SonarQube syntax and annotation warnings like missing @Override, unused imports or stray semicolons?",
+      "Which SonarQube syntax fixes are traps that look safe but break things, like varargs arrays or static access?",
+      "What is the safe batch of mechanical SonarQube fixes to apply across the xwiki-platform code?"
+    ],
+    "aliases": [
+      "Sonar syntax rules",
+      "SonarQube annotation rules",
+      "SonarLint syntax fixes",
+      "Sonar code smells"
+    ]
+  },
+  "sections": {
+    "SonarQube syntax and annotation rules": {
+      "questions": [
+        "Which SonarQube fixes are the safest because they cannot change how the code runs?",
+        "Which SonarQube rules only touch syntax or annotations, with no dataflow involved?",
+        "What should I check before applying a SonarQube syntax fix to XWiki code?"
+      ],
+      "aliases": [
+        "Sonar syntax fixes",
+        "sonar annotation rules"
+      ]
+    },
+    "S6208 — merge fall-through `case` labels into one comma-separated label": {
+      "questions": [
+        "Sonar says to merge the previous cases into one comma-separated label, how do I do that in a switch?",
+        "How do I combine consecutive empty case labels in a Java switch into a single case line?",
+        "When should I not merge switch case labels that have a // fallthrough comment?"
+      ],
+      "aliases": [
+        "S6208",
+        "merge switch cases",
+        "switch case fall-through"
+      ]
+    },
+    "S1128 — unused import": {
+      "questions": [
+        "Sonar flags an import as unused, can I delete it even if Javadoc links to that class?",
+        "How do I safely remove unused imports that SonarQube reports in a Java file?",
+        "Why does SonarQube keep some imports that I think are unused?"
+      ],
+      "aliases": [
+        "S1128",
+        "unused import",
+        "remove unused import"
+      ]
+    },
+    "S1197 — array designator on the variable": {
+      "questions": [
+        "Sonar says the array brackets should be on the type, not the variable name, how do I move them?",
+        "How do I convert C-style array declarations like int x[] into int[] x in Java?",
+        "How do I avoid breaking a method that already returns String[] when I fix this?"
+      ],
+      "aliases": [
+        "S1197",
+        "C-style array declaration",
+        "array brackets after variable name"
+      ]
+    },
+    "S1116 — empty statement": {
+      "questions": [
+        "Sonar flags an empty statement, how do I remove a stray semicolon after a closing brace?",
+        "Is it safe to delete the semicolon after an anonymous class like new Foo(){};?",
+        "How do I fix a double semicolon ;; that SonarQube reports as an empty statement?"
+      ],
+      "aliases": [
+        "S1116",
+        "empty statement",
+        "extra semicolon"
+      ]
+    },
+    "S1161 — missing `@Override`": {
+      "questions": [
+        "Sonar says a method is missing @Override, how do I add it to an implementation of a parent method?",
+        "Can an interface method that redeclares a super-interface method take @Override?",
+        "How do I add the missing @Override annotation to many methods at once without breaking anything?"
+      ],
+      "aliases": [
+        "S1161",
+        "missing override annotation",
+        "@Override missing"
+      ]
+    },
+    "S1611 — redundant parentheses around a lambda parameter": {
+      "questions": [
+        "Sonar says the parentheses around my lambda parameter are redundant, how do I simplify (x) -> to x ->?",
+        "What is the difference between a lambda with (x) and one with x when only one untyped parameter is used?",
+        "How do I handle a lambda that SonarQube flags with both S1611 and S1602 at once?"
+      ],
+      "aliases": [
+        "S1611",
+        "redundant lambda parentheses",
+        "lambda parameter parentheses"
+      ]
+    },
+    "S2209 — a `static` member should be accessed statically": {
+      "questions": [
+        "Sonar says to change this instance reference to a static reference, how do I fix a this.CONSTANT access?",
+        "Why does my subclass read a parent's static constant through this. and get flagged?",
+        "How do I remove the this. qualifier from a static field access without changing behaviour?"
+      ],
+      "aliases": [
+        "S2209",
+        "static member instance reference",
+        "this.CONSTANT static field"
+      ]
+    },
+    "S3252 — a `static` member should be accessed through the class that declares it": {
+      "questions": [
+        "Sonar says to access this static member through its declaring class, how do I change the qualifier?",
+        "Should I replace StringUtils with the Apache base class to fix a static access warning?",
+        "How do I fix the imports when I change a static access from a child class to the declaring class?"
+      ],
+      "aliases": [
+        "S3252",
+        "static access through subclass",
+        "static member declaring class"
+      ]
+    },
+    "S1124 — modifier order": {
+      "questions": [
+        "Sonar says modifiers are out of order, how should I order final static or static public in Java?",
+        "What is the canonical Java modifier order that SonarQube expects?",
+        "Does reordering modifiers like static final need a @since tag?"
+      ],
+      "aliases": [
+        "S1124",
+        "modifier order",
+        "JLS modifier order"
+      ]
+    },
+    "S3878 — array created for a varargs parameter": {
+      "questions": [
+        "Sonar says an array is created for a varargs parameter, how do I remove the new Object[] wrapper?",
+        "Why does removing new Object[]{...} in my logger method cause infinite recursion?",
+        "When should I keep an explicit array for a varargs call that SonarQube flags?"
+      ],
+      "aliases": [
+        "S3878",
+        "varargs array creation",
+        "Disambiguate this call casting Object"
+      ]
+    },
+    "S7476 — a single-line comment should start with exactly two slashes": {
+      "questions": [
+        "Sonar says a comment should start with exactly two slashes, what should I do with a banner line of slashes?",
+        "How do I remove decorative comment banners made of many slashes in Java code?",
+        "Why are there two blank lines left after deleting a separator comment in a test file?"
+      ],
+      "aliases": [
+        "S7476",
+        "comment with too many slashes",
+        "decorative comment banner"
+      ]
+    },
+    "S1659 — declare each local variable on its own line": {
+      "questions": [
+        "Sonar says to declare each variable on a separate line, how do I split String a, b, c declarations?",
+        "How do I un-wrap a long multi-variable declaration preamble in a legacy Java method?",
+        "Does splitting several local variable declarations onto separate lines change behaviour?"
+      ],
+      "aliases": [
+        "S1659",
+        "multiple declarations on one line",
+        "split variable declarations"
+      ]
+    },
+    "S6355 — `@Deprecated` should carry `since`": {
+      "questions": [
+        "Sonar says @Deprecated should have a since attribute, how do I copy the version from the Javadoc?",
+        "What do I do when the deprecated element has no version in its @deprecated Javadoc tag?",
+        "How do I add the since value to an @Override method that inherits deprecation from its parent?"
+      ],
+      "aliases": [
+        "S6355",
+        "deprecated since attribute",
+        "@Deprecated since version"
+      ]
+    },
+    "S6213 — an identifier matching a restricted identifier": {
+      "questions": [
+        "Sonar says an identifier matches a restricted identifier, how do I rename a variable named record?",
+        "Can I rename a method called record in a published XWiki API to fix this Sonar issue?",
+        "How do I rename the variable record without accidentally changing words in comments?"
+      ],
+      "aliases": [
+        "S6213",
+        "restricted identifier",
+        "record as variable name"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Which SonarQube guides should I read after the syntax and annotation fixes?",
+        "Where is the index of SonarQube rule fixes and the verification steps for a fix?",
+        "Which guide explains the @since and @Deprecated version format to use with these fixes?"
+      ],
+      "aliases": [
+        "see also",
+        "next reading",
+        "Sonar rule map"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "sonarqube/index.md",
+      "conventions/versioning.md",
+      "sonarqube/simplification-rules.md",
+      "sonarqube/verification.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "1fc844d236250066027e57823f5e948d16f32e1848abe3464080653379e44dc8"
+}

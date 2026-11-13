@@ -9,6 +9,9 @@ summary: Three traps in a wiki application's own stored data — a non-multiSele
 sources:
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-oldcore/src/main/java/com/xpn/xwiki/objects/classes/ListClass.java
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-oldcore/src/main/resources/xwiki.hbm.xml
+provenance: official
+last-confirmed: 2026-08-31
+related: [architecture/data-migrations.md, conventions/performance.md, architecture/platform-modules.md]
 ---
 
 # Stored data in a wiki application

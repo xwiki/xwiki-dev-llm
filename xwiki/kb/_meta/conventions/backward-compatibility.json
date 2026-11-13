@@ -1,0 +1,132 @@
+{
+  "file": {
+    "questions": [
+      "What are the backward compatibility rules for changing a public API in XWiki?",
+      "Can my contrib extension import an internal package from xwiki-platform?",
+      "Do I need @Unstable or a deprecation cycle when I change test framework or page object code?",
+      "How do I add a method to an interface without breaking existing implementations?",
+      "How do I deprecate a method or class in XWiki and when can I remove it?"
+    ],
+    "aliases": [
+      "Revapi",
+      "API compatibility",
+      "binary compatibility",
+      "API stability policy",
+      "breaking change policy"
+    ]
+  },
+  "sections": {
+    "Backward compatibility policy": {
+      "questions": [
+        "What rules apply to changing public APIs so existing extensions keep working?",
+        "Does the build check whether my change breaks binary or source compatibility?",
+        "What does the Revapi check enforce in XWiki and what does it skip?"
+      ],
+      "aliases": [
+        "API compatibility rules",
+        "breaking changes policy",
+        "binary and semantic compatibility"
+      ]
+    },
+    "Who may use `internal` packages": {
+      "questions": [
+        "Can my extension import classes from an internal package of xwiki-platform?",
+        "Can xwiki-rendering code use internal classes from xwiki-commons?",
+        "Which packages are safe to depend on from a contrib extension?"
+      ],
+      "aliases": [
+        "internal API",
+        "private package",
+        "non-public packages"
+      ]
+    },
+    "Test code is not API": {
+      "questions": [
+        "Do I need @Unstable or a deprecation cycle when changing a test helper class?",
+        "Can I rename a page object method without breaking downstream extension tests?",
+        "Does Revapi check test-jars and test frameworks in XWiki?"
+      ],
+      "aliases": [
+        "test utilities",
+        "page objects compatibility",
+        "test-jar API",
+        "test framework stability"
+      ]
+    },
+    "`@Unstable` annotation": {
+      "questions": [
+        "How do I mark a new public method as experimental in XWiki?",
+        "How long can an API stay marked unstable before the build fails?",
+        "Which Javadoc tags do I need alongside @Unstable on new API?"
+      ],
+      "aliases": [
+        "experimental API annotation",
+        "unstable API",
+        "provisional API"
+      ]
+    },
+    "Evolving an interface without breaking it": {
+      "questions": [
+        "How do I add a method to an existing Java interface without breaking implementors?",
+        "Should I create a new interface version or use a default method?",
+        "What should a default method body do when it is added to a shared interface?"
+      ],
+      "aliases": [
+        "default methods",
+        "interface evolution",
+        "extending an interface safely"
+      ]
+    },
+    "Deprecation": {
+      "questions": [
+        "What steps do I follow to deprecate a method and move it to a legacy module?",
+        "When can I delete a deprecated API from xwiki-platform?",
+        "Do I need a VOTE before removing a legacy API?"
+      ],
+      "aliases": [
+        "@Deprecated",
+        "deprecating code",
+        "legacy module",
+        "API removal"
+      ]
+    },
+    "Choosing the `<criticality>` of a Revapi ignore": {
+      "questions": [
+        "Which Revapi criticality should I pick for an ignore that reports a real break?",
+        "What is the difference between highlight, documented and allowed in a Revapi ignore?",
+        "Where do I put a Revapi ignore in the pom so Maven applies it?"
+      ],
+      "aliases": [
+        "revapi.differences",
+        "revapi ignore severity",
+        "revapi suppression"
+      ]
+    },
+    "Where Revapi does and does not look": {
+      "questions": [
+        "Why does my downstream module fail Revapi even though the changed module is green?",
+        "How do I exclude a wrapped legacy artifact from Revapi analysis in dependent modules?",
+        "When does Revapi report removed methods on classes I did not change directly?"
+      ],
+      "aliases": [
+        "revapi.filter",
+        "transitive API check",
+        "downstream compatibility"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "decisions/check-binary-not-source-compatibility.md",
+      "conventions/code-style.md",
+      "processes/release-notes.md"
+    ],
+    "applies-to": [
+      "**/*.java",
+      "**/*.aj",
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "b72c41d98c42945d8e6dcbe7a101de6a6b26210c1ff0f8b83f67a268e629ad1b"
+}
