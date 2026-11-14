@@ -288,7 +288,8 @@ xwiki-platform-<feature>/
   `maven-failsafe-plugin` declared in `<build><plugins>`, `xwiki.surefire.captureconsole.skip` set to
   `true`, test-scoped dependencies on `xwiki-platform-test-docker` and the feature's
   `-test-pageobjects`, the modules under test as ordinary runtime dependencies (the framework
-  installs them as extensions; `extraJARs` is a last resort), and the `clover` profile copied from a
+  installs them as extensions; `extraJARs` is a last resort, a Hibernate mapping being the routine
+  exception: [[docker-test-framework]]), and the `clover` profile copied from a
   sibling module. A macro the minimal WAR lacks (`{{display}}`) is a dependency of the `-ui` module
   using it, which real installs need too, not an `extraJARs` of the test.
 - **Test-only code for the wiki under test** — a component override, an event listener, a script

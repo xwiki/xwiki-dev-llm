@@ -1,0 +1,101 @@
+{
+  "file": {
+    "questions": [
+      "How do I configure a Docker functional test in XWiki with @UITest options and system properties?",
+      "How do I debug the wiki's server-side code while a UI test is driving it?",
+      "How do I skip a functional test on only one browser or one servlet engine?",
+      "Why is my extension's Hibernate mapping not loaded in a Docker UI test?",
+      "How do I log in two users at once in a Selenium test?"
+    ],
+    "aliases": [
+      "@UITest",
+      "Docker ITs",
+      "xwiki-platform-test-docker",
+      "Docker UI test",
+      "Selenium integration test"
+    ]
+  },
+  "sections": {
+    "Configuring a Docker functional test — option overrides, debugging, skips, HBM mappings, several users": {
+      "questions": [
+        "How do I set @UITest options for a Docker functional test without editing the annotation every time?",
+        "What is the difference between a @UITest annotation value and a -D system property for test settings?",
+        "Where do I change the browser or database used by a Docker UI test?"
+      ],
+      "aliases": [
+        "UITest options",
+        "-Dxwiki.test.ui system property"
+      ]
+    },
+    "A `-Dxwiki.test.ui.*` override that changes nothing": {
+      "questions": [
+        "I passed a -Dxwiki.test.ui property on the Maven command line but the test still uses the old value, why?",
+        "Which functional test settings can I override from the Maven command line and which can't I?",
+        "Why is my -D flag ignored for extraJARs or sshPorts in a UI test?"
+      ],
+      "aliases": [
+        "maven -D override for UI tests",
+        "xwiki.test.ui property not applied"
+      ]
+    },
+    "A breakpoint in the wiki's code: suspended start or not, depending on the engine": {
+      "questions": [
+        "How do I attach my IDE debugger to the wiki that runs inside a functional test?",
+        "My Docker UI test hangs at startup when I turn on debug, what is it waiting for?",
+        "Which port should I connect the debugger to when the test runs Tomcat in a container?"
+      ],
+      "aliases": [
+        "remote debugging",
+        "JDWP",
+        "Jetty standalone"
+      ]
+    },
+    "Skipping a test on one browser or one servlet engine": {
+      "questions": [
+        "How do I make one test method not run on Firefox only?",
+        "How can I stop a whole UI test class from running on one servlet engine like Jetty?",
+        "Why did my forbiddenEngines setting skip more tests than the class I annotated?"
+      ],
+      "aliases": [
+        "@IgnoreBrowser",
+        "forbiddenServletEngines",
+        "disable test for one browser"
+      ]
+    },
+    "An extension's Hibernate mapping is never loaded": {
+      "questions": [
+        "My extension's hbm.xml mapping is never loaded during a Docker UI test, what am I missing?",
+        "How do I get a Hibernate mapping file from a JAR into a functional test's database setup?",
+        "What happens if I add an extraJARs entry without a version in a UI test?"
+      ],
+      "aliases": [
+        "hbm.xml",
+        "Hibernate mapping file",
+        "xwikiDbHbmCommonExtraMappings"
+      ]
+    },
+    "Several users logged in at once": {
+      "questions": [
+        "How do I test two users interacting with the same page in one Selenium test?",
+        "How do I open a second tab logged in as another user in a functional test?",
+        "Why does my second user's login overwrite the first one's session in a UI test?"
+      ],
+      "aliases": [
+        "MultiUserTestUtils",
+        "two users in one browser",
+        "multiple sessions in a test"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "testing/running-docker-its.md",
+      "testing/flickers.md"
+    ],
+    "applies-to": [
+      "**/src/test/**/*.java"
+    ]
+  },
+  "source_hash": "b39e037fb40c436d8614aaf7ffb332e3c92959f28f42fb42e9a8b4ac3d991291"
+}

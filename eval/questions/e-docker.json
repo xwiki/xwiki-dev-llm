@@ -1,0 +1,195 @@
+[
+ {
+  "id": "e02",
+  "group": "e",
+  "question": "My company network only lets me reach the internet through an HTTP gateway. I've put the gateway in my Maven settings and also added -D options to MAVEN_OPTS, but when I run a Selenium/Docker-based functional test with mvn verify, the step that builds the WAR still can't download artifacts from the remote repositories. What do I have to change so the test run actually goes through the gateway?",
+  "kind": "fact",
+  "key_points": [
+   "The test framework ignores the proxies in Maven's settings.xml; it uses the JVM proxy system properties (http.proxyHost/Port, https.proxyHost/Port, http.nonProxyHosts, or java.net.useSystemProxies=true), since 18.10.0RC1 / 18.4.9 / 17.10.16 / 16.10.20",
+   "Tests run in a JVM forked by Maven Failsafe, so MAVEN_OPTS or .mvn/jvm.config don't reach it",
+   "Pass the properties via the JAVA_TOOL_OPTIONS environment variable or Failsafe's argLine",
+   "Limits: the proxy setting doesn't reach a containerized XWiki (e.g. Tomcat), so some tests needing internet break, and the Docker daemon needs its own proxy configuration to pull images"
+  ],
+  "avoided_terms": [
+   "proxy",
+   "Running behind a proxy",
+   "settings.xml",
+   "Failsafe",
+   "JAVA_TOOL_OPTIONS",
+   "argLine",
+   "http.proxyHost",
+   "offline",
+   "forked JVM",
+   "Docker testing"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Running behind a proxy",
+   "gap": "B07",
+   "reference": "= Running behind a proxy =\n\nRunning integration tests with internet connectivity only provided through a proxy is only partially supported and requires special configuration. When it isn't ##offline##, the framework downloads the artifacts needed to generate the XWiki WAR and to provision XWiki from the Maven remote repositories. It doesn't read the proxies configured in the Maven settings (##settings.xml##). Instead, since 18.10.0RC1, 18.4.9, 17.10.16 and 16.10.20, it uses the proxy configured for the JVM, i.e. the ##http.proxyHost##, ##http.proxyPort##, ##https.proxyHost##, ##https.proxyPort## and ##http.nonProxyHosts## system properties (or the system proxies when ##java.net.useSystemProxies## is ##true##).\n\nThe tests are executed in a JVM forked by the Maven Failsafe plugin, so these properties must reach that JVM: setting them in ##MAVEN_OPTS## or ##.mvn/jvm.config## isn't enough. Use the ##JAVA_TOOL_OPTIONS## environment variable, which is read by every JVM, or Failsafe's ##argLine##. For example:\n\n{{code language=\"none\"}}\nexport JAVA_TOOL_OPTIONS=\"-Dhttp.proxyHost=proxy.example.org -Dhttp.proxyPort=3128 -Dhttps.proxyHost=proxy.example.org -Dhttps.proxyPort=3128\"\nmvn clean verify -Dit.test=NavigationPanelIT\n{{/code}}\n\nThe proxy configuration doesn't reach the XWiki instance when it runs in a container (e.g. with Tomcat) which breaks some tests that expect internet connectivity, and the Docker images are pulled by the Docker daemon, which needs its own proxy configuration.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Running behind a proxy\")"
+  }
+ },
+ {
+  "id": "e03",
+  "group": "e",
+  "question": "My Docker-based functional test class has @UITest(...) set to use one browser and to add some extra JAR files to the test webapp. On CI I'd like to override both from the Maven command line with -D flags, without touching the test code. Will that work, and if both are given, which value wins?",
+  "kind": "fact",
+  "key_points": [
+   "For a scalar option such as the browser, a command-line -D value takes priority over the value set in @UITest",
+   "Options are passed as -Dxwiki.test.ui.<Option Name>=<Value>",
+   "The extra JARs option (extraJARs) can't be set this way, so it can only be set in @UITest; the same goes for sshPorts, forbiddenEngines, screenWidth and screenHeight",
+   "The browser option can be overridden from the command line"
+  ],
+  "avoided_terms": [
+   "Configuration options",
+   "annotation",
+   "system property",
+   "extraJARs",
+   "xwiki.test.ui",
+   "attributes"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Configurations options (annotation vs system property)",
+   "gap": "B08",
+   "reference": "= Configurations options =\n\n{{info}}\nNote:\n\n* When passing as Java annotation attributes, in functional tests, the format is ##@UITest(<Option Name> = <Value>)##\n* When passing the options as System Properties, the format is ##-Dxwiki.test.ui.<Option Name>=<Value>##\n** Except for passing ##properties## where the format is ##-Dxwiki.test.ui.properties.<Property name>=<Property Value>##\n** Except for ##extraJARs##, ##sshPorts##, ##forbiddenServletEngines##, ##screenWidth## & ##screenHeight## which cannot be set from System Properties.\n** Except for passing ##databaseCommands## where the format is ##-Dxwiki.test.ui.database.commands.<Command name>=<Command Value>##\n* System properties have priority over Java annotation attributes\n* The ##xwiki.test.ui.dependencies## configuration value can only be passed as a system property.\n{{/info}}\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Configurations options (annotation vs system property)\")\n\nCode check (xwiki-platform 2c938ecd6c8cb9ff300f4c616337c3e1da551c2c, UITestTestConfigurationResolver), where the page is inaccurate: the servlet-engine skip attribute is named `forbiddenEngines` (not `forbiddenServletEngines`); `resolveExtraJARs`, `extensionOverrides` and `xwikiInstances` are annotation-only too; for `profiles` and `servletEngineNetworkAliases` the system property is read only when the annotation leaves them empty (the annotation wins); `properties`/`databaseCommands` are merged key by key, the system property winning per key."
+  }
+ },
+ {
+  "id": "e05",
+  "group": "e",
+  "question": "I'm running a functional UI test against an XWiki started in a container and I put a breakpoint in my IDE in some server-side code. While I watch the browser through a remote desktop viewer, the page just keeps spinning until I step forward in the IDE. Why does this happen, and what should I change in the test setup so I can debug and still use the UI? Also, how do I attach my IDE's remote debugger to the containerized server?",
+  "kind": "fact",
+  "key_points": [
+   "With the default Jetty Standalone servlet engine, the IDE breakpoint blocks XWiki's code from running, so the UI spins until you step forward in the debugger",
+   "Use a different servlet engine, e.g. servletEngine = ServletEngine.TOMCAT",
+   "Set the debug option to true (default false) to start XWiki with a remote debugging agent on port 5005; under Jetty Standalone it starts suspended, waiting for the debugger to attach",
+   "Run docker ps to find the local port mapped to container port 5005, then attach using localhost as the host"
+  ],
+  "avoided_terms": [
+   "Configurations options",
+   "debug",
+   "VNC",
+   "servletEngine",
+   "Jetty Standalone",
+   "Tomcat",
+   "spinning wheel",
+   "debug point",
+   "docker ps",
+   "5005",
+   "suspend"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Usage / Configurations options (debug)",
+   "gap": "B11",
+   "reference": "* When test execute it's possible to connect to the running VNC server and see the UI by using a VNC client and connect to the VNC URL printed in the console, e.g. ##vnc:~/~/vnc:secret@localhost:32936##.\n** Note that if you want to debug and interact with the XWiki UI you should use a ##servletEngine## other than the default Jetty Standalone one since otherwise the debug point in your IDE will prevent the XWiki code from executing and you'll see a spinning wheel until you step forward in your debugger. You can use for example ##servletEngine = ServletEngine.TOMCAT##.\n[...]\n|##debug##|##false##|(((\n* ##true##\n* ##false##\n)))|When active, starts XWiki in debug mode when using the \"Jetty Standalone\" and Tomcat Servlet Engines (and starts it with suspend on, i.e. wait for the remote debugger to connect to it before progressing, to make it easy to debug XWiki's server side). You can then attach a remote debugger. Since Tomcat runs in a Docker container, you'll need to do a ##docker ps## to find the local mapped port corresponding to port 5005 and then use ##localhost## as the JVM host name. {{version before=\"16.2\"}}Some debug logs were also shown only with this parameter set to true.{{/version}}\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Usage / Configurations options (debug)\")\n\nCode check (xwiki-platform 2c938ecd6c8cb9ff300f4c616337c3e1da551c2c): with Jetty Standalone, debug starts XWiki through start_xwiki_debug with `-dp 5005 --suspend` (XWikiExecutor), on the host, and raises the start timeout to a day; with a containerised engine (ServletContainerExecutor) the agent is `suspend=n`, container port 5005 is exposed on a random host port (hence `docker ps`)."
+  }
+ },
+ {
+  "id": "e06",
+  "group": "e",
+  "question": "I'm writing a Docker-based functional test where XWiki sends email to a fake SMTP server (Greenmail) that runs on my host machine on port 3025, not in a container. XWiki inside the container can't reach it. What do I have to set on the test annotation so the container can connect back to that host port? And do I also need to list the XWiki port?",
+  "kind": "fact",
+  "key_points": [
+   "Add the host port (e.g. 3025) to the sshPorts parameter of @UITest (or call setSSHPorts on the test configuration), so it gets forwarded from the container to the host",
+   "The container reaches the host through host.testcontainers.internal",
+   "Port 8080 is always forwarded automatically, so you don't need to list it",
+   "sshPorts is empty by default"
+  ],
+  "avoided_terms": [
+   "sshPorts",
+   "Dynamic Configuration",
+   "Configuration options",
+   "SSH-forwarded",
+   "host.testcontainers.internal",
+   "setSSHPorts"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Configurations options (sshPorts) / Dynamic Configuration",
+   "gap": "B16",
+   "reference": "|##sshPorts##|No default (empty)|List of integers|The list of ports that should be SSH-forwarded when connecting from a Docker container to the host (i.e. when using the ##host.testcontainers.internal##. This is in addition to port ##8080## which is always added. For example if you need XWiki to send a mail to a SMTP server running on port 3025 on the host, you should add port 3025 to the list.\n[...]\n== Example 3: Test using Greenmail + Hibernate HBM ==\n\n{{code language=\"java\"}}\n@UITest(sshPorts = {\n        3025\n    },\n    properties = {\n        \"xwikiDbHbmCommonExtraMappings=mailsender.hbm.xml\",\n        // Pages created in the tests need to have PR since we ask for PR to send mails so we need to exclude them from\n        // the PR checker.\n        \"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MailIT\\\\..*\"\n[...]\n            String.format(\"activeinstalls2.pingURL=%s\", hostAddress));\n        configuration.setProperties(properties);\n        // When the Servlet engine is running inside docker, Active Installs (thus running inside docker) will need\n        // access the socket of the Elasticsearch server running on the host. Thus, we need to expose the port, see\n        // https://www.testcontainers.org/features/networking/#exposing-host-ports-to-the-container.\n        configuration.setSSHPorts(List.of(esContainer.getMappedPort(9200)));\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Configurations options (sshPorts) / Dynamic Configuration\")"
+  }
+ },
+ {
+  "id": "e08",
+  "group": "e",
+  "question": "One of my Docker-based functional test methods keeps failing only when it runs on Firefox because alert handling is broken there. I need to skip just that method on Firefox, and the fix also has to be backported to the 15.10.x maintenance branch. What's the supported way to do it, and is it available that far back? And separately, if a test suite is known to break on a particular servlet container, how do I tell the test framework to skip it there?",
+  "kind": "fact",
+  "key_points": [
+   "Annotate the test method with @IgnoreBrowser, giving value = \"firefox\" (a browser name, optionally with a browser version) and a reason, e.g. a JIRA issue link",
+   "@IgnoreBrowser is available since 16.6RC1, 16.4.1 and 15.10.12, so on the 15.10.x branch it needs 15.10.12 or later",
+   "To skip tests on specific servlet engines, use the @UITest forbiddenEngines attribute (documented on the page as forbiddenServletEngines): a list of ServletEngine enum values, empty by default"
+  ],
+  "avoided_terms": [
+   "Ignore Browsers",
+   "IgnoreBrowser",
+   "forbiddenServletEngines",
+   "ServletEngine",
+   "DockerTesting"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Ignore Browsers / forbiddenServletEngines",
+   "gap": "B18",
+   "reference": "= Ignore Browsers =\n\n{{version since=\"16.6RC1,16.4.1,15.10.12\"}}\nIf a test must not execute on a given browser or given browser version, it's possible to disable it using the ##@IgnoreBrowser## annotation.\n\nHere's an example:\n\n{{code language=\"java\"}}\n@Test\n@IgnoreBrowser(value = \"firefox\", reason = \"Alert handling in Firefox currently isn't working, see also \"\n    + \"https://jira.xwiki.org/browse/XWIKI-22282\")\n@Order(6)\ncodepublic void saveAndFormManipulation(TestUtils setup, TestReference reference)\n{...}\n{{/code}}\n{{/version}}\n[...]\n|##forbiddenServletEngines##|No default (empty)|List of ##ServletEngine##s enums|List of Servlet Engines for which the tests will be skipped (usually because they'd fail on them).\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Ignore Browsers / forbiddenServletEngines\")\n\nCode check (xwiki-platform 2c938ecd6c8cb9ff300f4c616337c3e1da551c2c): the @UITest attribute is `forbiddenEngines` (UITest.java); the page's `forbiddenServletEngines` is the TestConfiguration getter name. It is evaluated once on the top-level class with the merged configuration, so on a nested class it skips the whole AllIT."
+  }
+ },
+ {
+  "id": "e09",
+  "group": "e",
+  "question": "I'm writing a Docker-based functional test for a module that ships its own Hibernate mapping file. The module is installed in the test wiki like any normal extension, but the mapping never gets picked up. What do I need to set in the test annotation to fix this? And if I list the module without a version, which version gets used?",
+  "kind": "fact",
+  "key_points": [
+   "Hibernate mapping (HBM) files are only supported when they sit in a JAR in WEB-INF/lib (a core extension), not in an extension installed at runtime",
+   "Add the module to the extraJARs attribute of @UITest as groupId:artifactId (optionally :version) so it is deployed in WEB-INF/lib",
+   "Register the mapping file with the xwikiDbHbmCommonExtraMappings property (e.g. mailsender.hbm.xml in the MailIT example)",
+   "When no version is given, the current POM's version is used"
+  ],
+  "avoided_terms": [
+   "extraJARs",
+   "resolveExtraJARs",
+   "WEB-INF/lib",
+   "core extensions",
+   "HBM",
+   "xwikiDbHbmCommonExtraMappings",
+   "Greenmail",
+   "MailIT",
+   "Configuration options"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Configurations options (extraJARs, resolveExtraJARs) / Example 3",
+   "gap": "B19",
+   "reference": "|##extraJARs##|No default (empty)|Comma-separated list of ##<groupId>:<artifactId>## or ##<groupId>:<artifactId>:<version>##|(% style=\"word-break:break-all\" %)There are cases where the module being tested cannot be fully deployed as an extension into a running XWiki and it needs to deploy one or several JARs into ##WEB-INF/lib## (as core extensions). One such example is when an extension includes a Hibernate HBM file, as right now only HBM files located in JARs in ##WEB-INF/lib## are supported. Note that when the version is not specified the current POM's version is used.\n[...]\n== Example 3: Test using Greenmail + Hibernate HBM ==\n\n{{code language=\"java\"}}\n@UITest(sshPorts = {\n        3025\n    },\n    properties = {\n        \"xwikiDbHbmCommonExtraMappings=mailsender.hbm.xml\",\n        // Pages created in the tests need to have PR since we ask for PR to send mails so we need to exclude them from\n        // the PR checker.\n        \"xwikiPropertiesAdditionalProperties=test.prchecker.excludePattern=.*:MailIT\\\\..*\"\n    },\n    extraJARs = {\n        \"org.xwiki.platform:xwiki-platform-mail-send-storage\"\n    }\n)\npublic class MailIT\n...\n{{/code}}\n\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Configurations options (extraJARs, resolveExtraJARs) / Example 3\")"
+  }
+ },
+ {
+  "id": "e11",
+  "group": "e",
+  "question": "I'm writing a Docker-based functional UI test where two different users need to be logged in at the same time (e.g. one edits a page while the other watches for a notification). Since both share the same browser session cookies, how do I set up the test so each user stays logged in at once?",
+  "kind": "fact",
+  "key_points": [
+   "Declare extra network aliases for the servlet engine container in the @UITest annotation (servletEngineNetworkAliases), so the same XWiki is reachable under several domains",
+   "Open a new browser tab that accesses XWiki through a different alias/domain, and log in with the other user there (cookies are per-domain)",
+   "Inject MultiUserTestUtils as a test method parameter: openNewBrowserTab(alias), switchToBrowserTab(getFirstTabHandle()), closeTabs() at the end",
+   "Available since 15.10.12 / 16.4.1 / 16.6.0RC1"
+  ],
+  "avoided_terms": [
+   "Login multiple users at the same time",
+   "servletEngineNetworkAliases",
+   "MultiUserTestUtils",
+   "network aliases",
+   "openNewBrowserTab",
+   "browser tabs",
+   "MultipleUsersIT"
+  ],
+  "gold": {
+   "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/@81.1",
+   "section": "Example 8: Login multiple users at the same time",
+   "gap": "B25",
+   "reference": "|servletEngineNetworkAliases|[]|List of Docker network aliases|{{version since=\"15.10.12,16.4.1,16.6.0RC1\"}}Allows to specify additional network aliases to use for the servlet engine Docker container. If the servlet engine runs directly on the Docker host then this is used to configure additional hosts on the browser Docker container. This is useful when you need to access the same XWiki instance using different domains, e.g. because you need to login with different XWiki users in the same browser instance (but different tabs). Use this along with ##MultiUserTestUtils## that you can inject as parameter in your test methods.{{/version}}\n[...]\n== Example 8: Login multiple users at the same time ==\n\n{{version since=\"15.10.12,16.4.1,16.6.0RC1\"}}\nThe current approach to achieve this is to:\n\n* map the servlet engine running XWiki to multiple domains (Docker network aliases)\n* open multiple browser tabs\n* access XWiki using a different domain in each browser tab\n* log in with different users in different browser tabs\n\nWe implemented a helper to ease this:\n\n{{code language=\"java\"}}\n@UITest(\n  servletEngineNetworkAliases = MultipleUsersIT.XWIKI_ALIAS\n)\nclass MultipleUsersIT\n{\n    public static final String XWIKI_ALIAS = \"xwiki-alias\";\n\n    @Test\n    @Order(1)\n    void loginWithMultipleUsers(TestUtils setup, MultiUserTestUtils multiUserSetup)\n    {\n        // First tab.\n        setup.createUserAndLogin(\"Alice\", \"foo\");\n\n        // Second tab.\n        String secondTabHandle = multiUserSetup.openNewBrowserTab(XWIKI_ALIAS);\n        setup.createUserAndLogin(\"Bob\", \"bar\");\n\n        // Back to first tab.\n        multiUserSetup.switchToBrowserTab(multiUserSetup.getFirstTabHandle());\n\n        // Finally, close the opened tabs, except for the first one.\n        multiUserSetup.closeTabs();\n    }\n}\n{{/code}}\n{{/version}}\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/ , page version 81.1, section \"Example 8: Login multiple users at the same time\")"
+  }
+ }
+]

@@ -94,15 +94,15 @@ in the topic file. Read the entry to choose, then read the file — never act on
   must satisfy, the functional-test module layout (procedures: the test skills).
 - **test-value** — a test worth having: its level, outcomes over calls, when to `verify()`, what a
   hard test says.
-- **running-docker-its** — running the Docker functional tests locally: container
-  networking, setup failures, a run not testing your build, leftover containers (ryuk), parallel
-  runs. Commands in `xwiki-build`.
-- **ci-watch** — proving a merged or backported functional test on CI: what counts as "it ran and
-  passed", and the in-session watch.
-- **flickers** — diagnosing a flickering functional test: reading its video, the Selenium and browser
-  mechanics most flickers turn out to be, forcing a race to prove a fix, the realtime debug dump.
-- **manual-tests** — the manual tests on test.xwiki.org: where a test's steps, runs and automation
-  status are stored, finding a release's runs, and which automation fields are deprecated.
+- **running-docker-its** — running the Docker functional tests locally: networking, proxy and host
+  ports, setup failures, a stale build, ryuk leftovers, parallel runs. Commands in `xwiki-build`.
+- **docker-test-framework** — `@UITest` options `-D` can't set, debugging, skips, HBM, two users.
+- **ci-watch** — proving on CI that a merged or backported functional test ran and passed, and the
+  in-session watch.
+- **flickers** — diagnosing a flickering functional test: its video, the Selenium and browser
+  mechanics behind most flickers, forcing a race, the realtime debug dump.
+- **manual-tests** — the manual tests on test.xwiki.org: where steps, runs and automation status
+  live, a release's runs, the deprecated automation fields.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
