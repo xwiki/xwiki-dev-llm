@@ -28,7 +28,7 @@ of truth and changes over time — fetch it when actually releasing.
   [[backward-compatibility]]).
 - **Backport targets are the LTS branches.** Two LTS lines are maintained in parallel: the
   Intermediate LTS `N.4.x` (branched end of May) and the Cycle LTS `N.10.x` (branched end of
-  November) — with master on `18.9`, `18.4.x` and `17.10.x`. Derive them from the root `pom.xml`
+  November) — with master on `N.9`, `N.4.x` and `(N-1).10.x`. Derive them from the root `pom.xml`
   version rather than memorising them.
 - **The recent stable branches are not routine backport targets.** A new stable ships every month,
   so an ordinary fix rides the next release instead of paying for an extra one — a release is
@@ -36,7 +36,7 @@ of truth and changes over time — fetch it when actually releasing.
   enough that a freshly released stable needs a bugfix release now.
 - The LTS line **older** than the maintained two takes **security fixes only** — a "Critical"
   vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix, however small; with
-  master on `18.x` that is `16.10.x`. A repo offering a `backport stable-<old>.x` GitHub label does
+  master on `N.x` that is `(N-2).10.x`. A repo offering a `backport stable-<old>.x` GitHub label does
   not make that branch a routine target. **Never name that line in a public artifact** — a PR body,
   a JIRA issue or fix version, a commit message, a forum post — not even to explain why it is
   excluded: naming it implies a support commitment that does not exist. List the targets and stop.
