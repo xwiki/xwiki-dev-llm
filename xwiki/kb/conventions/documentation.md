@@ -9,7 +9,7 @@ summary: The rules for xwiki.org documentation — Diataxis page types & audienc
   a code macro rather than a screenshot whenever what is shown is itself text (a config file, a command)
   and above all when the reader must edit or copy it,
   architecture/concept diagrams for Explanations, and when *not* to force a visual, how much belongs on
-  one page (granularity, keeping verbosity low, a hub page routing rather than narrating, how
+  one page (granularity, keeping verbosity low, what a hub page's prose links, how
   duplication is actually detected & where the one copy of shared content lives: a visible page,
   else a content fragment, never a hidden page), the page-structure xobject fields (Highlights/More/Related and their exact
   semantics), documentation style (incl. never hard-wrapping prose and not overusing the em dash),
@@ -240,10 +240,13 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   the three that inflate a page most. Prefer a **screenshot or a code example** over a paragraph
   wherever one will do (see "Show, don't only tell" above), a **table** over prose in a Reference
   (see "Content rules per type" for the two prose shapes that hide a table), and a **link** over a summary.
-- **A hub page's job is to route, not to narrate.** Its children are reached through the automatic
-  **More** table and, for those readers should open first, **Highlights** with their one-line
-  description — never through a prose list ("See X and Y."), which repeats the More table without the
-  descriptions. The prose is a short orientation on the topic, not a mini-manual of its features.
+- **A hub page's prose links, it does not only narrate.** It briefly says what the topic lets the
+  reader do and links each child it introduces **where it reaches the capability that child covers** —
+  context the More table, sorted by title, cannot give: how the children relate and which one fits which
+  need. Children it does not reach are left to the More table and, on a large hub, Highlights. Two
+  failures: a mini-manual explaining the features without linking the pages that document them, and a
+  bare link list ("See X and Y.") repeating the More table. Test each linking sentence: if removing its
+  links leaves nothing the reader learns, it was a list.
 - **Duplication is found by comparing pages, not by writing each one carefully.** Before finishing a
   tree, put the intros, the FAQ entries and the hub prose **side by side** and look for *the same fact*,
   not the same wording — a re-phrased duplicate is the invisible one. Line up the sibling How-tos'
@@ -686,7 +689,7 @@ ones, which is worse than either extreme because it looks deliberate.
 
 One further rule, established in practice and **not** stated in the guide:
 
-- **The tree must not contradict the page.** When a landing page's prose lists its children in a
+- **The tree must not contradict the page.** When a landing page's prose links its children in a
   deliberate order, the pin repeats that order rather than inventing a second one. The same applies to
   the **Highlights** field: if it singles out a subset, take them in the pinned order.
 
