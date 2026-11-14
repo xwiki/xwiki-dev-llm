@@ -130,11 +130,11 @@ and lands only the ones the model needs, with numbers showing they help and harm
   default size, an entry in `scripts/size-budgets.json`.
 - **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
   runs per side: group (e) with the gate's model and code; groups (a) and (d) without the code, with
-  `run.mjs`'s default `sonnet` (`claude-sonnet-5-5` today; `model_id` in each record must match across
-  the sides). `analyze.mjs --gate`, once on the (e) runs and once on the (a)+(d) runs, must pass both
-  times: the (e) difference CI lies above 0, the (a) one does not lie entirely below 0, harmful answers
-  per run do not grow in (e) nor (a), and the branch's (d) pointers per session do not exceed the master
-  runs' maximum.
+  `run.mjs`'s default `sonnet` (`claude-sonnet-5-5` today). `analyze.mjs --gate`, once on the (e) runs
+  and once on the (a)+(d) runs, must pass both times: the (e) difference CI lies above 0, the (a) one
+  does not lie entirely below 0, harmful answers per run do not grow in (e) nor (a), the branch's (d)
+  pointers per session do not exceed the master runs' maximum, and each group's records name at most one
+  `model_id` (a record without one, older than that field, is not counted).
 - **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
   `status` set (`done` with where it went, `dropped` with why).
 

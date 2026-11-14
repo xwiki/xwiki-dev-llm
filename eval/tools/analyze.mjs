@@ -146,7 +146,8 @@ const harmfulPerRun = (qs, runs) => runs.map((recs) => qs.filter((q) => recs[q.i
  * The KB batch gate (eval/README.md, "KB batches") on the groups of `questions` it covers, head against
  * base: (e) the paired difference's CI lies above 0; (a) its CI does not lie entirely below 0; (e) and (a)
  * harmful answers per run do not grow (means over the runs); (d) pointers per session do not exceed the
- * base runs' maximum (fewer is better: they are noise there). Returns [{ condition, value, pass }]; a
+ * base runs' maximum (fewer is better: they are noise there); per group, the records' known `model_id`s
+ * are one (a record without one, from before run.mjs kept it, is not counted). Returns [{ condition, value, pass }]; a
  * group absent from `questions` adds no condition. `sides` as in report(), every record present.
  */
 export function gate(questions, [base, head], opts) {
@@ -162,6 +163,12 @@ export function gate(questions, [base, head], opts) {
       : { condition: '(a) score difference: CI not entirely below 0', value: ci, pass: d.hi >= 0 });
     const [hb, hh] = [base, head].map((side) => mean(harmfulPerRun(qs, side.runs.map((r) => r.recs))));
     rows.push({ condition: `(${g}) harmful per run does not grow`, value: `${hb.toFixed(2)} -> ${hh.toFixed(2)}`, pass: hh <= hb });
+  }
+  for (const g of ['e', 'a', 'd']) {
+    const qs = of(g);
+    if (!qs.length) continue;
+    const ids = [...new Set([base, head].flatMap((side) => side.runs.flatMap((r) => qs.map((q) => r.recs[q.id]?.model_id).filter(Boolean))))];
+    rows.push({ condition: `(${g}) one model on both sides`, value: ids.join(', ') || 'unknown', pass: ids.length <= 1 });
   }
   const ds = of('d');
   if (ds.length) {

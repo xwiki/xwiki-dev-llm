@@ -106,17 +106,27 @@ const merge = (...sets) => sets[0].map((_, i) => Object.assign({}, ...sets.map((
 test('the batch gate passes batch 1: (e) CI above 0, (a) and harmful flat, (d) pointers not above the base maximum', () => {
   const rows = gate([...eQuestions, a26q, d01q], [
     side('master', merge(runsOf(0), aRuns(2, true), dRuns(5))), side('branch', merge(runsOf(1), aRuns(2, true), dRuns(4)))]);
-  assert.deepEqual(rows.map((r) => r.pass), [true, true, true, true, true]);
+  assert.deepEqual(rows.map((r) => r.pass), [true, true, true, true, true, true, true, true]);
   assert.match(rows[0].value, /0\.714 \(CI 0\.238 to 1\.238\)/);
-  assert.match(rows[4].value, /4\.00 vs base max 5\.00/);
+  assert.match(rows.at(-1).value, /4\.00 vs base max 5\.00/);
 });
 
 test('the batch gate fails on an (e) CI reaching 0, an (a) loss, more harmful answers or more (d) pointers', () => {
   const [base, head] = [side('master', merge(runsOf(1), aRuns(3, false), dRuns(4))), side('branch', merge(runsOf(1), aRuns(1, true), dRuns(5)))];
   const rows = gate([...eQuestions, a26q, d01q], [base, head]);
   assert.deepEqual(rows.map((r) => [r.condition.slice(0, 3), r.pass]),
-    [['(e)', false], ['(e)', true], ['(a)', false], ['(a)', false], ['(d)', false]]);
+    [['(e)', false], ['(e)', true], ['(a)', false], ['(a)', false], ['(e)', true], ['(a)', true], ['(d)', true], ['(d)', false]]);
   assert.deepEqual(gate([eQuestions[0]].map((q) => ({ ...q, group: 'b' })), [base, head]), []);
+});
+
+test('the batch gate fails a group whose records name two models; a record without model_id is not counted', () => {
+  const withModel = (runs, id) => runs.map((recs) => Object.fromEntries(Object.entries(recs).map(([k, r]) => [k, { ...r, model_id: id }])));
+  const base = side('master', withModel(runsOf(0), 'claude-opus-5-5'));
+  const one = (rows) => rows.find((r) => r.condition === '(e) one model on both sides');
+  assert.equal(one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-opus-5-5'))])).pass, true);
+  assert.equal(one(gate(eQuestions, [base, side('branch', runsOf(1))])).pass, true);
+  const mixed = one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-sonnet-5-5'))]));
+  assert.deepEqual([mixed.pass, mixed.value], [false, 'claude-opus-5-5, claude-sonnet-5-5']);
 });
 
 test('the report sums the judge\'s recorded cost apart from the sessions\'', () => {
