@@ -15,7 +15,7 @@ When **converting** existing tests (JUnit4/JMock → JUnit5/Mockito), use the `x
 
 When writing a test:
 * Follow the test strategy at https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HTestingStrategy
-* When writing unit tests for Java code, follow https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HJavaUnitTesting
+* When writing unit tests for Java code, follow https://dev.xwiki.org/xwiki/bin/view/Community/Testing/#HJavaUnitTesting (where it disagrees with the code, `kb/testing/unit-test-framework.md` follows the code)
 * When writing unit tests for code using XWiki Rendering (like rendering macros), follow https://rendering.xwiki.org/xwiki/bin/view/Main/Extending#HAddingTests
 * When writing unit tests for XWiki templates (.vm files) or XWiki pages (.xml files representing a wiki page), follow https://dev.xwiki.org/xwiki/bin/view/Community/Testing/ViewUnitTesting/
 * When writing a functional test, follow https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
@@ -32,5 +32,3 @@ When writing a test:
 * Apply XWiki's general code best practices and code style when writing tests.
 * Before writing a unit test, choose its level by the kind of code changed and assert outcomes, not calls (`kb/testing/test-value.md`). A test needing many stubs, a captor to reach the result, a `doAnswer` faking a side effect, `InOrder` or reflection is design feedback: extract the logic or test higher up (same file). Use `@OldcoreTest` only when needed — code saving documents needs it.
 * Verify if the jacoco coverage threshold cannot be increased after tests have been added, by running maven with `-Pquality -Dxwiki.jacoco.instructionRatio=1.00` which should fail but provide the current threshold value that can then be used to replace the current value.
-
-For where each XWiki test framework lives in the source tree (commons/rendering/platform), see `kb/testing/strategy.md`.

@@ -10,8 +10,7 @@ summary: Entry map of the XWiki LLM knowledge base. Lists every topic with a one
 The **KB** is the curated, LLM-oriented knowledge base for developing XWiki platform code and
 xwiki-contrib extensions. It holds **declarative** knowledge (conventions, architecture, the dev
 server ecosystem, processes). **Procedures** ("how to do task X") live in the `xwiki-*` skills, not
-here. A slimmed copy of this map is injected into every XWiki session via
-`instructions/xwiki-org.md`; this is the full map.
+here.
 
 ## How to use the KB (READ)
 
@@ -94,6 +93,8 @@ in the topic file. Read the entry to choose, then read the file — never act on
   must satisfy, the functional-test module layout (procedures: the test skills).
 - **test-value** — a test worth having: its level, outcomes over calls, when to `verify()`, what a
   hard test says.
+- **unit-test-framework** — unit-test mechanics: temp dir, setup order, `Provider` role
+  mismatch, logs.
 - **running-docker-its** — running the Docker functional tests locally: networking, proxy and host
   ports, setup failures, a stale build, ryuk leftovers, parallel runs. Commands in `xwiki-build`.
 - **docker-test-framework** — `@UITest` options `-D` can't set, debugging, skips, HBM, two users.
