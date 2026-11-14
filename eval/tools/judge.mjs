@@ -45,7 +45,7 @@ const schema = {
 };
 
 function prompt(q, rec) {
-  const ref = q.group === 'a' ? (q.gold.reference || goldSection(q.gold)) : q.group === 'b' ? q.gold.answer : q.gold.checklist.join('\n- ');
+  const ref = q.group === 'a' || q.group === 'e' ? (q.gold.reference || goldSection(q.gold)) : q.group === 'b' ? q.gold.answer : q.gold.checklist.join('\n- ');
   const subject = q.group === 'c'
     ? `The developer gave this TASK to their coding agent:\n<<<\n${q.task}\n>>>\n\nThe agent's final message:\n<<<\n${rec.answer}\n>>>\n\n${rec.commits ? `The agent's commit messages:\n<<<\n${rec.commits}\n>>>\n\n` : ''}The agent's diff:\n<<<\n${(rec.diff || '(no changes)').slice(0, 60000)}\n>>>`
     : `The developer asked:\n<<<\n${q.question}\n>>>\n\nThe agent answered:\n<<<\n${rec.answer}\n>>>`;

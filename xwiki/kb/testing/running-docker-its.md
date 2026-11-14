@@ -3,15 +3,15 @@ title: Running Docker functional tests on a developer machine
 stability: durable
 summary: How the browser container reaches XWiki under each servlet engine and why that makes the two
   configurations exercise different networking, which engine to pick for the local loop and when the
-  containerised one is mandatory, the setup-failure symptom table (a beforeAll failure is never
+  containerised one is mandatory, reaching a proxy or a host service from a run, the setup-failure symptom table (a beforeAll failure is never
   evidence about your change), a run silently testing other code than yours, why runs leak
   containers and networks when ryuk cannot reach the daemon, and what several agents sharing one
   machine contend for.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
 provenance: official
-last-confirmed: 2026-10-17
-related: [testing/strategy.md, servers/jenkins.md, testing/ci-watch.md, testing/flickers.md]
+last-confirmed: 2026-11-14
+related: [testing/strategy.md, testing/docker-test-framework.md, servers/jenkins.md, testing/ci-watch.md, testing/flickers.md]
 ---
 
 # Running Docker functional tests on a developer machine
@@ -50,6 +50,26 @@ pipeline round trip.
 **verify:** which configurations CI actually runs is volatile — read the repo's `Jenkinsfile` (the
 `xwikiBuild` `profiles`/`properties`) and the Docker testing page above, rather than assuming a
 matrix.
+
+## Reaching outside the run: a proxy, a service on the host
+
+- **Behind a proxy, the WAR build cannot download while Maven can.** When not `offline`, the framework
+  resolves the WAR's and the provisioned extensions' artifacts with its own resolver
+  (`RepositoryResolver`, in the test JVM), which never reads `settings.xml` proxies. Since 18.10.0RC1,
+  18.4.9, 17.10.16 and 16.10.20 it uses the JVM's proxy (`http(s).proxyHost`/`Port`,
+  `http.nonProxyHosts`, or `java.net.useSystemProxies=true`); older versions have no proxy support.
+  Those properties must reach the JVM Failsafe forks, which `MAVEN_OPTS` and `.mvn/jvm.config` do
+  not: set them in `JAVA_TOOL_OPTIONS` (read by every JVM) or Failsafe's `argLine`. They still do not
+  reach a containerised wiki (tests needing internet from XWiki break), and image pulls go through
+  the Docker daemon's own proxy configuration.
+- **A containerised wiki cannot reach a service on the host** (a GreenMail SMTP server, a mock HTTP
+  server) unless its port is in `@UITest(sshPorts = {3025})`: containers reach the host as
+  `host.testcontainers.internal`, and only exposed ports get through (`Testcontainers.exposeHostPorts`;
+  8080 always is). Under the default engine the wiki runs on the host and reaches it directly, so the
+  test is green locally and refused under Tomcat. A port known only at run time (a container mapped to
+  a random port) goes through `TestConfiguration.setSSHPorts(...)` in the dynamic configuration
+  ([[strategy]] "URLs and runtime configuration"). `sshPorts` is annotation only
+  ([[docker-test-framework]]).
 
 ## A setup failure is never evidence about your change
 

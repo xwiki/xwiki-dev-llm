@@ -1,89 +1,108 @@
 {
   "file": {
     "questions": [
-      "How do I run the XWiki Docker functional tests on my own machine?",
-      "Why does my UI test pass locally but fail on CI with a networking error?",
-      "Why are testcontainers networks and browser containers piling up after my test runs?",
-      "Can I run several Docker functional tests or agents at the same time on one laptop?"
+      "How do I run XWiki Docker functional tests on my own machine without them failing for reasons unrelated to my change?",
+      "Why does my Docker functional test say the browser can't resolve xwikiweb or shows a dnsNotFound error?",
+      "Why do my local Docker UI tests pass but fail in CI when the wiki runs in Tomcat or Jetty containers?",
+      "How do I let a containerised XWiki reach a mock SMTP or HTTP server running on my host?",
+      "Why are leftover browser containers and Docker networks piling up after my test runs?"
     ],
     "aliases": [
+      "Docker ITs",
+      "UI tests",
+      "@UITest",
       "ryuk",
-      "testcontainers",
-      "docker ITs",
-      "UI tests in Docker",
-      "-Pdocker,integration-tests"
+      "testcontainers"
     ]
   },
   "sections": {
     "Running Docker functional tests on a developer machine": {
       "questions": [
-        "Which servlet engine should I pick to run the XWiki UI tests locally?",
-        "When do I have to run the containerised Tomcat or Jetty config before trusting a green local run?",
-        "How do I run the Docker integration tests with mvn on my laptop?"
+        "Which servlet engine should I pick to run Docker UI tests locally versus in CI?",
+        "What do I need to know before running the -Pdocker,integration-tests profile on my laptop?",
+        "Why does my Docker functional test fail in beforeAll before any test method runs?"
       ],
       "aliases": [
-        "local UI test setup",
-        "docker integration tests",
-        "servlet engine choice"
+        "Docker integration tests setup",
+        "local UI test run"
       ]
     },
     "The browser is always a container; what changes is how it reaches XWiki": {
       "questions": [
-        "Why can't the browser container reach localhost:8080 in my XWiki UI test?",
-        "Why does a hardcoded host name or port in my functional test pass locally and fail in CI?",
-        "What is the difference between JETTY_STANDALONE and a containerised servlet engine for UI tests?"
+        "Why does my UI test behave differently under Jetty standalone than under Tomcat in a container?",
+        "How does the browser container reach the wiki under the default servlet engine?",
+        "Why does my page object assuming a host port or host path break in the containerised configuration?"
       ],
       "aliases": [
-        "xwikiweb alias",
-        "host-gateway",
-        "BrowserContainerExecutor"
+        "JETTY_STANDALONE",
+        "servletEngine",
+        "BrowserContainerExecutor",
+        "host-gateway"
+      ]
+    },
+    "Reaching outside the run: a proxy, a service on the host": {
+      "questions": [
+        "My WAR build can't download artifacts during the Docker test but Maven works, what proxy settings do I need?",
+        "How do I expose a port of a mock mail or HTTP server on my host to a wiki running in a container?",
+        "Why is my GreenMail SMTP test green locally but refused when the wiki runs under Tomcat?"
+      ],
+      "aliases": [
+        "sshPorts",
+        "host.testcontainers.internal",
+        "proxyHost JVM settings",
+        "Failsafe argLine"
       ]
     },
     "A setup failure is never evidence about your change": {
       "questions": [
-        "My test fails in beforeAll with 'Error setting up the XWiki testing environment', is my code broken?",
-        "What does a 401 when installing extensions during a Docker UI test mean?",
-        "Why does XWiki fail to start after 120 seconds in my functional test, and what do I check?"
+        "What does the 401 during extension installation mean in my Docker test run?",
+        "Why does my Docker test fail with Failed to start XWiki in 120 seconds, and is my code the cause?",
+        "Why do I get a dnsNotFound error or a Firefox TimeoutException when running the UI tests?",
+        "Why does my test say Can't find descriptor for the component after I pulled the branch?"
       ],
       "aliases": [
-        "setup failure",
         "beforeAll failure",
-        "test environment error"
+        "environment setup error",
+        "Error setting up the XWiki testing environment",
+        "TZ=UTC date test failure"
       ]
     },
     "Leftover containers and networks: ryuk has to reach the daemon": {
       "questions": [
-        "Docker says all predefined address pools have been fully subnetted, how do I clean up leftover networks?",
-        "Why are browser containers still running after my test run has finished?",
-        "How do I fix ryuk failing with 'client version 1.29 is too old'?"
+        "How do I clean up leftover testcontainers browser containers and networks left by killed test runs?",
+        "Why do my Docker tests fail with all predefined address pools have been fully subnetted?",
+        "How do I configure a newer ryuk image because my Docker daemon rejects the old API version 1.29?"
       ],
       "aliases": [
-        "leaked containers",
-        "address pool exhausted",
-        "testcontainers ryuk"
+        "testcontainers ryuk",
+        "ryuk container",
+        "testcontainers.properties",
+        "docker network prune",
+        "address pool exhausted"
       ]
     },
     "What several agents on one machine contend for": {
       "questions": [
-        "Can two Docker functional tests run at the same time on one machine without clashing?",
-        "Two git worktrees running mvn install overwrite each other's SNAPSHOT jar, what should I do?",
-        "Why does my second UI test end up provisioning into another wiki and reporting a 401?"
+        "Can I run two Docker functional tests at the same time from different worktrees on one machine?",
+        "Why does my second parallel UI test run provision into another wiki and report a 401?",
+        "Why does running mvn install from two worktrees make my test pick up the wrong SNAPSHOT jar?"
       ],
       "aliases": [
         "parallel test runs",
         "concurrent builds",
-        "shared m2 repository"
+        "shared ~/.m2",
+        "port 8080 conflict"
       ]
     }
   },
   "proposed": {
     "related": [
+      "testing/docker-test-framework.md",
       "testing/strategy.md",
       "servers/jenkins.md",
-      "testing/ci-watch.md",
-      "testing/flickers.md"
+      "testing/ci-watch.md"
     ],
     "applies-to": []
   },
-  "source_hash": "18fa9484cbf826dfd766f84691c0ee6726433537922f4b288776d30d15d75355"
+  "source_hash": "5f9a32ca52f3cc9019c894c8309c2b0e0fd3b5c7d2a7ef3c062fa13626492562"
 }

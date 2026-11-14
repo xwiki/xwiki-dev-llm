@@ -1,6 +1,6 @@
 // Runs benchmark questions/tasks through headless Claude Code with one plugin version.
 // Usage: node run.mjs --label <name> --questions a,b[,c,d] [--plugin <xwiki plugin dir>] [--out <dir>]
-//          [--clones <dir>] [--model sonnet] [--concurrency 4] [--only a01,b03]
+//          [--clones <dir>] [--model sonnet] [--concurrency 4] [--only a01,b03] [--code-dir <dir>]
 // Groups a/b/d run in a stub repo (an xwiki-remote repo, so the plugin's SessionStart hook injects);
 // group c runs each task in its own throwaway repo holding only the task's base (task-repo.mjs),
 // with the whole repo writable from the task's cwd, and records the diff of everything it produced.
@@ -133,6 +133,8 @@ function summarize(events) {
     },
     tool_calls: events.filter(e => e.type === 'assistant')
       .flatMap(e => (e.message?.content || []).filter(c => c.type === 'tool_use').map(c => c.name)),
+    tool_inputs: events.filter(e => e.type === 'assistant')
+      .flatMap(e => (e.message?.content || []).filter(c => c.type === 'tool_use').map(c => `${c.name} ${JSON.stringify(c.input).slice(0, 200)}`)),
     okf_touches: okfTouches(events),
     permission_denials: (result.permission_denials || []).map(d => ({ tool: d.tool_name, input: d.tool_input,
       reason: toolResultText(events, d.tool_use_id).slice(0, 300) })),
@@ -167,7 +169,9 @@ const hidden = [path.join(evalDir, 'questions'), path.join(out, 'runs'), path.jo
 await pool(items, Number(args.concurrency || 4), async q => {
   const started = Date.now();
   try {
-    let cwd = q.group === 'c' ? null : stubRepo();
+    // --code-dir <dir>: groups a/b/d/e run in <dir>/xwiki-platform instead of the stub, with every other
+    // repo under <dir> readable too (the "agent with the code" condition).
+    let cwd = q.group === 'c' ? null : args['code-dir'] ? path.join(path.resolve(args['code-dir']), 'xwiki-platform') : stubRepo();
     let repo = null;
     let base = null;
     if (q.group === 'c') {
@@ -205,7 +209,9 @@ await pool(items, Number(args.concurrency || 4), async q => {
       permArgs = ['--add-dir', repo, '--add-dir', scratch, '--settings', JSON.stringify(settings),
         '--permission-mode', 'bypassPermissions', '--disallowedTools', ...disallowed];
     } else {
-      permArgs = ['--disallowedTools', ...disallowed, ...hidden.map(d => `Read(/${d}/**)`), '--permission-mode', 'default',
+      const codeDirs = args['code-dir'] ? fs.readdirSync(path.resolve(args['code-dir'])).map(d => path.join(path.resolve(args['code-dir']), d))
+        .filter(d => d !== cwd && fs.statSync(d).isDirectory()).flatMap(d => ['--add-dir', d]) : [];
+      permArgs = [...codeDirs, '--disallowedTools', ...disallowed, ...hidden.map(d => `Read(/${d}/**)`), '--permission-mode', 'default',
         '--allowedTools', 'Read', 'Grep', 'Glob', 'Skill', 'Bash(git:*)', 'Bash(node:*)', 'Bash(ls:*)', 'Bash(cd:*)',
         'Bash(cat:*)', 'Bash(grep:*)', 'Bash(find:*)', 'Bash(sed:*)', 'Bash(head:*)'];
     }
