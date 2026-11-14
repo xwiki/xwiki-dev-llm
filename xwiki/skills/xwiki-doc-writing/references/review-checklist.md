@@ -37,8 +37,8 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       something the prose does badly.
 - [ ] **Verbosity** — no sentence survives that the reader does not need in order to act; no paragraph
       restates the next section, motivates the feature at length, or describes what a screenshot shows.
-- [ ] **Hub pages route** — a landing/hub page links each child where its prose reaches what that child
-      covers; it neither narrates the feature without those links nor lists its children bare ("See X and Y.").
+- [ ] **Hub pages link in context** — a hub page links each child it introduces where its prose reaches
+      what that child covers; it neither narrates the feature without those links nor lists children bare.
 - [ ] **Intro** — a How-to's intro is **one short paragraph**; no second or trailing paragraph
       explaining the steps.
 - [ ] **No duplication** — no fact is stated on two pages (or in both a page's intro and its own FAQ),

@@ -152,7 +152,7 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    declaring the conversion done, hub prose included. Legacy pages are typically far more verbose than the
    new tree allows, and copying their prose across imports that verbosity: keep only what the reader needs
    in order to act. A **How-to/Tutorial** you extracted also gets its **result step** (legacy procedures
-   almost never have one), and the **hub page** you create over the split links each child **in context**
+   almost never have one), and the **hub page** you create over the split links the children it introduces **in context**
    rather than re-telling the legacy page's introduction or listing its children bare.
 10. **Handle the original page** — after the content is moved, follow the guide's
     [Handle Original Documentation Pages](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/)
@@ -217,7 +217,7 @@ only complete record of what the legacy page said — comparing legacy → new, 
 - **Illustrated to the new standard** — the converted pages show as well as tell (screenshots for
   User/Administrator, code examples for Developer, a diagram where an Explanation describes a structure),
   whether or not the legacy page had any, and without adding visuals that clarify nothing; each
-  How-to/Tutorial ends on a **result step**; each hub links its children in context, never as a bare list.
+  How-to/Tutorial ends on a **result step**; hubs link children in context, never as a bare list.
 - **Not more verbose than it needs to be** — the rewrite cut the legacy prose rather than reflowing it;
   no sentence survives that the reader does not need in order to act.
 - **Nothing was live half-built** — the set went public in one pass, parents first, and no reader
