@@ -54,6 +54,14 @@ export function loadQuestions(spec, fallback) {
   return questionFiles(spec, fallback).flatMap((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
 }
 
+/**
+ * The ids of group (e) questions with no `gold.reference`: their reference is the page text, never a KB
+ * section, so judging them without it would grade against nothing.
+ */
+export function missingReferences(questions) {
+  return questions.filter((q) => q.group === 'e' && !q.gold?.reference).map((q) => q.id);
+}
+
 /** The directory holding one clone per group (c) repo, named as the task's `repo`. */
 export function clonesDir(args) {
   return path.resolve(args.clones || path.join(outRoot(args), 'clones'));

@@ -1,0 +1,2143 @@
+[
+  {
+    "id": "B03",
+    "fact": "Never use the system temp dir or JUnit 5 @TempDir in tests (leftover data in a shared location breaks other tests; Jenkins forbids files outside the workspace). Use @XWikiTempDir on a static field (one per class), an instance field (one per test) or a parameter: it creates a unique dir under Maven's target and works with @ComponentTest, @OldcoreTest or @ExtendWith(XWikiTempDirExtension.class).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "Temporary Directory"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"My unit test needs a scratch directory. Should I use `@TempDir`?\"",
+    "status": "candidate",
+    "note": "@TempDir is the idiomatic JUnit 5 answer and every model reaches for it."
+  },
+  {
+    "id": "B04",
+    "fact": "To test a wiki page, depend on org.xwiki.platform:xwiki-platform-test-page and extend PageTest (registers PageComponentList + ReferenceComponentList), add syntax component lists as needed, then render with setOutputSyntax(...), request.put(...) and renderPage(DocumentReference), which loads the page XML from the classpath; pages it includes must be loaded with loadPage(ref). For a template, depend on the jar holding it (macros.vm loaded automatically) and render via oldcore.getMocker().getInstance(TemplateManager.class).render(\"x.vm\").",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/ViewUnitTesting",
+        "version": "7.1",
+        "sections": [
+          "Page Unit Testing"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"How do I unit-test the Velocity in `Main.WebRss.xml`, which includes another page?\"",
+    "status": "candidate",
+    "note": "Without the setup the model mocks XWikiDocument or writes a functional test; it cannot know renderPage loads from the classpath or that included pages need loadPage. Also § Template Unit Testing. Partial: kb/testing/test-value.md#Pick the level by the kind of code changed (says write a PageTest, not how)."
+  },
+  {
+    "id": "B12",
+    "fact": "To load a wiki macro in a PageTest (14.2RC1+): add a test-jar dependency on xwiki-platform-rendering-wikimacro-store (<type>test-jar</type>), annotate the class with org.xwiki.rendering.wikimacro.internal.WikiMacroFactoryComponentClass, and load the macro page with org.xwiki.test.page.WikiMacroSetup#loadWikiMacro. A Java macro only needs its components in the list.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/ViewUnitTesting",
+        "version": "7.1",
+        "sections": [
+          "Loading a Wiki Macro"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"My page under `PageTest` uses a wiki macro defined in another XML page and renders nothing. What's missing?\"",
+    "status": "candidate",
+    "note": "Three non-discoverable pieces, one of them a test-jar."
+  },
+  {
+    "id": "B13",
+    "fact": "For an injected Provider<T>, @ComponentTest automatically registers a mock T as a singleton (fetched with componentManager.getInstance(T.class, hint)); when T is per-lookup, register a mock Provider yourself in a @BeforeComponent (registerMockComponent(new DefaultParameterizedType(null, Provider.class, T.class), hint)) and stub get().",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "Providers"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"The component calls `provider.get()` twice and must get two different `MailListener`s. How do I mock that?\"",
+    "status": "candidate",
+    "note": "The model writes @MockComponent Provider<T> or does not realise every get() returns the same mock. Partial: kb/testing/strategy.md#A mocked component that the code's `Provider` does not return (role mismatch only); skills/xwiki-convert-tests/SKILL.md (DefaultParameterizedType mapping table)."
+  },
+  {
+    "id": "B22",
+    "fact": "LogCaptureExtension fails a test on logs at or above the captured level that it does not assert (\"Following messages must be asserted: […]\"). For logs emitted during @BeforeAll or a component's initialize(), register the extension as a static field and assert in an @AfterAll (12.1RC1+).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "Capturing and Asserting Logs"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"My component logs a WARN in `initialize()` and the test fails with 'must be asserted'. How do I assert it?\"",
+    "status": "candidate",
+    "note": "An instance field misses initialization logs, so the test fails on unasserted output. Also § Testing a JUnit5 Extension. Partial: skills/xwiki-convert-tests/SKILL.md (instance-field usage only)."
+  },
+  {
+    "id": "B23",
+    "fact": "@BeforeComponent(\"<testMethodName>\") runs only before that test's component injection (after the unnamed @BeforeComponents), giving a per-test fixture before Initializable#initialize() (12.2+). Order: empty CM → @InjectComponentManager → @MockComponent → @BeforeComponent → @AllComponents/@ComponentList → @AfterComponent → @InjectMockComponents → @Inject → Mockito annotations.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "@BeforeComponent / @AfterComponent"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"How do I give one test a different configuration mock that `initialize()` reads?\"",
+    "status": "candidate",
+    "note": "Testing an Initializable with different config per test otherwise looks impossible. Also § Order. Partial: skills/xwiki-convert-tests/SKILL.md (unnamed @BeforeComponent, eager injection)."
+  },
+  {
+    "id": "B33",
+    "fact": "@AllComponents(excludes = {A.class, B.class}) registers every component on the classpath except those (12.1RC1+).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "Component Manager"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"I want `@AllComponents` but with my own mock of `DefaultOfficeServer`. How?\"",
+    "status": "candidate",
+    "note": "The model falls back to a long @ComponentList."
+  },
+  {
+    "id": "B34",
+    "fact": "Name a unit test method after the method under test plus a qualifier (e.g. importWithHeterogeneousEncodings()), or after the use case when that doesn't apply; each method tests one use case where possible; no public on test classes, test methods or lifecycle methods.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting",
+        "version": "23.1",
+        "sections": [
+          "Best practices"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/unit-test-framework.md",
+    "probe": "\"What should I name the test for `serialize()` with a null input?\"",
+    "status": "candidate",
+    "note": "Models write testFoo, shouldX_whenY or keep public. Partial: kb/sonarqube/test-code-rules.md (the public rule); kb/testing/strategy.md#Test kinds and naming (class suffix only)."
+  },
+  {
+    "id": "C06",
+    "fact": "Regression issues get the `regression` label; Priority Blocker if the regression was introduced less than two years ago, otherwise Critical; Fix Version = the next versions of the supported branches; assign a developer ASAP.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Regression Handling"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "I'm filing a JIRA bug for a regression introduced in 17.4.0 (May 2025). Which priority and labels?",
+    "status": "candidate",
+    "note": "Generic trackers have no age-based priority rule; a model picks priority by perceived severity."
+  },
+  {
+    "id": "C09",
+    "fact": "Only five JIRA issue types may be used: Bug, Idea, Improvement, New Feature, Task. \"All other types must not be used\"; Subtask \"Must not be used\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Choose the right issue type"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "Split XWIKI-2xxxx into three sub-tasks for each module.",
+    "status": "candidate",
+    "note": "JIRA offers Sub-task/Epic/Story; a model splitting work reaches for Sub-task."
+  },
+  {
+    "id": "B26",
+    "fact": "A JIRA bug report holds the environment (OS, browser, database, servlet container, XWiki version), the steps and, if useful, a screenshot, attachment or snippet, following the template \"STEPS TO REPRODUCE: … EXPECTED RESULTS: … ACTUAL RESULTS: …\"; search for duplicates first.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy",
+        "version": "51.1",
+        "sections": [
+          "Creating JIRA issues"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "\"Draft the description of a bug I found in the PDF export.\"",
+    "status": "candidate",
+    "note": "Without it agents write free-form descriptions. KB jira.md covers fields and markup, not the description shape."
+  },
+  {
+    "id": "B27",
+    "fact": "To automate a manual test, file a JIRA ticket in the XWIKI project, type Task, component \"Development Issues Only\", label testneeded, linking the manual test (and the Matrix discussion), with the environments it needs.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy",
+        "version": "51.1",
+        "sections": [
+          "Manual tests migration strategy"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "\"File the issue to automate manual test 'Web Tests.X'.\"",
+    "status": "candidate",
+    "note": "The fields are pure convention. Partial: kb/testing/manual-tests.md#Automation status (points to the section, records the status object, not the ticket fields)."
+  },
+  {
+    "id": "C13",
+    "fact": "The Component/s of a closed issue are derived from the committed files: map each changed file to its Maven module's JIRA component and set as many components as there are modules changed.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Components must be specified"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "My fix touches the Flamingo skin LESS and the livetable JS. Which JIRA components?",
+    "status": "candidate",
+    "note": "\"At least one\" leads to a single guessed component. partial: kb/servers/jira.md#Issue-field conventions (\"set at least one\")."
+  },
+  {
+    "id": "C14",
+    "fact": "JIRA labels are lowercase and never carry a version (`tomcat`, with \"Tomcat 9.x\" in the Environment field, not `tomcat9`); notable labels: `l10n` (also on every issue with the Localization component), `onboarding`, `responsive`, `performance`, `nestedspaces`, browser/container/DB/OS names.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: create lowercase labels and without versions"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "Label a bug that only happens on PostgreSQL 16 with Tomcat 10.",
+    "status": "candidate",
+    "note": "Models freely invent `Tomcat10`/`firefox-128` labels; only flickering/security/testneeded are covered."
+  },
+  {
+    "id": "C15",
+    "fact": "When a contributor opens a PR, assign the JIRA issue to the contributor; if they have no JIRA account, ask them to create one and meanwhile assign the merging committer. The contributor tags the issue with the `patch` label.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Assign contributor when there's a Pull Request"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "I'm merging a contributor's PR for XWIKI-2xxxx. Who should be the assignee when I close it?",
+    "status": "candidate",
+    "note": "The KB rule reads as \"assign whoever works on it\", i.e. the merging committer. partial: kb/servers/jira.md#Starting work on an issue; `patch` label (Contributing § Coding rules) absent."
+  },
+  {
+    "id": "B35",
+    "fact": "A WCAG issue in JIRA gets the label wcag and the broken rule's id/name (WCAG 2.1 rule ids field), with a screenshot of the element and DOM.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/WCAGTesting/Reading through WCAG reports",
+        "version": "9.3",
+        "sections": [
+          "Understanding an issue to report it properly"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "\"File a JIRA issue for an axe 'label' violation on the admin page.\"",
+    "status": "candidate",
+    "note": "Convention."
+  },
+  {
+    "id": "B42",
+    "fact": "Beginner issues carry the JIRA label Onboarding; the Difficulty field (Easy, Trivial, …) filters easy issues.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Onboarding/TrackIssues",
+        "version": "9.3",
+        "sections": [
+          "Task 2"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "\"Mark this issue as suitable for a newcomer.\"",
+    "status": "candidate",
+    "note": "Convention, needed when labelling an issue as a good first issue."
+  },
+  {
+    "id": "C18",
+    "fact": "Non-code issues are allowed: `Task` type + `Development Issue Only` component, Fix Version = the version before which it must be done. A UI Design issue may be closed only once a forum proposal and an up-to-date design.xwiki.org page exist; its Documentation field points to that design page.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Non-code issues are allowed"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "Can I close the UI design task XWIKI-2xxxx now that the mockups are on the forum?",
+    "status": "candidate",
+    "note": "Models don't know the design-page closing condition. partial: kb/conventions/versioning.md#Affected version (cites the rule for Affects Version only)."
+  },
+  {
+    "id": "C21",
+    "fact": "Translations added on l10n.xwiki.org need no JIRA issue; if one is created anyway it takes the `Development Issue Only` component; an issue about a translation key (adding/changing keys in code) does go in the release notes.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
+        "version": "6.1",
+        "sections": [
+          "Rule: Don't create unnecessary issues"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "Weblate opened a PR with new French translations. Does it need a JIRA issue?",
+    "status": "candidate",
+    "note": "Edge case of the \"affects users\" test. partial: kb/servers/jira.md#Whether to file an issue at all (general rule only)."
+  },
+  {
+    "id": "A04",
+    "fact": "Nullability uses JSpecify (`org.jspecify.annotations.Nullable`); do not use `javax.annotation.*` (JSR-305) or `jakarta.annotation.*` nullability annotations in new code; put `@Nullable` on the API contract (interface method), not repeated on the implementation; no `@CheckForNull`; adopt `@NullMarked` (in `package-info.java`) one module at a time, never blanket on legacy modules like oldcore; it complements `Optional`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Nullability annotations"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "Which @Nullable should I use on a new XWiki API method?",
+    "status": "candidate",
+    "note": "`javax.annotation.Nullable`/`@CheckForNull` are the defaults, and the jakarta-migration rule in xwiki-org.md pushes toward `jakarta.annotation.Nullable`. Only a passing \"javax → JSpecify\" in kb/sonarqube/verification.md."
+  },
+  {
+    "id": "A05",
+    "fact": "Always try to use `Optional` in return values of methods that can return null (justify deviations), but do not use it in return values of methods callable from scripting (Velocity) until XCOMMONS-1930 is fixed.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Optional"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "Should my new script service method return `Optional<DocumentReference>`?",
+    "status": "candidate",
+    "note": "Model cannot know Velocity cannot handle Optional; it either never uses Optional or uses it in a script service."
+  },
+  {
+    "id": "A12",
+    "fact": "Checkstyle suppression: `@SuppressWarnings(\"checkstyle:<Rule>\")` on a class/method/variable declaration; where no annotation is allowed, `// CHECKSTYLE:<Rule>` ignores the next line and `// CHECKSTYLE:<Rule>(n)` the next n lines, always with a `//` comment above stating why. Sonar `@SuppressWarnings` cannot go on statements inside a method — there the SonarCloud UI is used; never `NOSONAR` (it suppresses every rule on the line).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Quality check ignores"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "How do I suppress a Checkstyle BooleanExpressionComplexity on one return statement?",
+    "status": "candidate",
+    "note": "`// CHECKSTYLE:OFF/ON` or `NOSONAR` are the generic reflexes. partial: kb/conventions/code-style.md#Suppressing a static-analysis warning (Sonar annotation form only); kb/conventions/logging.md notes NOSONAR is not used."
+  },
+  {
+    "id": "A09",
+    "fact": "Do not implement `java.lang.Object.clone()` / `Cloneable` (SonarQube `java:S2975`); provide a copy constructor or a `copy()` factory method; existing `clone()` methods are deprecated progressively, best effort, only where compatibility allows (existing findings marked Accepted).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Don't implement clone() methods"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "I need a copy of my `FooConfiguration`; should I implement `clone()`?",
+    "status": "candidate",
+    "note": "`implements Cloneable` is common Java practice and present in old XWiki code; kb/sonarqube/index.md lists only S2157."
+  },
+  {
+    "id": "A10",
+    "fact": "`equals`/`hashCode` use Apache Commons Lang `EqualsBuilder` / `HashCodeBuilder` (e.g. `new HashCodeBuilder(3, 17)`) with the `getClass()` comparison pattern; `toString()` uses XWiki's `XWikiToStringBuilder`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Equals/HashCode and ToString implementations"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "How should I implement toString() on a new XWiki model class?",
+    "status": "candidate",
+    "note": "Modern default is `Objects.equals`/`Objects.hash` or IDE-generated code; `XWikiToStringBuilder` is unguessable."
+  },
+  {
+    "id": "A11",
+    "fact": "Imports are grouped, each group separated by a blank line, single-class imports: `java.*`, `javax.*`, `jakarta.*`, `org.*`, `com.*`, any other, then `import static` last.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Imports"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "In what order do imports go in an XWiki Java file?",
+    "status": "candidate",
+    "note": "IDE defaults (IntelliJ: static first, javax after others) differ; model orders imports wrongly in new files. partial: kb/sonarqube/constant-and-resource-rules.md#S1143 + S1163 — a `finally` block that throws (java/javax first, then org.* alphabetically), kb/sonarqube/test-code-rules.md (the static imports block)."
+  },
+  {
+    "id": "A29",
+    "fact": "Javadoc code examples use `<pre>{@code …}</pre>`, but a Checkstyle bug (checkstyle#3351) forces escaping `<` as `&#60;` (and `>` as `&#62;`) inside `<pre><code>` blocks containing XML.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Use the right format for examples"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/code-style.md",
+    "probe": "How do I put an XML snippet in a Javadoc comment without failing Checkstyle?",
+    "status": "candidate",
+    "note": "Model writes raw `<plugin>` in a `{@code}` block and Checkstyle fails; absent from skills/xwiki-javadoc."
+  },
+  {
+    "id": "A07",
+    "fact": "Since 18.10.0RC1 the Java macros of a jar module (non-abstract `@Component` implementing `org.xwiki.rendering.macro.Macro`; hint from `@Component(hints)`, else `@Named`, else `default`) and the wiki macros of a XAR module (`XWiki.WikiMacroClass` ids, checked by `xar:verify`) must match the macros declared in the `xwiki.extension.components` Maven property (`org.xwiki.rendering.macro.Macro/<hint>`); internal macros go in `xwiki.extension.components.macros.check.excluded`; skip with `xwiki.extension.components.macros.check.skip=true`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Automatic Checks"
+        ]
+      },
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/XARPlugin",
+        "version": "40.1",
+        "sections": [
+          "Verify Mojo"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "I added a new rendering macro and the build fails on xwiki.extension.components; what do I do?",
+    "status": "candidate",
+    "note": "New XWiki-specific build rule (18.10.0+); a model adding a macro will not touch the pom and will not understand the failure."
+  },
+  {
+    "id": "A06",
+    "fact": "Spoon checks that `@Inject` is done on the component role: the build fails if an injected field is typed with an implementation unless its `@Component(roles=…)` points to itself; exceptions (e.g. an external interface without `@Role`) go in the `spoon-main` execution of `spoon-maven-plugin`, `InjectAnnotationProcessor` property `excludedFieldTypes`. Other Spoon checks: forbidden method calls, `components.txt` lists all components, no JUnit4+JUnit5 mix in one test, tests do not leak files outside `target/` (18.5.0RC1+); skip all with `-Dxwiki.spoon.skip=true`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Automatic Checks"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "Spoon fails because I `@Inject` a `javax.script.ScriptEngineFactory`; how do I fix it?",
+    "status": "candidate",
+    "note": "Unfamiliar Spoon failure message; model does not know the `excludedFieldTypes` escape hatch or `xwiki.spoon.skip`. kb/architecture/component-system.md#Injection says inject a role, not that Spoon enforces it."
+  },
+  {
+    "id": "A08",
+    "fact": "Other default-build gates: Maven Enforcer (`-Dxwiki.enforcer.skip=true`) requires plugin versions, bans `commons-lang:commons-lang` (Lang < 3), Commons Logging and Log4j (SLF4J only), and bans dependencies on Rendering/Platform from Commons and on Platform from Rendering; since 18.7.0RC1 legacy modules weave aspects with `xlint=error`, so an aspect that no longer matches fails the build.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Automatic Checks"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "Can I add a commons-logging dependency to an xwiki-platform module? / Why does my legacy module fail with an AspectJ xlint error?",
+    "status": "candidate",
+    "note": "Model adds commons-lang 2 / log4j by habit, or a legacy aspect pointcut matching nothing, and misreads the failure. partial: skills/xwiki-build/SKILL.md#Notes (other skip flags; says the Enforcer runs, not what it bans)."
+  },
+  {
+    "id": "A20",
+    "fact": "Some tests require the en_US system locale (date formats); on locale-related failures run `LANG=C.UTF-8 mvn clean install`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Building with Maven"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "A date-format unit test fails locally but passes on CI; why?",
+    "status": "candidate",
+    "note": "A model treats a date-format assertion failure on a non-English machine as a code bug."
+  },
+  {
+    "id": "A23",
+    "fact": "Since 18.7.0 the build sets `project.build.outputTimestamp` for reproducible builds: build outputs must not include other timestamps or environment-dependent data (absolute paths, configured Maven repositories, current user name).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices",
+        "version": "266.1",
+        "sections": [
+          "Build Best Practices"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "Can I put the build date in a generated properties file in my module?",
+    "status": "candidate",
+    "note": "A model writing a plugin/resource-filtering step embeds `${maven.build.timestamp}` or `${user.name}`."
+  },
+  {
+    "id": "A24",
+    "fact": "Since 18.10.0RC1 the `release` profile attaches a CycloneDX SBOM (classifier `cyclonedx`, JSON, transitive dependencies except `provided`), not for test modules (artifactId with a `test`/`tests`/`pageobject(s)` dash-part); skip with `-Dxwiki.cyclonedx.skip=true` or the pom property; distributions (WAR) set `xwiki.cyclonedx.projectType=application`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Using Profiles"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/build-checks.md",
+    "probe": "I'm adding a new distribution packaging module; anything to set for the SBOM?",
+    "status": "candidate",
+    "note": "New (18.10.0RC1+); a model adding a distribution module would not set the project type."
+  },
+  {
+    "id": "D04",
+    "fact": "Deprecated content is marked with the `{{deprecated}}` macro, not with `{{version}}`: \"Use {{deprecated}} when only part of a page is outdated: a parameter, UI element, or behavior… Don't use \"version\" macro for this\". The two can be combined, `{{version}}` wrapped around `{{deprecated}}`: \"The {{version}} macro gets removed eventually, but {{deprecated}} stays as long as the feature is still bundled.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent",
+        "version": "1.4",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "How do I mark a deprecated parameter on an xwiki.org reference page?",
+    "status": "candidate",
+    "note": "A model knows `{{version}}` and would reuse it (`before=`) or a free-text note; `{{deprecated}}` is xwiki.org-specific. partial: kb/conventions/documentation.md#Versioning and perspective (\"Deprecated is not obsolete\" names the macro and its lifetime since PR #409; not \"never {{version}} for this\" nor the nesting)."
+  },
+  {
+    "id": "D08",
+    "fact": "For an extension, the `{{version}}` macro must carry `product=\"<extension name>\"`: \"Without it, the version is displayed and treated as an XWiki version.\" Example `{{version product=\"JIRA\" since=\"11.0\"}}`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning",
+        "version": "7.2",
+        "sections": [
+          "The \"Version\" Macro"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "How do I badge a feature new in version 2.3 of the (non-bundled) Jira Macro on its doc page?",
+    "status": "candidate",
+    "note": "The KB presents `product` as optional free text, so a model writes `since=\"2.3\"`, rendered as \"XWiki 2.3+\". partial: kb/conventions/documentation.md#The {{version}} macro (\"product is free text, defaulting to XWiki\")."
+  },
+  {
+    "id": "D10",
+    "fact": "Top-level page titles \"must be concise: 1–3 words maximum, so they don't wrap in the navigation panel\"; and \"top-level pages are an exception and must not use parenthetical qualifiers, it will crowd the panel.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames",
+        "version": "4.2",
+        "sections": [
+          "Page Title Rules"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "What title for a new top-level admin topic page about configuring the Like application?",
+    "status": "candidate",
+    "note": "The KB presents parenthetical disambiguation as the general fix, without the top-level exception or the 1–3-word cap."
+  },
+  {
+    "id": "D09",
+    "fact": "\"Once a feature is no longer maintained and falls out of the product, remove its docs after the 1-year period.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent",
+        "version": "1.4",
+        "sections": [
+          "When to use the \"Deprecated\" macro"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "A feature was unbundled from XS. When do its xwiki.org docs go?",
+    "status": "candidate",
+    "note": "The KB's only removal rule is \"unsupported old versions\"; a model deletes right away or keeps forever. partial: kb/conventions/documentation.md#Versioning and perspective (\"Deprecated is not obsolete\": kept while bundled; the 1-year removal is absent)."
+  },
+  {
+    "id": "D16",
+    "fact": "\"You must link XWiki concepts to their corresponding documentation pages whenever such documentation exists… The link should be applied to the relevant wording within the sentence, rather than added as a separate or generic link\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle",
+        "version": "7.3",
+        "sections": [
+          "Linking"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Mentioning \"export the pages as a XAR\" on a How-to: anything to do with that phrase?",
+    "status": "candidate",
+    "note": "Models add \"see here\" links, or none, for concepts mentioned in passing. partial: kb/conventions/documentation.md#How much belongs on one page (hub pages link children on the words saying what they cover, PRs #412/#414); the general rule for any XWiki concept is absent."
+  },
+  {
+    "id": "D17",
+    "fact": "\"Pages must be written in xwiki/2.1 syntax\"; when converting a page from 2.0 to 2.1, \"look at the end result and check for conversion errors\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle",
+        "version": "7.3",
+        "sections": [
+          "Syntax"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Updating a legacy xwiki/2.0 doc page: keep 2.0?",
+    "status": "candidate",
+    "note": "The KB treats 2.0 pages as editable as is. partial: kb/conventions/documentation.md#Documentation style (\"write content in XWiki syntax\"), #XWiki syntax traps (2.0 vs 2.1 anchors)."
+  },
+  {
+    "id": "D18",
+    "fact": "Related field: \"You shouldn't add additional text besides the link.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure",
+        "version": "9.24",
+        "sections": [
+          "Related"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Can I add a one-line description after each Related link?",
+    "status": "candidate",
+    "note": "Models annotate Related links with a description, as Highlights do; documentation.md#Page-structure fields lists the Related rules without this one."
+  },
+  {
+    "id": "D19",
+    "fact": "\"Keep How-to instructions generic and applicable across different systems and configurations. If a step applies only to a specific system, platform, or configuration, clearly indicate its scope (e.g., \"If you are using Linux, ...\").\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis",
+        "version": "1.34",
+        "sections": [
+          "How-to"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "My install How-to has a step that only applies on Windows. How do I write it?",
+    "status": "candidate",
+    "note": "Weak, borderline generic: admin How-tos bake in OS-specific paths silently."
+  },
+  {
+    "id": "B06",
+    "fact": "Only the latest stable Firefox, Chrome, Edge and Safari are supported (Edge and Safari tested manually only). IE11 support was dropped in XWiki 14.0 (IE6/7 in 3.3M1, IE8/9 in 7.0, IE10 in 9.9); Opera and others are unsupported, but an easy fix or a provided patch is accepted.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/BrowserSupportStrategy",
+        "version": "22.2",
+        "sections": [
+          "Supported Browsers"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"Can I use `structuredClone` / CSS `:has()` in a new xwiki-platform JS module?\"",
+    "status": "candidate",
+    "note": "Models hedge for old browsers (polyfills, avoiding modern APIs) or assume IE11 still matters. Partial: kb/conventions/frontend.md#JavaScript modules (\"check the supported-browser list\", list not held)."
+  },
+  {
+    "id": "B14",
+    "fact": "16.10.x is stuck on Jakarta EE 8 / javax (Tomcat 9, Jetty 10/12 EE 8); XWiki 17+ is jakarta (Tomcat latest 11.x and 10.x). Jetty 12.x is used both standalone and in the official packaging; WildFly and Glassfish are not officially supported.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/ServletContainerSupportStrategy",
+        "version": "28.1",
+        "sections": [
+          "Supported Servlet Containers"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"Can I backport this `jakarta.servlet.http.HttpServletRequest` change to stable-16.10?\"",
+    "status": "candidate",
+    "note": "Backporting jakarta.servlet code to 16.10 compiles nowhere; the model doesn't know where the boundary is. Partial: kb/conventions/code-style.md#javax → jakarta migration (no version boundary)."
+  },
+  {
+    "id": "B29",
+    "fact": "Java support by XWiki version: 16.0 → Java 17 & 21 (source 17); 17.10.3 → 17, 21 & 25; 18.0 → Java 21 & 25 (source 21); 14.10.9/15.3 → 11 & 17. Every two cycles the oldest Java is dropped and the newest LTS adopted, the LTS branch keeping the previous pair. Java 17+ needs the --add-opens java.base/{java.lang,java.io,java.util,java.util.concurrent}=ALL-UNNAMED switches to run XWiki.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/JavaSupportStrategy",
+        "version": "34.1",
+        "sections": [
+          "By XWiki Versions"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"Is Java 25 supported to run XWiki 17.10.2?\"",
+    "status": "candidate",
+    "note": "The pom gives the source level, not which newer JDKs are supported for running. Also § Rules. Partial: instructions/xwiki-org.md (links the table), skills/xwiki-build (xwiki.java.version source level only)."
+  },
+  {
+    "id": "B39",
+    "fact": "Supported databases: HSQLDB (latest), MariaDB, MySQL, PostgreSQL and Oracle (latest + LTS). H2, DB2, MSSQL and Derby are unsupported: fixed only if easy or patched, and may need HBM tuning.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/DatabaseSupportStrategy",
+        "version": "16.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"Should a store change be validated against MSSQL?\"",
+    "status": "candidate",
+    "note": "The model may treat an H2 or MSSQL bug as a regular one. Partial: kb/architecture/data-migrations.md (Oracle traps), kb/servers/jenkins.md (env matrix)."
+  },
+  {
+    "id": "B38",
+    "fact": "When raising the minimum Java version: add a row to the support table, set <xwiki.java.version> in the xwiki-commons root pom, install the JDK on the release agent (xwiki-docker-build Dockerfile), update the mapping in xwiki-dev-tools/xwiki-release-scripts/maven-release.sh and in xwiki-jenkins-pipeline/vars/configureJavaTool.groovy.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/JavaSupportStrategy",
+        "version": "34.1",
+        "sections": [
+          "Things to do when increasing the minimum supported Java version"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"We're moving master to Java 25 source level. What must change besides the pom?\"",
+    "status": "candidate",
+    "note": "Rare task, five places across four repos."
+  },
+  {
+    "id": "B41",
+    "fact": "Only the LibreOffice LTS (\"Previous Release\") version is supported, and not the snap package (jodconverter can't drive a binary run through an intermediary).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/LibreOfficeSupportStrategy",
+        "version": "5.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/support-strategy.md",
+    "probe": "\"A user's office import fails with LibreOffice installed via snap. Bug?\"",
+    "status": "candidate",
+    "note": "Office-conversion bug triage on snap installs."
+  },
+  {
+    "id": "A02",
+    "fact": "JavaScript: write asynchronous code with async/await rather than promise chains, mandatory for new code — no `.then()/.catch()/.finally()` chains, no jQuery `.done()/.fail()/$.Deferred()`; `new Promise` only to wrap callback APIs, `Promise.all/allSettled/race` for independent operations (never awaited one after the other), a commented fire-and-forget with a terminal `.catch()`, a commented promise queue.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices",
+        "version": "266.1",
+        "sections": [
+          "JavaScript Best Practices"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "How should I write a fetch-then-update function in a new XWiki JS module?",
+    "status": "candidate",
+    "note": "Existing XWiki JS is full of `.then()` and jQuery `.done()`; the model imitates surrounding code."
+  },
+  {
+    "id": "A13",
+    "fact": "`webjar-node` packaging (since 17.10.0RC1; npm instead of pnpm 17.5.0–17.10.0RC1): node project in `src/main/node`; `package.json` declares `build`, `test:unit` and `lint` scripts; webjar content in `dist/`; module listed in `packages` of the root `pnpm-workspace.yaml`; external dependencies use `\"catalog:\"` with the version in the workspace `catalog`; a script that must do nothing is `\"exit 0 # <reason>\"`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/WebJar Node Maven Handler",
+        "version": "6.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "I'm creating a new TypeScript webjar module in xwiki-platform; what must its package.json and pom contain?",
+    "status": "candidate",
+    "note": "A model creating a front-end module hard-codes dependency versions, forgets the workspace listing or the three required scripts; skills/xwiki-build#JavaScript covers commands only."
+  },
+  {
+    "id": "A14",
+    "fact": "HTML/CSS: kebab-case for `class`/`id` values and for CSS property and LESS variable names; no `!important` (except a generic class whose purpose is forcing a style); no inline `style`; zero values without unit; colour variables named with `color` for foreground and `bg`/`background` for background (`@btn-default-color`, `@btn-default-bg`); avoid `display: contents`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
+        "version": "41.1",
+        "sections": [
+          "HTML",
+          "CSS"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "I need a new LESS variable for a panel's background colour; how do I name it?",
+    "status": "candidate",
+    "note": "camelCase/BEM classes and `!important` are common; new LESS variable naming is unguessable. partial: kb/conventions/frontend.md#HTML, CSS, accessibility (style variables only)."
+  },
+  {
+    "id": "A15",
+    "fact": "Pointer targets must be at least 24×24 CSS px (LESS `@target-size-minimum`) and should be at least 44×44 (`@target-size-recommended`); exceptions (inline targets, enough surrounding space, a duplicate target with the same function, user-determined size, essential presentation) are applied in good faith.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
+        "version": "41.1",
+        "sections": [
+          "WCAG"
+        ]
+      },
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Target size exceptions",
+        "version": "3.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "What minimum size should a new icon button have, and how do I express it in LESS?",
+    "status": "candidate",
+    "note": "The LESS variable names are XWiki-specific; a model hard-codes pixel sizes."
+  },
+  {
+    "id": "A16",
+    "fact": "Hiding elements: visually and semantically → CSS `display: none` or the HTML `hidden` attribute, avoiding a dedicated class such as `.hidden` (`type=\"hidden\"` for inputs); visually only → class `sr-only`; semantically only → `role=\"presentation\"`, only on DOM leaf nodes, `aria-hidden` as last resort. Icons only with a text alternative (may be visually hidden).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Properly hiding elements",
+        "version": "1.1",
+        "sections": []
+      },
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
+        "version": "41.1",
+        "sections": [
+          "WCAG"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "How do I hide an element that only appears after a click?",
+    "status": "candidate",
+    "note": "Bootstrap 3's `.hidden` class is the reflex in an XWiki skin; `aria-hidden` is overused."
+  },
+  {
+    "id": "C03",
+    "fact": "XClass translation keys: a field's prettyName is translated by `Space.ApplicationClass_fieldName`; a static/database list value by `Space.ApplicationClass_fieldName_value` (the stored value); boolean labels come from the field's `displayType` (`yesno` default, `truefalse`, `active`, `allow`), and a custom display type `newtype` is defined by translating `newtype_0` / `newtype_1`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions",
+        "version": "11.1",
+        "sections": [
+          "Translating XClasses"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/translations.md",
+    "probe": "I added an XClass `MyApp.TaskClass` with a static list `status` (values `open`, `done`) and a boolean `urgent`. How do I make the field label and the list values translatable?",
+    "status": "candidate",
+    "note": "XWiki-specific key shape; a model hard-codes the label in prettyName or invents a key the class displayer never looks up."
+  },
+  {
+    "id": "C04",
+    "fact": "Translation key format is `module[.submodule]*[.section]*.element[.part]*`, camelCase parts, the element named by its purpose, not its English text; a form uses `<prefix>.title` and per field `.label` / `.hint` / `.help` / `.placeholder` / `.tooltip` / `.error[.errorType]`; the submit button is always `<prefix>.submit`, cancel always `<prefix>.cancel`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions",
+        "version": "11.1",
+        "sections": [
+          "Key format"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/translations.md",
+    "probe": "Name the translation keys for the 'Create job' form of the scheduler: title, name field label + hint, the 'Create' button.",
+    "status": "candidate",
+    "note": "Models derive keys from the English text (`myapp.create` for a submit button). partial: kb/conventions/translations.md#Where a translation resource lives (pointer to the L10N Conventions page only)."
+  },
+  {
+    "id": "C05",
+    "fact": "Composite messages: never split a sentence into translated fragments; use one key with MessageFormat parameters (plurals via `{0,choice,0#…|1#…|1<…}`); keep punctuation inside the value; never write a value in upper case (use CSS `text-transform`); don't reuse small tokens (\"on\") across sentences.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions",
+        "version": "11.1",
+        "sections": [
+          "Rules for translating composite and long messages"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/translations.md",
+    "probe": "Render 'There are N errors in the form.' with a translated message in Velocity.",
+    "status": "candidate",
+    "note": "Concatenating fragments and appending `:`/`?` outside the key are default coding habits. partial: skills/xwiki-translations/SKILL.md (no key reuse, no markup in values, `{0}…{1}` markup boundaries)."
+  },
+  {
+    "id": "C10",
+    "fact": "Never make a major change to an existing translation message (changing its meaning, adding parameters): other languages keep the old meaning and break; create a new key instead (deprecating the old one), copying translations over only if the format is unchanged.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions",
+        "version": "11.1",
+        "sections": [
+          "Updating translations"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/translations.md",
+    "probe": "The label `foo.bar=Delete page` must now say 'Delete {0} pages'. Can I just edit the value?",
+    "status": "candidate",
+    "note": "Editing the en value in place is the obvious minimal diff. partial: kb/conventions/translations.md#Deprecating, renaming, never moving (delete/rename/move only)."
+  },
+  {
+    "id": "C07",
+    "fact": "A security issue counts as fixed only once the fix is released on all supported branches it impacts; the embargo (at least 3 months, longer only by a forum vote) starts once all versions containing the fix are released, after which the CVE/advisory may be published.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "When is a security issue considered as fixed?",
+          "How long does it take to publish a CVE?"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/security-policy.md",
+    "probe": "The fix shipped in 18.9.0 on 20 Oct; the 17.10.x backport ships 15 Nov. From when can the advisory be published?",
+    "status": "candidate",
+    "note": "Models assume disclosure right after the first patched release, or a 90-day default. partial: skills/xwiki-security-advisory/references/github-advisory.md (the app computes the embargo date; duration and the all-branches start rule absent)."
+  },
+  {
+    "id": "C11",
+    "fact": "At disclosure: remove the Confidential level on the JIRA issue and on its linked Duplicate / Solved By issues, publish the GitHub advisory, then publish it in the Security Advisory App after checking the CVE ID is filled.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "What's the process to handle security issues?"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/security-policy.md",
+    "probe": "The embargo for XWIKI-2xxxx is reached and the CVE ID arrived. What do I do on JIRA?",
+    "status": "candidate",
+    "note": "Linked restricted issues are easy to forget; the model only looks at the main issue."
+  },
+  {
+    "id": "C12",
+    "fact": "Fix targets: Critical security issues (CVSS ≥ 7) are fixed and released on all supported branches within 90 days (≤30 to start, ≤30 to develop, ≤30 to release); Blocker (actively exploited) within 30 days; others: no timeline. Before 2025-07-14 \"Blocker\" was used like today's \"Critical\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "How long does it take to fix a security issue?"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/security-policy.md",
+    "probe": "How fast must a Blocker security issue be fixed at XWiki, and what did Blocker mean on a 2024 issue?",
+    "status": "candidate",
+    "note": "Not inferable; models quote the generic 90-day norm without the Blocker tier or the 2025-07-14 change."
+  },
+  {
+    "id": "C25",
+    "fact": "When adding a new `attacker_*`/`attack_*` label in JIRA, also add it to the filters \"Security issues missing categorization\" (16100) and \"Open security issues missing categorization\" (16099).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "What are the criteria for computing severity?"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/security-policy.md",
+    "probe": "I want to introduce `attack_ssrf`. Anything besides using it?",
+    "status": "candidate",
+    "note": "Hidden coupling; rare task."
+  },
+  {
+    "id": "A17",
+    "fact": "XAR page types beyond Technical/Content/Translatable: Visible Technical Pages (`<visibleTechnicalPages>` regex, e.g. application home pages) are not hidden with an empty `defaultLanguage`; content pages are selected by a `<contentPages>` regex; translated pages are recognised by the `translatedPages` regex (default `.*\\.([a-z][a-z](_[\\w]+)?)\\.xml`) and their locale must match the file name (since 16.10.6, 17.3.0RC1).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/XARPlugin",
+        "version": "40.1",
+        "sections": [
+          "Page types (Format & Verify)"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-xar-pages/SKILL.md",
+    "probe": "xar:verify says my app's WebHome must be hidden, but users must see it; what's the right fix?",
+    "status": "candidate",
+    "note": "`xar:verify` fails on an app home made visible and the model \"fixes\" it by hiding the page. partial: skills/xwiki-xar-pages/SKILL.md#Page types (three types only)."
+  },
+  {
+    "id": "A18",
+    "fact": "Since 18.10.0 `xar:format` raises the `xwikidoc` root `version` attribute to the one the elements used require (attachment `revisions` 1.4, `originalMetadataAuthor` 1.5, `enforceRequiredRights` 1.6, object-property `type` attribute 1.7), and `xar:verify` checks it is `<major>.<minor>`, at least that, and at most the plugin's known version (1.7 for 18.10.0). `xar:format`/`verify` also strip/forbid `originalMetadataAuthor` (skip: `xar.authors.skip`, `xar.authors.skip.documentList`); date stripping skips: `xar.dates.skip`, `xar.dates.skip.documentList`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/XARPlugin",
+        "version": "40.1",
+        "sections": [
+          "Format Mojo",
+          "Verify Mojo"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-xar-pages/SKILL.md",
+    "probe": "My page uses `enforceRequiredRights`; what must the xwikidoc version be, and how do I set it?",
+    "status": "candidate",
+    "note": "Model leaves the root version alone or bumps it by hand to a value the target XWiki does not know. partial: kb/architecture/required-rights.md#A page carrying the element must declare XAR document version 1.6 — which still says xar:format/verify pass a too-low version and \"nothing warns\", stale for 18.10+ (XCOMMONS-3886 follow-up)."
+  },
+  {
+    "id": "B02",
+    "fact": "Automatic WCAG validation (axe-core, WCAG 2.2 AA) runs at the end of the constructor of each BasePage page object when the `wcag` @UITest option is on; a violation never fails an individual test but fails the test suite. Failing rules go to target/wcag-reports/wcagFails.txt (build breaks), warning rules to wcagWarnings.txt, set in WCAGContext (15.8+ adds wcagIncompletes.txt and wcagOverview.txt; wcagStopOnError since 15.10.7/16.1.0); in CI it runs only on the first configuration of the docker-latest job.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/WCAGTesting",
+        "version": "44.11",
+        "sections": [
+          "Testing"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "\"All my `*IT` methods pass but the AllIT suite fails with WCAG violations. Where do I look and which test caused it?\"",
+    "status": "candidate",
+    "note": "A suite-level failure with every test green looks like a framework bug; nobody guesses that constructing a page object triggers an audit, or where the report is. Also DT § Configurations options (wcag, wcagStopOnError) + § CI Jobs. Partial: kb/conventions/frontend.md#HTML, CSS, accessibility (only \"WCAG 2.2 AA\")."
+  },
+  {
+    "id": "B37",
+    "fact": "xwiki-platform-distribution-flavor-test-webstandards validates XHTML5 and RSS of all pages (plus legacy Dutch Web Guidelines tests, which skip hidden pages except a whitelist in its pom); xwiki-platform-distribution-flavor-test-escaping tries to find injections automatically.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing",
+        "version": "173.1",
+        "sections": [
+          "XHTML, CSS & WCAG Validations"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "\"The webstandards test fails on my new page. What does it check?\"",
+    "status": "candidate",
+    "note": "An agent seeing these modules fail does not know what they assert. Also § Security Testing."
+  },
+  {
+    "id": "B28",
+    "fact": "The shared CI pipeline (xwikiModule/xwikiBuild) runs deploy only on master and stable-* branches and install elsewhere, so a PR or feature-branch build never publishes SNAPSHOTs to Nexus; developers working on one module get the others' SNAPSHOTs from CI.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ContinuousBuild",
+        "version": "43.2",
+        "sections": [
+          "Main Pipeline"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jenkins.md",
+    "probe": "\"My PR branch changed `xwiki-commons-x`. Will a platform build resolve that SNAPSHOT from Nexus?\"",
+    "status": "candidate",
+    "note": "The model assumes a pushed branch's artifacts are resolvable remotely. Also § General. jenkins.md and running-docker-its.md describe Nexus lag, not which branches deploy."
+  },
+  {
+    "id": "B36",
+    "fact": "Docker CI jobs: docker-latest runs nightly (all tests on the latest supported configs, WCAG on the first config only), docker-all weekly (smoke tests on all supported configs), docker-unsupported monthly (smoke tests on configs to support in the future). Configurations live in xwiki-jenkins-pipeline/vars/dockerConfigurations.groovy, schedules in JenkinsfileEnvironmentTests.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "80.1",
+        "sections": [
+          "CI Jobs"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jenkins.md",
+    "probe": "\"Why did a PostgreSQL-only failure show up a week after the merge?\"",
+    "status": "candidate",
+    "note": "Explains why a config-specific failure surfaces only days later. Also ContinuousBuild@43.2 § Nightly Configuration Tests. Partial: kb/servers/jenkins.md#The two functional-test jobs (matrix, no cadence or config source)."
+  },
+  {
+    "id": "A21",
+    "fact": "To swap a rebuilt JAR into a running instance, a core JAR goes in `WEB-INF/lib`, but for an installed extension the JAR must be replaced in the `<permanent directory>/extension/repository` folder.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices",
+        "version": "266.1",
+        "sections": [
+          "Development Flow"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/local-instance-debugging.md",
+    "probe": "I rebuilt an extension JAR and copied it to WEB-INF/lib but nothing changed; why?",
+    "status": "candidate",
+    "note": "Model copies to WEB-INF/lib and the old extension JAR keeps loading; not in xwiki-capture-ui-change references/jar-route.md nor xwiki-deploy-extension."
+  },
+  {
+    "id": "A22",
+    "fact": "XWiki serves minified JS with source maps; `?minify=false` on the page URL (or `debug.minify=false` in `xwiki.properties`) loads the non-minified sources; the `debug` Maven profile removes minification at build time. `?debug=true` on a URL shows the request's elapsed-time tree.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Debugging",
+        "version": "56.1",
+        "sections": [
+          "Debugging JavaScript",
+          "Debug mode"
+        ]
+      },
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Using Profiles"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/local-instance-debugging.md",
+    "probe": "How do I step through the unminified JavaScript of an XWiki page?",
+    "status": "candidate",
+    "note": "XWiki-specific URL parameters/property; a model rebuilds or edits minified files."
+  },
+  {
+    "id": "A30",
+    "fact": "`start_xwiki_debug.sh` (Standalone distribution) opens JDWP on 5005; `--suspend` waits for the debugger; port via `-dp <n>`/`--debugPort` (12.8RC1+) or `JETTY_DEBUG_PORT`; Jetty distributions enable `-XX:+HeapDumpOnOutOfMemoryError` with dumps in `data/`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Debugging",
+        "version": "56.1",
+        "sections": [
+          "Remote Debugging",
+          "Analyze Out Of Memory issues"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/local-instance-debugging.md",
+    "probe": "How do I attach a debugger to a local XWiki standalone and break on startup?",
+    "status": "candidate",
+    "note": "Low: generic JDWP knowledge suffices; only the script name and flags are XWiki-specific. partial: kb/testing/docker-test-framework.md#A breakpoint in the wiki's code (Docker-test side only)."
+  },
+  {
+    "id": "B20",
+    "fact": "A Maven dependency added for all distributions goes in xwiki-platform-minimaldependencies/pom.xml, which Docker tests and the standard distribution use; the legacy functional-test frameworks also need it in xwiki-tools-packager-plugin (pom.xml and PackageMojo.java).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing",
+        "version": "173.1",
+        "sections": [
+          "Adding a new maven dependency for minimal war"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/strategy.md",
+    "probe": "\"I'm adding a new core JAR every XWiki needs. Where do I declare it so functional tests get it?\"",
+    "status": "candidate",
+    "note": "The model adds the dependency to the distribution WAR pom only, and Docker tests miss it. Partial: skills/xwiki-convert-tests-docker/SKILL.md (WARBuilder builds from minimaldependencies; no \"where to add\" rule). Target section: #Functional-test module layout."
+  },
+  {
+    "id": "B40",
+    "fact": "With Clover, always use a separate -Dmaven.repo.local (e.g. ~/.m2/repository-clover): instrumented artifacts in the normal repo need the Clover JAR at runtime and break later non-Clover builds (or get deployed). A Docker test module needs a clover profile that adds org.openclover:clover and sets xwiki.test.ui.profiles=clover.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/TestCoverage",
+        "version": "8.10",
+        "sections": [
+          "Using Clover"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/strategy.md",
+    "probe": "\"I ran a Clover build. Now unrelated tests fail with `NoClassDefFoundError: com_atlassian_clover`. Why?\"",
+    "status": "candidate",
+    "note": "Polluting ~/.m2 is a silent, delayed failure. Also DT § Test Coverage. Partial: kb/testing/strategy.md#Functional-test module layout (clover profile copied from a sibling, no why); docker-test-framework.md (profiles override loses clover). Target section: #Done once CI proves it; coverage."
+  },
+  {
+    "id": "D14",
+    "fact": "Rendering-macro and UIXP Reference pages \"use the ##DocApp.Code.RenderingMacroClass## and ##DocApp.Code.UIXPClass## objects\", each with a dedicated guide page (and Confluence macros/plugins too).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis",
+        "version": "1.34",
+        "sections": [
+          "Reference"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation-mechanics.md",
+    "probe": "I'm documenting a new UIXP. How is its reference page structured?",
+    "status": "candidate",
+    "note": "Without it a UIXP reference is written as plain content, missing the object the app renders. partial: skills/xwiki-doc-writing/tools/README.md (RenderingMacroClass only)."
+  },
+  {
+    "id": "D21",
+    "fact": "\"Anyone who wants to propose a change to the Highlights can edit and save with Change Request or ask on the #xwiki Matrix chat. The Documentation Manager will review and update the Highlights.\" Selection criteria: pages relevant to newcomers, frequently accessed as a reference, addressing common issues, covering essential topics; reviewed regularly.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HighlightsPage",
+        "version": "3.3",
+        "sections": [
+          "Criteria for Selecting Highlighted Pages"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation-mechanics.md",
+    "probe": "Which child pages should I pick for a hub's Highlights, and how do I change a landing page's Highlights?",
+    "status": "candidate",
+    "note": "Without criteria a model highlights the first or most recent children. partial: kb/conventions/documentation-mechanics.md#Landing pages carry a different class (managed by the Documentation Team); criteria and channel absent."
+  },
+  {
+    "id": "D22",
+    "fact": "A farm-wide list of doc-checker violations lives at `xwiki:DocApp.WebHome` (anchor `HDocumentationviolations`); pending doc to-dos are open XINFRA issues, component `www.xwiki.org`, text ~ \"Documentation\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide",
+        "version": "89.86",
+        "sections": [
+          "Choose What to Contribute To"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation-mechanics.md",
+    "probe": "Where can I see every page currently failing the xwiki.org doc checks?",
+    "status": "candidate",
+    "note": "To sweep for violations a model enumerates pages one by one. partial: kb/conventions/documentation-mechanics.md#Reading the doc-quality checker's actual findings (per-page objects only)."
+  },
+  {
+    "id": "A01",
+    "fact": "Variables used only inside a Velocity macro are set in the `$macro` scope (`#set ($macro.userName = …)`) so they do not leak out and overwrite the calling code's variables; convert the whole macro at once (mixing `$macro.x` and `$x` fails silently), set before reading in nested macros (`#set ($macro.x = $NULL)`) since `$macro` is shared between nested macros; parameters and `#foreach` loop variables need no `$macro`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/VelocityCodeStyle",
+        "version": "10.2",
+        "sections": [
+          "Code"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/velocity-code-style.md",
+    "probe": "I'm adding a Velocity macro that computes a temporary `$userName`; how should I declare it?",
+    "status": "candidate",
+    "note": "Velocity macros look function-scoped; model writes plain #set and clobbers caller variables, unaware of the XWiki `$macro` namespace and its nesting trap."
+  },
+  {
+    "id": "A03",
+    "fact": "Log levels: `info` only when absolutely necessary (mostly startup); `warn` must not print a stack trace — pass `ExceptionUtils.getRootCauseMessage(e)` (not `e.getMessage()`) as a parameter; `error` always passes the exception as the last argument, never as a message parameter; for `debug` the exception is optional.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Choosing the Level"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/logging.md",
+    "probe": "I catch an exception that's recoverable; how do I log it?",
+    "status": "candidate",
+    "note": "Generic SLF4J advice always passes the throwable; XWiki forbids it on warn, and `e.getMessage()` is the reflex. partial: kb/conventions/logging.md (intro defers the general rules to the dev wiki; names getRootCauseMessage, not the per-level rules)."
+  },
+  {
+    "id": "C02",
+    "fact": "Security issues are not listed in the release notes (\"for security reasons\") until their CVE is published; instead all release note summaries show the highest CVSS score of the security issues fixed in that release. Once the CVE is out, they appear in past release notes.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "How do I know if I need to upgrade?"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/release-notes.md",
+    "probe": "XWIKI-2xxxx (security, Confidential) is fixed in 18.9.0. Write its release-note entry.",
+    "status": "candidate",
+    "note": "A release-documentation sweep treats a fixed security issue like any other and writes an RN entry: a disclosure before the embargo. partial: kb/processes/release-notes.md#What creating a release note over REST does not do (only names the security-severity sentence); nothing in skills/xwiki-release-documentation."
+  },
+  {
+    "id": "A27",
+    "fact": "Wiki application layout: pages in one application space; technical pages in a `Code` subspace, hidden, terminal when childless; XClass/Sheet/Template named `XXXClass`/`XXXSheet`/`XXXTemplate`; an XClass alone in its own document with no XObject (import may load the object before the class); minimal HTML in content (`(% class=\"x\" %)(((…)))` rather than `<div>`); register in the Applications Panel via an `ApplicationsPanelEntry` page; data apps use Page Templates, not a custom create UI.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ApplicationDevelopmentBestPractices",
+        "version": "37.1",
+        "sections": [
+          "Pages"
+        ]
+      }
+    ],
+    "kb_target": "kb/architecture/wiki-application-data.md",
+    "probe": "Where do I put the XClass and its sheet for a new application, and can the class page hold a default object?",
+    "status": "candidate",
+    "note": "A model scaffolding an app puts class and objects in one page and uses raw HTML."
+  },
+  {
+    "id": "A28",
+    "fact": "Applications/extensions must not use skin-specific resources (use the `resources/` ones, e.g. `$xwiki.getSkinFile(\"icons/xwiki/noavatar.png\")`); depend on the oldest commons/rendering/platform version that works (at least the latest LTS); set `xwiki.extension.namespaces` when the extension only works on the root namespace.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ApplicationDevelopmentBestPractices",
+        "version": "37.1",
+        "sections": [
+          "General",
+          "Build & Release"
+        ]
+      }
+    ],
+    "kb_target": "kb/architecture/wiki-application-data.md",
+    "probe": "Which XWiki version should my contrib extension's parent pom target?",
+    "status": "candidate",
+    "note": "A model bumps the parent to the newest XWiki and references skin files directly. partial: kb/processes/module-lifecycle.md#Extracting a module out (contrib parent at the LTS version)."
+  },
+  {
+    "id": "C20",
+    "fact": "Accepting a PR that adds a new locale requires, on every branch: locale code `ll_CC`; Java/ICU support; a `<dynamicField>` + `<fieldType>` in the Solr core `managed-schema`; embedded PDF-export fonts (`xwiki-platform-web/…/WEB-INF/fonts`); a name/flag in the Language macro; then a LocaleClass xobject on the SupportedLocales page.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/SupportedLocales",
+        "version": "36.2",
+        "sections": [
+          "New locale checklist"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/l10n.md",
+    "probe": "A PR adds `ApplicationResources_uz.properties` across platform. Anything to check before merging?",
+    "status": "candidate",
+    "note": "A translation PR looks like a pure properties change; nobody thinks of the Solr schema or fonts."
+  },
+  {
+    "id": "C23",
+    "fact": "Creating a Weblate component for a new translation source: component name = the Maven module name; project Commons/Rendering/Platform or Contrib; VCS GitHub; license LGPL 2.1 only; the push URL must be filled (blank = changes never pushed); file format \"XWiki Java Properties\" / \"XWiki Page Properties\" / \"XWiki Full Page\"; file mask `…/ApplicationResources_*.properties` + monolingual base file.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Weblate Configuration",
+        "version": "22.2",
+        "sections": [
+          "Add new component"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/l10n.md",
+    "probe": "I added a new `ApplicationResources.properties` in a contrib repo. How do I register it on l10n.xwiki.org?",
+    "status": "candidate",
+    "note": "Weblate defaults (generic Java properties format, empty push URL) silently break the sync. partial: kb/conventions/translations.md#Where a translation resource lives (\"must additionally be declared on l10n.xwiki.org\")."
+  },
+  {
+    "id": "C24",
+    "fact": "In a translated `.properties`/Translations page a missing translation is a comment `### Missing: key=source value`; a XAR translation file has `<language>xx</language>`, `<translation>1</translation>` and is named `<Source>Translations.<LOCALE>.xml`; full-page translations (`WebHome.fr.xml`) only for special pages (home, Sandbox).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/XWiki Translations Formats",
+        "version": "6.2",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/processes/l10n.md",
+    "probe": "Why does `ApplicationResources_fr.properties` contain `### Missing:` lines — should I remove them?",
+    "status": "candidate",
+    "note": "Low: agents rarely edit translated files. partial: skills/xwiki-translations (don't edit localized variants), skills/xwiki-xar-pages."
+  },
+  {
+    "id": "B15",
+    "fact": "Every feature needs at least one functional test, but functional tests are kept few (cost, flickers, slow feedback); variations go in unit/integration/PageTest/JS unit tests — \"Ask yourself first what would be the fastest executing test\". For a JS change, write a JS unit test, not a functional test, unless the feature has no functional test yet.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing",
+        "version": "173.1",
+        "sections": [
+          "Choosing a type of test to write"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/test-value.md",
+    "probe": "\"I fixed a bug in a JS file of an existing feature that already has an IT. Do I add a functional test?\"",
+    "status": "candidate",
+    "note": "Models default to an end-to-end test for UI or JS changes. Partial: kb/testing/test-value.md#Pick the level by the kind of code changed, #What needs no test of its own (no \"at least one per feature\" rule, no JS exception)."
+  },
+  {
+    "id": "B21",
+    "fact": "For a small contribution, build the changed module and its dependents (including their -test-docker modules) with checks: mvn clean install -amd -f <parent-dir> -pl :<module> -Pquality,integration-tests,docker; -f bounds -amd to the sub-tree.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Recommendations on passing the build for code contributions",
+        "version": "2.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "skills/xwiki-build/SKILL.md",
+    "probe": "\"I changed `xwiki-platform-livedata-webjar`. Which command proves I didn't break anything downstream?\"",
+    "status": "candidate",
+    "note": "Agents build only the changed module and miss breakages in its dependents. Partial: skills/xwiki-build/SKILL.md#Validate every module the change touched (no -amd; discusses -am only)."
+  },
+  {
+    "id": "D11",
+    "fact": "When a new extension is published on extensions.xwiki.org (not only when migrating), its page \"contains only technical information (dependencies, prerequisites, etc.)\"; the documentation goes to /documentation and the page gets the \"Documentation\" button (`website` = `…/DocApp/Code/ExtensionLD?id=<Technical ID>&name=%22<name>%22`).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HandleExtensionPages",
+        "version": "7.10",
+        "sections": [
+          "You Have Published a New Extension"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation-migration.md",
+    "probe": "I just released the first version of a contrib extension. Where does its documentation go, and what goes on its e.x.o page?",
+    "status": "candidate",
+    "note": "Contrib authors historically put docs in the e.x.o Description; the KB frames the button as a migration step only. partial: kb/conventions/documentation-migration.md#Handling the original page; skills/xwiki-contrib-release §6 silent."
+  },
+  {
+    "id": "A26",
+    "fact": "`xwiki-commons-tool-extension-plugin:dependency-tree` (since 15.2) prints a dependency tree resolved with Extension Manager logic: `mvn org.xwiki.commons:xwiki-commons-tool-extension-plugin:<ver>:dependency-tree -DcoreExtensions=org.xwiki.platform:xwiki-platform-distribution-war-dependencies:<xwiki ver>`; always give a target WAR (much faster and more accurate).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/ExtensionPlugin",
+        "version": "25.1",
+        "sections": [
+          "Dependency tree Mojo"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/dependencies.md",
+    "probe": "How do I see which dependencies Extension Manager will actually install with my extension on XWiki 17.10?",
+    "status": "candidate",
+    "note": "`mvn dependency:tree` differs from what EM installs (core extensions, features)."
+  },
+  {
+    "id": "C26",
+    "fact": "extensions.xwiki.org hosts free and open-source extensions only; a Sponsoring Company may have its extension repository in the default `xwiki.properties` (and on nexus.xwiki.org) only with at least 3 active committers.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Governance",
+        "version": "8.2",
+        "sections": [
+          "Governance"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/dependencies.md",
+    "probe": "Can we add company X's store to the default extension repositories in xwiki.properties?",
+    "status": "candidate",
+    "note": "Not inferable; relevant when a change adds a default extension repository."
+  },
+  {
+    "id": "A19",
+    "fact": "Data migration class name: `R<major><minor><bugfix><migration number on 3 digits><JIRA key without dash>DataMigration` (e.g. `R171014000XWIKI1234DataMigration` for 17.10.14 / XWIKI-1234, the next one for that version `R171014001XWIKI5678DataMigration`); the component hint is the same without the `R` prefix and `DataMigration` suffix; placed in an `internal` package of the closest module.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle",
+        "version": "83.1",
+        "sections": [
+          "Migrations"
+        ]
+      }
+    ],
+    "kb_target": "kb/architecture/data-migrations.md",
+    "probe": "Name a migration for 18.4.0 fixing XWIKI-23000, second migration of that version.",
+    "status": "candidate",
+    "note": "The digit packing (two-digit minor, 3-digit sequence) and hint convention are unguessable. partial: kb/architecture/data-migrations.md (only `R<version>XWIKI<issue>`); skills/xwiki-backport/SKILL.md#3.E shows an example name."
+  },
+  {
+    "id": "C16",
+    "fact": "Issues closed during a Bug Fixing Day get the JIRA label `bugfixingday` (likewise `docfixingday`, `deprecationfixingday`, `qualityfixingday`, `testfixingday`, `automationfixingday` for the other XWiki Days).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/XWikiDays",
+        "version": "163.1",
+        "sections": [
+          "Active XWiki Days"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-jira-bfd/SKILL.md",
+    "probe": "Close these 12 issues as part of today's BFD.",
+    "status": "candidate",
+    "note": "Not inferable; the BFD skill closes issues without the label, so they vanish from the BFD dashboard."
+  },
+  {
+    "id": "C17",
+    "fact": "A forum vote passes only with at least 3 committer votes and no committer -1 (a -1 is a veto); contributor votes are indicative, not binding; votes last 72 h minimum; the proposer posts the result after it closes. Lazy consensus covers changes everyone would agree to.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Committership",
+        "version": "21.2",
+        "sections": [
+          "Voting"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-forum/SKILL.md",
+    "probe": "My vote got +1 from 4 committers, +1 from 2 contributors and -1 from 1 committer after 80 h. Did it pass?",
+    "status": "candidate",
+    "note": "Generic majority-vote instinct. partial: skills/xwiki-forum/SKILL.md (deliberately points to the page: \"read them there… rather than recalling them\"), so the target may be the pointer's context rather than a copy."
+  },
+  {
+    "id": "D15",
+    "fact": "Screenshot environment: import `UserProfiles.xar` and `MainWiki.xar` (optionally `ProjectsWiki.xar`, after creating a wiki named \"Projects\"); users John Smith (AdminGroup, for admin features), Ana Smith and Alex Johnson; \"each user's password is the lowercase version of the username\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources",
+        "version": "21.4",
+        "sections": [
+          "To get started"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-doc-writing/SKILL.md",
+    "probe": "Which account do I use for xwiki.org doc screenshots on my local instance, after importing the doc resources?",
+    "status": "candidate",
+    "note": "The skill offers Admin/admin, so screens are captured as `Admin` not `JohnSmith`, and the Projects wiki is not created first. partial: skills/xwiki-doc-writing/SKILL.md (links the page)."
+  },
+  {
+    "id": "C19",
+    "fact": "On op.xwiki.org there is no resolution: it is folded into statuses (Won't fix, Duplicate… are closed statuses); Labels is a list custom field; the documentation field is a long-text field holding URLs or `N/A`; categories (= JIRA components) are per project; work packages cannot be confidential, so security issues cannot live there.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/OpenProject",
+        "version": "45.1",
+        "sections": [
+          "REQM02, REQM03, REQM04, REQM16, REQM25"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-openproject/SKILL.md",
+    "probe": "Close DA-120 as Won't Fix on OpenProject.",
+    "status": "candidate",
+    "note": "A model trained on JIRA looks for a resolution field and a Confidential level."
+  },
+  {
+    "id": "D20",
+    "fact": "The Guide's guideline levels are Must (mandatory), Should (strongly recommended unless there's a good reason) and Could (optional), with priority Must > Should > Could.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide",
+        "version": "89.86",
+        "sections": [
+          "Guideline Levels"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-doc-writing/references/review-checklist.md",
+    "probe": "Reviewing a doc page, the alt text is missing on a gallery image. Blocker?",
+    "status": "candidate",
+    "note": "A review agent ranks every deviation the same; the Guide's wording sets a finding's severity."
+  },
+  {
+    "id": "C22",
+    "fact": "Release cadence: one minor per month Jan–Nov (N.0–N.10): 3 weeks of development until the RC, then 1 week to the final; usually one RC per minor; LTS branches get two stabilization releases (N.x.1, N.x.2) two weeks apart, N.10.2 no later than January 3.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices",
+        "version": "42.1",
+        "sections": [
+          "The Cycle"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/release.md",
+    "probe": "When does the 18.10.0 RC normally ship relative to the final, and when is 18.10.2 due?",
+    "status": "candidate",
+    "note": "Generic release-train assumptions (quarterly, several RCs). partial: kb/processes/release.md#Durable facts (branching months, monthly stable)."
+  },
+  {
+    "id": "AC1",
+    "fact": "The deprecation version goes in `@Deprecated(since = …)`, not in the `@deprecated` Javadoc tag (JavaCodeStyle § Deprecation, 14.0RC1+); the DevelopmentPractices \"Deprecation Rules\" example `@deprecated replaced by {@link …} since 1.3M2` is stale.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices",
+        "version": "266.1",
+        "sections": [
+          "Deprecation Rules"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/backward-compatibility.md",
+    "probe": "",
+    "status": "done",
+    "note": "KB right, the page example stale: kb/conventions/backward-compatibility.md#Deprecation (step 1). The page fix goes upstream on DevelopmentPractices."
+  },
+  {
+    "id": "AC2",
+    "fact": "XWiki follows WCAG 2.2 at level AA; XhtmlCssCodeStyle § WCAG still says WCAG 2.1 AA, contradicting DevelopmentPractices § Accessibility and WCAGTesting.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
+        "version": "41.1",
+        "sections": [
+          "WCAG"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/frontend.md",
+    "probe": "",
+    "status": "done",
+    "note": "KB right (kb/conventions/frontend.md#HTML, CSS, accessibility: WCAG 2.2 AA); the page fix goes upstream on XhtmlCssCodeStyle. Leftover: skills/xwiki-doc-writing/tools/plantuml-accessible-palette.puml:1 still says WCAG 2.1 AA."
+  },
+  {
+    "id": "B-proxy",
+    "fact": "The Docker test framework ignores Maven settings.xml proxies; since 18.10.0RC1/18.4.9/17.10.16/16.10.20 it uses the JVM proxy properties, which must reach Failsafe's forked JVM (JAVA_TOOL_OPTIONS or argLine, not MAVEN_OPTS); containers and the Docker daemon need their own proxy config.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Running behind a proxy"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/running-docker-its.md",
+    "probe": "\"My Docker IT fails resolving artifacts behind a corporate proxy, though Maven itself works. Why?\"",
+    "status": "done",
+    "note": "Same fact as B07: kb/testing/running-docker-its.md#Reaching outside the run: a proxy, a service on the host (https://github.com/xwiki/xwiki-dev-llm/pull/413)."
+  },
+  {
+    "id": "B01",
+    "fact": "Page-object actions wait for their own outcome, but \"This is not always possible (e.g. a modal shared by several editors cannot wait for the refresh of one specific editor), in which case the test performs the wait.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "80.1",
+        "sections": [
+          "Best Practices > Page Objects"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/strategy.md",
+    "probe": "\"My test waits for the editor content to refresh after `MacroDialogEditModal.clickSubmit()`. Do I keep the wait in the test?\"",
+    "status": "done",
+    "note": "KB right (code: MacroDialogEditModal(Consumer<Runnable>)); DockerTesting 81.1 was edited to match. KB: kb/testing/strategy.md#Functional tests: scenarios and the page-object boundary."
+  },
+  {
+    "id": "B07",
+    "fact": "Behind a proxy, when not offline the Docker test framework downloads artifacts itself and ignores settings.xml proxies; since 18.10.0RC1/18.4.9/17.10.16/16.10.20 it uses the JVM proxy system properties, which must reach the Failsafe-forked JVM (JAVA_TOOL_OPTIONS or argLine, not MAVEN_OPTS or .mvn/jvm.config). Containers and the Docker daemon need their own proxy configuration.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Running behind a proxy"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/running-docker-its.md",
+    "probe": "\"My Docker IT fails resolving artifacts behind a corporate proxy, though Maven itself works. Why?\"",
+    "status": "done",
+    "note": "Batch 1 (e02), PR #413: kb/testing/running-docker-its.md#Reaching outside the run: a proxy, a service on the host (verified on master)."
+  },
+  {
+    "id": "B08",
+    "fact": "Docker test options are set as @UITest(<opt> = …) or -Dxwiki.test.ui.<opt>=… (properties → -Dxwiki.test.ui.properties.<name>, databaseCommands → -Dxwiki.test.ui.database.commands.<name>); extraJARs, sshPorts, forbiddenServletEngines, screenWidth and screenHeight cannot be set as system properties; system properties override the annotation.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"Can I add an extra JAR to a Docker test run from the command line?\"",
+    "status": "done",
+    "note": "Batch 1 (e03), PR #413: kb/testing/docker-test-framework.md#A `-Dxwiki.test.ui.*` override that changes nothing (code-corrected: more annotation-only options; profiles/servletEngineNetworkAliases read the property only when the annotation is empty)."
+  },
+  {
+    "id": "B09",
+    "fact": "DockerTesting: \"mvn -Dit.test=ResetPasswordIT clean verify\" runs the nested class on its own instead of through AllIT; \"-Dit.test=*NestedResetPasswordIT* is not going to work well\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "80.1",
+        "sections": [
+          "Run a single test"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-build/SKILL.md",
+    "probe": "\"How do I run only `ResetPasswordIT` from a module whose failsafe runs `AllIT`?\"",
+    "status": "done",
+    "note": "Skill right (runs as CI does); DockerTesting 81.1 was edited to match. Skill: skills/xwiki-build/SKILL.md#Run tests (-Dit.test=AllIT#m1+m2)."
+  },
+  {
+    "id": "B11",
+    "fact": "debug=true starts XWiki waiting for a debugger on port 5005; with Tomcat, find the mapped port with docker ps and attach to localhost. To debug and use the UI, switch from the default JETTY_STANDALONE to e.g. ServletEngine.TOMCAT, \"since otherwise the debug point in your IDE will prevent the XWiki code from executing\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Usage"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I set a breakpoint in XWiki server code while a `@UITest` runs?\"",
+    "status": "done",
+    "note": "Batch 1 (e05), PR #413: kb/testing/docker-test-framework.md#A breakpoint in the wiki's code: suspended start or not, depending on the engine (code-corrected: only Jetty Standalone suspends)."
+  },
+  {
+    "id": "B16",
+    "fact": "A container reaching a service on the host (host.testcontainers.internal) only reaches ports listed in sshPorts, plus 8080 always forwarded (e.g. GreenMail SMTP 3025 → @UITest(sshPorts = {3025})); dynamic ports go through TestConfiguration.setSSHPorts(...).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/running-docker-its.md",
+    "probe": "\"My `MailIT` passes on Jetty Standalone but XWiki can't reach GreenMail under Tomcat. Fix?\"",
+    "status": "done",
+    "note": "Batch 1 (e06), PR #413: kb/testing/running-docker-its.md#Reaching outside the run: a proxy, a service on the host (verified on master)."
+  },
+  {
+    "id": "B18",
+    "fact": "Skip a Docker test method on a browser with @IgnoreBrowser(value = \"firefox\", reason = \"… XWIKI-nnnnn\") (16.6RC1, 16.4.1, 15.10.12+); forbiddenServletEngines (annotation only) skips a class on given engines.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Ignore Browsers"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"This IT step fails only on Firefox because of a known issue. How do I skip it there?\"",
+    "status": "done",
+    "note": "Batch 1 (e08), PR #413: kb/testing/docker-test-framework.md#Skipping a test on one browser or one servlet engine (code-corrected: the attribute is forbiddenEngines)."
+  },
+  {
+    "id": "B19",
+    "fact": "Some modules cannot be installed as extensions: \"only HBM files located in JARs in WEB-INF/lib are supported\", so a module with a Hibernate HBM must be an extraJARs (plus xwikiDbHbmCommonExtraMappings). Without a version, an extraJARs entry takes the current POM version; resolveExtraJARs=true resolves it from the dependency tree (slow; SNAPSHOTs resolve to the latest published).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"My extension ships a `.hbm.xml` and its Docker test fails at mapping. Why?\"",
+    "status": "done",
+    "note": "Batch 1 (e09), PR #413: kb/testing/docker-test-framework.md#An extension's Hibernate mapping is never loaded, pointer from strategy.md#Functional-test module layout (verified on master)."
+  },
+  {
+    "id": "B25",
+    "fact": "To log several users in at once, map the servlet engine to extra domains with servletEngineNetworkAliases and use the injected MultiUserTestUtils (openNewBrowserTab(alias), switchToBrowserTab, closeTabs) so each tab has its own session cookie.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Example 8"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"My IT needs Alice and Bob logged in at the same time (realtime editing). How?\"",
+    "status": "done",
+    "note": "Batch 1 (e11), PR #413: kb/testing/docker-test-framework.md#Several users logged in at once (verified on master)."
+  },
+  {
+    "id": "C01",
+    "fact": "The SecurityPolicy step \"Request a CVE once the advisory has been completed and announced\" is struck through: \"XWiki SAS is on the process of becoming CNA, until it's done (within few weeks hopefully) we shouldn't request more CVE IDs to Github.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy",
+        "version": "64.1",
+        "sections": [
+          "What's the process to handle security issues?"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-security-advisory/references/github-advisory.md",
+    "probe": "The GHSA draft is completed and announced in the Security Advisory App. Should I click 'Request CVE' on GitHub now?",
+    "status": "done",
+    "note": "Page right: no CVE request until XWiki SAS is a CNA, publication waits for the CVE ID. Fixed in https://github.com/xwiki/xwiki-dev-llm/pull/409: skills/xwiki-security-advisory/references/github-advisory.md and SKILL.md follow the live policy step."
+  },
+  {
+    "id": "C08",
+    "fact": "XWiki has two LTS kinds: the Cycle LTS (bugfix releases of N.10, from N.10.2) and the Intermediate LTS (bugfix releases of N.4, from N.4.2); at most 2 LTS in parallel; the Cycle LTS replaces the Intermediate LTS of the same cycle once released.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices",
+        "version": "42.1",
+        "sections": [
+          "Supported LTS Versions"
+        ]
+      }
+    ],
+    "kb_target": "kb/servers/jira.md",
+    "probe": "Dev is on 18.9. What are the currently supported LTS lines?",
+    "status": "done",
+    "note": "Page right: two LTS lines (Cycle N.10.x, Intermediate N.4.x); with no released version affected, Affects Version = the Cycle LTS .0. Fixed in https://github.com/xwiki/xwiki-dev-llm/pull/409: kb/servers/jira.md#Identifying the current LTS, kb/conventions/versioning.md, skills/xwiki-jira/references/rest-api.md."
+  },
+  {
+    "id": "D01",
+    "fact": "The Guide has the Technical ID filled with the extension page's id (\"Paste the ##id## from there in the Technical Id field\") and treats a prefix as optional: \"If the extension ID is prefixed (e.g., with ##xwiki:##) in this field, the same prefix must also be specified in the \"Website\" field\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension",
+        "version": "2.15",
+        "sections": [
+          "Fill In the Extension Id to the Page"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "What value goes in a doc page's Technical ID for `org.xwiki.platform:xwiki-platform-icon-macro`?",
+    "status": "done",
+    "note": "The xwiki: prefix is required (best practice); an unprefixed id still renders the badge; the id must match the Website field. Fixed in https://github.com/xwiki/xwiki-dev-llm/pull/409: kb/conventions/documentation.md#Page-structure fields. The DocGuide LinkDocumentationPageExtension step 5 fix goes upstream."
+  },
+  {
+    "id": "D02",
+    "fact": "\"For API reference pages, tables may be replaced by the code macro, and usage examples, short use cases should be provided… For each API element, provide a concise description of its purpose and document its relevant parameters, types, supported values, default values, and return values.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis",
+        "version": "1.34",
+        "sections": [
+          "Reference"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Can a Developer Reference page document an API with code macros per element instead of a table?",
+    "status": "done",
+    "note": "A section with a code macro per API element is an acceptable Reference layout. The one-table rule was dropped from kb/conventions/documentation.md#Content rules per type, the xwiki-doc-writing skill, its checklist and lint (https://github.com/xwiki/xwiki-dev-llm/pull/409)."
+  },
+  {
+    "id": "D03",
+    "fact": "\"Deprecated content stays documented as long as it's bundled in XWiki Standard\": deprecated means still supported and bundled, getting only bug fixes, so a conversion must not drop it.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent",
+        "version": "1.4",
+        "sections": [
+          "When to use the \"Deprecated\" macro"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-doc-convert/SKILL.md",
+    "probe": "While converting a legacy page, a section documents a deprecated but still-bundled feature. Do I drop it?",
+    "status": "done",
+    "note": "Contradiction, wiki right; fixed in PR #409: skills/xwiki-doc-convert/SKILL.md:202 + kb/conventions/documentation.md#Versioning and perspective (\"Deprecated is not obsolete\")."
+  },
+  {
+    "id": "D05",
+    "fact": "The \"-ing\" words allowed at the start of a Reference/Explanation title are held by the `NOUN_ING_WORDS` constant of the `verb` check: \"add a word there when a page needs it, rather than marking the violation as a false positive\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames",
+        "version": "4.2",
+        "sections": [
+          "Words ending in \"-ing\""
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "The doc checker's verb check flags my Reference title \"Caching Strategies\". What do I do?",
+    "status": "done",
+    "note": "Contradiction, wiki right; fixed in PR #409: kb/conventions/documentation.md#Titles and page names (NOUN_ING_WORDS). Goes stale upstream when DA-132 (nounIngWords property) ships."
+  },
+  {
+    "id": "D06",
+    "fact": "\"e.g. \"Edit a Page Using the WYSIWYG Editor\", not \"Edit a Page using the WYSIWYG Editor\". Small words like \"a\", \"the\", \"using\", \"of\" are only capitalized if they start the title.\" (the Guide contradicts its own example)",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames",
+        "version": "4.2",
+        "sections": [
+          "Page Title Rules"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Is it \"Edit a Page Using the WYSIWYG Editor\" or \"…using…\"?",
+    "status": "done",
+    "note": "Contradiction, KB right (follows the example, \"Using\"); wiki-only fix (DocGuide PageTitlesNames small-word list). KB at kb/conventions/documentation.md#Titles and page names."
+  },
+  {
+    "id": "D07",
+    "fact": "\"Major edits you are unsure of may be saved with Change Request, so that they can be properly reviewed and validated by the Documentation Team before being published. You may also ask for feedback on the XWiki forum or Chat\".",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/SaveChanges",
+        "version": "9.59",
+        "sections": [
+          "Save with Change Request"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Must every major doc change go through a Change Request?",
+    "status": "done",
+    "note": "A Change Request when unsure or wanting review; a confident committer may save a major change directly: kb/conventions/documentation.md#Saving changes and the xwiki-doc-writing skill (https://github.com/xwiki/xwiki-dev-llm/pull/409)."
+  },
+  {
+    "id": "D12",
+    "fact": "The Guide names the Developer audience segment `developer` (\"developer (e.g., under Developer Documentation)\") while its own link goes to `documentation.xs.dev`; the `target` xproperty value is `developer`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "1.54",
+        "sections": [
+          "step 2"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "What's the space path for a developer doc page in XS, and what `target` value goes in the object?",
+    "status": "done",
+    "note": "Contradiction, KB right (path `dev`, target `developer`); wiki-only fix (DocGuide ChooseRightLocation step 2). KB at kb/conventions/documentation.md#Page-structure fields."
+  },
+  {
+    "id": "D13",
+    "fact": "\"Nest documentation pages where it makes sense. For example, if one feature or action logically leads to another, or if a page describes options or consequences of another page, it should be placed as a child under that main page.\"",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "1.54",
+        "sections": [
+          "bullets after step 3"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Should a page describing the consequences of deleting a page be a sibling or a child of the delete How-to?",
+    "status": "done",
+    "note": "Contradiction, wiki right (stale KB claim); fixed in PR #409: kb/conventions/documentation.md#How much belongs on one page now cites the Guide's nesting rule."
+  },
+  {
+    "id": "A25",
+    "fact": "Functional-test output must not contain `Deprecated usage of` nor Tomcat's `because there was insufficient free space available after evicting expired cache entries`; the general errors/warnings validator is currently disabled.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
+        "version": "170.1",
+        "sections": [
+          "Automatic Checks"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/strategy.md",
+    "probe": "My docker test fails with 'Deprecated usage of' in the log; what does that mean?",
+    "status": "dropped",
+    "note": "Batch 1 (e15): the KB is right, the upstream page is stale — LogCaptureValidator fails on \"ERROR\" again since 23f7f8bd8ca (XWIKI-25495); kb/testing/strategy.md#Every change has a test holds it; wiki fix only."
+  },
+  {
+    "id": "AC3",
+    "fact": "DevelopmentPractices § Development Flow: export changed wiki pages as a XAR, unzip into the source tree, run `mvn xar:format`.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices",
+        "version": "266.1",
+        "sections": [
+          "Development Flow"
+        ]
+      }
+    ],
+    "kb_target": "skills/xwiki-xar-pages/SKILL.md",
+    "probe": "",
+    "status": "dropped",
+    "note": "Not a contradiction: nothing to change, and no probe."
+  },
+  {
+    "id": "B05",
+    "fact": "Visual regression testing (18.9.0RC1+): take a ScreenshotComparator parameter and call assertMatches(name, element[, Insets]); references live in src/test/resources/screenshots/<declaring class, not AllIT>/<method>/firefox/<name>.png, are added by running once, and are refreshed with -Dxwiki.test.ui.screenshots.update=true. Firefox only.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Visual Regression Testing"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I add a screenshot assertion to my `@UITest`, and how do I refresh the references after a skin change?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e01): scored 3 twice in the baseline with the code: findable in the code."
+  },
+  {
+    "id": "B10",
+    "fact": "The default Docker test database is hsqldb since 18.7.0RC1 (before: hsqldb_embedded); HSQLDB runs in server mode when clustering. Clustering (xwikiInstances, 18.7.0RC1+) switches solrMode to remote and blobStore to s3 (SILO container).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"On master, what is the target directory of the default Docker test configuration?\"",
+    "status": "dropped",
+    "note": "The default database and target directory are readable in the code; the clustering defaults scored 3 twice in the baseline with the code. The flicker skill path is fixed: skills/xwiki-fix-flickering-docker-test/SKILL.md step 3 (https://github.com/xwiki/xwiki-dev-llm/pull/409)."
+  },
+  {
+    "id": "B17",
+    "fact": "Files in src/test/resources are made available to the browser container (mapped to target/test-classes); get their path for an upload with testConfiguration.getBrowser().getTestResourcesPath().",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Test Resources"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I upload a file from my test resources through the UI in a `@UITest`?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e07): scored 3 twice in the baseline with the code: findable in the code."
+  },
+  {
+    "id": "B24",
+    "fact": "@WikisSource(extensions = {...}) on a @ParameterizedTest runs a Docker test on the main wiki and on an auto-created subwiki; WikiReference must be the first parameter, and the module needs the xwiki-platform-wiki-creationjob and xwiki-platform-wiki-template-default dependencies.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Example 7"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I run the same UI scenario on the main wiki and a subwiki?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e10): scored 3 twice in the baseline with the code: findable in the code."
+  },
+  {
+    "id": "B30",
+    "fact": "Docker test debug/inspection options: savePermanentDirectoryData=true keeps the permanent directory in target (14.5+); standardFlavor=true installs the XS flavor and WAR (18.6.0RC1+); verbose=true shows container and debug logs (16.2+); office=true builds an office image with LibreOffice; saveDatabaseData writes files owned by the docker user that mvn clean cannot remove.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"My Docker test needs the full XS UI for a screenshot. Do I have to install the flavor in the test?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e12, savePermanentDirectoryData/standardFlavor excerpt): scored 3 twice in the baseline with the code: findable in the code. (verbose/office/saveDatabaseData not measured separately.)"
+  },
+  {
+    "id": "B31",
+    "fact": "To enable debug logging in a Docker test module, put a logback-override.xml in the module's src/test/resources.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Test Logging"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I enable DEBUG for `org.xwiki.mail` in one Docker test module?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e13): scored 3 twice in the baseline with the code: findable in the code."
+  },
+  {
+    "id": "B32",
+    "fact": "The xwikiCfgPlugins velocity property passed through @UITest(properties=…) is merged with the defaults unless the value starts with ^.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
+        "version": "81.1",
+        "sections": [
+          "Configurations options"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/docker-test-framework.md",
+    "probe": "\"How do I *replace* the plugin list in xwiki.cfg for a Docker test?\"",
+    "status": "dropped",
+    "note": "Batch 1 (e14): scored 3 twice in the baseline with the code: findable in the code."
+  },
+  {
+    "id": "C-domains",
+    "fact": "Documentation topics and subtopics are functional domains, named after what a reader uses (the page marks these rules as being defined, WIP).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "2.1",
+        "sections": []
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "",
+    "status": "dropped",
+    "note": "The rule is marked work in progress on the page (ChooseRightLocation, since 1.53), and no developer question tests it."
+  }
+]
