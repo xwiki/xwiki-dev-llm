@@ -1,12 +1,14 @@
 // Compares two plugin versions over repeated runs: each side is a list of run labels (one label per run).
 // Usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out <dir>]
-//          [--allow-missing]
+//          [--allow-missing | --gate]
 // Prints, per question group, the mean [min–max] over the runs of each metric, pass^k (k = that side's
 // run count), and for graded groups the paired head − base score difference with its 95% bootstrap CI and
 // the questions whose mean score moved by ≥ 1. Without --head it prints the base alone, with each
 // question's scores (the baseline gate: a question scoring 3 in every run is marked).
 // A missing run directory, record or grade makes the comparison refuse to print, unless --allow-missing:
 // then the paired difference uses only the questions graded at least once on both sides.
+// --gate (with --head) also checks the KB batch gate of eval/README.md on the groups present (see gate()),
+// prints PASS or FAIL per condition and exits 0 when all pass, 1 otherwise, 2 when a record is missing.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -137,13 +139,48 @@ export function missingItems(questions, sides) {
   return out;
 }
 
+/** Per run, the count of answers judged harmful (graded records only). */
+const harmfulPerRun = (qs, runs) => runs.map((recs) => qs.filter((q) => recs[q.id]?.grade?.harmful).length);
+
+/**
+ * The KB batch gate (eval/README.md, "KB batches") on the groups of `questions` it covers, head against
+ * base: (e) the paired difference's CI lies above 0; (a) its CI does not lie entirely below 0; (e) and (a)
+ * harmful answers per run do not grow (means over the runs); (d) pointers per session do not exceed the
+ * base runs' maximum (fewer is better: they are noise there). Returns [{ condition, value, pass }]; a
+ * group absent from `questions` adds no condition. `sides` as in report(), every record present.
+ */
+export function gate(questions, [base, head], opts) {
+  const rows = [];
+  const of = (g) => questions.filter((q) => q.group === g);
+  for (const g of ['e', 'a']) {
+    const qs = of(g);
+    if (!qs.length) continue;
+    const d = pairedDiff(questionScores(qs, base.runs.map((r) => r.recs)), questionScores(qs, head.runs.map((r) => r.recs)), opts);
+    const ci = `${d.mean.toFixed(3)} (CI ${d.lo.toFixed(3)} to ${d.hi.toFixed(3)})`;
+    rows.push(g === 'e'
+      ? { condition: '(e) score difference: CI above 0', value: ci, pass: d.lo > 0 }
+      : { condition: '(a) score difference: CI not entirely below 0', value: ci, pass: d.hi >= 0 });
+    const [hb, hh] = [base, head].map((side) => mean(harmfulPerRun(qs, side.runs.map((r) => r.recs))));
+    rows.push({ condition: `(${g}) harmful per run does not grow`, value: `${hb.toFixed(2)} -> ${hh.toFixed(2)}`, pass: hh <= hb });
+  }
+  const ds = of('d');
+  if (ds.length) {
+    const per = (recs) => mean(ds.map((q) => ptrs(recs[q.id]).length));
+    const [pb, ph] = [base, head].map((side) => side.runs.map((r) => per(r.recs)));
+    rows.push({ condition: '(d) pointers per session within the base maximum',
+      value: `${mean(ph).toFixed(2)} vs base max ${Math.max(...pb).toFixed(2)}`, pass: mean(ph) <= Math.max(...pb) });
+  }
+  return rows;
+}
+
 /** The whole report, as Markdown lines. `sides` = [{ name, runs: [{ label, recs }] }] (recs null for a missing run). */
 export function report(questions, sides) {
   const out = [];
   const P = (s) => out.push(s);
   sides = sides.map((s) => ({ ...s, runs: s.runs.map((r) => ({ ...r, recs: r.recs || {} })) }));
-  const cost = sides.flatMap((s) => s.runs)
-    .reduce((t, { recs }) => t + questions.reduce((c, q) => c + (recs[q.id]?.cost_usd || 0), 0), 0);
+  const sum = (f) => sides.flatMap((s) => s.runs).reduce((t, { recs }) => t + questions.reduce((c, q) => c + (recs[q.id] ? f(recs[q.id]) || 0 : 0), 0), 0);
+  const cost = sum((r) => r.cost_usd);
+  const judgeCost = sum((r) => r.grade?.cost_usd);
   const ks = sides.map((s) => s.runs.length);
   const head = `| metric | ${sides.map((s, i) => `${s.name} (${ks[i]} run${ks[i] > 1 ? 's' : ''})`).join(' | ')} |\n|---|${sides.map(() => '---|').join('')}`;
   for (const g of [...new Set(questions.map((q) => q.group))]) {
@@ -174,7 +211,7 @@ export function report(questions, sides) {
     for (const { q, i } of moved) P(`| ${q.id} | ${cell(scores[0][i])} | ${cell(scores[1][i])} |`);
     if (moved.length) P('');
   }
-  P(`Session cost: $${cost.toFixed(2)}.`);
+  P(`Session cost: $${cost.toFixed(2)}. Judge cost: $${judgeCost.toFixed(2)}.`);
   return out;
 }
 
@@ -189,7 +226,11 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const base = labels('base');
   const headLabels = labels('head');
   if (!base || !args.questions) {
-    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing]');
+    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing | --gate]');
+    process.exit(2);
+  }
+  if (args.gate && (!headLabels || args['allow-missing'])) {
+    console.error('--gate needs --head, and never --allow-missing: a gate is read on complete runs only');
     process.exit(2);
   }
   const side = (name, list) => ({ name, runs: list.map((label) => ({ label, recs: loadRun(args, label) })) });
@@ -197,9 +238,21 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const questions = loadQuestions(args.questions);
   const missing = missingItems(questions, sides);
   if (missing.length && !args['allow-missing']) {
-    console.error(`Missing (rerun or judge them, or pass --allow-missing):\n${missing.join('\n')}`);
-    process.exit(1);
+    console.error(`Missing (rerun or judge them${args.gate ? '' : ', or pass --allow-missing'}):\n${missing.join('\n')}`);
+    process.exit(args.gate ? 2 : 1);
   }
   console.log(report(questions, sides).join('\n'));
   if (missing.length) console.log(`Missing: ${missing.join(', ')}`);
+  if (args.gate) {
+    const rows = gate(questions, sides);
+    if (!rows.length) {
+      console.error('--gate: none of the groups (a), (d), (e) in --questions');
+      process.exit(2);
+    }
+    console.log(`\n## Gate\n\n| condition | value | verdict |\n|---|---|---|`);
+    for (const r of rows) console.log(`| ${r.condition} | ${r.value} | ${r.pass ? 'PASS' : 'FAIL'} |`);
+    const pass = rows.every((r) => r.pass);
+    console.log(`\nGate: ${pass ? 'PASS' : 'FAIL'}`);
+    process.exit(pass ? 0 : 1);
+  }
 }

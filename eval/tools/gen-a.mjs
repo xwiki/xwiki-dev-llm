@@ -33,8 +33,10 @@ Section (file ${s.file}, heading "${s.section}"):
 ${s.text}
 >>>`;
 
+let cost = 0;
 const results = await pool(sections, 4, async s => {
   const r = await claudeJson(prompt(s), { model: 'opus', tools: '', jsonSchema: schema });
+  cost += r.total_cost_usd || 0;
   const q = r.structured_output;
   if (!q) throw new Error(`${s.id}: no structured output: ${JSON.stringify(r).slice(0, 300)}`);
   console.error(`${s.id} ok: ${q.question.slice(0, 100)}`);
@@ -42,3 +44,4 @@ const results = await pool(sections, 4, async s => {
     avoided_terms: q.avoided_terms, gold: { file: s.file, section: s.section } };
 });
 fs.writeFileSync(outFile, JSON.stringify(results, null, 2));
+console.log(`Generation cost: $${cost.toFixed(2)} (${results.length} questions).`);

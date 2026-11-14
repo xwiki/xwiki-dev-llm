@@ -2,7 +2,7 @@
 // keeps them, and which ones the routine must read.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { changesUrl, classify, devSources, editsSince, pageKey, pinArg, restPaths, unpinnedSources, versionCmp }
+import { changesUrl, classify, devSources, diffFrom, editsSince, pageKey, pinArg, restPaths, unpinnedSources, versionCmp }
   from '../../scripts/kb-sources.mjs';
 
 const VIEW = 'https://dev.xwiki.org/xwiki/bin/view/';
@@ -91,6 +91,16 @@ test('the edits since a pin, newest first, with the author\'s short name', () =>
 test('a pin argument may name the exact version read', () => {
   assert.deepEqual(pinArg(`${VIEW}Community/CodeStyle/@27.1`), [`${VIEW}Community/CodeStyle`, '27.1']);
   assert.deepEqual(pinArg(`${VIEW}Community/CodeStyle#HComments`), [`${VIEW}Community/CodeStyle`, undefined]);
+});
+
+test('a diff starts from the version named, else from the pin; an unpinned page needs a version', () => {
+  const pins = { [`${VIEW}Community/CodeStyle`]: '27.1' };
+  assert.deepEqual(diffFrom(`${VIEW}Community/CodeStyle/@25.2`, pins), { key: `${VIEW}Community/CodeStyle`, from: '25.2' });
+  assert.deepEqual(diffFrom(`${VIEW}Community/CodeStyle#HComments`, pins), { key: `${VIEW}Community/CodeStyle`, from: '27.1' });
+  assert.deepEqual(diffFrom(`${VIEW}Community/Testing/DockerTesting/@81.1`, {}),
+    { key: `${VIEW}Community/Testing/DockerTesting`, from: '81.1' });
+  assert.throws(() => diffFrom(`${VIEW}Community/Testing/DockerTesting/`, pins), /not pinned.*@<version>/);
+  assert.throws(() => diffFrom('https://www.xwiki.org/xwiki/bin/view/Main/', pins), /not a dev\.xwiki\.org page/);
 });
 
 test('a cited page without a pin is reported, once per citing file', () => {

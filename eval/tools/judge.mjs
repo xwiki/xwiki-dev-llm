@@ -76,7 +76,8 @@ await pool(questions, Number(args.concurrency || 4), async q => {
   if (rec.grade || q.group === 'd') return; // resumable; (d) has no gold: it measures retrieval noise only
   try {
     const r = await claudeJson(prompt(q, rec), { model: args.model || 'opus', tools: '', jsonSchema: schema });
-    rec.grade = r.structured_output;
+    // The judge's own cost goes with its grade, so a run's total (analyze.mjs) is measured, not estimated.
+    rec.grade = { ...r.structured_output, cost_usd: r.total_cost_usd ?? null };
     fs.writeFileSync(recFile, JSON.stringify(rec, null, 2));
     console.error(`${q.id} score ${rec.grade.score}${rec.grade.harmful ? ' HARMFUL' : ''}`);
   } catch (e) {

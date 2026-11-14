@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { commonQuestions, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, spread } from '../../eval/tools/analyze.mjs';
+import { commonQuestions, gate, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, spread } from '../../eval/tools/analyze.mjs';
 
 // Group (e) scores per question over 3 runs: master (base) and the branch adding the facts (head).
 const E = {
@@ -95,4 +95,31 @@ test('the report flags missing records and, without a head, marks the questions 
     { name: 'branch', runs: [{ label: 'b', recs: { a26: a26branch } }] }]).join('\n');
   assert.match(both, /Paired difference branch − master, score: 2\.000/);
   assert.match(both, /\| a26 \| 1 \| 3 \|/);
+});
+
+// The gate on batch 1: (e) gained, (a) unchanged with one harmful answer per run, (d) given fewer pointers.
+const side = (name, runs) => ({ name, runs: runs.map((recs, i) => ({ label: `${name}-r${i + 1}`, recs })) });
+const dRuns = (n) => [0, 1, 2].map(() => ({ d01: { ...d01, hook_pointers: d01.hook_pointers.slice(0, n) } }));
+const aRuns = (score, harmful) => [0, 1, 2].map(() => ({ a26: { ...a26master, grade: { score, harmful } } }));
+const merge = (...sets) => sets[0].map((_, i) => Object.assign({}, ...sets.map((s) => s[i])));
+
+test('the batch gate passes batch 1: (e) CI above 0, (a) and harmful flat, (d) pointers not above the base maximum', () => {
+  const rows = gate([...eQuestions, a26q, d01q], [
+    side('master', merge(runsOf(0), aRuns(2, true), dRuns(5))), side('branch', merge(runsOf(1), aRuns(2, true), dRuns(4)))]);
+  assert.deepEqual(rows.map((r) => r.pass), [true, true, true, true, true]);
+  assert.match(rows[0].value, /0\.714 \(CI 0\.238 to 1\.238\)/);
+  assert.match(rows[4].value, /4\.00 vs base max 5\.00/);
+});
+
+test('the batch gate fails on an (e) CI reaching 0, an (a) loss, more harmful answers or more (d) pointers', () => {
+  const [base, head] = [side('master', merge(runsOf(1), aRuns(3, false), dRuns(4))), side('branch', merge(runsOf(1), aRuns(1, true), dRuns(5)))];
+  const rows = gate([...eQuestions, a26q, d01q], [base, head]);
+  assert.deepEqual(rows.map((r) => [r.condition.slice(0, 3), r.pass]),
+    [['(e)', false], ['(e)', true], ['(a)', false], ['(a)', false], ['(d)', false]]);
+  assert.deepEqual(gate([eQuestions[0]].map((q) => ({ ...q, group: 'b' })), [base, head]), []);
+});
+
+test('the report sums the judge\'s recorded cost apart from the sessions\'', () => {
+  const recs = { a26: { ...a26branch, grade: { ...a26branch.grade, cost_usd: 0.25 } } };
+  assert.match(report([a26q], [{ name: 'base', runs: [{ label: 'm', recs }] }]).join('\n'), /Session cost: \$0\.04\. Judge cost: \$0\.25/);
 });

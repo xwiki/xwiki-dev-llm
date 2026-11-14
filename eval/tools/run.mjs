@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { claudeStream, pool } from './claude.mjs';
+import { codeRepos, agentFiles } from './code-dir.mjs';
 import { clonesDir, evalDir, kbDirOf, loadQuestions, outRoot, parseArgs, pluginDir as pluginDirOf, runDir, taskClone } from './common.mjs';
 import { makeTaskRepo, sessionResult } from './task-repo.mjs';
 
@@ -122,6 +123,8 @@ function summarize(events) {
   const result = events.find(e => e.type === 'result');
   const u = result.usage || {};
   return {
+    // The model id an alias such as `sonnet` resolved to: what two compared runs must share.
+    model_id: events.find(e => e.type === 'system' && e.subtype === 'init')?.model ?? null,
     answer: result.result,
     is_error: result.is_error,
     num_turns: result.num_turns,
@@ -162,16 +165,34 @@ function stubRepo() {
   return dir;
 }
 
-// What a session must not read: the questions with their gold, past results, and the group (c)
-// clones, which hold the real fix after each task's base.
-const hidden = [path.join(evalDir, 'questions'), path.join(out, 'runs'), path.join(out, 'recall'), clonesDir(args)];
+// What a session must not read: the questions with their gold, the backlog stating the facts a batch
+// measures, past results, and the group (c) clones, which hold the real fix after each task's base.
+const hidden = [path.join(evalDir, 'questions'), path.join(evalDir, 'backlog.json'), path.join(out, 'runs'),
+  path.join(out, 'recall'), clonesDir(args)];
+const denyRead = hidden.map(d => (fs.existsSync(d) && fs.statSync(d).isFile() ? `Read(/${d})` : `Read(/${d}/**)`));
+
+// --code-dir <dir>: groups a/b/d/e run in its xwiki-platform clone instead of the stub, with its
+// xwiki-commons and xwiki-rendering clones readable too (the "agent with the code" condition). It must
+// not reach this checkout, and no agent instruction file may steer the session (code-dir.mjs).
+let code = null;
+if (args['code-dir']) {
+  try {
+    code = codeRepos(args['code-dir']);
+  } catch (e) {
+    console.error(e.message);
+    process.exit(2);
+  }
+  const found = agentFiles(code);
+  if (found.length) {
+    console.error(`agent instruction files in the code clones (node eval/tools/code-dir.mjs <dir> --strip):\n${found.join('\n')}`);
+    process.exit(2);
+  }
+}
 
 await pool(items, Number(args.concurrency || 4), async q => {
   const started = Date.now();
   try {
-    // --code-dir <dir>: groups a/b/d/e run in <dir>/xwiki-platform instead of the stub, with every other
-    // repo under <dir> readable too (the "agent with the code" condition).
-    let cwd = q.group === 'c' ? null : args['code-dir'] ? path.join(path.resolve(args['code-dir']), 'xwiki-platform') : stubRepo();
+    let cwd = q.group === 'c' ? null : code ? code[0] : stubRepo();
     let repo = null;
     let base = null;
     if (q.group === 'c') {
@@ -202,16 +223,15 @@ await pool(items, Number(args.concurrency || 4), async q => {
       const settings = {
         sandbox: { enabled: true, autoAllowBashIfSandboxed: true, allowUnsandboxedCommands: false,
           filesystem: { allowWrite: [repo, scratch], denyRead: hidden } },
-        permissions: { deny: [...disallowed, ...hidden.map(d => `Read(/${d}/**)`)] },
+        permissions: { deny: [...disallowed, ...denyRead] },
         hooks: { PreToolUse: [{ matcher: 'Write|Edit|MultiEdit|NotebookEdit',
           hooks: [{ type: 'command', command: `node ${JSON.stringify(path.join(evalDir, 'tools', 'write-guard.mjs'))}` }] }] },
       };
       permArgs = ['--add-dir', repo, '--add-dir', scratch, '--settings', JSON.stringify(settings),
         '--permission-mode', 'bypassPermissions', '--disallowedTools', ...disallowed];
     } else {
-      const codeDirs = args['code-dir'] ? fs.readdirSync(path.resolve(args['code-dir'])).map(d => path.join(path.resolve(args['code-dir']), d))
-        .filter(d => d !== cwd && fs.statSync(d).isDirectory()).flatMap(d => ['--add-dir', d]) : [];
-      permArgs = [...codeDirs, '--disallowedTools', ...disallowed, ...hidden.map(d => `Read(/${d}/**)`), '--permission-mode', 'default',
+      const codeDirs = (code || []).slice(1).flatMap(d => ['--add-dir', d]);
+      permArgs = [...codeDirs, '--disallowedTools', ...disallowed, ...denyRead, '--permission-mode', 'default',
         '--allowedTools', 'Read', 'Grep', 'Glob', 'Skill', 'Bash(git:*)', 'Bash(node:*)', 'Bash(ls:*)', 'Bash(cd:*)',
         'Bash(cat:*)', 'Bash(grep:*)', 'Bash(find:*)', 'Bash(sed:*)', 'Bash(head:*)'];
     }
