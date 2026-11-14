@@ -25,9 +25,8 @@ this file: a gap you hit in them goes under `## Routine notes`, written as the e
   minutes, and `run.mjs` prints no end marker: run every `run.mjs`, `judge.mjs` and `gen-metadata.mjs`
   stage as `(node … ; echo "EXIT $?") > <log> 2>&1 &` and wait for the `EXIT` line **in the same turn**,
   by repeated bounded waits each under 10 minutes (an until-loop on the log with a timeout). Never end
-  the turn while a stage runs: when the nested sessions exhaust the account's usage limit, which they
-  share with this one, nothing resumes the run. `judge.mjs` exits 3 at that limit. Both eval tools
-  resume, so rerunning a stage after an interruption does only what is missing.
+  the turn while a stage runs: nothing resumes the routine run on its own. Both eval tools resume, so
+  rerunning a stage after an interruption does only what is missing.
 - Maven and Docker are not available: a fact is checked by reading the code in the clones.
 - GitHub is reached over REST only, as in the consolidation routine's step 1.
 
@@ -84,19 +83,21 @@ excerpt when its key points are not the fact.
 ### 7. Compare and gate
 
 Exactly the README's "Compare" bullet, `--changed` included: the gate passes when both
-`analyze.mjs --gate` calls exit 0.
-Exit 2 names the missing records: rerun or judge that stage (it resumes) and read the gate again. A
-session that still fails after two reruns leaves the gate unreadable: treat it as failed, saying why.
+`analyze.mjs --gate` calls exit 0. Exit 3 names questions to confirm: run the README's "Confirm"
+bullet for them, and its call's exit code is the verdict. Exit 2 names the missing records: rerun or
+judge that stage (it resumes) and read the gate again. A session that still fails after two reruns
+leaves the gate unreadable: treat it as failed, saying why.
 Measure once: KB text retuned against these questions and measured again is fitted to them, not better.
 
 ### 8. Cost
 
 At most **$80** per run, counted from what the tools report: `analyze.mjs` sums the session and judge
-costs of the runs it reads, `gen-a.mjs` and `gen-metadata.mjs` print theirs. Batch 1, with seven
-survivors, cost about $10 for the baseline and $33 for the comparison, of which the (a)+(d) half does
-not shrink with the batch. Before
-each stage, add its projection to what is spent; over the cap, do not start it: shrink the batch first
-when that is enough (before the baseline), otherwise stop there. A stage not run lands nothing.
+costs of the runs it reads (a confirmation's on its own line), `gen-a.mjs` and `gen-metadata.mjs`
+print theirs. Batch 1, with seven survivors, cost about $10 for the baseline and $33 for the comparison,
+of which the (a)+(d) half does not shrink with the batch. A confirmation (step 7) adds six sessions and
+their judging per question: about $1.50 for an (e) one, $1 for an (a) one. Before each stage, add its
+projection to what is spent; over the cap, do not start it: shrink the batch first when that is enough
+(before the baseline), otherwise stop there. A stage not run lands nothing.
 
 ### 9. Open the PR — or not
 

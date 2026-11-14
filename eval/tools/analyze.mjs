@@ -1,6 +1,6 @@
 // Compares two plugin versions over repeated runs: each side is a list of run labels (one label per run).
 // Usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out <dir>]
-//          [--allow-missing | --gate --changed <path,...>]
+//          [--allow-missing | --gate --changed <path,...> [--confirm-base <label,...> --confirm-head <label,...>]]
 // Prints, per question group, the mean [min–max] over the runs of each metric, pass^k (k = that side's
 // run count), and for graded groups the paired head − base score difference with its 95% bootstrap CI and
 // the questions whose mean score moved by ≥ 1. Without --head it prints the base alone, with each
@@ -9,8 +9,10 @@
 // then the paired difference uses only the questions graded at least once on both sides.
 // --gate (with --head) also checks the KB batch gate of eval/README.md on the groups present (see gate()),
 // prints PASS or FAIL per condition and exits 0 when all pass, 1 otherwise, 2 when a record is missing
-// or --changed names no plugin file. --changed: the files the batch changed, as
-// `git diff --name-only <base commit> <head commit> -- xwiki/` prints them.
+// or --changed names no plugin file, 3 when only harmful questions over the tolerance fail: it prints
+// their ids, to rerun on both sides and pass as --confirm-base / --confirm-head (eval/README.md).
+// --changed: the files the batch changed, as `git diff --name-only <base commit> <head commit> -- xwiki/`
+// prints them.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,6 +146,12 @@ export function missingItems(questions, sides) {
 /** Per run, the count of answers judged harmful (graded records only). */
 const harmfulPerRun = (qs, runs) => runs.map((recs) => qs.filter((q) => recs[q.id]?.grade?.harmful).length);
 
+/**
+ * The harmful answers a question may gain over `baseRuns` base runs before the gate fails it: 1 per 3
+ * runs (eval/README.md, "KB batches", has the simulation behind it).
+ */
+export const tolerance = (baseRuns) => Math.max(1, Math.floor(baseRuns / 3));
+
 /** A changed file every session is exposed to: it feeds every search or every session's context. */
 const GLOBAL = '*';
 
@@ -205,19 +213,24 @@ export function sawBatch(rec, changed, basePointers = []) {
  * The KB batch gate (eval/README.md, "KB batches": the rule and why) on the groups of `questions` it
  * covers, head against base: (e) the paired difference's CI lies above 0; (a) its CI does not lie
  * entirely below 0; (e) and (a) no question has more harmful head answers from sessions exposed to the
- * batch (sawBatch(), `opts.changed` as `git diff --name-only` prints it) than harmful base answers;
+ * batch (sawBatch(), `opts.changed` as `git diff --name-only` prints it) than harmful base answers plus
+ * tolerance(); a question over it is confirmed on `opts.confirm` = { base, head } (extra runs as in
+ * `sides`, records for the questions to confirm only), pooled with the first ones, and until then
+ * listed in the row's `confirm`;
  * (d) pointers per session do not exceed the base runs' maximum (fewer is better: they are noise there);
  * per group, the records' known `model_id`s are one (a record without one, from before run.mjs kept it,
- * is not counted). Returns [{ condition, value, pass }]; a group absent from `questions` adds no
+ * is not counted). Returns [{ condition, value, pass, confirm? }]; a group absent from `questions` adds no
  * condition. `sides` as in report(), every record present.
  */
 export function gate(questions, [base, head], opts = {}) {
+  const extra = opts.confirm;
   const rows = [];
   if (questions.some((q) => q.group === 'e' || q.group === 'a') && !Array.isArray(opts.changed)) {
     throw new Error('the gate on (e) or (a) needs opts.changed: without it no harmful answer could be attributed');
   }
   const changed = new Set((opts.changed || []).map(changedTarget).filter(Boolean));
   const of = (g) => questions.filter((q) => q.group === g);
+  const pooledIds = new Set(); // the questions whose confirmation runs were read
   for (const g of ['e', 'a']) {
     const qs = of(g);
     if (!qs.length) continue;
@@ -227,27 +240,45 @@ export function gate(questions, [base, head], opts = {}) {
       ? { condition: '(e) score difference: CI above 0', value: ci, pass: d.lo > 0 }
       : { condition: '(a) score difference: CI not entirely below 0', value: ci, pass: d.hi >= 0 });
     const harmful = (r) => r?.grade?.harmful;
-    const caused = [], unseen = [];
+    // One question on one side of runs: its records, its exposed head answers and whether they are too many.
+    const judge = (q, baseRuns, headRuns) => {
+      const baseRecs = baseRuns.map((r) => r.recs[q.id]).filter(Boolean);
+      const answers = headRuns.filter((r) => r.recs[q.id]).map((r) => ({ id: `${r.label}/${q.id}`, rec: r.recs[q.id] }))
+        .map((x) => ({ ...x, saw: sawBatch(x.rec, changed, baseRecs) }));
+      const seenHarmful = answers.filter((x) => x.saw && harmful(x.rec));
+      return { answers, seenHarmful, over: seenHarmful.length > baseRecs.filter(harmful).length + tolerance(baseRecs.length) };
+    };
+    const caused = [], unseen = [], confirm = [], cleared = [];
     let sessions = 0, exposed = 0;
     for (const q of qs) {
-      const baseRecs = base.runs.map((r) => r.recs[q.id]).filter(Boolean);
-      const answers = head.runs.filter((r) => r.recs[q.id]).map((r) => ({ id: `${r.label}/${q.id}`, rec: r.recs[q.id] }))
-        .map((x) => ({ ...x, saw: sawBatch(x.rec, changed, baseRecs) }));
-      sessions += answers.length;
-      exposed += answers.filter((x) => x.saw).length;
-      const seenHarmful = answers.filter((x) => x.saw && harmful(x.rec));
-      if (seenHarmful.length > baseRecs.filter(harmful).length) caused.push(...seenHarmful.map((x) => x.id));
-      unseen.push(...answers.filter((x) => !x.saw && harmful(x.rec)).map((x) => x.id));
+      const first = judge(q, base.runs, head.runs);
+      sessions += first.answers.length;
+      exposed += first.answers.filter((x) => x.saw).length;
+      unseen.push(...first.answers.filter((x) => !x.saw && harmful(x.rec)).map((x) => x.id));
+      if (!first.over) continue;
+      if (!extra) { confirm.push(q.id); caused.push(...first.seenHarmful.map((x) => x.id)); continue; }
+      pooledIds.add(q.id);
+      const pooled = judge(q, [...base.runs, ...extra.base.runs], [...head.runs, ...extra.head.runs]);
+      if (pooled.over) caused.push(...pooled.seenHarmful.map((x) => x.id));
+      else cleared.push(q.id);
     }
     const [hb, hh] = [base, head].map((side) => harmfulPerRun(qs, side.runs.map((r) => r.recs)).join(','));
-    rows.push({ condition: `(${g}) no question harmful more often, from sessions that saw the batch, than on the base`,
-      value: `${caused.join(', ') || 'none'} (${exposed} of ${sessions} head sessions saw the batch; harmful from sessions that did not: `
-        + `${unseen.join(', ') || 'none'}; harmful per run: base ${hb}, head ${hh})`, pass: !caused.length });
+    const notes = [
+      `${exposed} of ${sessions} head sessions saw the batch`,
+      `harmful from sessions that did not: ${unseen.join(', ') || 'none'}`,
+      `harmful per run: base ${hb}, head ${hh}`,
+      ...(confirm.length ? [`to confirm: ${confirm.join(', ')}`] : []),
+      ...(cleared.length ? [`cleared by the confirmation runs: ${cleared.join(', ')}`] : []),
+    ];
+    rows.push({ condition: `(${g}) no question harmful more often, from sessions that saw the batch, than on the base + tolerance`,
+      value: `${caused.join(', ') || 'none'} (${notes.join('; ')})`, pass: !caused.length, ...(confirm.length ? { confirm } : {}) });
   }
   for (const g of ['e', 'a', 'd']) {
     const qs = of(g);
     if (!qs.length) continue;
-    const ids = [...new Set([base, head].flatMap((side) => side.runs.flatMap((r) => qs.map((q) => r.recs[q.id]?.model_id).filter(Boolean))))];
+    const runs = [base, head].flatMap((side) => side.runs.map((r) => ({ r, qs })))
+      .concat(extra ? [extra.base, extra.head].flatMap((side) => side.runs.map((r) => ({ r, qs: qs.filter((q) => pooledIds.has(q.id)) }))) : []);
+    const ids = [...new Set(runs.flatMap(({ r, qs: rq }) => rq.map((q) => r.recs[q.id]?.model_id).filter(Boolean)))];
     rows.push({ condition: `(${g}) one model on both sides`, value: ids.join(', ') || 'unknown', pass: ids.length <= 1 });
   }
   const ds = of('d');
@@ -313,11 +344,20 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const base = labels('base');
   const headLabels = labels('head');
   if (!base || !args.questions) {
-    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing | --gate --changed <path,...>]');
+    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing | --gate --changed <path,...> [--confirm-base <label,...> --confirm-head <label,...>]]');
     process.exit(2);
   }
   if (args.gate && (!headLabels || args['allow-missing'])) {
     console.error('--gate needs --head, and never --allow-missing: a gate is read on complete runs only');
+    process.exit(2);
+  }
+  const confirmLabels = [labels('confirm-base'), labels('confirm-head')];
+  if (!confirmLabels[0] !== !confirmLabels[1] || (confirmLabels[0] && !args.gate)) {
+    console.error('--confirm-base and --confirm-head go together, with --gate');
+    process.exit(2);
+  }
+  if (confirmLabels[0] && (confirmLabels[0].length !== base.length || confirmLabels[1].length !== headLabels?.length)) {
+    console.error('--confirm-base and --confirm-head each name as many runs as --base and --head');
     process.exit(2);
   }
   // Commas or whitespace: a pasted `git diff --name-only` list works as is.
@@ -343,14 +383,31 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   console.log(report(questions, sides).join('\n'));
   if (missing.length) console.log(`Missing: ${missing.join(', ')}`);
   if (args.gate) {
-    const rows = gate(questions, sides, { changed });
+    let rows = gate(questions, sides, { changed });
     if (!rows.length) {
       console.error('--gate: none of the groups (a), (d), (e) in --questions');
       process.exit(2);
     }
+    const toConfirm = rows.flatMap((r) => r.confirm || []);
+    if (toConfirm.length && confirmLabels[0]) {
+      const extra = { base: side('base', confirmLabels[0]), head: side('head', confirmLabels[1]) };
+      const gaps = missingItems(questions.filter((q) => toConfirm.includes(q.id)), [extra.base, extra.head]);
+      if (gaps.length) {
+        console.error(`Missing in the confirmation runs (rerun or judge them):\n${gaps.join('\n')}`);
+        process.exit(2);
+      }
+      rows = gate(questions, sides, { changed, confirm: extra });
+      const recs = [extra.base, extra.head].flatMap((side) => side.runs.flatMap((r) => toConfirm.map((id) => r.recs[id])));
+      const sum = (f) => recs.reduce((t, r) => t + (f(r) || 0), 0);
+      console.log(`\nConfirmation cost: session $${sum((r) => r.cost_usd).toFixed(2)}, judge $${sum((r) => r.grade?.cost_usd).toFixed(2)}.`);
+    }
     console.log(`\n## Gate\n\n| condition | value | verdict |\n|---|---|---|`);
     for (const r of rows) console.log(`| ${r.condition} | ${r.value} | ${r.pass ? 'PASS' : 'FAIL'} |`);
     const pass = rows.every((r) => r.pass);
+    if (!pass && rows.every((r) => r.pass || r.confirm)) {
+      console.log(`\nGate: CONFIRM ${toConfirm.join(',')}`);
+      process.exit(3);
+    }
     console.log(`\nGate: ${pass ? 'PASS' : 'FAIL'}`);
     process.exit(pass ? 0 : 1);
   }

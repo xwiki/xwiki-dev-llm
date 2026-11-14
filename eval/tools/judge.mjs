@@ -1,7 +1,6 @@
 // Grades a run's answers against the frozen gold with an LLM judge, then prints the scoreboard.
 // Usage: node judge.mjs --label <run label> --questions a,b,c [--kb <kb dir>] [--out <dir>]
 //          [--model opus] [--concurrency 4]
-// After a call fails on the account's usage limit it starts no other and exits 3, printing no scoreboard.
 // A group (a) reference is the question's `gold.reference`, else its gold section: frozen in
 // questions/a-sections.json, or read from --kb when given (to judge against another KB's wording).
 import fs from 'node:fs';
@@ -70,10 +69,7 @@ ${q.kind === 'volatile-behaviour' ? '\nThis question asks for a volatile value: 
 ${q.group === 'c' ? '\nFor a task, a point is "covered" when the diff (or, for process points, the final message) respects it; "missing" when the diff ignores it.' : ''}`;
 }
 
-// Set by the first call failing on the account's usage limit: every later call would fail the same way.
-let limited = null;
 await pool(questions, Number(args.concurrency || 4), async q => {
-  if (limited) return;
   const recFile = path.join(runDir, `${q.id}.json`);
   if (!fs.existsSync(recFile)) return;
   const rec = JSON.parse(fs.readFileSync(recFile, 'utf8'));
@@ -93,13 +89,8 @@ await pool(questions, Number(args.concurrency || 4), async q => {
     console.error(`${q.id} score ${rec.grade.score}${rec.grade.harmful ? ' HARMFUL' : ''}`);
   } catch (e) {
     console.error(`${q.id} judge FAILED: ${e.message}`);
-    if (/usage limit|hit your limit|limit reached|rate.?limit/i.test(e.message)) limited ??= e.message;
   }
 });
-if (limited) {
-  console.error(`Stopped at the usage limit, no new call started: rerun this stage once it resets (${limited.slice(0, 200)})`);
-  process.exit(3);
-}
 
 // Scoreboard.
 const recs = questions.map(q => {

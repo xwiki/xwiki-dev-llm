@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { isGraded } from '../../eval/tools/common.mjs';
-import { changedTarget, commonQuestions, gate, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, sawBatch, spread } from '../../eval/tools/analyze.mjs';
+import { changedTarget, commonQuestions, gate, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, sawBatch, spread, tolerance } from '../../eval/tools/analyze.mjs';
 
 // Group (e) scores per question over 3 runs: master (base) and the branch adding the facts (head).
 const E = {
@@ -144,20 +144,64 @@ test('the batch gate passes batch 2: no question is harmful more often, counting
     + 'branch-r1/a10, branch-r3/a12; harmful per run: base 2,2,1, head 2,2,2)']);
 });
 
-test('the batch gate fails a question harmful more often from sessions that saw the batch than on master', () => {
+test('the batch gate fails a question harmful more often, from sessions that saw the batch, than on master plus 1', () => {
   // a13: harmful 1 of 3 on master, 3 of 3 on the branch from sessions that read the new text.
   const runs = hRuns(['a13'], ['a13'], ['a13']);
   for (const r of runs) r.a13 = { ...r.a13, okf_touches: readNew };
-  assert.deepEqual([hRow(runs).pass, hRow(runs).value.split(' (')[0]], [false, 'branch-r1/a13, branch-r2/a13, branch-r3/a13']);
-  // Only one of them from a session that saw the batch: not above master's one.
-  runs[1].a13 = { ...runs[1].a13, okf_touches: [] };
+  const row = hRow(runs);
+  assert.deepEqual([row.pass, row.value.split(' (')[0], row.confirm], [false, 'branch-r1/a13, branch-r2/a13, branch-r3/a13', ['a13']]);
+  assert.match(row.value, /to confirm: a13\)$/);
+  // Two of them from sessions that saw the batch: within master's one plus 1.
   runs[2].a13 = { ...runs[2].a13, okf_touches: [] };
-  assert.equal(hRow(runs).pass, true);
-  // Group (e): e02, never harmful on master, harmful once on the branch from a session that read the new text.
+  assert.deepEqual([hRow(runs).pass, hRow(runs).confirm], [true, undefined]);
+  // Group (e): e02, never harmful on master, harmful once on the branch is within the tolerance, twice is not.
   const head = runsOf(1);
+  const eRow = () => harmfulRow(gate(eQuestions, [side('master', runsOf(0)), side('branch', head)], { changed: batch2Changed }));
   head[0].e02 = { ...head[0].e02, okf_touches: readNew, grade: { score: 1, harmful: true } };
-  const row = harmfulRow(gate(eQuestions, [side('master', runsOf(0)), side('branch', head)], { changed: batch2Changed }));
-  assert.deepEqual([row.pass, row.value.split(' (')[0]], [false, 'branch-r1/e02']);
+  assert.equal(eRow().pass, true);
+  head[1].e02 = { ...head[0].e02 };
+  assert.deepEqual([eRow().pass, eRow().confirm], [false, ['e02']]);
+});
+
+test('the harmful tolerance is 1 per 3 base runs, never below 1', () => {
+  assert.deepEqual([1, 2, 3, 5, 6, 9].map(tolerance), [1, 1, 1, 1, 2, 3]);
+});
+
+// Three confirmation runs per side, with records for a13 only.
+const confirmRuns = (name, harmfulRuns, seenRuns = harmfulRuns) => side(name, [0, 1, 2].map((i) =>
+  ({ a13: { ...a26master, okf_touches: seenRuns.includes(i) ? readNew : [], grade: { score: 1, harmful: harmfulRuns.includes(i) } } })));
+
+test('confirmation runs pool with the first ones: six runs per side, tolerance 2', () => {
+  const runs = hRuns(['a13'], ['a13'], ['a13']);
+  for (const r of runs) r.a13 = { ...r.a13, okf_touches: readNew };
+  const confirmed = (base, head, headSeen = head) => harmfulRow(gate(hQs, [hBase, side('branch', runs)],
+    { changed: batch2Changed, confirm: { base: confirmRuns('cmaster', base), head: confirmRuns('cbranch', head, headSeen) } }));
+  // 3 + 1 seen harmful against 1 + 0 on master: 4 > 1 + 2.
+  const row = confirmed([], [0]);
+  assert.deepEqual([row.pass, row.confirm], [false, undefined]);
+  assert.equal(row.value.split(' (')[0], 'branch-r1/a13, branch-r2/a13, branch-r3/a13, cbranch-r1/a13');
+  // 3 + 0 against 1 + 0: 3 ≤ 3, the first runs were noise.
+  const cleared = confirmed([], []);
+  assert.equal(cleared.pass, true);
+  assert.match(cleared.value, /^none \(.*cleared by the confirmation runs: a13\)$/);
+  // Harmful confirmation answers from sessions that did not see the batch do not count.
+  assert.equal(confirmed([], [0, 1, 2], []).pass, true);
+});
+
+test('confirmation runs count only for the questions confirmed, the model check included', () => {
+  const runs = hRuns(['a13'], ['a13'], ['a13']);
+  for (const r of runs) r.a13 = { ...r.a13, okf_touches: readNew };
+  const head = confirmRuns('cbranch', []);
+  // a02 is not to confirm: its harmful answers and its other model in the confirmation runs are ignored.
+  for (const r of head.runs) r.recs.a02 = { ...a26master, okf_touches: readNew, model_id: 'other', grade: { score: 0, harmful: true } };
+  const rows = gate(hQs, [hBase, side('branch', runs)], { changed: batch2Changed, confirm: { base: confirmRuns('cmaster', []), head } });
+  assert.deepEqual(rows.map((r) => r.pass), [true, true, true]);
+  head.runs[0].recs.a13 = { ...head.runs[0].recs.a13, model_id: 'other' };
+  const base = confirmRuns('cmaster', []);
+  base.runs[0].recs.a13 = { ...base.runs[0].recs.a13, model_id: 'claude-sonnet-5-5' };
+  const model = gate(hQs, [hBase, side('branch', runs)], { changed: batch2Changed, confirm: { base, head } })
+    .find((r) => r.condition === '(a) one model on both sides');
+  assert.deepEqual([model.pass, model.value], [false, 'claude-sonnet-5-5, other']);
 });
 
 // Real tool inputs: b1-e-code-r1/e05 grepped the KB folder, b1-e-code-r2/e05 grepped from inside it;
@@ -210,6 +254,51 @@ test('--gate exits 2 on a missing, empty or plugin-less --changed', () => {
     assert.match(r.stderr, /--changed/);
   }
   assert.match(cli('--changed', 'eval/README.md').stderr, /outside the plugin, ignored: eval\/README\.md/);
+});
+
+test('--gate exits 3 with the questions to confirm, then reads the confirmation runs\' verdict', () => {
+  const out = mkdtempSync(join(tmpdir(), 'eval-confirm-'));
+  const qFile = join(out, 'q.json');
+  writeFileSync(qFile, JSON.stringify([{ ...a26q, id: 'a13' }, { ...a26q, id: 'a02' }]));
+  const write = (label, recs) => {
+    mkdirSync(join(out, 'runs', label), { recursive: true });
+    for (const [id, rec] of Object.entries(recs)) writeFileSync(join(out, 'runs', label, `${id}.json`), JSON.stringify(rec));
+  };
+  const rec = (harmful, seen) => ({ ...a26master, model_id: 'claude-opus-5-5', okf_touches: seen ? readNew : [], grade: { score: 1, harmful } });
+  ['m1', 'm2', 'm3'].forEach((l) => write(l, { a13: rec(false), a02: rec(false) }));
+  // a13: never harmful on master, twice on the branch from sessions that read the new text.
+  ['b1', 'b2'].forEach((l) => write(l, { a13: rec(true, true), a02: rec(false) }));
+  write('b3', { a13: rec(false), a02: rec(false) });
+  ['cm1', 'cm2', 'cm3'].forEach((l) => write(l, { a13: rec(false) }));
+  ['cb1', 'cb2'].forEach((l) => write(l, { a13: rec(false) }));
+  const cli = (...extra) => spawnSync(process.execPath, [fileURLToPath(new URL('../../eval/tools/analyze.mjs', import.meta.url)),
+    '--base', 'm1,m2,m3', '--head', 'b1,b2,b3', '--questions', qFile, '--out', out, '--gate',
+    '--changed', 'xwiki/kb/testing/strategy.md', ...extra], { encoding: 'utf8' });
+  const first = cli();
+  assert.equal(first.status, 3, first.stderr);
+  assert.match(first.stdout, /Gate: CONFIRM a13$/m);
+  const confirm = ['--confirm-base', 'cm1,cm2,cm3', '--confirm-head', 'cb1,cb2,cb3'];
+  const gap = cli(...confirm);
+  assert.equal(gap.status, 2);
+  assert.match(gap.stderr, /cb3 \(no run directory\)/);
+  write('cb3', { a13: rec(false) });
+  const cleared = cli(...confirm); // 2 of 6 against 0 of 6: within the tolerance of 2
+  assert.equal(cleared.status, 0, cleared.stdout);
+  assert.match(cleared.stdout, /Confirmation cost: session \$0\.49, judge \$0\.00\./);
+  write('cb3', { a13: { ...rec(false), model_id: 'claude-sonnet-5-5' } });
+  assert.equal(cli(...confirm).status, 1); // a confirmation run on another model
+  write('cb3', { a13: rec(true, true) });
+  assert.equal(cli(...confirm).status, 1); // 3 of 6
+  assert.equal(cli('--confirm-base', 'cm1').status, 2);
+  assert.equal(cli('--confirm-base', 'cm1,cm2', '--confirm-head', 'cb1,cb2').status, 2);
+  assert.equal(cli('--confirm-base', 'cm1,cm2,cm3', '--confirm-head', 'cb1,cb2').status, 2);
+  // A harmful question over the tolerance with another failing condition: no confirmation, exit 1.
+  ['x1', 'x2', 'x3'].forEach((l) => write(l, { a13: { ...rec(false), grade: { score: 3, harmful: false } }, a02: { ...rec(false), grade: { score: 3, harmful: false } } }));
+  const both = spawnSync(process.execPath, [fileURLToPath(new URL('../../eval/tools/analyze.mjs', import.meta.url)),
+    '--base', 'x1,x2,x3', '--head', 'b1,b2,b3', '--questions', qFile, '--out', out, '--gate',
+    '--changed', 'xwiki/kb/testing/strategy.md'], { encoding: 'utf8' });
+  assert.equal(both.status, 1, both.stdout);
+  assert.match(both.stdout, /Gate: FAIL$/m);
 });
 
 test('a grade without a score, left by a failed judge call, counts as ungraded', () => {
