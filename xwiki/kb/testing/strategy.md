@@ -1,7 +1,7 @@
 ---
 title: XWiki testing strategy (overview)
 stability: durable
-summary: The kinds of tests XWiki uses, their naming, that every change comes with a test failing
+summary: The kinds of tests XWiki uses, their class and method naming, that every change comes with a test failing
   without it, the no-stdout rule, the prefer-the-lightest-base
   rule, the assertion rule (JUnit 5 where it fits, Hamcrest assertThat where it reports better), the
   scenario rule (no two @Test methods build the same fixture, a distinct fixture is what justifies a
@@ -13,7 +13,7 @@ summary: The kinds of tests XWiki uses, their naming, that every change comes wi
   Programming Rights to a test's own content, asserting whose rights code runs with, the assertion channel
   (browser vs REST), the bare @UITest on an AllIT container, the functional-test module layout
   (which pom lists which module under which profile, the -test-docker pom), getting a mandatory class in an
-  @OldcoreTest, MockitoOldcore's save authors, mocking a raw injected Provider, a functional test being
+  @OldcoreTest, MockitoOldcore's save authors, a functional test being
   done only once CI has proven it on every branch, coverage, and where
   each test framework lives. Procedures live in the test skills.
 sources:
@@ -41,6 +41,10 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
 - **Unit tests** — class names end with `*Test.java`, run by Surefire.
 - **Integration / functional tests** — class names end with `*IT.java`, run by Failsafe, activated
   by the `integration-tests` profile (Docker-based functional tests also need the `docker` profile).
+
+Test methods are named after the method under test plus a qualifier
+(`importWithHeterogeneousEncodings()`), or after the use case where that does not fit, one use case per
+method where possible. No `public` on the class, the test methods or JUnit lifecycle methods.
 
 ## Every change has a test; tests stay silent
 
@@ -227,6 +231,8 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
 
 - **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
   oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
+  What the frameworks do that their annotations do not show (temp dir, setup order, a
+  mocked component a `Provider` does not return, logs): [[unit-test-framework]].
 - **A mandatory class in an `@OldcoreTest`** — to get a real XClass from its
   `MandatoryDocumentInitializer` (rather than mocking `BaseObject`s), list the initializer in
   `@ComponentList` and call `oldcore.getSpyXWiki().initializeMandatoryDocuments(context)` in the
@@ -238,12 +244,6 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   effective metadata author only when the content is dirty. A change made only through objects
   dirties the metadata, so after one user saves a page and another modifies its objects, the content
   author is still the first user and only the metadata author is the second.
-## A mocked component that the code's `Provider` does not return
-
-- **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked
-  the role the provider asks for, which differs from the registered one: fix the provider in the
-  production code ([[component-system]]), not the mock's type.
-
 ## Done once CI proves it; coverage
 
 - **A functional test is done once CI has proven it, not when its PR is merged** — a new or modified

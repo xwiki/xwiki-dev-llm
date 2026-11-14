@@ -1,0 +1,110 @@
+[
+  {
+    "id": "e01",
+    "group": "e",
+    "question": "I'm writing a JUnit 5 test that needs a scratch folder to unzip some files into. Is it fine to just use JUnit's built-in temp folder injection or File.createTempFile / java.io.tmpdir, and if not, what should I use instead, and how do I get one folder shared across the whole class versus a fresh one per test method?",
+    "kind": "fact",
+    "key_points": [
+      "Don't use the system temp directory or JUnit 5's @TempDir, since @TempDir also uses the system temp dir. The reasons: leftover data, shared state that breaks other tests, and Jenkins errors when files are created or removed outside the workspace",
+      "Use the @XWikiTempDir annotation instead. It creates a unique temporary directory inside Maven's target directory",
+      "The test class needs @ComponentTest (or @OldcoreTest), or @ExtendWith(XWikiTempDirExtension.class)",
+      "On a static File field you get one directory per test class. On an instance field you get a new one per test. On a test method parameter you get one just for that test"
+    ],
+    "avoided_terms": [
+      "Temporary Directory",
+      "XWikiTempDir",
+      "XWikiTempDirExtension",
+      "@TempDir",
+      "target directory",
+      "Jenkins workspace"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/@23.1",
+      "section": "Temporary Directory",
+      "gap": "B03",
+      "reference": "== Temporary Directory ==\n\nFrom time to time, tests require a temporary directory. We must not use the system's temporary directory nor use JUnit5's ##@TempDir## annotation (it also uses the system's temporary directory) for the following reasons:\n\n* Leftover data in a shared location once the test has finished\n* Creates a state that can make other tests fail\n* Generate errors in Jenkins since Jenkins monitors created files and doesn't allow to remove files outside of the Worskspace\n\nThus the best practice is to use the ##XWikiTempDir## annotation as in the following examples:\n\n{{code language=\"java\"}}\n@ComponentTest // or @ExtendWith(XWikiTempDirExtension.class)\nclass MyTest\n{\n  ...\n  // New tmp dir once per test class\n  @XWikiTempDir\n  private static File TEST_DIR;\n\n  // New tmp dir once per test\n  @XWikiTempDir\n  private File tmpDir;\n\n  // New tmp dir for this specific test\n  @Test\n  void testXXX(@XWikiTempDir File tmpDir)\n  {\n      ...\n  }\n...\n{{/code}}\n\nThe ##XWikiTempDir## annotation will create a unique temporary directory inside Maven's ##target## directory.\n\nExample when using ##@OldcoreTest##:\n\n{{code language=\"java\"}}\n@OldcoreTest\nclass MyTest\n{\n    @XWikiTempDir\n    private File tmpDir;\n...\n}\n{{/code}}\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/ , page version 23.1, section \"Temporary Directory\")"
+    }
+  },
+  {
+    "id": "e05",
+    "group": "e",
+    "question": "I'm writing a JUnit 5 test for a component that logs an INFO message when it's initialized. That happens once for the whole test class, in the class-level setup, not in each test. Where do I put the log capture and the assertion so the build doesn't fail with an error saying some logged messages were never checked?",
+    "kind": "fact",
+    "key_points": [
+      "Register the XWiki log-capture JUnit5 extension as a static field (@RegisterExtension private static ...), at a level that includes INFO (e.g. LogLevel.INFO)",
+      "Do the assertion in a static @AfterAll method (e.g. assertEquals(expected, logCapture.getMessage(0)))",
+      "The extension fails the test (after each test, or after all tests when registered statically) if any captured message was not read via getMessage()/getLogEvent()"
+    ],
+    "avoided_terms": [
+      "LogCaptureExtension",
+      "Capturing and Asserting Logs",
+      "getMessage",
+      "getLogEvent",
+      "Following messages must be asserted",
+      "@AfterAll",
+      "@BeforeAll",
+      "@RegisterExtension",
+      "initializable()",
+      "LogLevel"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/@23.1",
+      "section": "Capturing and Asserting Logs",
+      "gap": "B22",
+      "reference": "== Capturing and Asserting Logs ==\n\nIf the code under tests output logs, they need to be captured and possibly asserted. For example:\n\n{{code language=\"java\"}}\n...\n/**\n * Capture logs.\n */\n@RegisterExtension\nprivate LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.WARN);\n...\nassertEquals(\"Error getting resource [bad resource] because of invalid path format. Reason: [invalid url]\",\n    logCapture.getMessage(0));\n...\n{{/code}}\n\n{{info}}Since 12.1RC1{{/info}} If we have some code that emits logs during a ##@BeforeAll## (for example in some component ##initializable()## method), you should register the ##LogCaptureExtension## statically as in:\n\n{{code}}\n@RegisterExtension\nprivate static LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.INFO);\n{{/code}}\n\nAnd perform the verification in a ##@AfterAll## method, as in:\n\n{{code language=\"java\"}}\n@AfterAll\nstatic void verifyLog() throws Exception\n{\n  // Assert log happening in the first initialize() call.\n  assertEquals(String.format(\"Using filesystem store directory [%s]\",\n      new File(new File(\".\"), \"store/file\").getCanonicalFile()), logCapture.getMessage(0));\n}\n{{/code}}\n\nCode check (xwiki-commons de5b1357d3ce76ec27e7ef540cd7be10a4dc3c32, LogCaptureExtension.java): after each test (and, when registered statically, after all tests) the extension fails with \"Following messages must be asserted: [...]\" for every captured message the test did not read with getMessage()/getLogEvent().\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/ , page version 23.1, section \"Capturing and Asserting Logs\")"
+    }
+  },
+  {
+    "id": "e06",
+    "group": "e",
+    "question": "I'm writing a JUnit5 test for a component whose initialize() method reads some mocked config. One of my test methods needs that mock stubbed differently than the rest, and the stubbing has to happen before initialize() runs. Can I scope that pre-init setup to just that one test method? If so, how, and in what order does it run compared to the shared setup that runs before init?",
+    "kind": "fact",
+    "key_points": [
+      "Use @BeforeComponent with the test method's name as its value, e.g. @BeforeComponent(\"myTestName\"), on a setup method",
+      "That method runs before Initializable#initialize() is called on the component under test",
+      "It runs after the unnamed (generic) @BeforeComponent methods",
+      "The component manager is rebuilt for each test, so per-test fixtures don't leak between tests (a matching named @AfterComponent also exists)"
+    ],
+    "avoided_terms": [
+      "@BeforeComponent",
+      "@AfterComponent",
+      "BeforeComponent(\"<testname>\")",
+      "Initializable",
+      "MockitoComponentManagerExtension",
+      "test fixtures"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/@23.1",
+      "section": "@BeforeComponent / @AfterComponent",
+      "gap": "B23",
+      "reference": "=== @BeforeComponent / @AfterComponent ===\n\n{{info}}Since 12.2{{/info}} And if you need to test some component that implements ##Initializable## and you need different test fixtures depending on the test, you'll need to use ##BeforeComponent(\"<testname>\")##, such as:\n\n{{code language=\"java\"}}\n@BeforeComponent(\"normalizeFromRootServletContextAndServletMapping\")\npublic void beforeNormalizeFromRootServletContextAndServletMapping()\n{\n  // Code executed before Initializable#initialize() is called and\n  // after methods annotated with @BeforeComponent have been called\n}\n\n@Test\npublic void normalizeFromRootServletContextAndServletMapping()\n{\n   ...\n}\n{{/code}}\n\nCode check (xwiki-commons de5b1357d3ce76ec27e7ef540cd7be10a4dc3c32, MockitoComponentManagerExtension.java): the component manager is rebuilt for every test; @BeforeComponent(\"<testname>\") runs after the unnamed @BeforeComponent methods, and @AfterComponent(\"<testname>\") likewise exists.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/ , page version 23.1, section \"@BeforeComponent / @AfterComponent\")"
+    }
+  },
+  {
+    "id": "e08",
+    "group": "e",
+    "question": "I'm writing a new unit test for one of our XWiki components. Should the test class, the test methods and the setup method that runs before each test be declared with an access modifier, or should I leave it off? Also, how should I name the test methods?",
+    "kind": "fact",
+    "key_points": [
+      "Do not use the public keyword: JUnit 5 no longer requires it",
+      "This applies to the test class, the test methods and the lifecycle methods such as @BeforeEach",
+      "Name each test method after the method being tested plus a qualifier (e.g. importWithHeterogeneousEncodings), or after the use case if that doesn't fit, and keep each test to one use case where possible"
+    ],
+    "avoided_terms": [
+      "public",
+      "JUnit5",
+      "BeforeEach",
+      "Best practices",
+      "suffixed with Test",
+      "XWikiMessageToolTest",
+      "importWithHeterogeneousEncodings",
+      "lifecycle methods"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/@23.1",
+      "section": "Best practices",
+      "gap": "B34",
+      "reference": "= Best practices =\n\n* Name the Test class with the name of the class under test **suffixed with ##Test##**. For example the JUnit test class for ##XWikiMessageTool## should be named ##XWikiMessageToolTest##\n* Have each test method test only 1 use case as much as possible.\n* Name the test methods with the method to test followed by a qualifier describing the test. For example ##importWithHeterogeneousEncodings()##. In the few cases where it's not applicable, name after the use case being tested.\n* Don't use the ##public## keyword since they're not required any more by JUnit5 (not in the Test Class nor in the test methods nor in the lifecycle methods such as ##BeforeEach##).\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/ , page version 23.1, section \"Best practices\")"
+    }
+  }
+]
