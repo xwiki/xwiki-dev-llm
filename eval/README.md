@@ -97,7 +97,8 @@ rerun prints the same CI), with the questions whose mean moved by 1 or more. A m
 record or grade stops it with the list; `--allow-missing` prints anyway, the difference then using only
 the questions graded on both sides. Without `--head` it prints the base alone with each question's
 scores, marking those at 3 in every run. `--gate` checks a KB batch's comparison (below): PASS or FAIL per
-condition on the groups given, exit 0 only when all pass, 2 when anything is missing.
+condition on the groups given, exit 0 only when all pass, 2 when anything is missing, 3 when only
+harmful questions to confirm fail (below).
 
 These questions have been seen by the sessions that tuned the KB, so a gain on them can be overfit. To
 confirm a change to the retrieval mechanics, measure it on a fresh batch generated from recently merged
@@ -134,16 +135,29 @@ and lands only the ones the model needs, with numbers showing they help and harm
   (`git diff --name-only origin/master <the measured commit> -- xwiki/`, the files that were archived),
   once on the (e) runs and once on the (a)+(d) runs, must pass both times: the (e) difference CI lies
   above 0, the (a) one does not lie entirely below 0, no (e) or (a) question has more harmful branch
-  answers from sessions that saw the batch than harmful master answers, the branch's (d) pointers per
-  session do not exceed the master runs' maximum, and each group's records name at most one `model_id`
-  (a record without one, older than that field, is not counted). A session saw the batch when it read a
-  changed topic or skill, named one or its folder in a tool input, ran `kb-search`, was pointed at one
-  by a hook, or got prompt-hook pointers other than master's for that question (they are the same on
-  every run of a side); every session saw it when the batch changed a file outside topics and skills
-  (`kb/glossary.md`, `kb/_meta/skills.json`, instructions, scripts, hooks). The harmful condition asks
-  whether the batch caused harm: a session that never saw the batch answers as on master, so its harmful
-  answer is run noise, listed but not failing. Counting harmful answers per run instead fails a batch on
-  one noisy answer when master's runs agree (2,2,2 → 2,2,3).
+  answers from sessions that saw the batch than harmful master answers plus 1, the branch's (d)
+  pointers per session do not exceed the master runs' maximum, and each group's records name at most
+  one `model_id` (a record without one, older than that field, is not counted). A session saw the
+  batch when it read a changed topic or skill, named one or its folder in a tool input, ran
+  `kb-search`, was pointed at one by a hook, or got prompt-hook pointers other than master's for that
+  question (they are the same on every run of a side); every session saw it when the batch changed a
+  file outside topics and skills (`kb/glossary.md`, `kb/_meta/skills.json`, instructions, scripts,
+  hooks). The harmful condition asks whether the batch caused harm: a session that never saw the batch
+  answers as on master, so its harmful answer is run noise, listed but not failing. Counting harmful
+  answers per run instead fails a batch on one noisy answer when master's runs agree (2,2,2 → 2,2,3).
+- **Confirm** a harmful failure before trusting it. When only questions over that tolerance fail, the
+  gate exits 3 and prints them (`Gate: CONFIRM a02,a28`). Rerun only those questions (`run.mjs --only`),
+  three more runs per side with the same `run.mjs` options as the first runs (archive, `--model`,
+  `--code-dir` for (e)), judge them, and repeat the `--gate` call with `--confirm-base` and
+  `--confirm-head` naming the new runs (as many as the first runs): each confirmed question is judged
+  again on its six runs per side, with a tolerance of 2 (1 per 3 runs); that call's verdict stands. Why
+  1 and then 2: a Monte Carlo of a batch that changes nothing, at batch 2's per-question harmful rates
+  (a02 0.8, a28 0.67, a13, a10 and a12 0.17, a27 0.08), fails it 42% of the time with no tolerance when
+  40% of the sessions see the batch, 85% when all do; with 1 it is 4% and 27% before confirmation, and
+  0.4% and 9% after it (2% and 20% if the confirmation kept 1, 0% and 2% with 3). A question going from
+  never to 0.67 harmful, every session seeing the batch, still fails 73% of the time (74% with 1 kept,
+  62% with 3): the first three runs, needing 2 harmful answers of 3, bound it. Blind spot: a question
+  already often harmful on master that gets worse is rarely caught (0.67 → 1: 19%; 0.17 → 0.67: 47%).
 - **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
   `status` set (`done` with where it went, `dropped` with why).
 
