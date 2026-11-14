@@ -16,9 +16,7 @@ related: [testing/strategy.md, testing/running-docker-its.md, testing/flickers.m
 
 What the `@UITest` framework does that its annotation does not show. How to write the test is
 [[strategy]]; running it on a developer machine is [[running-docker-its]]. Where this file and the
-Docker testing page disagree, this file follows the code of `xwiki-platform-test-docker` (master,
-November 2026): the page names `forbiddenServletEngines` (the attribute is `forbiddenEngines`), says
-system properties always win, and says `debug` suspends on every engine.
+Docker testing page disagree, this file follows the code of `xwiki-platform-test-docker`.
 
 ## A `-Dxwiki.test.ui.*` override that changes nothing
 
@@ -29,8 +27,9 @@ does not reach every option, and does not always win (`UITestTestConfigurationRe
   system property wins over the annotation.
 - **Annotation only**, the property is never read: `extraJARs`, `resolveExtraJARs`, `sshPorts`,
   `forbiddenEngines`, `extensionOverrides`, `screenWidth`, `screenHeight`, `xwikiInstances`.
-- **`profiles`, `servletEngineNetworkAliases`**: the comma-separated property is used only when the
-  annotation leaves them empty — the annotation wins.
+- **`profiles`, `servletEngineNetworkAliases`**: the comma-separated property values are added to the
+  annotation's (since 18.10.0RC1, XWIKI-25768); before, the property is read only when the annotation
+  leaves them empty, so a pom-wide `clover` profile is lost on a test that sets `profiles`.
 - **`properties`, `databaseCommands`**: merged key by key, as
   `-Dxwiki.test.ui.properties.<name>=…` and `-Dxwiki.test.ui.database.commands.<name>=…`; a property
   replaces the annotation's value for the same key only.

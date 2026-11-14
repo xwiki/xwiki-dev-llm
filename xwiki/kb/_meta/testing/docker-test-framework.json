@@ -1,89 +1,91 @@
 {
   "file": {
     "questions": [
-      "How do I configure a Docker functional test in XWiki with @UITest options and system properties?",
-      "How do I debug the wiki's server-side code while a UI test is driving it?",
-      "How do I skip a functional test on only one browser or one servlet engine?",
-      "Why is my extension's Hibernate mapping not loaded in a Docker UI test?",
-      "How do I log in two users at once in a Selenium test?"
+      "Why does a -Dxwiki.test.ui.* flag I pass to Maven have no effect on my Docker UI test?",
+      "How do I attach a debugger to the wiki while a Selenium functional test drives the browser?",
+      "How do I make one UI test skip on Firefox, or on one servlet engine, without touching the other tests?",
+      "My extension's Hibernate .hbm.xml mapping is ignored in my functional test. How do I get it loaded?",
+      "How do I log two different users in at the same time in one browser-based XWiki test?"
     ],
     "aliases": [
       "@UITest",
-      "Docker ITs",
-      "xwiki-platform-test-docker",
       "Docker UI test",
-      "Selenium integration test"
+      "Selenium integration test",
+      "xwiki-platform-test-docker",
+      "functional test options"
     ]
   },
   "sections": {
     "Configuring a Docker functional test — option overrides, debugging, skips, HBM mappings, several users": {
       "questions": [
-        "How do I set @UITest options for a Docker functional test without editing the annotation every time?",
-        "What is the difference between a @UITest annotation value and a -D system property for test settings?",
-        "Where do I change the browser or database used by a Docker UI test?"
+        "Why does a -Dxwiki.test.ui.* flag I pass to Maven have no effect on my Docker UI test?",
+        "How do I attach a debugger to the wiki while a Selenium functional test drives the browser?"
       ],
-      "aliases": [
-        "UITest options",
-        "-Dxwiki.test.ui system property"
-      ]
+      "aliases": []
     },
     "A `-Dxwiki.test.ui.*` override that changes nothing": {
       "questions": [
-        "I passed a -Dxwiki.test.ui property on the Maven command line but the test still uses the old value, why?",
-        "Which functional test settings can I override from the Maven command line and which can't I?",
-        "Why is my -D flag ignored for extraJARs or sshPorts in a UI test?"
+        "I set a -D flag for my UI test in Maven but the test still uses the annotation value, why?",
+        "Which UI test settings can I change from the command line, and which ones are silently ignored?",
+        "Passing -Dxwiki.test.ui.extraJARs does nothing, what am I doing wrong?"
       ],
       "aliases": [
-        "maven -D override for UI tests",
-        "xwiki.test.ui property not applied"
+        "system property ignored",
+        "Maven property override",
+        "command line override UITest",
+        "xwiki.test.ui"
       ]
     },
     "A breakpoint in the wiki's code: suspended start or not, depending on the engine": {
       "questions": [
-        "How do I attach my IDE debugger to the wiki that runs inside a functional test?",
-        "My Docker UI test hangs at startup when I turn on debug, what is it waiting for?",
-        "Which port should I connect the debugger to when the test runs Tomcat in a container?"
+        "My UI test hangs at startup once I enable debug. Is the wiki waiting for my debugger to attach?",
+        "How do I set a breakpoint in server-side XWiki code while a Selenium test runs?",
+        "Which port do I connect my IDE debugger to for the wiki started by a Docker test, and why does it differ between Jetty and Tomcat?"
       ],
       "aliases": [
         "remote debugging",
-        "JDWP",
-        "Jetty standalone"
+        "JDWP port 5005",
+        "debug attach IDE",
+        "step through server code"
       ]
     },
     "Skipping a test on one browser or one servlet engine": {
       "questions": [
-        "How do I make one test method not run on Firefox only?",
-        "How can I stop a whole UI test class from running on one servlet engine like Jetty?",
-        "Why did my forbiddenEngines setting skip more tests than the class I annotated?"
+        "How do I make one UI test method skip on Firefox but still run on Chrome?",
+        "My test fails on Jetty but passes on Tomcat. How do I exclude one servlet engine for a test class?",
+        "Why did forbiddenEngines skip my whole AllIT suite instead of just one test class?"
       ],
       "aliases": [
-        "@IgnoreBrowser",
-        "forbiddenServletEngines",
-        "disable test for one browser"
+        "IgnoreBrowser",
+        "exclude browser from test",
+        "forbiddenEngines",
+        "disable test on engine"
       ]
     },
     "An extension's Hibernate mapping is never loaded": {
       "questions": [
-        "My extension's hbm.xml mapping is never loaded during a Docker UI test, what am I missing?",
-        "How do I get a Hibernate mapping file from a JAR into a functional test's database setup?",
-        "What happens if I add an extraJARs entry without a version in a UI test?"
+        "My extension's .hbm.xml mapping file is ignored in the Docker test. How do I get it loaded?",
+        "How do I put an extension JAR into the wiki's WEB-INF/lib for a functional test?",
+        "My UI test for a contrib extension reports an unmapped entity class. What am I missing?"
       ],
       "aliases": [
         "hbm.xml",
-        "Hibernate mapping file",
-        "xwikiDbHbmCommonExtraMappings"
+        "xwikiDbHbmCommonExtraMappings",
+        "extraJARs",
+        "Hibernate mapping file"
       ]
     },
     "Several users logged in at once": {
       "questions": [
-        "How do I test two users interacting with the same page in one Selenium test?",
-        "How do I open a second tab logged in as another user in a functional test?",
-        "Why does my second user's login overwrite the first one's session in a UI test?"
+        "How do I test a page as two different users at the same time in one Selenium test?",
+        "My test logs in as admin, then logging in as a second user logs out the first. How do I keep two sessions?",
+        "How do I switch between browser tabs for two users in a UI test without getting a wrong CSRF token?"
       ],
       "aliases": [
+        "multi-user test",
+        "two sessions in one browser",
         "MultiUserTestUtils",
-        "two users in one browser",
-        "multiple sessions in a test"
+        "multiple browser tabs"
       ]
     }
   },
@@ -97,5 +99,5 @@
       "**/src/test/**/*.java"
     ]
   },
-  "source_hash": "b39e037fb40c436d8614aaf7ffb332e3c92959f28f42fb42e9a8b4ac3d991291"
+  "source_hash": "df12b48727e983a820934ec1daf7a6b65fa2531cdff798460abdcbdffcd0ff18"
 }
