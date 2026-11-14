@@ -262,10 +262,12 @@ comments: `PUT /rest/api/2/issue/{KEY}/comment/{ID}` with JSON `{"body": "…"}`
 
 ## Identifying the current LTS (for the Affects-Version fallback)
 
-XWiki dev runs in yearly **cycles** `X.0 → X.10`; the final **`X.10`** line of the **last completed**
-cycle is the current LTS (the in-progress cycle's `.10` does not exist yet), and the previous cycle's
-`X.10` typically still gets overlap patches. So while dev is on `18.x`, the current LTS is the
-`17.10` line. This mapping is **volatile** — verify, do not cache the number.
+XWiki dev runs in yearly **cycles** `N.0 → N.10`. At most two LTS lines are supported: the **Cycle
+LTS** `N.10.x` of the last completed cycle (from `N.10.2`) and, mid-year, the **Intermediate LTS**
+`N.4.x` of the in-progress cycle (from `N.4.2`); the next Cycle LTS replaces that cycle's Intermediate
+LTS. With dev on `18.9` they are `17.10.x` and `18.4.x` (backports: [[release]]). The Affects-Version
+fallback is the **Cycle LTS's** `.0` — `17.10.0` there. This mapping is **volatile** — verify, do not
+cache the number.
 
 ## Verifying the volatile values
 

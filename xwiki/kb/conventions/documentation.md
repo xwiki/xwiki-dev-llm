@@ -38,6 +38,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HorizontalMenu/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/SaveChanges/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/wcag/
@@ -72,7 +73,7 @@ Scope facts:
   https://www.xwiki.org/xwiki/bin/view/documentation/ — **not** under the old `Documentation` space
   or the Extensions wiki (those are the *old* documentation, being migrated out).
 - Documentation pages are **wiki pages**, not files in a git repo — authored in XWiki syntax on the
-  wiki, and submitted via a Change Request.
+  wiki, and a major change usually goes through a Change Request (see "Saving changes" below).
 - All documentation is written in **English**, and a feature must be tested on a real wiki running an
   LTS version (or beyond) before being documented.
 
@@ -107,8 +108,10 @@ Source: the guide's [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin
 | Reference | **Does not** start with a verb; indicates the topic is covered extensively — "All Wiki Pages" |
 | Explanation | **Does not** start with a verb; a phrase naming the subject, answering "why" — "Conflict Resolution" |
 
-An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title; the accepted
-words are listed on that page.
+An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title. The accepted
+words are held by the `verb` check (its `NOUN_ING_WORDS` constant, per
+[Page Titles and Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)):
+add a word there rather than marking the violation a false positive.
 
 **Titles use English title case** — capitalise the significant words, not just the first:
 *"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. A title may be
@@ -153,11 +156,10 @@ result, a bookmark or a link, none of which carry the surrounding context.
   they should now see* — "The macro is inserted in the page, as follows:" plus the screenshot (or the
   code macro, when the result is text, or the produced output on a Developer page). No check catches its
   absence.
-- **Reference** — prefer **tables**, keep it concise. An API reference's members go in **one table**
-  (`|=Member |=Returns |=Default |=What it does`): a bare signature is a *column*, not a code example,
-  which is kept for what a cell cannot hold (a usage snippet, a whole role interface). Avoid a section per
-  member (unless each holds something a cell cannot, such as a screenshot) and a `name: meaning` bullet
-  list — a table in disguise. `docpages.py lint` flags both, advisory.
+- **Reference** — prefer **tables**, keep it concise. An API reference may instead give each element
+  a section with a code macro; either way it documents each element's purpose, parameters, types,
+  supported and default values, and return value. Avoid a `name: meaning` bullet list — a table in
+  disguise; `docpages.py lint` flags it, advisory.
 - **Explanation** — explain concepts, limitations, consequences, and background; link to the How-tos
   applying the concept and the References pinning down its details.
 - **A topic page** — top of a tree, with children — **must be an Explanation whose first sentence
@@ -211,9 +213,10 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
 - **When a topic needs both a How-to and an Explanation, the How-to is the parent** and the
   Explanation its child, linked from the How-to's intro, so the reader lands on the goal page first.
   **This inverts for a hub**: when one Explanation covers several sibling How-tos, the Explanation is
-  the parent and the How-tos are its children. The guide's
-  [Choose the Right Location](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/)
-  does not state a rule either way.
+  the parent and the How-tos are its children. Both apply the guide's rule that a page describing the
+  options or consequences of another is its child
+  ([Choose the Right Location](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/));
+  its Explanation topic top-level pages are the hub case.
 - **One fact lives on one page; every other page links to it.** Do not copy-paste a paragraph, a FAQ entry or a step between pages, however short it is.
 - **Give the one copy a *visible* home before reaching for a hidden one.** Restructure so the shared
   material becomes a page of its own, reachable from navigation and search: a navigation step every
@@ -316,13 +319,14 @@ The fields:
   - an XWiki Extension → **`xwiki:<extension id>`**, e.g. `xwiki:org.xwiki.platform:xwiki-platform-icon-macro`
   - an NPM package → **`npm:<package id>`**, e.g. `npm:@xwiki/platform-dsapi` (Documentation 1.7+)
 
-  The prefix is what makes the badge at the bottom of the page resolve to the Extensions wiki, so an
-  unprefixed id renders no badge. Empty when no extension applies (e.g. installation pages).
+  The badge accepts an unprefixed id too (for historical reasons), but the id must match the extension
+  page's **Website** field exactly, or its "Documentation" button breaks: change both or neither.
+  Empty when no extension applies (e.g. installation pages).
   An **empty `id` on the extension page is completed there** (`<groupId>:<artifactId>`), and an
   extension with no page on the Extensions wiki is imported first, per
   [Link the Documentation Page to its Extension](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/).
-  **Older pages carrying an unprefixed id are the non-conformant ones** — do not "fix" a prefixed id
-  to match them. Authority:
+  **Older pages carrying an unprefixed id are the non-conformant ones** (fix them with the Website
+  field) — do not "fix" a prefixed id to match them. Authority:
   [Page Structure on xwiki.org](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/documentation-xwiki-org/page-structure-xwikiorg/).
 
 The **Documentation application's own reference** for these fields is
@@ -504,6 +508,9 @@ it. For a conversion, the split into pages *is* that decision.
   macros once their version no longer matters. Leave out, too, what rots unflagged on an upgrade without
   the reader needing it: a bundled library's version ("Pygments 2.4.2"), a full copy of what it supports
   (its style names), why it is pinned. Give an example or two and link the upstream list instead.
+- **Deprecated is not obsolete.** A deprecated feature stays documented as long as XWiki Standard
+  bundles it, marked with the `{{deprecated}}` macro, which stays until the feature is no longer
+  bundled ([Deprecated Content](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent/)).
 - **The macro is the only form a version may take.** A version never appears on a page as bare text:
   not in prose, not in a cell, and above all **not as a `Since` (or `Version`, or `Available in`)
   column in a reference table**. That column looks natural in an API reference (Javadoc `@since`
@@ -556,7 +563,9 @@ page splits edits in two, and the split decides whether a Change Request is the 
   a Change Request for a typo is the noise this rule exists to prevent. Over REST, "minor" is
   `?minorRevision=true` on **every** write, an xobject property (FAQ, Related) included
   (`xwikidoc.py`: `minor=True`); an xobject write cannot carry the summary (XWIKI-25300).
-- **Major changes — save via a Change Request.** New documentation, refactoring a page to the guide,
+- **Major changes — a Change Request when you are unsure of the edit or want the Documentation
+  Team's review** (recommended for new pages and refactorings); a committer confident of the change
+  may save it directly. Major means new documentation, refactoring a page to the guide,
   restructuring navigation, moving content between locations, and bulk edits across many pages. When
   a page already has an open Change Request covering related work, add to **that** one rather than
   opening a second.

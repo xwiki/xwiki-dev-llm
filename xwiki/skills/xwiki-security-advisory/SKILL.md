@@ -216,14 +216,14 @@ directory, e.g. `<work>/<repo>/<date>-<JIRA-KEY>-security-advisory/advisory-draf
 End by listing what remains after the draft, even when the user does not go on to Step 6: create
 the GitHub advisory, add the Security team, link it on the JIRA issue(s), import it into the
 Security Advisory Application once the fix is merged (that import is what triggers the disclosure
-reminders), and request the CVE.
+reminders), and the CVE step of Step 6.
 
 ## Step 6 — Creating the real draft advisory on GitHub (only when asked)
 
 Creating the advisory is visible to every organization owner at once, so it happens only when the
 user asks for it, and only after re-running Step 1's check that no advisory exists yet. Then open `references/github-advisory.md` and follow it: the create request, the
 Security team and the credited researcher as collaborators, editing a draft others may have changed, the JIRA link, the Security
-Advisory Application import and the CVE request. Two rules hold whatever the user asks:
+Advisory Application import and the CVE step. Two rules hold whatever the user asks:
 
 - No fix is merged through the advisory's temporary private fork in the GitHub UI, which would put
   the JIRA title in the commit log; the manual merge recipe is in `kb/processes/security-policy.md`.

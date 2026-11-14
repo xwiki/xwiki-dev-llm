@@ -1,55 +1,60 @@
 {
   "file": {
     "questions": [
-      "What version do I write in @since for a new class or method I'm adding to XWiki?",
-      "Which version string goes in @Deprecated(since=...) when I deprecate a method, and what format is it in?",
-      "Do I need @since on a test helper, page object, or @UITest annotation I add in a test module?",
-      "Which version should I put in the affected version field when I file a JIRA bug?"
+      "Which version string do I put in @since for code I'm adding on master right now?",
+      "What affected version should I set on a JIRA bug that has been there for years?",
+      "How do I mark an XWiki method as deprecated, and what version goes in the annotation?",
+      "Why does my @since value fail review, and what's the correct format for it?"
     ],
     "aliases": [
+      "api versioning",
       "@since tag",
-      "@since version format",
-      "API version annotation",
-      "deprecation version",
-      "Affects Version/s"
+      "@deprecated javadoc",
+      "affects version",
+      "since annotation"
     ]
   },
   "sections": {
     "Versions in code and issues (@since / @Deprecated, affected version)": {
       "questions": [
-        "What version number should I write in @since when my code is not released yet?",
-        "Why does XWiki require three segments like 18.3.0RC1 in @since and @Deprecated?",
-        "How do I find the current development version to put in @since?"
+        "What version string goes in @since for a new class I'm writing on the current dev branch?",
+        "Why is my @since like 18.3RC1 flagged, and should it have three numbers?",
+        "Should I put @since on a new helper method in a test module or on a private method?",
+        "Where do I find the current development version number to use in @since?"
       ],
       "aliases": [
-        "version format",
-        "RC1 version number",
-        "since version string"
+        "since tag",
+        "@since version format",
+        "RC1 version string",
+        "current dev version"
       ]
     },
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": {
       "questions": [
-        "How do I deprecate a Java method in XWiki, and what goes in the @deprecated Javadoc tag?",
-        "Should I set forRemoval = true on @Deprecated when I replace an old API?",
-        "When a deprecation is backported to several stable branches, how do I list the versions in since?"
+        "How do I deprecate a method in XWiki's Java code, and what goes in the since attribute?",
+        "My deprecation is applied on two stable branches too, which versions do I list in since?",
+        "Should I set forRemoval=true when I deprecate an old XWiki API method?",
+        "What should the @deprecated Javadoc say: do I repeat the version or just name the replacement?"
       ],
       "aliases": [
+        "deprecate method",
+        "@deprecated tag",
         "forRemoval",
-        "@deprecated javadoc tag",
-        "deprecating a method",
-        "Deprecated annotation since"
+        "deprecation javadoc"
       ]
     },
     "Affected version of an issue": {
       "questions": [
-        "Which affected version should I pick for a JIRA bug that has existed for many releases?",
-        "What affected version do I set for a new feature or improvement with no released version to point at?",
-        "How do I find the oldest release that contains a bug when the fix was cherry-picked to stable branches?"
+        "Which Affects Version do I pick for a JIRA bug whose code is older than the latest release?",
+        "What affected version goes on a new feature or improvement ticket with no existing bug?",
+        "How do I find the oldest release containing a bug when backport cherry-picks have different SHAs?",
+        "Can I leave the affected version empty on a development-only issue?"
       ],
       "aliases": [
-        "Observed in versions",
-        "Affects Version",
-        "oldest affected release"
+        "affects version",
+        "affected versions jira",
+        "bug version field",
+        "observed in versions"
       ]
     }
   },
@@ -63,5 +68,5 @@
       "**/*.java"
     ]
   },
-  "source_hash": "231437150fa9cfbc298d2ded73593d8345fa09a6e93f2f75648b1df8966cdd13"
+  "source_hash": "fadf6dff6970cc81a9b8f2bdb091269d1e40f3d197a957f99b60310d6a1f1233"
 }

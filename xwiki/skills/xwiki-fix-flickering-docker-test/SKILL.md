@@ -72,7 +72,7 @@ Fix the cause the experiment confirmed — in a page object when the test drives
 
 1. Build the modified Maven projects, excluding those with ``-docker`` and ``-tests`` suffix.
 2. Check if there is an XWiki instance already running on port 8080, in which case ask for confirmation to stop it.
-3. Run the test once through the normal Docker build to provision the instance, then start it in the background with ``./target/hsqldb_embedded-default-default-jetty_standalone-default-firefox/jetty/start_xwiki.sh``, run **from its own directory** (its paths are relative). Reusing the provisioned instance makes an iteration take seconds instead of minutes. Stop it with ``./stop_xwiki.sh`` there, at the end.
+3. Run the test once through the normal Docker build to provision the instance, then start it in the background with `jetty/start_xwiki.sh` in the configuration's directory under `./target/` — `hsqldb-default-default-jetty_standalone-default-firefox` on 18.7.0RC1+, `hsqldb_embedded-…` before, plus `-standardflavor` when the test sets `standardFlavor` — run **from that directory** (its paths are relative). Reusing the provisioned instance makes an iteration take seconds instead of minutes. Stop it with ``./stop_xwiki.sh`` there, at the end.
 4. Run the test against it, on the browser the failure prefers:
 
   ```

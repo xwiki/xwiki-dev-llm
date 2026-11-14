@@ -5,8 +5,8 @@ summary: Use the next release of the current dev version, written <X.Y.0>RC1, fo
   @Deprecated(since=…). The current version itself is volatile — read it from pom.xml, and another
   branch's from its pom.xml on origin, never from local tags. A deprecation
   done on several branches lists ALL its versions, comma-separated, in the annotation. An issue's
-  affected version is always set: the oldest released version that has the problem, else the latest
-  release or the current LTS.
+  affected version is always set: the oldest released version that has the problem, else the Cycle
+  LTS's .0.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/#HRule:Non-codeissuesareallowed
@@ -91,6 +91,5 @@ that code reaches stable branches as cherry-picks with other SHAs, which `git ta
 and `git merge-base --is-ancestor` miss — take the causing issue's Fix Versions, or `git grep` the code
 on each `origin/stable-*` branch; if that predates the versions the tracker defines, use its oldest
 one; if pinning it is impractical, fall back to the last LTS that has the problem. When no released version is really affected
-(a new feature, a new check, an improvement), use the latest release or the current LTS — usually the
-LTS's `.0`, e.g. `17.10.0` while dev is on `18.x` — not the first release of the code it touches (the
-LTS: [[jira]]).
+(a new feature, a new check, an improvement), use the Cycle LTS's `.0`, e.g. `17.10.0` while dev is on
+`18.x` — not the first release of the code it touches (which line that is: [[jira]]).

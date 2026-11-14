@@ -130,7 +130,8 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
 6. **Rewrite each page** with the `xwiki-doc-writing` flow — correct title/page-name, page-structure
    fields, style, and latest-version perspective. The style rules apply to the sentences you *carry
    over* too, not only to the ones you write.
-7. **Update while converting** — remove obsolete information; update deprecated terminology, UI
+7. **Update while converting** — remove obsolete information (a still-bundled deprecated feature
+   is not obsolete: see `kb/conventions/documentation.md`); update deprecated terminology, UI
    names, and configuration examples; convert version-specific notes to the `{{version}}` macro and
    drop notes for versions no longer supported. **Never silently lose still-valid information.**
 8. **Move the attachments too — and add the visuals the legacy page never had.** A legacy page is rarely
@@ -197,7 +198,8 @@ only complete record of what the legacy page said — comparing legacy → new, 
   configuration detail, example and troubleshooting note from the legacy page is present somewhere in
   the new pages. Walk the **inventory** item by item: each one is either on a new page or marked
   obsolete in the target map — an item that is neither is the finding. (Ignore genuinely
-  obsolete/deprecated/unsupported content — that is meant to be dropped.)
+  obsolete or unsupported content — that is meant to be dropped. Deprecated content still bundled in
+  XWiki Standard is kept, marked with `{{deprecated}}`.)
 - **Meaning preserved** — the rewrite did not change what the feature does, its requirements, or the
   relationships between features; nothing was over-simplified into being wrong.
 - **Up to date** — no obsolete UI names, deprecated terminology, removed features, or references to
