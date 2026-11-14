@@ -1,6 +1,6 @@
 // Compares two plugin versions over repeated runs: each side is a list of run labels (one label per run).
 // Usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out <dir>]
-//          [--allow-missing | --gate]
+//          [--allow-missing | --gate --changed <path,...>]
 // Prints, per question group, the mean [min–max] over the runs of each metric, pass^k (k = that side's
 // run count), and for graded groups the paired head − base score difference with its 95% bootstrap CI and
 // the questions whose mean score moved by ≥ 1. Without --head it prints the base alone, with each
@@ -8,11 +8,13 @@
 // A missing run directory, record or grade makes the comparison refuse to print, unless --allow-missing:
 // then the paired difference uses only the questions graded at least once on both sides.
 // --gate (with --head) also checks the KB batch gate of eval/README.md on the groups present (see gate()),
-// prints PASS or FAIL per condition and exits 0 when all pass, 1 otherwise, 2 when a record is missing.
+// prints PASS or FAIL per condition and exits 0 when all pass, 1 otherwise, 2 when a record is missing
+// or --changed names no plugin file. --changed: the files the batch changed, as
+// `git diff --name-only <base commit> <head commit> -- xwiki/` prints them.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadQuestions, parseArgs, runDir } from './common.mjs';
+import { isGraded, loadQuestions, parseArgs, runDir } from './common.mjs';
 
 /** The mean, or null for no values (never 0: an absent score is not a zero). */
 export const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -34,7 +36,7 @@ const readFile = (r, file) => (r.okf_touches || []).some((t) => t.target.endsWit
  * A graded group counts only graded records, group (d) every record. `recs` = the run's records by id.
  */
 export function runMetrics(questions, recs, graded) {
-  const xs = questions.map((q) => ({ q, r: recs[q.id] })).filter((x) => x.r && (!graded || x.r.grade));
+  const xs = questions.map((q) => ({ q, r: recs[q.id] })).filter((x) => x.r && (!graded || isGraded(x.r)));
   const per = (f) => mean(xs.map((x) => f(x.r, x.q)));
   const share = (f) => per((r, q) => (f(r, q) ? 1 : 0));
   const count = (f) => (xs.length ? xs.filter((x) => f(x.r)).length : null);
@@ -132,7 +134,7 @@ export function missingItems(questions, sides) {
       if (!recs) { out.push(`${label} (no run directory)`); continue; }
       for (const q of questions) {
         if (!recs[q.id]) out.push(`${label}/${q.id}`);
-        else if (q.group !== 'd' && !recs[q.id].grade) out.push(`${label}/${q.id} (ungraded)`);
+        else if (q.group !== 'd' && !isGraded(recs[q.id])) out.push(`${label}/${q.id} (ungraded)`);
       }
     }
   }
@@ -142,16 +144,79 @@ export function missingItems(questions, sides) {
 /** Per run, the count of answers judged harmful (graded records only). */
 const harmfulPerRun = (qs, runs) => runs.map((recs) => qs.filter((q) => recs[q.id]?.grade?.harmful).length);
 
+/** A changed file every session is exposed to: it feeds every search or every session's context. */
+const GLOBAL = '*';
+
 /**
- * The KB batch gate (eval/README.md, "KB batches") on the groups of `questions` it covers, head against
- * base: (e) the paired difference's CI lies above 0; (a) its CI does not lie entirely below 0; (e) and (a)
- * harmful answers per run do not grow (means over the runs); (d) pointers per session do not exceed the
- * base runs' maximum (fewer is better: they are noise there); per group, the records' known `model_id`s
- * are one (a record without one, from before run.mjs kept it, is not counted). Returns [{ condition, value, pass }]; a
- * group absent from `questions` adds no condition. `sides` as in report(), every record present.
+ * A changed path (`git diff --name-only` output; an absolute path or one with Windows separators is cut
+ * after its last `xwiki/`) as what a session can be exposed to: `kb/<topic>.md` (its `kb/_meta/` sidecar
+ * steers the pointers to it, so it counts as the topic), `skill:<name>`, GLOBAL for any other plugin file
+ * (`kb/glossary.md` and `kb/_meta/skills.json` feed every search; instructions, scripts and hooks reach
+ * every session), or null for a path outside the plugin.
  */
-export function gate(questions, [base, head], opts) {
+export function changedTarget(file) {
+  let p = String(file).trim().replace(/\\/g, '/').replace(/^\.\//, '');
+  const cut = p.lastIndexOf('xwiki/');
+  const inPlugin = cut === 0 || (cut > 0 && p[cut - 1] === '/');
+  if (inPlugin) p = p.slice(cut + 'xwiki/'.length);
+  p = p.replace(/^okf\//, 'kb/');
+  if (p === 'kb/glossary.md' || p === 'kb/_meta/skills.json') return GLOBAL;
+  const meta = /^kb\/_meta\/(.+)\.json$/.exec(p);
+  if (meta) return `kb/${meta[1]}.md`;
+  if (/^kb\/.+\.md$/.test(p)) return p;
+  const skill = /^skills\/([^/]+)\//.exec(p);
+  if (skill) return `skill:${skill[1]}`;
+  return inPlugin && p ? GLOBAL : null;
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Whether a session was exposed to the batch: it read a changed KB topic or skill (`okf_touches`), a
+ * tool input named a changed topic or one of its folders (`Grep path=…/kb/testing`, `cd …/kb && grep -r`:
+ * okf_touches keeps only `.md` paths), it ran `kb-search` (which reaches every topic), a hook pointed it
+ * at a changed topic or skill, or its prompt-hook pointers differ from every base run's on the question
+ * (the batch moved the ranking). `changed` = changedTarget() values; GLOBAL exposes every session.
+ */
+export function sawBatch(rec, changed, basePointers = []) {
+  if (changed.has(GLOBAL)) return true;
+  const sig = (r) => [...ptrs(r)].sort().join('\n');
+  if (basePointers.length && !basePointers.some((b) => sig(b) === sig(rec))) return true;
+  const ids = new Set();
+  for (const t of rec.okf_touches || []) {
+    ids.add(t.tool === 'Skill' ? `skill:${String(t.target).replace(/^.*:/, '')}` : String(t.target).replace(/^okf\//, 'kb/'));
+  }
+  const edits = (rec.edit_pointers || []).flatMap((e) => (typeof e === 'string' ? [e] : e.ids || []));
+  for (const id of [...ptrs(rec), ...edits]) ids.add(id.startsWith('skill:') ? id : `kb/${id.split('#')[0]}`);
+  if ([...ids].some((t) => changed.has(t))) return true;
+  const topics = [...changed].filter((t) => t.startsWith('kb/'));
+  if (!topics.length) return false;
+  const inputs = rec.tool_inputs || [];
+  if (inputs.some((i) => i.startsWith('Bash ') && i.includes('kb-search'))) return true;
+  return topics.some((t) => {
+    const parts = t.slice(3).split('/');
+    const names = parts.map((_, n) => ['kb', ...parts.slice(0, n)].join('/')).concat(t);
+    const re = new RegExp(`(?:^|[^\\w.-])(?:${names.map((x) => `(?:kb|okf)${escapeRe(x.slice(2))}`).join('|')})/?(?=$|[\\s"'\\\\)&|;,:#*])`);
+    return inputs.some((i) => re.test(i));
+  });
+}
+
+/**
+ * The KB batch gate (eval/README.md, "KB batches": the rule and why) on the groups of `questions` it
+ * covers, head against base: (e) the paired difference's CI lies above 0; (a) its CI does not lie
+ * entirely below 0; (e) and (a) no question has more harmful head answers from sessions exposed to the
+ * batch (sawBatch(), `opts.changed` as `git diff --name-only` prints it) than harmful base answers;
+ * (d) pointers per session do not exceed the base runs' maximum (fewer is better: they are noise there);
+ * per group, the records' known `model_id`s are one (a record without one, from before run.mjs kept it,
+ * is not counted). Returns [{ condition, value, pass }]; a group absent from `questions` adds no
+ * condition. `sides` as in report(), every record present.
+ */
+export function gate(questions, [base, head], opts = {}) {
   const rows = [];
+  if (questions.some((q) => q.group === 'e' || q.group === 'a') && !Array.isArray(opts.changed)) {
+    throw new Error('the gate on (e) or (a) needs opts.changed: without it no harmful answer could be attributed');
+  }
+  const changed = new Set((opts.changed || []).map(changedTarget).filter(Boolean));
   const of = (g) => questions.filter((q) => q.group === g);
   for (const g of ['e', 'a']) {
     const qs = of(g);
@@ -161,8 +226,23 @@ export function gate(questions, [base, head], opts) {
     rows.push(g === 'e'
       ? { condition: '(e) score difference: CI above 0', value: ci, pass: d.lo > 0 }
       : { condition: '(a) score difference: CI not entirely below 0', value: ci, pass: d.hi >= 0 });
-    const [hb, hh] = [base, head].map((side) => mean(harmfulPerRun(qs, side.runs.map((r) => r.recs))));
-    rows.push({ condition: `(${g}) harmful per run does not grow`, value: `${hb.toFixed(2)} -> ${hh.toFixed(2)}`, pass: hh <= hb });
+    const harmful = (r) => r?.grade?.harmful;
+    const caused = [], unseen = [];
+    let sessions = 0, exposed = 0;
+    for (const q of qs) {
+      const baseRecs = base.runs.map((r) => r.recs[q.id]).filter(Boolean);
+      const answers = head.runs.filter((r) => r.recs[q.id]).map((r) => ({ id: `${r.label}/${q.id}`, rec: r.recs[q.id] }))
+        .map((x) => ({ ...x, saw: sawBatch(x.rec, changed, baseRecs) }));
+      sessions += answers.length;
+      exposed += answers.filter((x) => x.saw).length;
+      const seenHarmful = answers.filter((x) => x.saw && harmful(x.rec));
+      if (seenHarmful.length > baseRecs.filter(harmful).length) caused.push(...seenHarmful.map((x) => x.id));
+      unseen.push(...answers.filter((x) => !x.saw && harmful(x.rec)).map((x) => x.id));
+    }
+    const [hb, hh] = [base, head].map((side) => harmfulPerRun(qs, side.runs.map((r) => r.recs)).join(','));
+    rows.push({ condition: `(${g}) no question harmful more often, from sessions that saw the batch, than on the base`,
+      value: `${caused.join(', ') || 'none'} (${exposed} of ${sessions} head sessions saw the batch; harmful from sessions that did not: `
+        + `${unseen.join(', ') || 'none'}; harmful per run: base ${hb}, head ${hh})`, pass: !caused.length });
   }
   for (const g of ['e', 'a', 'd']) {
     const qs = of(g);
@@ -233,11 +313,23 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const base = labels('base');
   const headLabels = labels('head');
   if (!base || !args.questions) {
-    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing | --gate]');
+    console.error('usage: node analyze.mjs --base <label,...> [--head <label,...>] --questions a,d[,<file>] [--out dir] [--allow-missing | --gate --changed <path,...>]');
     process.exit(2);
   }
   if (args.gate && (!headLabels || args['allow-missing'])) {
     console.error('--gate needs --head, and never --allow-missing: a gate is read on complete runs only');
+    process.exit(2);
+  }
+  // Commas or whitespace: a pasted `git diff --name-only` list works as is.
+  const changed = typeof args.changed === 'string' ? args.changed.split(/[\s,]+/).filter(Boolean) : [];
+  if (args.gate && !changed.length) {
+    console.error('--gate needs --changed <path,...>: the files the batch changed, to attribute harmful answers');
+    process.exit(2);
+  }
+  const unmapped = changed.filter((f) => !changedTarget(f));
+  if (unmapped.length) console.error(`--changed: outside the plugin, ignored: ${unmapped.join(', ')}`);
+  if (args.gate && unmapped.length === changed.length) {
+    console.error('--changed names no plugin file: give the paths `git diff --name-only <base> <head> -- xwiki/` prints');
     process.exit(2);
   }
   const side = (name, list) => ({ name, runs: list.map((label) => ({ label, recs: loadRun(args, label) })) });
@@ -251,7 +343,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   console.log(report(questions, sides).join('\n'));
   if (missing.length) console.log(`Missing: ${missing.join(', ')}`);
   if (args.gate) {
-    const rows = gate(questions, sides);
+    const rows = gate(questions, sides, { changed });
     if (!rows.length) {
       console.error('--gate: none of the groups (a), (d), (e) in --questions');
       process.exit(2);

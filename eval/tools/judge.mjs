@@ -1,12 +1,13 @@
 // Grades a run's answers against the frozen gold with an LLM judge, then prints the scoreboard.
 // Usage: node judge.mjs --label <run label> --questions a,b,c [--kb <kb dir>] [--out <dir>]
 //          [--model opus] [--concurrency 4]
+// After a call fails on the account's usage limit it starts no other and exits 3, printing no scoreboard.
 // A group (a) reference is the question's `gold.reference`, else its gold section: frozen in
 // questions/a-sections.json, or read from --kb when given (to judge against another KB's wording).
 import fs from 'node:fs';
 import path from 'node:path';
 import { claudeJson, pool } from './claude.mjs';
-import { evalDir, loadQuestions, missingReferences, parseArgs, runDir as runDirOf } from './common.mjs';
+import { evalDir, isGraded, loadQuestions, missingReferences, parseArgs, runDir as runDirOf } from './common.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.label) {
@@ -69,27 +70,42 @@ ${q.kind === 'volatile-behaviour' ? '\nThis question asks for a volatile value: 
 ${q.group === 'c' ? '\nFor a task, a point is "covered" when the diff (or, for process points, the final message) respects it; "missing" when the diff ignores it.' : ''}`;
 }
 
+// Set by the first call failing on the account's usage limit: every later call would fail the same way.
+let limited = null;
 await pool(questions, Number(args.concurrency || 4), async q => {
+  if (limited) return;
   const recFile = path.join(runDir, `${q.id}.json`);
   if (!fs.existsSync(recFile)) return;
   const rec = JSON.parse(fs.readFileSync(recFile, 'utf8'));
-  if (rec.grade || q.group === 'd') return; // resumable; (d) has no gold: it measures retrieval noise only
+  // Resumable: a record holding a score is done. (d) has no gold: it measures retrieval noise only.
+  if (isGraded(rec) || q.group === 'd') return;
   try {
     const r = await claudeJson(prompt(q, rec), { model: args.model || 'opus', tools: '', jsonSchema: schema });
+    // A failed call (a usage limit, an API error) returns no structured output: write nothing, so a rerun
+    // redoes it. A cost it still reports goes in no record, so it is printed here rather than lost.
+    if (typeof r.structured_output?.score !== 'number') {
+      const cost = r.total_cost_usd ? ` (this call cost $${r.total_cost_usd.toFixed(4)}, counted in no record)` : '';
+      throw new Error(`${r.result || 'no structured output'}${cost}`);
+    }
     // The judge's own cost goes with its grade, so a run's total (analyze.mjs) is measured, not estimated.
     rec.grade = { ...r.structured_output, cost_usd: r.total_cost_usd ?? null };
     fs.writeFileSync(recFile, JSON.stringify(rec, null, 2));
     console.error(`${q.id} score ${rec.grade.score}${rec.grade.harmful ? ' HARMFUL' : ''}`);
   } catch (e) {
     console.error(`${q.id} judge FAILED: ${e.message}`);
+    if (/usage limit|hit your limit|limit reached|rate.?limit/i.test(e.message)) limited ??= e.message;
   }
 });
+if (limited) {
+  console.error(`Stopped at the usage limit, no new call started: rerun this stage once it resets (${limited.slice(0, 200)})`);
+  process.exit(3);
+}
 
 // Scoreboard.
 const recs = questions.map(q => {
   const f = path.join(runDir, `${q.id}.json`);
   return fs.existsSync(f) ? { q, r: JSON.parse(fs.readFileSync(f, 'utf8')) } : null;
-}).filter(x => x?.r.grade);
+}).filter(x => x && isGraded(x.r));
 const groups = [...new Set(recs.map(x => x.q.group))].sort();
 const rows = groups.map(g => {
   const xs = recs.filter(x => x.q.group === g);

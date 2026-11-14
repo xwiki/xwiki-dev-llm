@@ -22,9 +22,12 @@ this file: a gap you hit in them goes under `## Routine notes`, written as the e
   them, assume no path. `run.mjs --code-dir` refuses a directory that also holds this checkout, so give
   it one with only symlinks to those three, after `eval/tools/code-dir.mjs <dir> --strip`.
 - Nested `claude -p` sessions run without an API key. A foreground shell command is stopped at 10
-  minutes: run every `run.mjs`, `judge.mjs` and `gen-metadata.mjs` stage in the background with its
-  output in a log, and wait for it to end. Both eval tools resume, so rerunning a stage after an
-  interruption does only what is missing.
+  minutes, and `run.mjs` prints no end marker: run every `run.mjs`, `judge.mjs` and `gen-metadata.mjs`
+  stage as `(node … ; echo "EXIT $?") > <log> 2>&1 &` and wait for the `EXIT` line **in the same turn**,
+  by repeated bounded waits each under 10 minutes (an until-loop on the log with a timeout). Never end
+  the turn while a stage runs: when the nested sessions exhaust the account's usage limit, which they
+  share with this one, nothing resumes the run. `judge.mjs` exits 3 at that limit. Both eval tools
+  resume, so rerunning a stage after an interruption does only what is missing.
 - Maven and Docker are not available: a fact is checked by reading the code in the clones.
 - GitHub is reached over REST only, as in the consolidation routine's step 1.
 
@@ -80,7 +83,8 @@ excerpt when its key points are not the fact.
 
 ### 7. Compare and gate
 
-Exactly the README's "Compare" bullet: the gate passes when both `analyze.mjs --gate` calls exit 0.
+Exactly the README's "Compare" bullet, `--changed` included: the gate passes when both
+`analyze.mjs --gate` calls exit 0.
 Exit 2 names the missing records: rerun or judge that stage (it resumes) and read the gate again. A
 session that still fails after two reruns leaves the gate unreadable: treat it as failed, saying why.
 Measure once: KB text retuned against these questions and measured again is fitted to them, not better.
@@ -108,8 +112,9 @@ when that is enough (before the baseline), otherwise stop there. A stage not run
   It carries the KB edits with their pins, sidecars, index and budget entries, the questions file, and
   the backlog status of every fact this run settled: `done` with its `<file>#<section>`, `dropped` with
   why. Push to `xwiki/xwiki-dev-llm` itself (no fork) and open the PR over REST, as the consolidation
-  routine does. The body, short: the `analyze.mjs --gate` output of both calls; the dropped facts and
-  why; the model ids and the three clones' commits; the cost; `## For a committer` (upstream page fixes,
+  routine does. The body, short, written to a file with a quoted heredoc (`<<'EOF'`: an unquoted one
+  expands `$63.40`): the `analyze.mjs --gate` output of both calls; the dropped facts and why; the three
+  clones' commits; the cost; `## For a committer` (upstream page fixes,
   findings elsewhere in the repo) and `## Routine notes` when there are any; the validator results in one
   line.
 - **Gate failed, or a stage could not run:** no KB edit is proposed. When this run settled facts —
