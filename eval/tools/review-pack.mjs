@@ -2,7 +2,7 @@
 // Usage: node review-pack.mjs <run label> <pack dir> [--out <dir>]
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadQuestions, parseArgs, runDir } from './common.mjs';
+import { isGraded, loadQuestions, parseArgs, runDir } from './common.mjs';
 
 const [label, outDir] = process.argv.slice(2);
 const args = parseArgs(process.argv.slice(4));
@@ -19,7 +19,7 @@ fs.writeFileSync(path.join(outDir, 'questions-review.md'), md);
 
 // 2. Blind calibration sample: 8 from (a), 7 from (b), spread over the judge's scores (hidden from the grader).
 const recs = [...a, ...b].map(q => ({ q, r: JSON.parse(fs.readFileSync(path.join(runDir(args, label), `${q.id}.json`), 'utf8')) }))
-  .filter(x => x.r.grade);
+  .filter(x => isGraded(x.r));
 const pick = (group, n) => {
   const xs = recs.filter(x => x.q.group === group).sort((x, y) => x.r.grade.score - y.r.grade.score || x.q.id.localeCompare(y.q.id));
   return Array.from({ length: n }, (_, i) => xs[Math.floor((i + 0.5) * xs.length / n)]);

@@ -50,6 +50,12 @@ export function questionFiles(spec, fallback = 'a') {
     /[\\/.]/.test(f) ? path.resolve(f) : path.join(evalDir, 'questions', `${f}.json`));
 }
 
+/**
+ * Whether a record is graded: its grade holds a score. A failed judge call once left a grade with only a
+ * cost, so a grade being there is not enough.
+ */
+export const isGraded = (rec) => typeof rec?.grade?.score === 'number';
+
 export function loadQuestions(spec, fallback) {
   return questionFiles(spec, fallback).flatMap((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
 }

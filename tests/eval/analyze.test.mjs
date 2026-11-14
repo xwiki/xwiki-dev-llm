@@ -5,7 +5,10 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { commonQuestions, gate, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, spread } from '../../eval/tools/analyze.mjs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { isGraded } from '../../eval/tools/common.mjs';
+import { changedTarget, commonQuestions, gate, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, sawBatch, spread } from '../../eval/tools/analyze.mjs';
 
 // Group (e) scores per question over 3 runs: master (base) and the branch adding the facts (head).
 const E = {
@@ -105,27 +108,123 @@ const merge = (...sets) => sets[0].map((_, i) => Object.assign({}, ...sets.map((
 
 test('the batch gate passes batch 1: (e) CI above 0, (a) and harmful flat, (d) pointers not above the base maximum', () => {
   const rows = gate([...eQuestions, a26q, d01q], [
-    side('master', merge(runsOf(0), aRuns(2, true), dRuns(5))), side('branch', merge(runsOf(1), aRuns(2, true), dRuns(4)))]);
+    side('master', merge(runsOf(0), aRuns(2, true), dRuns(5))), side('branch', merge(runsOf(1), aRuns(2, true), dRuns(4)))],
+    { changed: ['xwiki/kb/conventions/frontend.md'] });
   assert.deepEqual(rows.map((r) => r.pass), [true, true, true, true, true, true, true, true]);
   assert.match(rows[0].value, /0\.714 \(CI 0\.238 to 1\.238\)/);
   assert.match(rows.at(-1).value, /4\.00 vs base max 5\.00/);
 });
 
-test('the batch gate fails on an (e) CI reaching 0, an (a) loss, more harmful answers or more (d) pointers', () => {
+test('the batch gate fails on an (e) CI reaching 0, an (a) loss, a new harmful answer it caused or more (d) pointers', () => {
   const [base, head] = [side('master', merge(runsOf(1), aRuns(3, false), dRuns(4))), side('branch', merge(runsOf(1), aRuns(1, true), dRuns(5)))];
-  const rows = gate([...eQuestions, a26q, d01q], [base, head]);
+  const rows = gate([...eQuestions, a26q, d01q], [base, head], { changed: ['xwiki/kb/conventions/frontend.md'] });
   assert.deepEqual(rows.map((r) => [r.condition.slice(0, 3), r.pass]),
     [['(e)', false], ['(e)', true], ['(a)', false], ['(a)', false], ['(e)', true], ['(a)', true], ['(d)', true], ['(d)', false]]);
   assert.deepEqual(gate([eQuestions[0]].map((q) => ({ ...q, group: 'b' })), [base, head]), []);
+});
+
+// Batch 2, group (a): harmful on master a02,a28 / a02,a13 / a28; on the branch a02,a10 / a02,a28 / a12,a28.
+// a02 and a28 stay at 2 even counting every session; a10 and a12 are new, from sessions that never saw the batch.
+const batch2Changed = ['xwiki/kb/_meta/testing/strategy.json', 'xwiki/kb/_meta/testing/unit-test-framework.json',
+  'xwiki/kb/index.md', 'xwiki/kb/testing/strategy.md', 'xwiki/kb/testing/unit-test-framework.md'];
+const readNew = [{ tool: 'Read', target: 'kb/testing/strategy.md' }];
+const hIds = ['a02', 'a10', 'a12', 'a13', 'a28'];
+const hRuns = (...runs) => runs.map((ids) => Object.fromEntries(hIds.map((id) =>
+  [id, { ...a26master, grade: { score: 1, harmful: ids.includes(id) } }])));
+const hQs = hIds.map((id) => ({ ...a26q, id }));
+const hBase = side('master', hRuns(['a02', 'a28'], ['a02', 'a13'], ['a28']));
+const harmfulRow = (rows) => rows.find((r) => r.condition.includes('harmful more often'));
+const hRow = (headRuns) => harmfulRow(gate(hQs, [hBase, side('branch', headRuns)], { changed: batch2Changed }));
+
+test('the batch gate passes batch 2: no question is harmful more often, counting only sessions that saw the batch', () => {
+  const runs = hRuns(['a02', 'a10'], ['a02', 'a28'], ['a12', 'a28']);
+  for (const r of runs) for (const id of ['a02', 'a28']) r[id] = { ...r[id], okf_touches: readNew };
+  const row = hRow(runs);
+  assert.deepEqual([row.pass, row.value], [true, 'none (6 of 15 head sessions saw the batch; harmful from sessions that did not: '
+    + 'branch-r1/a10, branch-r3/a12; harmful per run: base 2,2,1, head 2,2,2)']);
+});
+
+test('the batch gate fails a question harmful more often from sessions that saw the batch than on master', () => {
+  // a13: harmful 1 of 3 on master, 3 of 3 on the branch from sessions that read the new text.
+  const runs = hRuns(['a13'], ['a13'], ['a13']);
+  for (const r of runs) r.a13 = { ...r.a13, okf_touches: readNew };
+  assert.deepEqual([hRow(runs).pass, hRow(runs).value.split(' (')[0]], [false, 'branch-r1/a13, branch-r2/a13, branch-r3/a13']);
+  // Only one of them from a session that saw the batch: not above master's one.
+  runs[1].a13 = { ...runs[1].a13, okf_touches: [] };
+  runs[2].a13 = { ...runs[2].a13, okf_touches: [] };
+  assert.equal(hRow(runs).pass, true);
+  // Group (e): e02, never harmful on master, harmful once on the branch from a session that read the new text.
+  const head = runsOf(1);
+  head[0].e02 = { ...head[0].e02, okf_touches: readNew, grade: { score: 1, harmful: true } };
+  const row = harmfulRow(gate(eQuestions, [side('master', runsOf(0)), side('branch', head)], { changed: batch2Changed }));
+  assert.deepEqual([row.pass, row.value.split(' (')[0]], [false, 'branch-r1/e02']);
+});
+
+// Real tool inputs: b1-e-code-r1/e05 grepped the KB folder, b1-e-code-r2/e05 grepped from inside it;
+// neither left an okf_touches entry, which only keeps `.md` paths.
+const grepFolder = 'Grep {"pattern":"(?i)debug|suspend|breakpoint","path":"/Users/x/OKF-2.0/xwiki/kb/testing","output_mode":"content"}';
+const grepInKb = 'Bash {"command":"cd /Users/x/OKF-2.0/xwiki/kb && grep -rn -i \\"debug\\\\|5005\\" testing/ | head -50"}';
+const saw = (rec, changed, base) => sawBatch({ okf_touches: [], hook_pointers: [], edit_pointers: [], ...rec },
+  new Set(changed.map(changedTarget)), base);
+
+test('a session saw the batch when it read, grepped, searched or was pointed at what the batch changed', () => {
+  const topic = ['xwiki/kb/testing/strategy.md'];
+  assert.equal(saw({}, topic), false);
+  assert.equal(saw({ okf_touches: readNew }, topic), true);
+  assert.equal(saw({ tool_inputs: [grepFolder] }, topic), true);
+  assert.equal(saw({ tool_inputs: [grepInKb] }, topic), true);
+  assert.equal(saw({ tool_inputs: ['Grep {"path":"/Users/x/OKF-2.0/xwiki/kb/conventions"}'] }, topic), false);
+  assert.equal(saw({ tool_inputs: ['Read {"file_path":"/Users/x/OKF-2.0/xwiki/kb/testing/strategy-old.md"}'] }, topic), false);
+  assert.equal(saw({ tool_inputs: ['Bash {"command":"node /p/xwiki/scripts/kb-search.mjs \\"mock a component\\""}'] }, topic), true);
+  assert.equal(saw({ hook_pointers: ['testing/strategy.md#Mocking'] }, topic), true);
+  assert.equal(saw({ edit_pointers: [{ subject: 'Foo.java', ids: ['testing/strategy.md#Mocking'] }] }, topic), true);
+  assert.equal(saw({ edit_pointers: ['testing/strategy.md#Mocking'] }, topic), true);
+  const skill = ['xwiki/skills/xwiki-build/SKILL.md'];
+  assert.equal(saw({ okf_touches: [{ tool: 'Skill', target: 'xwiki:xwiki-build' }] }, skill), true);
+  assert.equal(saw({ hook_pointers: ['skill:xwiki-build'] }, skill), true);
+  assert.equal(saw({ hook_pointers: ['skill:xwiki-jira'] }, skill), false);
+  // A file feeding every session or every search: every session saw it.
+  assert.equal(saw({}, ['xwiki/kb/glossary.md']), true);
+  assert.equal(saw({}, ['xwiki/scripts/kb-hooks.mjs']), true);
+  // Prompt-hook pointers are the same on every run of a side: different ones mean the batch moved the ranking.
+  const base = [{ hook_pointers: ['conventions/logging.md#A', 'servers/jira.md#B'] }];
+  assert.equal(saw({ hook_pointers: ['servers/jira.md#B', 'conventions/logging.md#A'] }, topic, base), false);
+  assert.equal(saw({ hook_pointers: ['servers/jira.md#B'] }, topic, base), true);
+});
+
+test('a changed path maps to the KB topic or skill a session can see, to every session, or to nothing', () => {
+  assert.deepEqual(['xwiki/kb/testing/strategy.md', 'xwiki\\kb\\testing\\strategy.md', './xwiki/kb/testing/strategy.md',
+    '/Users/x/xwiki-dev-llm/wt/xwiki/kb/_meta/testing/strategy.json', 'C:\\work\\xwiki\\kb\\testing\\strategy.md',
+    'xwiki/skills/xwiki-build/references/maven.md', 'xwiki/kb/glossary.md', 'xwiki/kb/_meta/skills.json',
+    'xwiki/instructions/xwiki-org.md', 'xwiki/hooks/hooks.json', 'eval/README.md', 'scripts/validate.mjs',
+    '/Users/x/xwiki-dev-llm/README.md'].map(changedTarget),
+  ['kb/testing/strategy.md', 'kb/testing/strategy.md', 'kb/testing/strategy.md', 'kb/testing/strategy.md',
+    'kb/testing/strategy.md', 'skill:xwiki-build', '*', '*', '*', '*', null, null, null]);
+});
+
+test('--gate exits 2 on a missing, empty or plugin-less --changed', () => {
+  const cli = (...extra) => spawnSync(process.execPath, [fileURLToPath(new URL('../../eval/tools/analyze.mjs', import.meta.url)),
+    '--base', 'm', '--head', 'b', '--questions', 'a', '--out', tmpdir(), '--gate', ...extra], { encoding: 'utf8' });
+  for (const r of [cli(), cli('--changed', ''), cli('--changed', 'eval/README.md,scripts/validate.mjs')]) {
+    assert.equal(r.status, 2, r.stderr);
+    assert.match(r.stderr, /--changed/);
+  }
+  assert.match(cli('--changed', 'eval/README.md').stderr, /outside the plugin, ignored: eval\/README\.md/);
+});
+
+test('a grade without a score, left by a failed judge call, counts as ungraded', () => {
+  const sides = [{ name: 'm', runs: [{ label: 'm-r1', recs: { a26: { ...a26master, grade: { cost_usd: 0 } } } }] }];
+  assert.deepEqual(missingItems([a26q], sides), ['m-r1/a26 (ungraded)']);
+  assert.deepEqual([isGraded({ grade: { cost_usd: 0 } }), isGraded({ grade: { score: 0 } }), isGraded(undefined)], [false, true, false]);
 });
 
 test('the batch gate fails a group whose records name two models; a record without model_id is not counted', () => {
   const withModel = (runs, id) => runs.map((recs) => Object.fromEntries(Object.entries(recs).map(([k, r]) => [k, { ...r, model_id: id }])));
   const base = side('master', withModel(runsOf(0), 'claude-opus-5-5'));
   const one = (rows) => rows.find((r) => r.condition === '(e) one model on both sides');
-  assert.equal(one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-opus-5-5'))])).pass, true);
-  assert.equal(one(gate(eQuestions, [base, side('branch', runsOf(1))])).pass, true);
-  const mixed = one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-sonnet-5-5'))]));
+  assert.equal(one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-opus-5-5'))], { changed: [] })).pass, true);
+  assert.equal(one(gate(eQuestions, [base, side('branch', runsOf(1))], { changed: [] })).pass, true);
+  const mixed = one(gate(eQuestions, [base, side('branch', withModel(runsOf(1), 'claude-sonnet-5-5'))], { changed: [] }));
   assert.deepEqual([mixed.pass, mixed.value], [false, 'claude-opus-5-5, claude-sonnet-5-5']);
 });
 

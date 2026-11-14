@@ -130,11 +130,20 @@ and lands only the ones the model needs, with numbers showing they help and harm
   default size, an entry in `scripts/size-budgets.json`.
 - **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
   runs per side: group (e) with the gate's model and code; groups (a) and (d) without the code, with
-  `run.mjs`'s default `sonnet` (`claude-sonnet-5-5` today). `analyze.mjs --gate`, once on the (e) runs
-  and once on the (a)+(d) runs, must pass both times: the (e) difference CI lies above 0, the (a) one
-  does not lie entirely below 0, harmful answers per run do not grow in (e) nor (a), the branch's (d)
-  pointers per session do not exceed the master runs' maximum, and each group's records name at most one
-  `model_id` (a record without one, older than that field, is not counted).
+  `run.mjs`'s default `sonnet` (`claude-sonnet-5-5` today). `analyze.mjs --gate --changed <files>`
+  (`git diff --name-only origin/master <the measured commit> -- xwiki/`, the files that were archived),
+  once on the (e) runs and once on the (a)+(d) runs, must pass both times: the (e) difference CI lies
+  above 0, the (a) one does not lie entirely below 0, no (e) or (a) question has more harmful branch
+  answers from sessions that saw the batch than harmful master answers, the branch's (d) pointers per
+  session do not exceed the master runs' maximum, and each group's records name at most one `model_id`
+  (a record without one, older than that field, is not counted). A session saw the batch when it read a
+  changed topic or skill, named one or its folder in a tool input, ran `kb-search`, was pointed at one
+  by a hook, or got prompt-hook pointers other than master's for that question (they are the same on
+  every run of a side); every session saw it when the batch changed a file outside topics and skills
+  (`kb/glossary.md`, `kb/_meta/skills.json`, instructions, scripts, hooks). The harmful condition asks
+  whether the batch caused harm: a session that never saw the batch answers as on master, so its harmful
+  answer is run noise, listed but not failing. Counting harmful answers per run instead fails a batch on
+  one noisy answer when master's runs agree (2,2,2 → 2,2,3).
 - **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
   `status` set (`done` with where it went, `dropped` with why).
 
