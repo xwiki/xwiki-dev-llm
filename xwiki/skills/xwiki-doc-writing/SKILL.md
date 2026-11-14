@@ -147,7 +147,7 @@ applies to everything a regex cannot decide.
     delete them. Then **cut verbosity**: take each sentence and ask *does the reader lose something they
     need in order to act if I delete it?* — if not, delete it rather than compress it. Readers skim, so
     length itself hides content. A How-to whose numbered list is wrapped in explanatory paragraphs, and
-    a hub page that narrates the feature or lists its children in prose (see "route, not narrate"), both fail this
+    a hub page that narrates the feature without linking its children, or lists them bare (see "route, not narrate"), both fail this
     step.
 13. **Review, then save.** Apply the review checklist first (see "Review"). A new or substantially
     rewritten page is a **major** change: save it as the developer chose in `Save mode` (a **Change

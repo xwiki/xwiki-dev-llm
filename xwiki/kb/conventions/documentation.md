@@ -240,10 +240,12 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   the three that inflate a page most. Prefer a **screenshot or a code example** over a paragraph
   wherever one will do (see "Show, don't only tell" above), a **table** over prose in a Reference
   (see "Content rules per type" for the two prose shapes that hide a table), and a **link** over a summary.
-- **A hub page's job is to route, not to narrate.** Its children are reached through the automatic
-  **More** table and, for those readers should open first, **Highlights** with their one-line
-  description — never through a prose list ("See X and Y."), which repeats the More table without the
-  descriptions. The prose is a short orientation on the topic, not a mini-manual of its features.
+- **A hub page's job is to route, not to narrate.** Its prose briefly says what the topic lets the
+  reader do and **links each child where it reaches the capability that child covers** — context the
+  More table, sorted by title, cannot give: how the children relate and which one fits which need. Two
+  failures: a mini-manual explaining the features without linking the pages that document them, and a
+  bare link list ("See X and Y.") repeating the More table. Test each linking sentence: if deleting it
+  leaves only the page titles, it was a list.
 - **Duplication is found by comparing pages, not by writing each one carefully.** Before finishing a
   tree, put the intros, the FAQ entries and the hub prose **side by side** and look for *the same fact*,
   not the same wording — a re-phrased duplicate is the invisible one. Line up the sibling How-tos'
