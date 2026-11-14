@@ -60,9 +60,9 @@ wiki keeps serving the already-registered component. Only a fresh install (a Doc
 `enforceRequiredRights` was added in XAR document model **1.6** (`XarDocumentModel.VERSION_16`),
 so the page's root element must be `<xwikidoc version="1.6" …>` or higher. The XAR filter maps
 elements by name and does not gate parsing on the declared version, so a page left at `1.2` still
-parses and enforces. Since 18.10.0RC1 `xar:verify` fails such a page and `xar:format` raises its
-version (skill `xwiki-xar-pages`). **Trap on older branches** (17.10.x, 18.4.x — not backported):
-the page passes both goals, so the version has to be set by hand.
+parses and enforces. Since 18.10.0RC1, 18.4.9 and 17.10.16 `xar:verify` fails such a page and
+`xar:format` raises its version (skill `xwiki-xar-pages`). **Trap:** an extension building against
+an older parent gets no check, so set the version by hand there.
 
 ## Enforcement is per-document, and reaches further only through a script save
 
