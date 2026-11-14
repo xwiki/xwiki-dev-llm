@@ -38,6 +38,10 @@ logic with `validate.mjs` through `scripts/md-blocks.mjs`). The same routine ope
 `sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`; its finder is
 `scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file.
 
+A second weekly routine, prompted by `scripts/kb-batch-routine.md`, lands one measured batch of
+`eval/backlog.json` facts in the KB and opens at most one `[Misc] Weekly KB batch:` PR, only when the
+benchmark gate passes.
+
 ## Release
 
 ```

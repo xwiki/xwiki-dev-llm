@@ -5,7 +5,9 @@
 // the routine reads only those diffs. It narrows, it does not decide what the KB should absorb.
 //
 // Usage: node scripts/kb-sources.mjs [--json]      changed, moved, unpinned and unreachable pages, unused pins
-//        node scripts/kb-sources.mjs --diff <url>  the page's wiki-syntax diff, pinned version -> current
+//        node scripts/kb-sources.mjs --diff <url>[@<version>]
+//                                                  the page's wiki-syntax diff, from the given version (any
+//                                                  page, pinned or not) or else its pin, to the current one
 //        node scripts/kb-sources.mjs --pin [url[@version]…]
 //                                                  pin the listed pages (default: every cited one) to the
 //                                                  given or current version; drop pins no KB file cites.
@@ -120,6 +122,15 @@ export const pinArg = (arg) => {
   return m ? [pageKey(m[1]), m[2]] : [pageKey(arg), undefined];
 };
 
+// The page and the version a --diff starts from: the one the argument names, else the page's pin.
+export const diffFrom = (arg, pins) => {
+  const [key, version] = pinArg(arg);
+  if (!key) throw new Error(`${arg}: not a dev.xwiki.org page`);
+  const from = version ?? pins[key];
+  if (!from) throw new Error(`${arg}: not pinned; name the version to diff from: <url>@<version>`);
+  return { key, from };
+};
+
 // ---- I/O -------------------------------------------------------------------------------------------
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -194,10 +205,8 @@ const report = async (json) => {
   if (Object.values(r).every((list) => !list.length)) console.log("nothing to sync");
 };
 
-const diff = async (url) => {
-  const key = pageKey(url);
-  const pin = key && readPins()[key];
-  if (!pin) throw new Error(`${url}: not a pinned dev.xwiki.org page`);
+const diff = async (arg) => {
+  const { key, from: pin } = diffFrom(arg, readPins());
   const page = await resolve(key);
   if (page.error) throw new Error(`${key}: ${page.error}`);
   const content = async (v) => {
@@ -207,7 +216,7 @@ const diff = async (url) => {
   };
   const dir = mkdtempSync(join(tmpdir(), "kb-sources-"));
   try {
-    const [a, b] = [`pinned-${pin}`, `current-${page.version}`];
+    const [a, b] = [`from-${pin}`, `current-${page.version}`];
     writeFileSync(join(dir, a), await content(pin));
     writeFileSync(join(dir, b), await content(page.version));
     try {

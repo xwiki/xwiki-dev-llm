@@ -30,12 +30,14 @@ group (a)/(b) question with the default Sonnet, more for a group (c) task, plus 
   where or why in `note`) marks a fact never to retry.
 - `tools/` — `run.mjs` (sessions), `judge.mjs` (grading and scoreboard), `analyze.mjs` (two versions
   compared over repeated runs), `recall.mjs` (retrieval only, no LLM), `grade-det.mjs` (the group (c)
-  points a diff settles mechanically), `task-repo.mjs` (group (c) isolation), `review-pack.mjs` (a human
-  review and blind judge-calibration pack), and the generators above.
+  points a diff settles mechanically), `task-repo.mjs` (group (c) isolation), `code-dir.mjs` (the
+  code clones' isolation), `review-pack.mjs` (a human review and blind judge-calibration pack), `to-e.mjs`
+  (group (e) questions from `gen-a.mjs` output), and the generators above.
 
 Everything a run writes goes under the output directory — `--out`, by default `xwiki-dev-llm/eval`
 in the plugin's work directory, never the repo: `runs/<label>/<id>.json` (one record per question:
-answer, tokens, cost, tool calls, KB files touched, hook pointers, `grade`) with `_scoreboard.json`,
+answer, the resolved `model_id`, tokens, cost, tool calls, KB files touched, hook pointers, `grade` with
+the judge's own `cost_usd`) with `_scoreboard.json`,
 `recall/<label>.json`, `repo-stub/`, `task-repos/` and `clones/`.
 
 ## Isolation
@@ -43,8 +45,8 @@ answer, tokens, cost, tool calls, KB files touched, hook pointers, `grade`) with
 Each session is `claude -p` with `--setting-sources ""` (no user settings, so no installed marketplace
 plugins), `--strict-mcp-config` (no MCP), `--plugin-dir` (only the plugin under test), the web closed
 (`WebFetch`, `WebSearch`, `curl`, `wget`, `gh`, `mvn` and git network commands disallowed) and the
-questions and results unreadable: the score must measure the knowledge base, not a live fetch of
-xwiki.org nor the gold.
+questions, `backlog.json` and results unreadable: the score must measure the knowledge base, not a live
+fetch of xwiki.org nor the gold.
 
 Groups (a), (b) and (d) run in `repo-stub/`, a git repo with an `xwiki/xwiki-platform` origin and a
 stub `pom.xml` (18.10.0-SNAPSHOT), so the plugin's scoped hooks fire. Group (c) runs each task in its
@@ -77,8 +79,10 @@ node eval/tools/grade-det.mjs --labels master                      # mechanical 
 
 `--questions` takes group names or file paths; `--only a01,c07` narrows a run. `run.mjs` and `judge.mjs`
 skip ids already done or graded, so an interrupted run resumes. `run.mjs --code-dir <dir>` runs groups
-other than (c) in the xwiki-platform clone found in `<dir>` rather than the stub, with every other
-directory of `<dir>` added: the session can read the code, as a developer's agent would.
+other than (c) in the `xwiki-platform` clone of `<dir>` rather than the stub, with its `xwiki-commons` and
+`xwiki-rendering` clones added: the session can read the code, as a developer's agent would. It refuses a
+`<dir>` that holds or sits inside this checkout, and clones holding a `CLAUDE.md`, `CLAUDE.local.md`,
+`AGENTS.md` or `.claude/` (`node eval/tools/code-dir.mjs <dir> --strip` removes them).
 
 Sessions are not deterministic: run each side several times (one label per run) and compare with
 
@@ -92,7 +96,8 @@ question's runs averaged, 95% CI from 10,000 bootstrap resamples of the question
 rerun prints the same CI), with the questions whose mean moved by 1 or more. A missing run directory,
 record or grade stops it with the list; `--allow-missing` prints anyway, the difference then using only
 the questions graded on both sides. Without `--head` it prints the base alone with each question's
-scores, marking those at 3 in every run.
+scores, marking those at 3 in every run. `--gate` checks a KB batch's comparison (below): PASS or FAIL per
+condition on the groups given, exit 0 only when all pass, 2 when anything is missing.
 
 These questions have been seen by the sessions that tuned the KB, so a gain on them can be overfit. To
 confirm a change to the retrieval mechanics, measure it on a fresh batch generated from recently merged
@@ -105,27 +110,31 @@ and lands only the ones the model needs, with numbers showing they help and harm
 
 - **Questions.** One group (e) question per fact, written by a fresh agent that avoids the fact's key
   terms (`gen-a.mjs` on a tight excerpt of the page), so a search hit is earned; key points from the fact.
-  `gen-a.mjs` writes group (a) questions: convert each to group `e`, with `gold.reference` = the page
-  excerpt and its URL and version, `gold.source` = `<url>@<version>` and `gold.gap` = the backlog `id`.
-  `judge.mjs` refuses a group (e) question without `gold.reference`.
+  `to-e.mjs` turns its output into group (e) questions (`gold.reference` = the excerpt with its URL and
+  version, `gold.source`, `gold.gap` = the backlog `id`) and lists the fact's terms each question's key
+  points leave out: a question missing them all likely aims at a side detail of its excerpt, but one
+  sharing some can too, so each question is still read against its fact. `judge.mjs` refuses a group (e)
+  question without `gold.reference`.
 - **Gold checked against the code.** Before any run, each reference is verified in the current code. An
   upstream page that is wrong is fixed (or proposed) upstream and the gold amended: a stale page never
   counts against the model.
 - **Baseline gate, with the code.** On master, two runs with `run.mjs --code-dir` over fresh shallow
-  clones of xwiki-commons, xwiki-rendering and xwiki-platform (no `CLAUDE.md`, `AGENTS.md` or `.claude/`
-  in them), with the newest Opus as the session model. A fact scoring 3 in both runs is findable in the
-  code: it is dropped. A baseline without the code overstates the gap.
+  clones of xwiki-commons, xwiki-rendering and xwiki-platform, with the newest Opus as the session model
+  (`--model claude-opus-5-5` today). A fact scoring 3 in both runs is findable in the code: it is dropped.
+  A baseline without the code overstates the gap.
 - **Write** the survivors following the repo's KB rules, each with its `sources:` URL, pinned with
   `scripts/kb-sources.mjs --pin <url>@<version>` at the version the fact was taken from (the backlog
-  entry's `sources`), never a bare `--pin`, which would hide an edit made since; when `--diff` shows the
-  page moved, re-check the fact first. A `kb_target` may be a file that does not exist yet: a new KB
+  entry's `sources`), never a bare `--pin`, which would hide an edit made since; when `--diff
+  <url>@<version>` shows the page changed since that version, re-check the fact first. A `kb_target` may be a file that does not exist yet: a new KB
   file also needs its entry in `kb/index.md`, its `_meta` sidecar (`gen-metadata`) and, above the
   default size, an entry in `scripts/size-budgets.json`.
 - **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
-  runs per side, read with `analyze.mjs` (no `--allow-missing`): group (e), same model and code as the
-  gate, must improve (CI above 0); groups (a) and (d), default model without the code, must not regress:
-  the (a) difference CI does not lie entirely below 0, harmful answers per run do not grow in (e) nor
-  (a), and the branch's (d) pointers per session stay within the master runs' min–max.
+  runs per side: group (e) with the gate's model and code; groups (a) and (d) without the code, with
+  `run.mjs`'s default `sonnet` (`claude-sonnet-5-5` today). `analyze.mjs --gate`, once on the (e) runs
+  and once on the (a)+(d) runs, must pass both times: the (e) difference CI lies above 0, the (a) one
+  does not lie entirely below 0, harmful answers per run do not grow in (e) nor (a), the branch's (d)
+  pointers per session do not exceed the master runs' maximum, and each group's records name at most one
+  `model_id` (a record without one, older than that field, is not counted).
 - **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
   `status` set (`done` with where it went, `dropped` with why).
 
@@ -140,7 +149,8 @@ judging).
 - `gold_in_pointers` / `gold_file_in_pointers` (group a): the prompt hook pointed at the gold section /
   file; `pointed`: share of sessions given any pointer (for group d, the lower the better).
 - `okf_used`: share of sessions that touched the KB or loaded a skill.
-- `in_tokens`: input tokens summed over all turns (cache reads included); `cost_usd` as reported.
+- `in_tokens`: input tokens summed over all turns (cache reads included); `cost_usd` as reported, for
+  the session and, in `grade`, for the judge (`analyze.mjs` sums both; `gen-a.mjs` prints its own).
 - `recall.mjs`: kb-search's recall@1/3/5 of the gold file and the gold section on the raw question,
   with the misses and their top 3.
 - `grade-det.mjs`: per group (c) point, the mechanical verdict next to the judge's; `exact: false`
