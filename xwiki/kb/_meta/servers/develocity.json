@@ -93,5 +93,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "9fa717aa66118914354391b6e151c59f54babe9709f4167c3cdff2c00720c414"
+  "source_hash": "9fa717aa66118914354391b6e151c59f54babe9709f4167c3cdff2c00720c414",
+  "file_hash": "69f3e46148e0d971be2464426fca97490daa325e42860a5065cede3c6e696cc2",
+  "section_hashes": {
+    "Develocity (community.develocity.cloud) — a test's failure history across CI builds": "54a22b9983c9a4a1e5e346087e5adb4b39f8e21f42b62e4385da873c5df44fe2",
+    "One test: `dv-test-history`": "260b5313b6dcbaf3691ea89705619e374f45c3e3d435d73c9f105969746fb77a",
+    "Finding candidates: `--recent-failures [HOURS]`": "447e4df4b6a29fbdf1d47d511621bd2f079ee8959a65aa261b3447a84f4e9d54",
+    "A test's output has no server log": "a9abb7b98986844ad621a41aefc0d7d0106b4b5b8b9cd880c60de7254f531359",
+    "A `flaky` outcome is a failure": "e9aea6253ab1564444320bdae57b6ef9cdafa1293514661333eb24850b42014a",
+    "Related": "b24dfad6cb43c936d839875a485d092c86e8ffe6a005026dce2d78a31851103a"
+  }
 }

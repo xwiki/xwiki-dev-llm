@@ -42,5 +42,9 @@
       "**/*.sh"
     ]
   },
-  "source_hash": "669e3ad7176decd2d7f2640e9b5fd277549d803aac4fbbbcc910a1992d41a10a"
+  "source_hash": "669e3ad7176decd2d7f2640e9b5fd277549d803aac4fbbbcc910a1992d41a10a",
+  "file_hash": "7833025e0232fc8dcc189d929b848b8a5659319da86cbbc3bcb5e9eeb015f0ac",
+  "section_hashes": {
+    "Code comment policy": "4e10f47ca47451a18294a8c0d7b4ce7ccb8f1072042e9f04141a7e523195554f"
+  }
 }

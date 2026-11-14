@@ -52,5 +52,10 @@
       "**/pnpm-lock.yaml"
     ]
   },
-  "source_hash": "69b7bcc03285ee22ee188a95db8e87381c024325d138264c7d2b7c472fc8c927"
+  "source_hash": "69b7bcc03285ee22ee188a95db8e87381c024325d138264c7d2b7c472fc8c927",
+  "file_hash": "abe8fd072d907984375df270779dfb1c2db07a497358e747842e91323c38bcb4",
+  "section_hashes": {
+    "Accepting a new third-party dependency": "aa5ede999b85c7b929e3d08f7325480959e8f5890d2a530955ed15feecdb7284",
+    "Upgrading a JavaScript dependency": "abf21363c12cd9f819eca621fbc33c8fd21708ae81de6ee009af7813fe258b5d"
+  }
 }

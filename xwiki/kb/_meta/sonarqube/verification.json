@@ -105,5 +105,15 @@
       "**/src/test/java/**/*.java"
     ]
   },
-  "source_hash": "7e8e4bab75c8ecc0aa532dbee0b5f2e214ebb3ff9ae34cf97f9eeef200128307"
+  "source_hash": "7e8e4bab75c8ecc0aa532dbee0b5f2e214ebb3ff9ae34cf97f9eeef200128307",
+  "file_hash": "f0966ed9437ed2ca6e58eac969eef3276f0b1ee498a56b6e2b4b5f0229c93ce2",
+  "section_hashes": {
+    "Verifying a SonarQube fix": "1d00e9cff5161cb1cb0eb0eb949399012ce1be2128c84a7db3f748ccd4e5d9c0",
+    "Run the tests — never skip them": "9500798a0a494c7b34350f09640635b747ac3483e14284ba2a565504282bdee5",
+    "`-Plegacy,quality` is mandatory": "efb9a953aa1de72e804270001bfc43bb134465dbe682292134e01d51901a2161",
+    "Removing covered instructions always lowers the ratio": "cec8bbec538d941bd9ca9b5fe190bd71af3bdf8eea28f0c184949a40b8a8a681",
+    "Reactor semantics when something fails": "426368a3b6a827e372e394ce90f55758d5e42fbe4129b34b85d56ee8e809e3ae",
+    "The quality gate measures NEW code — and a rewrite re-dates old findings": "355a80ef9e8dcb5ad1f1c369b9b9859281dddb1b9bf4a9ee2214e7f4117bf8a9",
+    "Related": "e15d7a0060e02e03ae93110f08d47dd0c7540e0c04cb76daecd089d6a2a57114"
+  }
 }

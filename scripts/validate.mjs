@@ -47,7 +47,9 @@
 //      past it moves into a file the skill opens on demand.
 //  13. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
 //      outlives its topic. kb-search silently drops a sidecar whose `source_hash` no longer matches
-//      the topic body, so an edited topic would lose its generated questions and aliases unnoticed.
+//      the topic body, so an edited topic would lose its generated questions and aliases unnoticed;
+//      a sidecar whose `file_hash` no longer matches the title and summary keeps file-level questions
+//      written for the old ones.
 //  14. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
 //      twice (as a merge can leave it) silently loses the first entry's hooks. Nor does a hook
 //      manifest declare one hook twice (same event, matcher, `if`, command), which runs it twice.
@@ -67,9 +69,9 @@ import {
   SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock,
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
-import { corpus } from "./kb-pipeline/gen-metadata.mjs";
+import { corpus, sidecarCurrent } from "./kb-pipeline/gen-metadata.mjs";
 import { duplicateHooks, duplicateKeys } from "./json-keys.mjs";
-import { loadSidecar, sidecarOf } from "../xwiki/scripts/kb-search.mjs";
+import { sidecarOf } from "../xwiki/scripts/kb-search.mjs";
 import { PINS_FILE, unpinnedSources } from "./kb-sources.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -422,9 +424,9 @@ for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
 // ---- Invariant 13: KB search metadata is current -------------------------------------------
 const topics = corpus(kbRoot);
 for (const t of topics) {
-  if (!loadSidecar(kbRoot, t.rel, t.text)) {
+  if (!sidecarCurrent(kbRoot, t)) {
     errors.push(
-      `xwiki/kb/${sidecarOf(t.rel)}: missing or stale for kb/${t.rel} — regenerate it with ` +
+      `xwiki/kb/${sidecarOf(t.rel)}: missing or stale for kb/${t.rel} (body, or title and summary) — regenerate it with ` +
         `\`node scripts/kb-pipeline/gen-metadata.mjs --only ${t.rel}\` and commit it with the topic`
     );
   }

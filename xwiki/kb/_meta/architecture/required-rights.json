@@ -96,5 +96,14 @@
       "**/*RequiredRight*.java"
     ]
   },
-  "source_hash": "9ff55e719cf83ca5ddf4013478e56dea1854d34183953daa1ca2aabd561dcaea"
+  "source_hash": "9ff55e719cf83ca5ddf4013478e56dea1854d34183953daa1ca2aabd561dcaea",
+  "file_hash": "c9fddb0e5e14e35263d4c2e1f26afbea78f9d206673befd6cd575e5a47417a4d",
+  "section_hashes": {
+    "Required rights on a page an extension ships (analyzer blind spots, XAR version, reading them back)": "d8d22b11e7bc6939d3a7e3c0fae4b73314cf5eb4ec44e22243555acd012b91e0",
+    "The analyzer is a recommendation, and it is blind to some privileged objects": "58fbfc27b94c87686382946fc370862b051ef8d28bc20cd1a23469a7ecacee2a",
+    "A page carrying the element must declare XAR document version 1.6": "ad83dc6468421729660ae53f1e3821437b870eef60543021a3efe6ba0361c185",
+    "Enforcement is per-document, and reaches further only through a script save": "5f5411c579ef6028f8255c3925955081cff266473959f5394241d24d5794f32c",
+    "Reading the enforced rights back in a test": "21d30b2f3d3e2842b5cb1e9821302b681dd91631171397fa6b35d84675fa51e5",
+    "Related": "173c711e4e0d2219e558b2b4c2d0b249702f37ef9a369ec21a40120865b30eba"
+  }
 }

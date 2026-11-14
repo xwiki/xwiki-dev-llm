@@ -104,5 +104,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "5f9a32ca52f3cc9019c894c8309c2b0e0fd3b5c7d2a7ef3c062fa13626492562"
+  "source_hash": "5f9a32ca52f3cc9019c894c8309c2b0e0fd3b5c7d2a7ef3c062fa13626492562",
+  "file_hash": "e6637a31fb80fd62c7d2e0f9e60f77d98831f793d5d5da2cc64d14c2c912756f",
+  "section_hashes": {
+    "Running Docker functional tests on a developer machine": "106395fa35d41a8e8a4d3692e3568b152395534b715555bdbecea46ce707504f",
+    "The browser is always a container; what changes is how it reaches XWiki": "9a15eefdf6b1a9ac2dca857cea3b1ea987e34e20f6993b54f69b2e65c76ef59a",
+    "Reaching outside the run: a proxy, a service on the host": "53a515ad83a7c57524cb14e641d952b6697016025c0adc4a2c79b5b7d3daf75f",
+    "A setup failure is never evidence about your change": "e739e0a9bfa8eb9f725694067d220fb7ea0acc185b373d664d48c8f84f799136",
+    "Leftover containers and networks: ryuk has to reach the daemon": "e2eb45e6557978db167f1276a9c7fabfd0994669b9c44ef0e5bd9e72baefd1a4",
+    "What several agents on one machine contend for": "cdfed3eb99f9f7ab6fbe1c0e407a7efca43661e7283073e3814b78a4d25b9e8a"
+  }
 }

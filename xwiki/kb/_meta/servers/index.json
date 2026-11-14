@@ -98,5 +98,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "457ace64e2daed5aa89c442bece014409768e5e98e06c8ecdf22e1f33b87c519"
+  "source_hash": "457ace64e2daed5aa89c442bece014409768e5e98e06c8ecdf22e1f33b87c519",
+  "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
+  "section_hashes": {
+    "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
+    "Server map": "815ae8f9f7faff11ff884d1047b6bb4eac11e3c21582ec37f96249a9c369794e",
+    "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
+    "Accessing / writing to the XWiki-run sites via REST": "ba5a9111170dbb6335c27d880a488d7c2befef03406b947a3969634983a7223f",
+    "Posts an LLM co-wrote": "36c6581b775db79de2b0ce733c2e210ce8b7a38173419842144850e73008cb45",
+    "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
+  }
 }

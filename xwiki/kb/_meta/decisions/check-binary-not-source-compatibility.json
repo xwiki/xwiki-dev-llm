@@ -62,5 +62,11 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "72351824fe9f74a097e01a9d6c832fce368d6c94a1efbfa839736d49cbe212c3"
+  "source_hash": "72351824fe9f74a097e01a9d6c832fce368d6c94a1efbfa839736d49cbe212c3",
+  "file_hash": "c53c1cdfb8038b5092b017199903cca0e480f41299fd7af1135f36755b6eb5e8",
+  "section_hashes": {
+    "Context": "59a960ac2d9fb86d04d76056ab3ad6a7b02cda620e1d378d19efea570fd14826",
+    "Decision": "6a5fe580aae83d0fdf468dc2af6b6e928ee9dadaf76ad49a258222ff30bd334a",
+    "Consequences": "3d9479a2189daef43cda4cbc1ffbbed26c23f7d6f89f9c23fb141152bc6f8dc3"
+  }
 }

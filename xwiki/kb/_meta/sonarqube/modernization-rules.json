@@ -136,5 +136,17 @@
       "**/*.java"
     ]
   },
-  "source_hash": "28c5e426e22c79cf278d7d54200ced24cb8a48d58d3e87564c015382f0d9e7fd"
+  "source_hash": "28c5e426e22c79cf278d7d54200ced24cb8a48d58d3e87564c015382f0d9e7fd",
+  "file_hash": "c44efb5b3b51fb07c07effb54957017a6c98f2abc50132d49db0ed1a13a26629",
+  "section_hashes": {
+    "SonarQube modernization rules": "7b2b0876a9e43f6a1fec0c345589dad62027ac037d57c43499539ff7090d6f19",
+    "S6201 — instanceof pattern matching": "c82a0a51c53aba1f7917cddf2fa5dedd5599628ab2b38d4e25162de0c71b9cd0",
+    "S6204 / S6211 — `collect(Collectors.toList()/toSet())` → `.toList()` / `.toSet()`": "e65d6e7ef7b3b2a415bc18c00c9dcd283de4ca0c02f15c2c549bb8851a908a45",
+    "S6485 — use the collection factory method instead of the sizing constructor": "83daf20c3035da89e4d0fd04c42487b455b15d77ed93aebeb94e37e4b39766af",
+    "S1640 — convert a `Map` with enum keys to `EnumMap`": "da97857639a8f5abc77e17b0c6a96df54a8791fec99d92d2e10a949acf087a21",
+    "S1604 — make an anonymous inner class a lambda": "e02403f64271a2e85dd4a869c74920e6dc5c5673e4af05ba9ed2cfdc5dc0d035",
+    "S1643 — use a `StringBuilder` instead of `+=` in a loop": "df2d7fdd3826e980770829b6939d96c7c90e0949c9625bcd0cf77668d24f99c2",
+    "S6126 — replace String concatenation with a text block": "1d02c45a1cb9f8f3113b4f09d799afd6fdf37fd6fcbadb3a692d6dfca5d53ebe",
+    "Related": "0176b57f1680c9f5ddf8ec5b26957f8e876d48fdb2f3c025a2d08e6eaf2c8a31"
+  }
 }

@@ -56,5 +56,11 @@
     ],
     "applies-to": []
   },
-  "source_hash": "e9ae27b5ba2a0f90e1ce0c2277fa3e924d0662a22d2c92c4608bce6019b4ef1b"
+  "source_hash": "e9ae27b5ba2a0f90e1ce0c2277fa3e924d0662a22d2c92c4608bce6019b4ef1b",
+  "file_hash": "121559653ff043c24bda44497e50ddf61aaf77f8173f25ca90935444f3d51a9b",
+  "section_hashes": {
+    "Watching a merged functional test on CI": "9f03fb4823d84dbb0ee9f12d20d595abbc1819b31b5a1ece59eda8ba748d3822",
+    "What counts as \"it ran and passed\"": "2d516b88535bc1ec2b711701b58b48fa8df483e34faa7fe13556ceaec907a36c",
+    "The in-session watch": "51ef748453495c499cc827439384784a5c9434825bd4f51a84293569212dd1e1"
+  }
 }

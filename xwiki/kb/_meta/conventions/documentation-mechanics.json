@@ -95,5 +95,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "f437ccb4c00d291111b77284bf0692a4568c886e238170606c94c2e3a8de27c1"
+  "source_hash": "f437ccb4c00d291111b77284bf0692a4568c886e238170606c94c2e3a8de27c1",
+  "file_hash": "ae6e1032224cae81d61d46df94039427e7118a24e0050218bafdf0c26e62959a",
+  "section_hashes": {
+    "Programming against the xwiki.org documentation tree": "cfbde2920b7178c451d394a8564b420b3afe44c1e1b2df68623130d80522eee1",
+    "The DocApp xobjects on a documentation page": "88250c97ae81fe46573420edff4435237155397701c5113262986274f9ff3023",
+    "Landing pages carry a different class": "d9ff97edcce6b0fc2ebf58b6b5e24f1e762d1575f82d384236ed7d68a8bf6f2f",
+    "Reading the doc-quality checker's actual findings": "75ad2c248f668340d8d52b0b442a4a954f0507db8a8cc3c864f726d70243c124",
+    "How navigation order is pinned": "d7a551b1eef677c78b8ffa9ca68c88be4e6314fe3a63588fce738bc24c1acfa6",
+    "Content fragments (the `{{fragment}}` macro)": "f2f404c5b0461729c026fd28db479e34f33d5c9e5efa1fe93cb7f479c11c5542"
+  }
 }

@@ -71,7 +71,9 @@ excerpt when its key points are not the fact.
   `analyze.mjs --base <r1>,<r2>` marks the questions at 3 in both runs: those facts are `dropped`,
   "findable in the code (3, 3)".
 - Write the survivors per the README's "Write" bullet and CLAUDE.md's rules: one home per fact, a budget
-  raised only under its three tests, stated in the PR body. None survives: go to step 9.
+  raised only under its three tests, stated in the PR body. A `tests/kb-hooks/` probe failing after the
+  sidecars are regenerated is reported as `gen-metadata.mjs`'s header says, never re-rolled. None
+  survives: go to step 9.
 - Run the checks of the consolidation routine's step 5 that apply (the `--lossless` one does not: a batch
   adds facts), with `recall.mjs` on groups (a) and (e), `origin/master` against your branch. A failure
   already on `origin/master` is not yours: name it.

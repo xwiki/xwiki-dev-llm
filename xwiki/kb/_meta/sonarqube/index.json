@@ -109,5 +109,15 @@
       "**/*.java"
     ]
   },
-  "source_hash": "be90a00065996888e6e379567e030ded1079754643f5ac0abcda53d4da93f17d"
+  "source_hash": "be90a00065996888e6e379567e030ded1079754643f5ac0abcda53d4da93f17d",
+  "file_hash": "652068777d8b2fd8117fb78f9cd20e836f9af0307c60200e25e6971fd130bc20",
+  "section_hashes": {
+    "SonarQube rule fixes — index / map": "2edb79a79891d19c7e83659726700693f4c0ab75cdad9c344773811a5d74192a",
+    "How to use this (READ)": "ecb3ecf919e57fdada1be4741a4e66b53dcd49896bc0a5ab519ec7831a489548",
+    "Rule map": "3d70fdfee34ea3c3a2a91c8f0817a671690186564a2ddb18279c34e06ad01115",
+    "Rules not worth fixing (denylist)": "bc387e42790c6e0cfe2ecde1adaef004bdc63c6dc1aaecce0eceba75702d0812",
+    "Universal drop conditions": "14e06f40a07c623c245a9128fcf7f4f955731982aee7de78e64648870cba8a64",
+    "Retiring an issue that should not be fixed": "d0bb6f4ad7c015a8346af59b0be27826d4dd7aae51f12fb0d82b66308ec6ff07",
+    "Related": "9781163269b195c78dc28a840ccc246c0894224096941f78d42cb31b975aa7c3"
+  }
 }

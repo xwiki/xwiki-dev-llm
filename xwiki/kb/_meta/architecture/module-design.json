@@ -77,5 +77,12 @@
       "**/*.java"
     ]
   },
-  "source_hash": "f0126a68d8a1f3e8798e51636730f4578ffd1f9012a787b1396c9083ca0c750a"
+  "source_hash": "f0126a68d8a1f3e8798e51636730f4578ffd1f9012a787b1396c9083ca0c750a",
+  "file_hash": "ed16f159d8547294505bdf268631c4c3a61c424d70b2b22ec20cef01a8ff076a",
+  "section_hashes": {
+    "Module design — a review lens for the classes a change adds or reshapes": "a5998d67b15d4edeea4923978d39e84a06c313b31fb9063e9e16239cdf32dbf7",
+    "Scope: only what the change adds or reshapes": "c8e576bebbf649e7ca78969e27eb0c16d498fafedf24b4fac2a5b41468fa16c9",
+    "The questions": "126830477a7e9047ad6c06d294d65adb90745c3d965a4b59fdf873baa0043cad",
+    "Turning it into a review point": "4024c3dca0d71a3c55043fcbcb0f6d76c0d2d3750636f1180932c016869f2497"
+  }
 }

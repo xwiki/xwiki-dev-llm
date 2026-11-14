@@ -75,5 +75,12 @@
       "**/*ScriptService.java"
     ]
   },
-  "source_hash": "766a651c7f5df659e5741bfd77521598f6920a8e853da330a4371f43027abc05"
+  "source_hash": "766a651c7f5df659e5741bfd77521598f6920a8e853da330a4371f43027abc05",
+  "file_hash": "4c412251a72bdcb3f1e34803873af4a8e5387da939513e8f9ee896113bddc398",
+  "section_hashes": {
+    "Package: `script`, never `internal`": "f96efca924fe2046db24a6fbf6486333221565ff5664e68a92f71ffe394b8091",
+    "Errors: throw, do not stash": "5b42d2b6296967ef289900a7cdd62aa8468ecc9eb949e17ee1f061c352d5fc98",
+    "Arguments: no bean factories": "419804c2e95ae4ff8712edb5acc1a06951bb7d01912603e34dbcfa849b3e35d0",
+    "Rights": "bbf248e878d593c41851b20df4c202e349a4b462a7386ef53b54880cceb3af96"
+  }
 }

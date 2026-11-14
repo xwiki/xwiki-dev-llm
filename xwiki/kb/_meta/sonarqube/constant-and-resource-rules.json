@@ -150,5 +150,19 @@
       "**/*.java"
     ]
   },
-  "source_hash": "ac2643d49bae5edb65fd752a18e0b9759eedc8696e028d7a764867b7f289d678"
+  "source_hash": "ac2643d49bae5edb65fd752a18e0b9759eedc8696e028d7a764867b7f289d678",
+  "file_hash": "336201f7b9565c16afd9225f8a1af71b98c78c147edaf6f2fe3b65291bbb30e5",
+  "section_hashes": {
+    "SonarQube constant, resource and exception rules": "0910d9379e1da79ab2a477d3be9c17fc4a8ebe7fe9de5e111883449de8af02d0",
+    "S1192 — define a constant instead of duplicating a literal": "6d7d0e9c1683b4d04238e436d070314892794570d31adfef728b695f4d6ae7a3",
+    "S2093 — use try-with-resources": "1c99f581c7ba69c2c7eb4151160d993b6d7d43bc79d0ff4b93958c927b2fcb76",
+    "S2119 — reuse `Random`": "26aa99fce2f9dd3568b11c790c47f66b05acfacd5cea5cdbac3bb8a57457a78e",
+    "S1143 + S1163 — a `finally` block that throws": "13b853c475fffe5d93bf5f29d2f5d983af61b54b66b57f3ed15f4581c05413b3",
+    "S5361 — `replaceAll` → `replace`": "c3d98cac62687c4892016d6e7c6c1ffe212e3bc798c63555500690868929dc1c",
+    "S2147 — combine catch clauses with identical bodies": "931c937031ac0cf43f4e517f2b1e7140e9b6a881785767183d6b2eaa41711cb6",
+    "S3626 — remove a redundant jump": "5d6290cc3175ac0805cd437753178a1aaaa6f7b168433d8b9cb6ed38f89fe1df",
+    "S4719 — use a `StandardCharsets` constant instead of a charset name": "1a81d2c23c16605afe15137d00b887f4c1769f09bd391d9f0d641aef1140fe7b",
+    "S1214 — move the constants defined in this interface to another class or enum": "1a4ef8d02f45a24ca36270c7d075dea9861f912c2a88f1042824225e5cc99df2",
+    "Related": "ad7a56a86728a535803dcb0d7a4f6a765be4d0d917d7858095c937acd0983b53"
+  }
 }

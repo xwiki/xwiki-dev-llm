@@ -143,5 +143,18 @@
       "**/src/test/**/*.java"
     ]
   },
-  "source_hash": "98e62f61194d7d6b08173c1dfa16230f0315c57d47d7de8f1d90af9a3126dfe4"
+  "source_hash": "98e62f61194d7d6b08173c1dfa16230f0315c57d47d7de8f1d90af9a3126dfe4",
+  "file_hash": "8e8b6f3652a81d1c8d87ab65d553d2e28f891c2dd8576a9509b48656daced86a",
+  "section_hashes": {
+    "SonarQube test-code rules": "267d1369ef6da32497da6b1118dff3f54f77aa6552cf781cecd732d73d1efec7",
+    "S5786 — a JUnit 5 test class or method should be package-private": "af31ab7c83b1566b48cdf388bc0f91b5d751f12199db907cac235f41d09bad67",
+    "S5785 — use `assertEquals` instead of `assertTrue(a.equals(b))`": "2369d41fef24bc1fd8a7bfc96c200e431d770d2045d279b11009ed56e4cd0b32",
+    "S3415 — swap the expected and actual arguments": "ded8a70b7bc97f0bdc2c1893b77448dce67bd8d69445f6146321a2bdc39b168a",
+    "S8924 — use a static import for a Mockito method": "ef244a82eecb352b7bad478c08289cf3e5f0352c27c33aaa40c99cae7bb95019",
+    "S6068 — remove a useless Mockito `eq()` matcher": "d4b0bd8b17e222a8a1dd14582151336ad447fd8f86cffb83665f0c98c69d59e6",
+    "S2133 — an object instantiated only to get its class": "d03458f64651e8c5fa1a0326c4e7bad5ce42c5ff213d3dcfc533ed465b566225",
+    "S5778 / S5783 — only one method invocation may throw inside an `assertThrows` lambda": "5e09c7558c9ea2ed6f284e9f2cbe74893e383bb848bd22ac0739430b763b5caa",
+    "S8714 — replace a try/catch/`fail` with `assertThrows`": "fe4c01a34f4662453179d5d281618ca2d6b6a3e2e98ea6d16699067eb48e18b6",
+    "Related": "15286312a4ec21c5578bbb1406c5a312bc3845a2f6c45a14bb8367b3b703ce66"
+  }
 }

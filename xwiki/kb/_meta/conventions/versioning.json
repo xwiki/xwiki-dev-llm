@@ -64,5 +64,11 @@
       "**/*.java"
     ]
   },
-  "source_hash": "ccac54b61f6f02158ff8e2c3199b9b0382f0dd579d3d5af43a5d6ab1b735c4c1"
+  "source_hash": "ccac54b61f6f02158ff8e2c3199b9b0382f0dd579d3d5af43a5d6ab1b735c4c1",
+  "file_hash": "54e4b99466576f8cd595d6c0b54092f6e191e6bf031b15441f6024af7332d331",
+  "section_hashes": {
+    "Versions in code and issues (@since / @Deprecated, affected version)": "3bf315a1716ed054ceab4c0b1249f92dab03c65e79b1851b6b69b59a30961eed",
+    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "65b853dd07da27dd0ef3f17093b596e8e12f888416dc24619146f897b65d31c0",
+    "Affected version of an issue": "b378f6370bb5c31b05d6bdd2174bc0b92cc6759b5a71555955bd1fe1cf99bc81"
+  }
 }

@@ -76,5 +76,12 @@
     ],
     "applies-to": []
   },
-  "source_hash": "b495cf7c42731a2b99aafb473277ad4790d4b5387f1f3de758a31c629ca55426"
+  "source_hash": "b495cf7c42731a2b99aafb473277ad4790d4b5387f1f3de758a31c629ca55426",
+  "file_hash": "66543f5bd84ba277a4a80c800aa0789d9a3e6486bbc3f2235f2bab0b6c4b5753",
+  "section_hashes": {
+    "Handling the original page after a documentation migration": "da540d1d12d9febf41a13bde738492dcd4d7f9df3ba494182380c8cc278bfe63",
+    "Deleting the original page's attachments": "be14990f135a8ba36c06672b1807ac450ceab3cdf0c3d130802d241a8b80a6d1",
+    "Repointing backlinks": "a07ad475e04debcfbc4b72173f1740266fbc31b5debc5ca17e5d2a2c254f8e74",
+    "Where an e.x.o extension page keeps its prose": "4c92b3547b0b47386060b8abf3fbedc836703c096f296ecdb5e10aa4a8823822"
+  }
 }

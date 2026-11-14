@@ -51,5 +51,10 @@
     ],
     "applies-to": []
   },
-  "source_hash": "9a315f26949396acc30c12769ed85a91fe162ec3c50d167a7b29d025392f2c35"
+  "source_hash": "9a315f26949396acc30c12769ed85a91fe162ec3c50d167a7b29d025392f2c35",
+  "file_hash": "8f650a5487975a0f005d6f4b282a72c740c0b7304b48daeef9b2846103a98394",
+  "section_hashes": {
+    "Manual tests on test.xwiki.org — data model and automation status": "3e115461255f862b4181d7f9bf2d517a46f553643035219c471f84de69dbe441",
+    "Automation status": "80e55238429dc4f58d737d9d6f1eb9b64b58bca29b5294c4ecef829e756759a1"
+  }
 }

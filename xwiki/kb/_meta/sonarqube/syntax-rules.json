@@ -217,5 +217,24 @@
       "**/*.java"
     ]
   },
-  "source_hash": "1fc844d236250066027e57823f5e948d16f32e1848abe3464080653379e44dc8"
+  "source_hash": "1fc844d236250066027e57823f5e948d16f32e1848abe3464080653379e44dc8",
+  "file_hash": "73dae5575039c1a4b4c7f3bc485f9acbd1c507c0776b33aa92cb42df4c1b36be",
+  "section_hashes": {
+    "SonarQube syntax and annotation rules": "6af2a61507abf9f72679618481c8e70a31819f5b13857a56c298d144e33efc68",
+    "S6208 — merge fall-through `case` labels into one comma-separated label": "2e1a67d8313ce00b7be9c75bd20c4a03c9b04595d786f8ca1f69b7eb51d96f49",
+    "S1128 — unused import": "82697863b9d427b2faf5247619d670be5aa15368842879771d5ae020f7f0bfbd",
+    "S1197 — array designator on the variable": "208c921b151d18ebc65c30d61c0c43271c8786b510161bdbb411170facb3d56e",
+    "S1116 — empty statement": "ac29a96820be535dc432c8ebabffb08da82e5746a7347b2a1b3cb070642bb70b",
+    "S1161 — missing `@Override`": "8e4ae2433a7740a559e7c6adc1767ec5faf31b633a596e53d46f150e22b1e2da",
+    "S1611 — redundant parentheses around a lambda parameter": "d0d2970a5d5168b97f5e6af7f2db9477efec2d440830e1f2f2be205c9fcbb251",
+    "S2209 — a `static` member should be accessed statically": "dd082ce9134d9cbe3fbdd0df2c21b3b5fded75bca6aa69e6c1a8184b1f5d35b3",
+    "S3252 — a `static` member should be accessed through the class that declares it": "990d059057c452667bfb272351a4d5797c226c52acd1358ffdbe37fe0a202b0f",
+    "S1124 — modifier order": "7c60458250ece4d9804c11bfde5f321cb8886bac7a58c43dd5a5a64e63cf8f73",
+    "S3878 — array created for a varargs parameter": "a9b200cffbbddd8d02e23173c3b1ced273225ae6e3c5ab45fb78f44b334f6e4c",
+    "S7476 — a single-line comment should start with exactly two slashes": "48b25f1616d558b42683388c01acb11d13b960954a932ab4bfc25acefcdd5934",
+    "S1659 — declare each local variable on its own line": "5334e61b4320ea34854e33b82d87ccb37bb5b3c193d00e2d26f5d384c618c6c8",
+    "S6355 — `@Deprecated` should carry `since`": "6d8cf59b31265412393912f6d6b9df74ed01a136f2cc9642e01e786ab0137890",
+    "S6213 — an identifier matching a restricted identifier": "0ab02d95e3a05355b56f6eeaafa3d58c815aa90e39ccd9d13db0b994f132828f",
+    "Related": "ba283b03eabf55b610b70738ba3c21ab24eaa9184007b2b24a151dd8a379aa1a"
+  }
 }

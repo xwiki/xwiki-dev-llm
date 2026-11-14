@@ -54,5 +54,10 @@
       "**/src/main/resources/**/*.xml"
     ]
   },
-  "source_hash": "df16041bb55731a6e52343a01a0fe123985dafa1ca7080c9dbf3781ac31061e2"
+  "source_hash": "df16041bb55731a6e52343a01a0fe123985dafa1ca7080c9dbf3781ac31061e2",
+  "file_hash": "556498d234571bfeedd247c5d23d381f5e32d1d6dc657fbdc8449bebcbbe9840",
+  "section_hashes": {
+    "Blocks in generated wiki syntax are separated by blank lines": "4f0eb6f0c31a73adf165ccd55fddb8c60b1673f6d0f4f087c59bd1a8c67fb761",
+    "Only a line ending with content needs a closing `##`": "6d7d82dea6363f53a055b1eef17f4359f45c7157a2106998b473d7b42ac4d93c"
+  }
 }

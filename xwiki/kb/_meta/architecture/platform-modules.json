@@ -96,5 +96,14 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "2a1e828c0f8d86681b0427ad53a7b52cfddd155c00bb6ac77fc0112084d2f287"
+  "source_hash": "2a1e828c0f8d86681b0427ad53a7b52cfddd155c00bb6ac77fc0112084d2f287",
+  "file_hash": "8037f6695e375b385de59dc9cfe12477967626d89624d787b98ec3f0b0004a8d",
+  "section_hashes": {
+    "How xwiki-platform is laid out, and where new code goes": "e352bbee51fce8ff3f8edb209fffd34eda9591c094f36819de1bb50314208553",
+    "The three top-level trees": "e9fa02cfd390547fa21b221763ea02b1aa9bf6ddaf6adb8703a76a9f4a9ac181",
+    "The modules worth knowing by name": "5624ed22be69922dbf6207a932b4c772a5098bde7a0e828f8041583552b53831",
+    "New code goes in a feature module, never in oldcore": "a3dee732b3884ea788dee2be512bd7a00a3497b57d5f04c6398ed75545e683b8",
+    "Every JAR is an OSGi bundle, and advertises what it provides": "49ce45eea490d8d08dc5de33f9a3bd1e00e72e4f027ba0ec92d08864623c72a4",
+    "Where to go deeper": "8f0effee2cb2f3acff8abf3d679e45b267c8271611f0e3d5a58265c843b095cd"
+  }
 }
