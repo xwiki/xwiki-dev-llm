@@ -13,8 +13,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"My unit test needs a scratch directory. Should I use `@TempDir`?\"",
-    "status": "candidate",
-    "note": "@TempDir is the idiomatic JUnit 5 answer and every model reaches for it."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e01 2,2,2 -> 3,3,3. Written to kb/testing/unit-test-framework.md (new), kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B04",
@@ -30,8 +30,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"How do I unit-test the Velocity in `Main.WebRss.xml`, which includes another page?\"",
-    "status": "candidate",
-    "note": "Without the setup the model mocks XWikiDocument or writes a functional test; it cannot know renderPage loads from the classpath or that included pages need loadPage. Also § Template Unit Testing. Partial: kb/testing/test-value.md#Pick the level by the kind of code changed (says write a PageTest, not how)."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e02 2,2,2 -> 2,2,2. Written to kb/testing/unit-test-framework.md (new); the page is stale: PageTest.request is deprecated since 17.0.0RC1, use stubRequest, kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B12",
@@ -47,8 +47,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"My page under `PageTest` uses a wiki macro defined in another XML page and renders nothing. What's missing?\"",
-    "status": "candidate",
-    "note": "Three non-discoverable pieces, one of them a test-jar."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e03 2,2,2 -> 3,3,3. Written to kb/testing/unit-test-framework.md (new), kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B13",
@@ -64,8 +64,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"The component calls `provider.get()` twice and must get two different `MailListener`s. How do I mock that?\"",
-    "status": "candidate",
-    "note": "The model writes @MockComponent Provider<T> or does not realise every get() returns the same mock. Partial: kb/testing/strategy.md#A mocked component that the code's `Provider` does not return (role mismatch only); skills/xwiki-convert-tests/SKILL.md (DefaultParameterizedType mapping table)."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e04 2,2,2 -> 3,3,3. Written to kb/testing/unit-test-framework.md (new); code: a non-@Role T gets a mock Provider returning one fixed mock, kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B22",
@@ -81,8 +81,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"My component logs a WARN in `initialize()` and the test fails with 'must be asserted'. How do I assert it?\"",
-    "status": "candidate",
-    "note": "An instance field misses initialization logs, so the test fails on unasserted output. Also § Testing a JUnit5 Extension. Partial: skills/xwiki-convert-tests/SKILL.md (instance-field usage only)."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e05 2,2,2 -> 3,3,3. Written to kb/testing/unit-test-framework.md (new), kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B23",
@@ -98,8 +98,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"How do I give one test a different configuration mock that `initialize()` reads?\"",
-    "status": "candidate",
-    "note": "Testing an Initializable with different config per test otherwise looks impossible. Also § Order. Partial: skills/xwiki-convert-tests/SKILL.md (unnamed @BeforeComponent, eager injection)."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e06 2,2,2 -> 3,3,3. Written to kb/testing/unit-test-framework.md (new), kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "B33",
@@ -115,8 +115,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"I want `@AllComponents` but with my own mock of `DefaultOfficeServer`. How?\"",
-    "status": "candidate",
-    "note": "The model falls back to a long @ComponentList."
+    "status": "dropped",
+    "note": "findable in the code (3, 3): KB batch 2026-11-14 baseline with the code clones."
   },
   {
     "id": "B34",
@@ -132,8 +132,8 @@
     ],
     "kb_target": "kb/testing/unit-test-framework.md",
     "probe": "\"What should I name the test for `serialize()` with a null input?\"",
-    "status": "candidate",
-    "note": "Models write testFoo, shouldX_whenY or keep public. Partial: kb/sonarqube/test-code-rules.md (the public rule); kb/testing/strategy.md#Test kinds and naming (class suffix only)."
+    "status": "dropped",
+    "note": "regressed (a) harmful: KB batch 2026-11-14 gate failed on (a) harmful per run 1.67 -> 2.00 (one extra harmful answer, a12, @Deprecated versioning, which the batch did not touch); (e) passed, +0.86 CI [0.57, 1.00]. e08 2,2,2 -> 3,3,3. Written to kb/testing/strategy.md#Test kinds and naming, kept on branch claude/kb-batch-2026-11-14-measured; retry as is."
   },
   {
     "id": "C06",
