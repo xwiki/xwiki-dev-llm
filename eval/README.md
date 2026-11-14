@@ -21,10 +21,15 @@ group (a)/(b) question with the default Sonnet, more for a group (c) task, plus 
   the session must not reach).
 - `questions/d.json` — group (d): 10 questions the KB does not answer. No gold: any KB pointer or read is
   noise.
-- `tools/` — `run.mjs` (sessions), `judge.mjs` (grading and scoreboard), `recall.mjs` (retrieval only,
-  no LLM), `grade-det.mjs` (the group (c) points a diff settles mechanically), `task-repo.mjs` (group
-  (c) isolation), `review-pack.mjs` (a human review and blind judge-calibration pack), and the
-  generators above.
+- `questions/e-<batch>.json` — group (e): one question per dev.xwiki.org fact of a KB batch (see
+  [KB batches](#kb-batches)), in the group (a) format. Gold = `gold.reference`, the page text with its
+  `gold.source` (`<url>@<version>`).
+- `backlog.json` — the dev.xwiki.org facts a KB batch can take, most valuable first and grouped by
+  `kb_target`; `status` `done` or `dropped` (with the reason in `note`) marks a fact never to retry.
+- `tools/` — `run.mjs` (sessions), `judge.mjs` (grading and scoreboard), `analyze.mjs` (two versions
+  compared over repeated runs), `recall.mjs` (retrieval only, no LLM), `grade-det.mjs` (the group (c)
+  points a diff settles mechanically), `task-repo.mjs` (group (c) isolation), `review-pack.mjs` (a human
+  review and blind judge-calibration pack), and the generators above.
 
 Everything a run writes goes under the output directory — `--out`, by default `xwiki-dev-llm/eval`
 in the plugin's work directory, never the repo: `runs/<label>/<id>.json` (one record per question:
@@ -69,13 +74,53 @@ node eval/tools/grade-det.mjs --labels master                      # mechanical 
 ```
 
 `--questions` takes group names or file paths; `--only a01,c07` narrows a run. `run.mjs` and `judge.mjs`
-skip ids already done or graded, so an interrupted run resumes. Compare two labels by their
-`_scoreboard.json`, and run each side several times before trusting a small difference: sessions are
-not deterministic.
+skip ids already done or graded, so an interrupted run resumes. `run.mjs --code-dir <dir>` runs groups
+other than (c) in the xwiki-platform clone found in `<dir>` rather than the stub, with every other
+directory of `<dir>` added: the session can read the code, as a developer's agent would.
+
+Sessions are not deterministic: run each side several times (one label per run) and compare with
+
+```
+node eval/tools/analyze.mjs --base m-r1,m-r2,m-r3 --head b-r1,b-r2,b-r3 --questions a,d [--out dir]
+```
+
+It prints, per group, each metric's mean [min–max] over the runs, pass^k (questions scoring 3 in every
+run), and for graded groups the paired head − base score difference: each question's runs averaged,
+95% CI from 10,000 bootstrap resamples of the questions (fixed seed, so a rerun prints the same CI),
+with the questions whose mean moved by 1 or more. Without `--head` it prints the base alone with each
+question's scores, marking those at 3 in every run.
 
 These questions have been seen by the sessions that tuned the KB, so a gain on them can be overfit. To
 confirm a change to the retrieval mechanics, measure it on a fresh batch generated from recently merged
 pull requests.
+
+## KB batches
+
+A batch takes about eight `candidate` facts from the top of `backlog.json`, aimed at one or two KB files,
+and lands only the ones the model needs, with numbers showing they help and harm nothing else.
+
+- **Questions.** One group (e) question per fact, written by a fresh agent that avoids the fact's key
+  terms (`gen-a.mjs` on a tight excerpt of the page), so a search hit is earned; key points from the fact.
+- **Gold checked against the code.** Before any run, each reference is verified in the current code. An
+  upstream page that is wrong is fixed (or proposed) upstream and the gold amended: a stale page never
+  counts against the model.
+- **Baseline gate, with the code.** On master, two runs with `run.mjs --code-dir` over fresh shallow
+  clones of xwiki-commons, xwiki-rendering and xwiki-platform (no `CLAUDE.md`, `AGENTS.md` or `.claude/`
+  in them), with the newest Opus as the session model. A fact scoring 3 in both runs is findable in the
+  code: it is dropped. A baseline without the code overstates the gap.
+- **Write** the survivors following the repo's KB rules, each with its `sources:` URL, pinned with
+  `scripts/kb-sources.mjs --pin <url>@<version>` at the version the fact was taken from (the backlog's
+  `source`), never a bare `--pin`, which would hide an edit made since; when `--diff` shows the page
+  moved, re-check the fact first.
+- **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
+  runs per side, read with `analyze.mjs`: group (e), same model and code as the gate, must improve (CI
+  above 0); groups (a) and (d), default model without the code, must not regress (the (a) difference CI
+  includes 0, (d) pointers per session do not grow).
+- **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
+  `status` set (`done` with where it went, `dropped` with why).
+
+Cost: about $50 for a batch of 14 facts, most of it the (a)+(d) comparison (300 sessions and their
+judging).
 
 ## Metrics
 
