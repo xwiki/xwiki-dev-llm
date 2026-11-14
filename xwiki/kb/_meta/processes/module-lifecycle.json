@@ -1,89 +1,95 @@
 {
   "file": {
     "questions": [
-      "How do I move a module out of xwiki-platform into its own repository while keeping git history?",
-      "How do I retire an XWiki module that nobody maintains anymore?",
-      "What are the steps to extract an xwiki-platform module into xwiki-contrib?",
-      "When should a contrib extension become a top-level extension with its own release cycle?"
+      "How do I move a module out of xwiki-platform into another repository without losing its git history?",
+      "How do I retire or archive an XWiki extension that nobody maintains anymore?",
+      "What's the process for moving a contrib extension into the official xwiki GitHub org?",
+      "How do I pull code from another repo into xwiki-platform while keeping its commits?"
     ],
     "aliases": [
-      "git subtree split",
-      "XWiki Attic",
-      "xwiki-contrib",
-      "top-level extension",
-      "module extraction"
+      "git subtree",
+      "split repository",
+      "archive module",
+      "promote extension",
+      "graduate extension"
     ]
   },
   "sections": {
     "Module lifecycle — extracting, merging in, retiring, top-level extensions": {
       "questions": [
-        "How do I move code between XWiki repositories without losing its git history?",
-        "Can I copy a module to another repo with a plain commit instead of git subtree?"
+        "What are my options for moving an XWiki module to a different repository?",
+        "Which git command keeps the history when I move code between XWiki repos?",
+        "How do I change who owns an XWiki module or where it lives?"
       ],
       "aliases": [
-        "repo split",
-        "code migration between repositories"
+        "repo migration",
+        "code move between repositories",
+        "change module ownership"
       ]
     },
     "Extracting a module out (to xwiki-contrib or the Attic)": {
       "questions": [
-        "How do I split a subdirectory of xwiki-platform into a new git repository with git subtree split?",
-        "What do I change in the pom and groupId when moving an extension to xwiki-contrib?",
-        "Which version should the extension keep when it moves to xwiki-contrib?"
+        "How do I split a subdirectory out of xwiki-platform into its own GitHub repository?",
+        "What do I have to change in the pom.xml when moving an extension to xwiki-contrib?",
+        "Why do I keep the same version number after moving my extension to xwiki-contrib?",
+        "How do I make an old extension id still resolve after I rename its artifact?"
       ],
       "aliases": [
         "git subtree split",
-        "xwiki-contrib migration",
-        "extension move"
+        "move to contrib",
+        "rename groupId artifactId",
+        "extension id redirect"
       ]
     },
     "Merging a module in": {
       "questions": [
-        "How do I bring an external repository into xwiki-platform with its history using git subtree add?",
-        "What should I check after merging a contrib module into the platform build?"
+        "How do I bring an external GitHub repo into xwiki-platform as a subdirectory and keep its history?",
+        "My module was developed in a separate repo; how do I fit it into the platform module hierarchy?",
+        "Why does my build break on the release machine after I merged a module in?"
       ],
       "aliases": [
         "git subtree add",
-        "import repository",
-        "merge module into platform"
+        "import repo",
+        "fold in repository",
+        "bring contrib into platform"
       ]
     },
     "Retiring a module (the XWiki Attic)": {
       "questions": [
-        "What is the procedure to deprecate and stop supporting an XWiki extension nobody maintains?",
-        "Do I need a vote on the forum before archiving an XWiki repository or module?"
+        "How do I shut down an XWiki extension that is no longer maintained?",
+        "What happens to a retired module's repo, JIRA project and extensions.xwiki.org page?",
+        "Do I need a community vote before archiving an XWiki project?"
       ],
       "aliases": [
-        "attic",
-        "unsupported module",
-        "archive extension",
-        "end of life module"
+        "deprecate module",
+        "end of life extension",
+        "archive repository",
+        "sunset project"
       ]
     },
     "Top-level extensions (own repo in the `xwiki` org, own release cycle)": {
       "questions": [
-        "What does an extension need before it can get its own repository in the xwiki GitHub org?",
-        "How do I set up a standalone XWiki extension with its own JIRA project and release cycle?",
-        "Why would an extension be voted back from top-level to xwiki-contrib?"
+        "What does an extension need before it can get its own repo in the xwiki GitHub org?",
+        "How do I get my contrib extension promoted to its own xwiki-<name> project with an independent release cycle?",
+        "Can an extension move back from the xwiki org to xwiki-contrib if its quality drops?"
       ],
       "aliases": [
-        "xwiki org repository",
-        "standalone extension",
-        "independent release cycle",
-        "XWiki Extensions JIRA category"
+        "official extension",
+        "graduate to xwiki org",
+        "independent release cycle"
       ]
     }
   },
   "proposed": {
     "related": [
-      "processes/release.md",
-      "conventions/naming.md",
       "architecture/platform-modules.md",
-      "conventions/versioning.md"
+      "conventions/naming.md",
+      "conventions/versioning.md",
+      "processes/release.md"
     ],
     "applies-to": [
       "**/pom.xml"
     ]
   },
-  "source_hash": "d3f15b6f93072316aaef9c1a429e990c0e52f7102c1d9212f81e849f75161977"
+  "source_hash": "0c6f4dac866f3bf454598ed80638a49fbfbb46c0f968c94b2823069161260be2"
 }

@@ -91,5 +91,5 @@ that code reaches stable branches as cherry-picks with other SHAs, which `git ta
 and `git merge-base --is-ancestor` miss — take the causing issue's Fix Versions, or `git grep` the code
 on each `origin/stable-*` branch; if that predates the versions the tracker defines, use its oldest
 one; if pinning it is impractical, fall back to the last LTS that has the problem. When no released version is really affected
-(a new feature, a new check, an improvement), use the Cycle LTS's `.0`, e.g. `17.10.0` while dev is on
-`18.x` — not the first release of the code it touches (which line that is: [[jira]]).
+(a new feature, a new check, an improvement), use the Cycle LTS's `.0`, e.g. `(N-1).10.0` while dev is on
+`N.x` — not the first release of the code it touches (which line that is: [[jira]]).
