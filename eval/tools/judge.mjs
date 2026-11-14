@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { claudeJson, pool } from './claude.mjs';
-import { evalDir, loadQuestions, parseArgs, runDir as runDirOf } from './common.mjs';
+import { evalDir, loadQuestions, missingReferences, parseArgs, runDir as runDirOf } from './common.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.label) {
@@ -15,6 +15,10 @@ if (!args.label) {
 }
 const runDir = runDirOf(args);
 const questions = loadQuestions(args.questions, 'a');
+if (missingReferences(questions).length) {
+  console.error(`group (e) questions without gold.reference: ${missingReferences(questions).join(', ')}`);
+  process.exit(2);
+}
 const frozen = JSON.parse(fs.readFileSync(path.join(evalDir, 'questions', 'a-sections.json'), 'utf8'));
 
 function goldSection(gold) {

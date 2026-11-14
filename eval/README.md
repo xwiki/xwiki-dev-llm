@@ -25,7 +25,9 @@ group (a)/(b) question with the default Sonnet, more for a group (c) task, plus 
   [KB batches](#kb-batches)), in the group (a) format. Gold = `gold.reference`, the page text with its
   `gold.source` (`<url>@<version>`).
 - `backlog.json` — the dev.xwiki.org facts a KB batch can take, most valuable first and grouped by
-  `kb_target`; `status` `done` or `dropped` (with the reason in `note`) marks a fact never to retry.
+  `kb_target` (an existing KB file or a new one to create). Each fact cites its `sources` (`url`, the
+  page `version` it was read at, `sections`) and a `probe` question; `status` `done` or `dropped` (with
+  where or why in `note`) marks a fact never to retry.
 - `tools/` — `run.mjs` (sessions), `judge.mjs` (grading and scoreboard), `analyze.mjs` (two versions
   compared over repeated runs), `recall.mjs` (retrieval only, no LLM), `grade-det.mjs` (the group (c)
   points a diff settles mechanically), `task-repo.mjs` (group (c) isolation), `review-pack.mjs` (a human
@@ -84,11 +86,13 @@ Sessions are not deterministic: run each side several times (one label per run) 
 node eval/tools/analyze.mjs --base m-r1,m-r2,m-r3 --head b-r1,b-r2,b-r3 --questions a,d [--out dir]
 ```
 
-It prints, per group, each metric's mean [min–max] over the runs, pass^k (questions scoring 3 in every
-run), and for graded groups the paired head − base score difference: each question's runs averaged,
-95% CI from 10,000 bootstrap resamples of the questions (fixed seed, so a rerun prints the same CI),
-with the questions whose mean moved by 1 or more. Without `--head` it prints the base alone with each
-question's scores, marking those at 3 in every run.
+It prints, per group, each metric's mean [min–max] over the runs, pass^k per side (questions scoring 3
+in each of that side's k runs), and for graded groups the paired head − base score difference: each
+question's runs averaged, 95% CI from 10,000 bootstrap resamples of the questions (fixed seed, so a
+rerun prints the same CI), with the questions whose mean moved by 1 or more. A missing run directory,
+record or grade stops it with the list; `--allow-missing` prints anyway, the difference then using only
+the questions graded on both sides. Without `--head` it prints the base alone with each question's
+scores, marking those at 3 in every run.
 
 These questions have been seen by the sessions that tuned the KB, so a gain on them can be overfit. To
 confirm a change to the retrieval mechanics, measure it on a fresh batch generated from recently merged
@@ -101,6 +105,9 @@ and lands only the ones the model needs, with numbers showing they help and harm
 
 - **Questions.** One group (e) question per fact, written by a fresh agent that avoids the fact's key
   terms (`gen-a.mjs` on a tight excerpt of the page), so a search hit is earned; key points from the fact.
+  `gen-a.mjs` writes group (a) questions: convert each to group `e`, with `gold.reference` = the page
+  excerpt and its URL and version, `gold.source` = `<url>@<version>` and `gold.gap` = the backlog `id`.
+  `judge.mjs` refuses a group (e) question without `gold.reference`.
 - **Gold checked against the code.** Before any run, each reference is verified in the current code. An
   upstream page that is wrong is fixed (or proposed) upstream and the gold amended: a stale page never
   counts against the model.
@@ -109,13 +116,16 @@ and lands only the ones the model needs, with numbers showing they help and harm
   in them), with the newest Opus as the session model. A fact scoring 3 in both runs is findable in the
   code: it is dropped. A baseline without the code overstates the gap.
 - **Write** the survivors following the repo's KB rules, each with its `sources:` URL, pinned with
-  `scripts/kb-sources.mjs --pin <url>@<version>` at the version the fact was taken from (the backlog's
-  `source`), never a bare `--pin`, which would hide an edit made since; when `--diff` shows the page
-  moved, re-check the fact first.
+  `scripts/kb-sources.mjs --pin <url>@<version>` at the version the fact was taken from (the backlog
+  entry's `sources`), never a bare `--pin`, which would hide an edit made since; when `--diff` shows the
+  page moved, re-check the fact first. A `kb_target` may be a file that does not exist yet: a new KB
+  file also needs its entry in `kb/index.md`, its `_meta` sidecar (`gen-metadata`) and, above the
+  default size, an entry in `scripts/size-budgets.json`.
 - **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
-  runs per side, read with `analyze.mjs`: group (e), same model and code as the gate, must improve (CI
-  above 0); groups (a) and (d), default model without the code, must not regress (the (a) difference CI
-  includes 0, (d) pointers per session do not grow).
+  runs per side, read with `analyze.mjs` (no `--allow-missing`): group (e), same model and code as the
+  gate, must improve (CI above 0); groups (a) and (d), default model without the code, must not regress:
+  the (a) difference CI does not lie entirely below 0, harmful answers per run do not grow in (e) nor
+  (a), and the branch's (d) pointers per session stay within the master runs' min–max.
 - **PR** with the `analyze.mjs` output, the group (e) file joining `questions/`, and each fact's backlog
   `status` set (`done` with where it went, `dropped` with why).
 

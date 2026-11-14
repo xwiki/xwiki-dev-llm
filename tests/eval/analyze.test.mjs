@@ -2,7 +2,10 @@
 // framework facts, 3 runs per side, Opus judge).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pairedDiff, passK, questionScores, report, runMetrics, spread } from '../../eval/tools/analyze.mjs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { commonQuestions, loadRun, missingItems, pairedDiff, passK, questionScores, report, runMetrics, spread } from '../../eval/tools/analyze.mjs';
 
 // Group (e) scores per question over 3 runs: master (base) and the branch adding the facts (head).
 const E = {
@@ -30,7 +33,16 @@ test('a missing grade counts neither in the question mean nor towards pass^k', (
   const scores = questionScores(eQuestions, runs);
   assert.deepEqual(scores[0], [3, 3, null]);
   assert.equal(passK(scores), 3);
-  assert.equal(pairedDiff([[2, 1, 2]], [scores[0]]).mean.toFixed(3), '1.333');
+  assert.equal(pairedDiff([[2, 1, 2]], [scores[0]], { resamples: 100 }).mean.toFixed(3), '1.333');
+});
+
+test('a question graded on one side only, or on neither, stays out of the paired difference', () => {
+  const base = [[2, 1, 2], [null, null, null], [3, 3, 3]];
+  const head = [[3, 3, 3], [3, 3, 3], [null, null, null]];
+  assert.deepEqual(commonQuestions(base, head), [0]);
+  assert.throws(() => pairedDiff(base, head), /graded on both sides/);
+  assert.throws(() => pairedDiff([[1]], [[2]], { resamples: 10 }), /resamples/);
+  assert.equal(passK(head), 2);
 });
 
 // Real group (a) and (d) records: a26 on master (hook pointed at the gold, file not read) and on the
@@ -45,22 +57,40 @@ const d01 = { cost_usd: 0.0927, tokens: { input: 30967 }, okf_touches: [], edit_
   'testing/strategy.md#URLs and runtime configuration in functional tests'] };
 
 test('a graded run reports the score and the gold reach; a (d) run the noise it was given', () => {
-  const a = Object.fromEntries(runMetrics([{ q: a26q, r: a26branch }], true).map(([n, v]) => [n, v]));
+  const a = Object.fromEntries(runMetrics([a26q], { a26: a26branch }, true).map(([n, v]) => [n, v]));
   assert.equal(a['score (0–3)'], 3);
   assert.equal(a['gold file read'], 1);
   assert.equal(a['gold section in pointers'], 1);
-  const d = Object.fromEntries(runMetrics([{ q: d01q, r: d01 }], false).map(([n, v]) => [n, v]));
+  const d = Object.fromEntries(runMetrics([d01q], { d01 }, false).map(([n, v]) => [n, v]));
   assert.equal(d['sessions given any pointer'], 1);
   assert.equal(d['pointers / session'], 5);
   assert.equal(d['score (0–3)'], undefined);
   assert.equal(spread([0.175, 0.175], 0, true), '18% [18%–18%]');
 });
 
+test('a run with nothing graded has the same rows as the others, each shown as -', () => {
+  const ungraded = { a26: { ...a26master, grade: undefined } };
+  const rows = runMetrics([a26q], ungraded, true);
+  assert.deepEqual(rows.map(([n]) => n), runMetrics([a26q], { a26: a26master }, true).map(([n]) => n));
+  assert.ok(rows.every(([, v]) => v === null));
+  assert.equal(spread([null, null]), '-');
+  assert.equal(spread([null, 2]), '2.00 [2.00–2.00]');
+});
+
+test('a missing run directory is reported, not read as a run scoring 0', () => {
+  const out = mkdtempSync(join(tmpdir(), 'eval-analyze-'));
+  mkdirSync(join(out, 'runs', 'm-r1'), { recursive: true });
+  writeFileSync(join(out, 'runs', 'm-r1', 'a26.json'), JSON.stringify(a26master));
+  assert.equal(loadRun({ out }, 'm-r2'), null);
+  const sides = [{ name: 'base', runs: [{ label: 'm-r1', recs: loadRun({ out }, 'm-r1') }, { label: 'm-r2', recs: null }] }];
+  assert.deepEqual(missingItems([a26q, d01q], sides), ['m-r1/d01', 'm-r2 (no run directory)']);
+  assert.match(report([a26q], sides).join('\n'), /\| score \(0–3\) \| 1\.00 \[1\.00–1\.00\] \|/);
+});
+
 test('the report flags missing records and, without a head, marks the questions passing the gate', () => {
   const lines = report([a26q, d01q], [{ name: 'base', runs: [
     { label: 'm-r1', recs: { a26: a26master, d01 } }, { label: 'm-r2', recs: { a26: a26branch } }] }]).join('\n');
   assert.match(lines, /\| a26 \| 1,3 \| {2}\|/);
-  assert.match(lines, /Missing: m-r2\/d01$/);
   const both = report([a26q], [{ name: 'master', runs: [{ label: 'm', recs: { a26: a26master } }] },
     { name: 'branch', runs: [{ label: 'b', recs: { a26: a26branch } }] }]).join('\n');
   assert.match(both, /Paired difference branch − master, score: 2\.000/);
