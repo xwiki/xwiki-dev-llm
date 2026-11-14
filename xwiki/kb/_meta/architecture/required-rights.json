@@ -1,85 +1,85 @@
 {
   "file": {
     "questions": [
-      "How do I restrict who can edit a wiki page that my extension installs?",
-      "My page in the extension needs Script right to run its Velocity, so what required rights level should I declare?",
-      "Why does my wiki macro show Unknown macro after I enforce required rights on its page?",
-      "My page includes another page and that included page's Velocity stops working once I enforce rights, why?",
-      "How do I check which rights a page will enforce, in a unit test?"
+      "My extension ships a wiki page that enforces required rights, and its script stopped running after I enabled it. What level should the page declare?",
+      "How do I set the required rights for a page that ships inside an extension's XAR file?",
+      "Why does a page keep denying script or admin rights after I added enforceRequiredRights to it?",
+      "How do I write a unit test that checks which rights a page enforces?"
     ],
     "aliases": [
       "enforceRequiredRights",
-      "XWiki.RequiredRightClass",
-      "RequiredRightAnalyzer",
-      "XWIKI-24822",
-      "XAR xwikidoc version 1.6"
+      "RequiredRightClass",
+      "required right analyzer",
+      "wiki macro required rights",
+      "page rights level in XAR"
     ]
   },
   "sections": {
     "Required rights on a page an extension ships (analyzer blind spots, XAR version, reading them back)": {
       "questions": [
-        "How do I restrict who can edit a wiki page that my extension installs?",
-        "My page in the extension needs Script right to run its Velocity, so what required rights level should I declare?",
-        "Where do I put enforceRequiredRights in the XML of a page I ship in my extension's resources?"
+        "What rights does a wiki page bundled in my extension need to declare so its scripts keep working?",
+        "Why does my page in the XAR silently stop working after I turn on required rights?",
+        "How do I pick the right rights level for a page that ships in an extension's XAR file?"
       ],
       "aliases": [
-        "enforce required rights on an extension page",
-        "page rights declaration in a XAR",
-        "required rights in extension resources"
+        "page rights in an extension",
+        "XAR page permissions",
+        "enforced page rights"
       ]
     },
     "The analyzer is a recommendation, and it is blind to some privileged objects": {
       "questions": [
-        "The required rights analyzer says script but my wiki macro does not register, what is going on?",
-        "Should I override the analyzer's suggested rights for a page with a wiki macro object, and why?",
-        "How can I validate a macro page that enforces rights when that page is already installed on my wiki?"
+        "The required rights analyzer says script but my wiki macro renders as Unknown macro. What is wrong?",
+        "Should I trust the analyzer's suggested rights level for a page that has a wiki macro or UI extension object?",
+        "Why does saving my macro page need admin rights even though its content is only Velocity?"
       ],
       "aliases": [
-        "WikiMacroClass required right",
-        "analyzer under-reports rights",
-        "Unknown macro with enforced rights"
+        "RequiredRightAnalyzer",
+        "XWIKI-24822",
+        "wiki macro registration rights"
       ]
     },
     "A page carrying the element must declare XAR document version 1.6": {
       "questions": [
-        "I added the required rights element to my XML page but nothing warns me, what version attribute must the xwikidoc root have?",
-        "Which XAR format version does my page need to hold the enforce flag, and how can I confirm it is right?"
+        "My page has enforceRequiredRights in its XML but xar:verify fails. Which xwikidoc version should it declare?",
+        "Why does enforcing rights have no effect on the 17.10 or 18.4 branch even though the page looks right?",
+        "What version attribute does the xwikidoc root element need when I use enforceRequiredRights?"
       ],
       "aliases": [
-        "XAR format version",
-        "xwikidoc version attribute",
-        "XarDocumentModel VERSION_CURRENT"
+        "XAR document model version",
+        "xwikidoc version 1.6",
+        "xar:format"
       ]
     },
     "Enforcement is per-document, and reaches further only through a script save": {
       "questions": [
-        "If my page enforces rights, does that limit the page it includes or the macro it calls?",
-        "When my script creates a new page from a template, does the new page inherit my page's rights limit?",
-        "My page title shows raw Velocity source instead of rendering after I enforce rights, why?"
+        "Does enforcing rights on my page also restrict the pages it includes or the macros it calls?",
+        "When a script creates a new page from a template, are the rights of the created page capped too?",
+        "Why does my page title show raw Velocity source after I enforce an empty rights set?"
       ],
       "aliases": [
-        "include macro permissions",
-        "Document#save required rights propagation",
-        "raw Velocity title"
+        "include macro rights",
+        "checkRequiredRightsForSaving",
+        "title shown as raw Velocity"
       ]
     },
     "Reading the enforced rights back in a test": {
       "questions": [
-        "How do I assert in a PageTest which rights my page enforces, instead of checking the XML?",
-        "My test that injects DefaultDocumentRequiredRightsManager fails with a missing SimpleDocumentCache, what do I do?",
-        "How do I write a unit test that checks my page's required rights are declared correctly?"
+        "How do I assert in a PageTest which rights a page enforces?",
+        "My PageTest fails with a missing SimpleDocumentCache when I inject DefaultDocumentRequiredRightsManager. How do I fix it?",
+        "How do I get a document's required rights as Right and EntityType values in a unit test?"
       ],
       "aliases": [
         "DocumentRequiredRightsManager",
-        "DocumentRequiredRights record",
-        "MockitoOldcore required rights stub"
+        "MockitoOldcore required rights",
+        "DocumentRequiredRights test"
       ]
     },
     "Related": {
       "questions": [
-        "Which page explains the script and programming right checks that go along with required rights?",
-        "Where can I find other data traps when my extension ships pages and XClass objects?",
-        "What is a good way to structure a test for a page's rights so it is worth keeping?"
+        "Which convention covers the right each scripting language needs and the context author checks?",
+        "Where are the other traps for application data stored as pages and XClass objects?",
+        "Which page explains how to write a test that is worth keeping for permission checks?"
       ],
       "aliases": []
     }
@@ -95,5 +95,5 @@
       "**/src/test/**/*.java"
     ]
   },
-  "source_hash": "c72a4cb64d4447a7176830dde556718cdb73cc3abdaaa2dbba229d6de956a028"
+  "source_hash": "83ee3f4d803d52a9fe21ba22700580751adeff6cf32f9a21f60a1d741c39b157"
 }
