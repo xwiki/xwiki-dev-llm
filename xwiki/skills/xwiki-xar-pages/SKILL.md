@@ -46,6 +46,11 @@ xar-packaging module **fails the build** if any page breaks the conventions. It 
 - License headers present (when `formatLicense` is on); attachments have a mimetype.
 - No `date` fields; `Translations` pages use `plain/1.0` syntax and have neither GLOBAL nor USER
   visibility; translated pages carry no attachment/object.
+- Since 18.10.0RC1, 18.4.9, 17.10.16, the XAR `<xwikidoc version>` (not `<version>`): at least
+  the format that introduced each element used (attachment `revisions` 1.4, `originalMetadataAuthor`
+  1.5, `enforceRequiredRights` 1.6, object property `type` 1.7 — `xar:format` raises it), at most
+  `XWikiDocument.HIGHEST_KNOWN_FORMAT_VERSION`; a new platform format version must raise (and
+  backport) that constant.
 
 Skip it (rarely) with `-Dxar.verify.skip=true`.
 

@@ -57,11 +57,12 @@ wiki keeps serving the already-registered component. Only a fresh install (a Doc
 
 ## A page carrying the element must declare XAR document version 1.6
 
-`enforceRequiredRights` was added in XAR document model **1.6** (`XarDocumentModel.VERSION_CURRENT`),
-so the page's root element must be `<xwikidoc version="1.6" …>`. **Trap:** the XAR filter maps
-elements by name and does not gate parsing on the declared version, so a page left at `1.2` parses,
-enforces, and passes `xar:format` and `xar:verify` while claiming a format version that does not
-contain the tag it uses. Nothing warns; it has to be got right by hand.
+`enforceRequiredRights` was added in XAR document model **1.6** (`XarDocumentModel.VERSION_16`),
+so the page's root element must be `<xwikidoc version="1.6" …>` or higher. The XAR filter maps
+elements by name and does not gate parsing on the declared version, so a page left at `1.2` still
+parses and enforces. Since 18.10.0RC1, 18.4.9 and 17.10.16 `xar:verify` fails such a page and
+`xar:format` raises its version (skill `xwiki-xar-pages`). **Trap:** an extension building against
+an older parent gets no check, so set the version by hand there.
 
 ## Enforcement is per-document, and reaches further only through a script save
 
