@@ -103,5 +103,15 @@
     ],
     "applies-to": []
   },
-  "source_hash": "874273e19a0019a0d3509afea8a6e8b82ba414197b680e7bba6a861410b7890c"
+  "source_hash": "874273e19a0019a0d3509afea8a6e8b82ba414197b680e7bba6a861410b7890c",
+  "file_hash": "33f6e1333cc0a46698b1662c4ed675f2cfa12927a3411511995bd7dfe625b5d2",
+  "section_hashes": {
+    "Release notes and the documentation fields of an issue": "d6c4528a4b197b439755fc0cb8e6d4ce6472cd5e910a90c6238c6d7eed937aa5",
+    "The two JIRA fields": "9f59d644d4d8a7ca603b6fd2a707ce6cad0998264bd02a8b8288546b699666ac",
+    "Extensions not bundled in XWiki Standard": "f185dcef2116d514352d31d09179c96761bfe6526bebf6ae1c45f68ad2ce5768",
+    "How a release note is stored": "6cc8e2bb8b18a7fa178d0e0b98abf8c0fe1d9afd5f805300b1c84eeed17b9768",
+    "The REST endpoints (since Release Notes Application 2.7)": "1917cdd9486962897f0b10779b00031528c38b92f14175fde655ef9db344a15b",
+    "Writing an entry": "9cb17faddddf7d6fb066160936efea892bc02257120e0a26006a6e58620c75a5",
+    "Access": "b3f3539a1de88a4f1169274000e6eff1c0e4955022b4b9762767f7437f247ba5"
+  }
 }

@@ -167,5 +167,19 @@
       "**/*-test-pageobjects/**/*.java"
     ]
   },
-  "source_hash": "2a499090cf34486e394211bde52af3766fae1530db13a1f4e0fd97521530f027"
+  "source_hash": "2a499090cf34486e394211bde52af3766fae1530db13a1f4e0fd97521530f027",
+  "file_hash": "2269cf7266410f0fe7a642b3663d95a8c8dc72617689e39731f1d9fcad11aa75",
+  "section_hashes": {
+    "XWiki testing strategy (overview)": "9c88d12e960031a38b250c267917d2fb2a5d0f155b77a58c5ece564bf0c7ba58",
+    "Test kinds and naming": "76bd7740e3c062b64b8cdce2df56b11d7589d6ac77b69d49cb43f81f8b392099",
+    "Every change has a test; tests stay silent": "4c9b0f52afc0cf5ea55efd3b7d7c01180b6f54ba1466a5e37668ddc25e309380",
+    "Functional tests: scenarios and the page-object boundary": "868817f36bc44fd17bc645b79dc1e2e4e7f6f22fdcc5083fb38a8204ba335adc",
+    "Functional tests: waits, cleanup and containers": "4b63ef75f7a9397c3132d16596ac3127d60b1b0d3e570f6e9dcde42883b550f7",
+    "URLs and runtime configuration in functional tests": "1436c3cd314e731a9576d91fb8df56ef929e2f3d9219ae71f34d26d2fde4b20a",
+    "Functional-test classes: rights checks, `AllIT` and `@Order`": "fa7d62005bd303ac906ca6002bfbdb84d3114e8c019a575c08a7301a55940b4a",
+    "Unit tests: the lightest base and oldcore": "a1986c29cf91a1d68299e20b988fb873f34f882f341d173ddf864e5a442c8a21",
+    "Done once CI proves it; coverage": "1f537d4e79a60246ac4dad2e7500a3c7b06a4ff2d569a2ad7c77fee0bbcb2272",
+    "Functional-test module layout": "2f851333f5c3bb7d1858f0268b3395c08b9b385e353f5f3ecc387aa5936b6ff3",
+    "Where the test frameworks live (per repo checkout)": "c487819c0c6a5da791ed262dc4705ebed4c3cae013fe6aee048ee072b91fbb30"
+  }
 }

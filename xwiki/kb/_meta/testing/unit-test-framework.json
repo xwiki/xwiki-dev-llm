@@ -86,5 +86,13 @@
       "**/src/test/java/**/*.java"
     ]
   },
-  "source_hash": "20860af9e48a6ce987cd10f308fb898f689fb9b2368439fb82f231e1a58a4f93"
+  "source_hash": "20860af9e48a6ce987cd10f308fb898f689fb9b2368439fb82f231e1a58a4f93",
+  "file_hash": "376a42c869c371fb041ab8ce0d5f60cccf1667f492bc240498928990fc8afd7c",
+  "section_hashes": {
+    "Writing a unit test with XWiki's test frameworks — temp dirs, setup order, mocked Providers, logs": "cb675a982ba99797a12065f5ecbc0c48f89006054fa0cb56c69ebf08f9dc134c",
+    "A scratch directory: `@XWikiTempDir`, never `@TempDir`": "4c2f0b21c0fd0f58bd8fa32f916eb39f6d778c224ed0debb00daee7aafc502c4",
+    "Setup for one test before `initialize()`": "008fd7ba1aab4fbbeeb251a4958859731d1345676a862950db4fd0e7171269cd",
+    "A mocked component that the code's `Provider` does not return": "fa5f9feb7d32069dda64e9f517ad3cd750321b220c60f9c4de822a07d5c81c0a",
+    "Every captured log must be asserted": "4950226e4e1006d1d20e6b51b186414d31c84044ce54e91dbeb884d935bc1f5c"
+  }
 }

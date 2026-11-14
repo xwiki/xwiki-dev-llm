@@ -84,5 +84,13 @@
       "**/*.java"
     ]
   },
-  "source_hash": "2cd1e6adca797e76aa278667b063e47c2d10ca1537f29fcb54c8503027b5c8ac"
+  "source_hash": "2cd1e6adca797e76aa278667b063e47c2d10ca1537f29fcb54c8503027b5c8ac",
+  "file_hash": "626316e1be58ce84af331f9cbf30bf43b6e666903f556e7a825107688199d4a5",
+  "section_hashes": {
+    "Logging — a log argument is an object, not text": "11cd552bf956b1eb18975bcc1ea4df3c6a1c284a06e063297ae3c2f11f3ba014",
+    "Why an argument is not just something to render": "2e18f715db09f12b422766e76edbf729533aee6c9f26f9380879c1931d6fb915",
+    "Decision table": "3fea19e79d283125fec0c4ee51e347b876fcb110c63556162545d5ef98bc153e",
+    "Never silently remove an explicit toString()": "d308dad42a56b13a093de1afc37fb264a24bdc630753315581d8aaa0115b2afd",
+    "java:S2629 interaction": "60e35eedb66309f81e1e534ca9b580cc17d2afdd1d0f3870f63077234a81d6c1"
+  }
 }

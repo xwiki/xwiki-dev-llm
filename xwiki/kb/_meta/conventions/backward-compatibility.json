@@ -125,5 +125,16 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "16701ddf8a600e4ab6959dfa825c578cc94bfccd2f39f2bf10b195cf6fb1a2a1"
+  "source_hash": "16701ddf8a600e4ab6959dfa825c578cc94bfccd2f39f2bf10b195cf6fb1a2a1",
+  "file_hash": "3d2051700906c9f3ea68d34ae59e85e07516b3cf335c250330c0ff5b052faf04",
+  "section_hashes": {
+    "Backward compatibility policy": "223b876a27207ffd9e3edd2b4731a5f36451c729a33efd216bc308a34c1d72e3",
+    "Who may use `internal` packages": "725ffc6e4098320855a4cd9db181d55cacfd0fb689c3cc593b69391b06e7b31b",
+    "Test code is not API": "da617ebe5a47da2765688581a34fc9134761a1b8d778cbba0e7b9c9db8f4934b",
+    "`@Unstable` annotation": "34d4da1a807c65cbbe0dda19e9cdc9ea49c9ed931dc566168a2e1fb6b36c6e40",
+    "Evolving an interface without breaking it": "4f76aac653bfaa889d268ba101d0ec327e9be67290249b5fd685bf36ac243c4e",
+    "Deprecation": "45e97109cd60155bc828d7b8ef25df7c1e42a7c137157ed79ea8bb6ecb306853",
+    "Choosing the `<criticality>` of a Revapi ignore": "53875990351040c738ab060077b418539f047b39aaf87feb42ee3f9077f58292",
+    "Where Revapi does and does not look": "94cbebf1d4cf471ee22019c8c57d61f72d1eb7ba21649387aae03ea42611bf67"
+  }
 }

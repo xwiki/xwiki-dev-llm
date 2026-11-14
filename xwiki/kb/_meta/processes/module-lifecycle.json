@@ -91,5 +91,13 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "0c6f4dac866f3bf454598ed80638a49fbfbb46c0f968c94b2823069161260be2"
+  "source_hash": "0c6f4dac866f3bf454598ed80638a49fbfbb46c0f968c94b2823069161260be2",
+  "file_hash": "5f8802eaeff7170904000fe6f2bfe65fd84632fa43256460bd1389bdf82ac0c5",
+  "section_hashes": {
+    "Module lifecycle — extracting, merging in, retiring, top-level extensions": "36ab97b8cfac15850ce757f3f8a2bbfeb1f3d878302744fc2cb1a645a183a4dd",
+    "Extracting a module out (to xwiki-contrib or the Attic)": "149ecc13dc4602ea697afee667c4072e1f662e251327f40734ac39e51761cce2",
+    "Merging a module in": "bf05b20f1c9da0dc4a646cc584877cd7cd550e9345717a81fdcc79fb5e744375",
+    "Retiring a module (the XWiki Attic)": "5bf73ec61e04e2db9b07b599511f54aba00caf50d840231af8e1d028bf5fa4f4",
+    "Top-level extensions (own repo in the `xwiki` org, own release cycle)": "735334ad5ff86c4e3a5a114a7d89a27bfad78ef01b84afd38d153105d6c85f7c"
+  }
 }

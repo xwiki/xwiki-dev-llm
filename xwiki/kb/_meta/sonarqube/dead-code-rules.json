@@ -137,5 +137,17 @@
       "**/*.java"
     ]
   },
-  "source_hash": "ecd3e6388b95fef6a6bb419818c32d8c0a835cd12ef5a3addb171e5cb14938c1"
+  "source_hash": "ecd3e6388b95fef6a6bb419818c32d8c0a835cd12ef5a3addb171e5cb14938c1",
+  "file_hash": "956ec87e921d7f29621e48d3576a31dc4518adf65b06013c6f296d3b94240974",
+  "section_hashes": {
+    "SonarQube dead-code and unused-code rules": "2aca35d77c027bc49836dedf2b567d3aa876192b79e34edc44032674208a1744",
+    "S1118 — add a private constructor to a utility class": "9dcd2d13ba844f9e040d7a29c1373a334c0ccc889a8e9aefa17eb21c246d5807",
+    "S1185 — remove an override that only calls `super`": "d978a12d22c201982eb78b813e7b8368fc12ffb0af758bb7c081b2076084f0d0",
+    "S1144 — remove an unused private method": "f29c421c4c13bca1db8ca3069a14cc8010339acc6135eb71a0d042e1e1eb0223",
+    "S1172 — remove an unused method parameter": "d80a88a32be609574b7146366010eef18a3e39e0111a5a647f53865a7e19a040",
+    "S1068 / S1481 / S1854 — unused field, unused local, dead store": "8660f0eb11bd24e74175bdb6a96327825d409f3852480f6f7de916fc8edb6056",
+    "S1130 — remove a `throws` for an exception that cannot be thrown": "a6492b6397c93e1135532c2bae83d173033001624da6f3f3cb21aa593bf860b1",
+    "S125 — remove a block of commented-out code": "d62994f00c684bfc12571badace0749520d22db9f195a2669aae881bc44c75f7",
+    "Related": "d75803b0201f76ec5d42d0b2e9d4eaff00fd897071db38b7ac39f1b38f92d65f"
+  }
 }

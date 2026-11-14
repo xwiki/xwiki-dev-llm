@@ -261,5 +261,30 @@
       "**/*.java"
     ]
   },
-  "source_hash": "d3a6a4f09b03863d2021881e204ffcfede40e9f9f027efbb1f920d39e7987f1f"
+  "source_hash": "d3a6a4f09b03863d2021881e204ffcfede40e9f9f027efbb1f920d39e7987f1f",
+  "file_hash": "fb6667fd1528261d97e156ada821c394fc463e35a0e00d4a5aa15370c848c671",
+  "section_hashes": {
+    "SonarQube simplification rules": "2640ac72805e3906ee0be9f6243516dd35bcb5af446965005677acf0fa96e8ec",
+    "S6397 — redundant single-character regex character class": "61e70454ed2b1fe37ec0715072e924131f5c0fdb3c9dc465bc073b4d8dd344ab",
+    "S1125 — redundant boolean literal": "7b7e856cf556f5d75e3aa8a0d0e3013b187deef2dee0b55409631537787379c9",
+    "S1488 — inline an immediately-returned local": "514e5e1811f80703fc684d2e188cd8ed2de413bdb6cdd4e3413fd3ce15e7e52a",
+    "S1264 — a `for` with neither initializer nor update is a `while`": "c189674dec49a7476d9078a51cb38f24f2a7e39fa877f4e1046f40bc2069e5db",
+    "S3012 — replace a manual array/collection copy loop with a library call": "558355c7e54254bbbf14433978bc9e6ec4aa97a0e3df16c87e7d72f0464acb7d",
+    "S3024 — do not concatenate inside a `StringBuilder.append`": "a725ca46751f59efaabcae8cd49c2a2d1509ea0f0d8696e44e5656c727232411",
+    "S1858 — pointless `toString()` on a `String`": "7fa1324022f3c21afe3421ffab837e09a73b55b81c29cf8ff347e03e85378100",
+    "S1155 / S7158 — use `isEmpty()`": "ba72c0a5432939168bb7483d4f30b1261dd747aab3ac8bede8cfc6a3f2eef8b5",
+    "S2864 — iterate `entrySet()` rather than `keySet()` + `get(k)`": "66d101f0b08ce55d87a2996bb2c6b8c523794d6cdfeb481b880b9fe64b6cedba",
+    "S1612 — replace a lambda with a method reference": "9a7b7f9be8c0be5a1e18d2ec0532947f94ad5fd4a51dbc6a8df20e4bbcca1916",
+    "S1602 — useless curly braces around a single-statement lambda body": "1edd61334327d40dc53c8981fe755c859086cafa57ed8d711916835a6549773e",
+    "S1126 — replace an if-then-else returning booleans with a single return": "f282b57bb679e39f8f16e369e5c43c1bf23f2a9b96431aa13c0cbf19b560e8ba",
+    "S3706 — `.stream().forEach()` → `.forEach()`": "c3b27771f420707746bf769f086f0c4a74565828cd16983497ecad114e235b00",
+    "S2130 — parse instead of boxing then unboxing": "51957d691259b369f1c5982aa9a96c9cdb8dfbab89ffca5054972e3c03004bc2",
+    "S1066 — merge collapsible nested `if`": "a279f27c162635ffd18fae08b41def1d5d122928590a1fb27c0936c5a14d2b4d",
+    "S6353 — use the concise character class": "910c689e255502de4373b5eaf406890a46081f7781dc28a45a94b46379da4ec0",
+    "S1905 — remove an unnecessary cast": "cdb3553ebd303da6cc0c291327f1831ae595286a8482336becda8084d9a217dc",
+    "S4201 — remove a null check made redundant by `instanceof`": "89ef8647890d67a39c62f3eb6617e05eb5ae286045ec6f91ee0f1efa5c075952",
+    "S1596 — `Collections.EMPTY_LIST` → `Collections.emptyList()`": "d3c918fa3320bd1e7f783776abef260fe3f98c56fe8e9b02f6924cb162b89a0b",
+    "S3358 — extract a nested ternary into its own statement": "462d993195a5fe0e4c021fab495119d7ae2d53c4088310fbe0a351017ce25651",
+    "Related": "046c2832305947e8009f3e0f51498996adf53f1b43bf1d0a0f88203089e77b97"
+  }
 }

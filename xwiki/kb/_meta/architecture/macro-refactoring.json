@@ -80,5 +80,13 @@
       "**/*MacroRefactoring*.java"
     ]
   },
-  "source_hash": "9bddaf756ce8713fb649e9e0e35fc8deaafa0e8c1be11b22bb5841aabe4cff5a"
+  "source_hash": "9bddaf756ce8713fb649e9e0e35fc8deaafa0e8c1be11b22bb5841aabe4cff5a",
+  "file_hash": "14aa3a66ad6e4f8f67ece862fb4bd594fdf9a9d8d503e5ef15b954d0773ceebd",
+  "section_hashes": {
+    "Macro reference refactoring and backlinks": "c6e0e8b0d74a9ce3bc15bc9a58342674e4042da8f1def9ffd67ba308dedde6a9",
+    "Keyed by macro id": "0acb198dc1ae24fdbd4f59ca61e1d5da55c8af46c3808cabfd0bb41dae43c34c",
+    "The methods": "31ea22e26fb42d847a79a4937f9dddf56daf452ec2fce383df72032d7b8dbf6d",
+    "The DefaultMacroRefactoring fallback (content only)": "305743a9053183b7b5486d7dc9d918efe227ae379280d990b024fc1780e96e7d",
+    "Where to go deeper": "08ab638edc996349d21d667857a0378046e618895a02e1084e318d1ef4dd78c4"
+  }
 }

@@ -108,5 +108,14 @@
       "**/src/test/**/*.java"
     ]
   },
-  "source_hash": "4eb71578823b109ce821a00c2567e74b92e0add58ebe5f4f9d06508b3a6df1d7"
+  "source_hash": "4eb71578823b109ce821a00c2567e74b92e0add58ebe5f4f9d06508b3a6df1d7",
+  "file_hash": "e069ec0c228640d08b7c18ef4a428380d5afbdd487cc1e46b2f0acb6be0e1284",
+  "section_hashes": {
+    "Writing a test worth having — level, outcome assertions, mocks": "932de41fb7545f4bdc508275be493ad297ac21819263a73e4c1a0c8d2821dccb",
+    "Pick the level by the kind of code changed": "3fbbb3a2ff018942bcc544a0466202209f1b326c69ea903b53559b77f2afcdcd",
+    "Assert outcomes, not calls": "6ff7921187f21bf0cbd2bb92e6d9bc2abb0512f371deabaa25a95ab76490be1e",
+    "A hard-to-write unit test is design feedback": "74b85ee60d0b8d446af4f4880faa6cca3323e85c3dbe93a58778094983c40781",
+    "What needs no test of its own": "dcd5e96c717203dd7c11fdddb3f8a4a79ce0c51377b9d043908d802f97f4b905",
+    "Coverage is a floor, not a target": "eb90949582ef8b95694e8326ea285fb6c80634b4bb12c34efaab5964e1e24c0f"
+  }
 }

@@ -99,5 +99,13 @@
       "**/src/main/resources/**/*.xml"
     ]
   },
-  "source_hash": "f3ea9bc0e5fd8466d4011fa43d95bc4a53fcc3e5e3640a97bc539c00a9b8506d"
+  "source_hash": "f3ea9bc0e5fd8466d4011fa43d95bc4a53fcc3e5e3640a97bc539c00a9b8506d",
+  "file_hash": "a92abeccdfe1d024bc95ca3af9de33c89da1dee8cf870408379e809f85a6f800",
+  "section_hashes": {
+    "Maven coordinates, directories, Java packages": "8522de2bf407147ba2281277082d966ca84194790702f879cad7ce2ad185adf8",
+    "npm packages": "74146f596ea685efdf62c2750cb495ce592977027b7496ead19b6b77bfe7d03b",
+    "Configuration properties": "6b07bfd0f8db2a956bbc9269b76b53be479a601a58e9efce697a5b980db39f30",
+    "UI Extension Points (UIXP) and UI Extensions (UIX)": "5b536320c5d9ce6ef0d637ce7cfd7fe13a9892c5b341e7d87d62ecb922ece451",
+    "Skins and icons": "16a7b91e02bea05120d4efe3bd9e2403aadf482e2ba922ea38c2dce3e9e88b6d"
+  }
 }

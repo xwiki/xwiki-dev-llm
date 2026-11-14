@@ -81,5 +81,12 @@
       "**/src/main/resources/**/*.properties"
     ]
   },
-  "source_hash": "c57a33a3e57c4d95b535f578892bd588ccb6cff23676a5e1741d41710852ddff"
+  "source_hash": "c57a33a3e57c4d95b535f578892bd588ccb6cff23676a5e1741d41710852ddff",
+  "file_hash": "fb8556364b70b332c1c6db3de9078e800f70defcf4b3f353d1cd9bd9ee9d0bfe",
+  "section_hashes": {
+    "Translation key lifecycle (en_US only, registration, deprecation, moving)": "79fe85e4adab6a9f00b3597adbfaf14991ff325e128fa2d814fe482b09839ccb",
+    "What committers maintain": "15071fb3a461681bbf8b517995b9efcfee91bffefca7d3dae74c0cbc73917fdf",
+    "Where a translation resource lives": "19d564e760fe4fd02fe4aadfff73deaac2ca3b6e4ede132581559103a9099cff",
+    "Deprecating, renaming, never moving": "95a39aab194c93b9fdb79207d42ae5508181acf3ef92831097046696b41778ba"
+  }
 }

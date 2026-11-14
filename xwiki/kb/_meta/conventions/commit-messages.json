@@ -39,5 +39,9 @@
     ],
     "applies-to": []
   },
-  "source_hash": "3d3569d8efbb8ba84447f86a4475b8e906a7f8ac400d445ab33c61d4b36a7359"
+  "source_hash": "3d3569d8efbb8ba84447f86a4475b8e906a7f8ac400d445ab33c61d4b36a7359",
+  "file_hash": "514313a53c9014f66a613dd0b37b26eb2a2726b44cf5e81f136fe2054b7a8a27",
+  "section_hashes": {
+    "Commit message convention": "ca3702dd4e388301c2bd6397f5e43c17420d5fd3d25fa15173c8f4d045c53c92"
+  }
 }

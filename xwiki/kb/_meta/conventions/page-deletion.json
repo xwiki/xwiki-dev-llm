@@ -73,5 +73,12 @@
     ],
     "applies-to": []
   },
-  "source_hash": "25243daaef1082b443204abcce407aad43547b8b9d973aef2cf7b423330d1eb1"
+  "source_hash": "25243daaef1082b443204abcce407aad43547b8b9d973aef2cf7b423330d1eb1",
+  "file_hash": "2d6ceab25216ba3a96e1e55533eba699e7c3c3756798861b31981d37c73af34e",
+  "section_hashes": {
+    "Deleting a page on xwiki.org — handle its backlinks first": "45ba184d3a8716e9cfac52d5788557ee3df42cc336f7a9cba42f478b5ea2fc84",
+    "What the deletion wizard does and does not repoint": "05a47bb72e73c109e13b924a548919ff927c309ed4183a83af5b3fbe51b81bf5",
+    "Procedure": "7eac6a1802bfd6e36f31b53d9eab55f08d04610fc5495b773e98a7c5bcdad12b",
+    "If a page was already deleted": "b653525af253936e07c20421bd47b9d272fff561790853cf1bcca9c14971ced1"
+  }
 }

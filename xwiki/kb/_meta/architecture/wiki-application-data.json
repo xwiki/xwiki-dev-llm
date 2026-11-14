@@ -80,5 +80,12 @@
       "**/*.vm"
     ]
   },
-  "source_hash": "b307b7acb88c6b2acda8b046c0ae62bcc2bdfc8c34b47b51e6e2786f5aa0f089"
+  "source_hash": "b307b7acb88c6b2acda8b046c0ae62bcc2bdfc8c34b47b51e6e2786f5aa0f089",
+  "file_hash": "82b23121d9a9fe405cacc37698ab10276f803b07ef5dbd42542e59f61d7e77dc",
+  "section_hashes": {
+    "A list property is a VARCHAR, so range filters on it are lexicographic": "23598d1bb6081a134b443a106d62eb5e6828611dd64bd02c3a02e5f4b76e978f",
+    "Allocate a generated page name by creating the page, not by querying": "7be8d6f388be86d197c621890ee6853232e6e967d4dce02943b55a480a77cada",
+    "A wiki-page migration is idempotent only if it drops what it matched on": "cf5080b1accbad9b9473f8f915ba50b0d7cc00d0a1226fc2e761e9608271e79f",
+    "An entry's template must carry the class its queries locate it by": "2aeb7b9a5b5a72cc698ab789292f88330bcdba2dd98b075ac5182caf5362ad8a"
+  }
 }

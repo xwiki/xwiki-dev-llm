@@ -59,5 +59,11 @@
       "**/*.java"
     ]
   },
-  "source_hash": "d3a38feb85754c42c9458cabce12a29f0e1dda03e07c4970c5129693b8278d9d"
+  "source_hash": "d3a38feb85754c42c9458cabce12a29f0e1dda03e07c4970c5129693b8278d9d",
+  "file_hash": "4f8423a2201593d09d0055ae6334c79488ff40a93310a63ba086e481855ca0ef",
+  "section_hashes": {
+    "Resource efficiency (memory and streaming)": "33d8da2615bc2d99902c53eabac03fca11bee28778e239d73cd42dcf26bb1c1a",
+    "Rules": "a0514a27d4603d681b50acf0b5b72f3afc69dfe6b6df0e5a6c07adb94220b284",
+    "Related": "57227987f56ae85f3404aff9fe96db5491ea884dea2d992e01fd2e55f9c24b00"
+  }
 }

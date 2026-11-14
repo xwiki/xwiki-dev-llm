@@ -38,5 +38,9 @@
       "**/src/test/**/*Migration*.java"
     ]
   },
-  "source_hash": "4433da9da4edb10fde85e8fc2c816adca7b5a77513d5f8103fc9fdce805f31f4"
+  "source_hash": "4433da9da4edb10fde85e8fc2c816adca7b5a77513d5f8103fc9fdce805f31f4",
+  "file_hash": "7511eee84f828c6be463bb1a24098cc896b976213272b2894cbe7080e36286c9",
+  "section_hashes": {
+    "Data migrations and the document-queueing pattern": "12eccaa44396e22928dc86c4dd253a131af04cc6dd1fe25f9cefef13a6b8d97b"
+  }
 }

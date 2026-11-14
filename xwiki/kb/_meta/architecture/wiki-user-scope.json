@@ -49,5 +49,10 @@
     ],
     "applies-to": []
   },
-  "source_hash": "9f96993e515356361093831610e2847e1d381ac1e8a59628b4dfb7a23e41b392"
+  "source_hash": "9f96993e515356361093831610e2847e1d381ac1e8a59628b4dfb7a23e41b392",
+  "file_hash": "9aceadf5dbb273ec2e9c0a480cc11caff5a75372c8e3d9436fd1e14c33b819e3",
+  "section_hashes": {
+    "Subwiki user scope (local vs global users and groups)": "80f9feeada4927bf6825432aca3a6b82e1716ec17aec6a1bb22a404d9a8cbaca",
+    "Where the scope is stored — and the non-obvious default": "52a4dd4abd2b58c737049a72d346d78cedc90f083b4ed5b6ff37392e0c9df006"
+  }
 }

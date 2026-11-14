@@ -164,5 +164,19 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "f5c120af65c999efe1046ae79e2522c1c22f2350f18bde44a0e896f2a5553eff"
+  "source_hash": "f5c120af65c999efe1046ae79e2522c1c22f2350f18bde44a0e896f2a5553eff",
+  "file_hash": "fce95a5c8085ede4877bf876b18abc30f04d615a71653613b1b7f31b90d6281b",
+  "section_hashes": {
+    "Code style and structural conventions": "7e13825cf53cb6e9d91ebcdd115d05819ea72533c2e396cd0eb0ad3b352ab823",
+    "Formatting": "dc5dae3a36804e03f6af5c491878ed6b0bbb546458bf2217382a721eee338e98",
+    "Comment formatting": "9eabf5164fe04fb856b0e22eaa6dfe60a03f9341f32aa59340f49f1018aae0ee",
+    "File encoding": "6fff6a33478d218722002c55dc568d882cd4fce87faec7692cb917333bedb9af",
+    "Rendering macros": "3200f95500cadb6837cee48abbf476ec6d7cd89584f32472ac0439aa80112316",
+    "Use the component system, not context passing": "16860e9ccbc7e23a4e9e288c7720b2a87c497f9eb86e23448d1774da06ac2ed2",
+    "javax → jakarta migration": "ad7d2646b51a5ad2ad0d71bc9773f3187dce4a8b897a73f5306e1b11398eb9d3",
+    "-legacy modules": "c1da8ddd460358681f04ae156bbc92825e07a00fa804a672664babe9cdf946db",
+    "Backward compatibility": "6c9047525e3c59c2817d7d0e1d712fb0b3dd545f6a28a748ab4364bfd5caa11e",
+    "Suppressing a static-analysis warning": "6e28dcc96309fac2c73ead8214832f7957170529d4cfe58bedf3e3c112750da5",
+    "Related": "43975b142cd65831096debca4a2c8521c4e4466e872967b6d633e1dc89a5994a"
+  }
 }

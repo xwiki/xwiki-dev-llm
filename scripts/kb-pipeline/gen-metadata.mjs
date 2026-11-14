@@ -9,10 +9,25 @@
 //   node scripts/kb-pipeline/gen-metadata.mjs [--root DIR] [--only REL]... [--concurrency N] [--model M] [--force]
 //   node scripts/kb-pipeline/gen-metadata.mjs --apply-frontmatter [--root DIR] [--provenance official]
 //
-// Resumable: a topic whose sidecar `source_hash` still matches its body is skipped (the hash covers
-// the body only, so curating frontmatter does not re-run the model). The model sees only the topic
-// itself plus the list of KB paths and titles (to pick `related:` from) — never anything else.
+// Resumable: a topic is skipped while its sidecar is current — `source_hash` matches its body and
+// `file_hash` its title and summary (other frontmatter edits do not re-run the model). The model sees
+// only the topic itself plus the list of KB paths and titles (to pick `related:` from) — never anything
+// else.
+//
+// Stable: a regenerated topic keeps the metadata of each section whose heading and text are unchanged
+// (`section_hashes`) and its file-level questions while its title and summary are (`file_hash`), and
+// calls no model when nothing it would replace changed: a title or summary edit renews the file part
+// only, a body edit only the changed sections. The model's wording varies from run to run, and each
+// varied word moves search scores; `--force` regenerates everything. A current sidecar without these
+// hashes gets them, with no model call.
+//
+// Residual risk: kb-search counts a file's generated questions in every section of that file, document
+// frequencies included, so regenerating them (a title or summary edit, or `--force`) can still move the
+// prompt-hook probes of other files across MIN_SCORE. When a tests/kb-hooks/ probe fails after a
+// regeneration, the change keeps that sidecar and lists the failing probe in its PR (or run report) for
+// a committer; it never regenerates again until the tests pass, which tunes the KB to the probes.
 
+import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -69,7 +84,9 @@ export function corpus(root) {
     const { data, body } = parseFrontmatter(text);
     const h1 = /^#\s+(.+)$/m.exec(body);
     const title = String(data.title || (h1 && h1[1]) || rel.replace(/\.md$/, ""));
-    return { rel, text, title, headings: splitSections(body, title).map((s) => s.heading) };
+    const sections = splitSections(body, title);
+    return { rel, text, title, summary: data.summary ? String(data.summary) : "", sections,
+      headings: sections.map((s) => s.heading) };
   });
 }
 
@@ -105,6 +122,56 @@ The file (${topic.rel}):
 <file>
 ${topic.text}
 </file>`;
+}
+
+const sha = (s) => createHash("sha256").update(s).digest("hex");
+
+/** What a section's metadata is written from: its heading and text. */
+export const sectionHash = (section) => sha(`${section.heading}\n${section.text}`);
+
+/** What the file-level metadata is written from: the title and the summary. */
+export const fileHash = (topic) => sha(`${topic.title}\n${topic.summary || ""}`);
+
+/** The hashes a sidecar records for `topic`, so a later run knows what changed. */
+export function hashes(topic) {
+  return {
+    file_hash: fileHash(topic),
+    section_hashes: Object.fromEntries((topic.sections || []).map((s) => [s.heading, sectionHash(s)])),
+  };
+}
+
+/**
+ * Whether `topic`'s sidecar is current: its `source_hash` matches the body and its `file_hash` the title
+ * and summary (a sidecar from before `file_hash` is not).
+ */
+export function sidecarCurrent(root, topic) {
+  return Boolean(loadSidecar(root, topic.rel, topic.text)) && readRaw(root, topic.rel)?.file_hash === fileHash(topic);
+}
+
+/**
+ * The previous sidecar's metadata kept for `topic`: `{ file, sections }`, each kept part only where its
+ * recorded hash still matches (the file part on `file_hash`, a section on its `section_hashes` entry), and
+ * `complete` when nothing is left for a model to write. A sidecar without hashes keeps nothing.
+ */
+export function reusable(topic, old) {
+  const kept = { file: null, sections: {} };
+  if (!old || typeof old !== "object") return { ...kept, complete: false };
+  if (old.file && old.file_hash === fileHash(topic)) kept.file = old.file;
+  // Keyed by heading: a heading used twice has one hash for two sections, so its sections are never kept.
+  for (const s of topic.sections || []) {
+    if (old.sections && Object.hasOwn(old.sections, s.heading) && old.section_hashes?.[s.heading] === sectionHash(s)) {
+      kept.sections[s.heading] = old.sections[s.heading];
+    }
+  }
+  return { ...kept, complete: kept.file !== null && Object.keys(kept.sections).length === (topic.sections || []).length };
+}
+
+/** `fresh` (a new sidecar) with the parts of `old` that `reusable` keeps, and the topic's hashes. */
+export function mergeSidecar(topic, fresh, old) {
+  const kept = reusable(topic, old);
+  const sections = {};
+  for (const h of topic.headings) sections[h] = Object.hasOwn(kept.sections, h) ? kept.sections[h] : fresh.sections[h];
+  return { ...fresh, file: kept.file || fresh.file, sections, ...hashes(topic), source_hash: bodyHash(topic.text) };
 }
 
 /** Turns the model's answer into the sidecar object, or throws when it does not fit the topic. */
@@ -200,23 +267,51 @@ function parseArgs(argv) {
   return o;
 }
 
+function readRaw(root, rel) {
+  try {
+    return JSON.parse(readFileSync(join(root, sidecarOf(rel)), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function writeSidecar(root, rel, sidecar) {
+  const out = join(root, sidecarOf(rel));
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, `${JSON.stringify(sidecar, null, 2)}\n`);
+}
+
 async function generate(o) {
   const all = corpus(o.root);
   const known = new Set(all.map((t) => t.rel));
-  const todo = all.filter((t) => (!o.only.length || o.only.includes(t.rel))
-    && (o.force || !loadSidecar(o.root, t.rel, t.text)));
+  const scope = all.filter((t) => !o.only.length || o.only.includes(t.rel));
+  // A current sidecar from before the hashes: record them, so its next regeneration keeps what it can.
+  let backfilled = 0;
+  for (const t of scope) {
+    const raw = readRaw(o.root, t.rel);
+    if (raw && !raw.section_hashes && loadSidecar(o.root, t.rel, t.text)) {
+      writeSidecar(o.root, t.rel, { ...raw, ...hashes(t) });
+      backfilled++;
+    }
+  }
+  if (backfilled) console.log(`hashes recorded in ${backfilled} current sidecars`);
+  const todo = scope.filter((t) => o.force || !sidecarCurrent(o.root, t));
   console.log(`${all.length} topics, ${todo.length} to generate`);
   let cost = 0;
   let failed = 0;
   await pool(todo, o.concurrency, async (topic) => {
+    const old = o.force ? null : readRaw(o.root, topic.rel);
+    if (old && reusable(topic, old).complete) {
+      writeSidecar(o.root, topic.rel, mergeSidecar(topic, old, old));
+      console.log(`kept ${topic.rel} (no section, title or summary changed)`);
+      return;
+    }
     for (let attempt = 1; ; attempt++) {
       try {
         const env = await claude(prompt(topic, all), o.model);
         cost += env.total_cost_usd || 0;
-        const sidecar = toSidecar(topic, env.structured_output, known);
-        const out = join(o.root, sidecarOf(topic.rel));
-        mkdirSync(dirname(out), { recursive: true });
-        writeFileSync(out, `${JSON.stringify(sidecar, null, 2)}\n`);
+        const sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known), old);
+        writeSidecar(o.root, topic.rel, sidecar);
         console.log(`ok   ${topic.rel} (${topic.headings.length} sections)`);
         return;
       } catch (e) {

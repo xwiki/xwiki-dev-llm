@@ -89,5 +89,13 @@
       "**/src/test/java/**/*.java"
     ]
   },
-  "source_hash": "528789910d31531648f1ea38cd628932cf7a859ede94ebeb7b23bfc062c2f8ae"
+  "source_hash": "528789910d31531648f1ea38cd628932cf7a859ede94ebeb7b23bfc062c2f8ae",
+  "file_hash": "6279791603a5924ad457e5a15dad5f297fb4cb3d98c1e2bc1e0ee37577b4df04",
+  "section_hashes": {
+    "Diagnosing a flickering functional test — evidence, Selenium traps, forcing the race": "4256e3bc2068cb63de50ef1c96918a6bb82cc316a1b962c09bf17e6ec897ecb6",
+    "Reading the video": "2a40d9e2abc2ef9fc1d0e1184df7340cb69bab67b2ab807e39edc41b5d51c628",
+    "Causes that look like something else": "587dc1f2ec97cea5d80ac11c787f72a41ec3ca1e530ee1c33654689277a477dc",
+    "Forcing the race": "c51b60a096dc341640531327a113be038fc60695793b9185d8fd9742493830f4",
+    "Realtime WYSIWYG: `REALTIME_DEBUG`": "044362cd727ee9d727109996daa5f249009f5a461f793a42c6750aa1448cac8f"
+  }
 }
