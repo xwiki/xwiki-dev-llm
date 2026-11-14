@@ -39,6 +39,11 @@ When a session establishes a fact worth keeping, run the **gate checklist** befo
 
 - [ ] **Durable** — is it a stable rule/architecture/process fact, not a transient value? (Transient
       values like the current version belong as a *pointer + verify recipe*, never a cached value.)
+      Never name the currently supported branches ("on 17.10.x you still have to…"): development
+      tooling is [backported to the LTS branches](https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/#HReleasesandSCM),
+      so a fact that differs per branch is a backport to propose, not a variation to document.
+      "Since 18.10.0RC1, 18.4.9 and 17.10.16" is durable; write it only where a reader on an older
+      version needs it (an xwiki-contrib extension on an older parent).
 - [ ] **Generic** — true for XWiki developers in general, with no personal paths, machine state,
       credentials, or secrets. De-personalise it.
 - [ ] **Not already present** — search the KB with `kb-search` (and the relevant skills) first; if it exists, improve
