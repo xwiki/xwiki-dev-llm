@@ -246,7 +246,9 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   need. Children it does not reach are left to the More table and, on a large hub, Highlights. Two
   failures: a mini-manual explaining the features without linking the pages that document them, and a
   bare link list ("See X and Y.") repeating the More table. Test each linking sentence: if removing its
-  links leaves nothing the reader learns, it was a list.
+  links leaves nothing the reader learns, it was a list. The link sits **on the words saying what the
+  child covers** ("You can [[disable it>>…]] to…"), never on its title or a trailing "see <title>",
+  which is a one-item list.
 - **Duplication is found by comparing pages, not by writing each one carefully.** Before finishing a
   tree, put the intros, the FAQ entries and the hub prose **side by side** and look for *the same fact*,
   not the same wording — a re-phrased duplicate is the invisible one. Line up the sibling How-tos'

@@ -1,202 +1,199 @@
 {
   "file": {
     "questions": [
-      "What are the rules for writing a page on the xwiki.org documentation?",
-      "How do I structure a new xwiki.org documentation page so it follows the Documentation Guide?",
-      "What should I check before I publish or edit a documentation page on xwiki.org?"
+      "What rules apply when writing a page on xwiki.org documentation?",
+      "How should I structure and title a new xwiki.org documentation page?",
+      "Which Documentation Guide rules do I follow before publishing a page on xwiki.org?"
     ],
     "aliases": [
       "DocGuide",
       "Documentation Guide",
-      "xwiki.org docs guidelines",
-      "doc writing rules"
+      "xwiki.org doc conventions",
+      "Diataxis"
     ]
   },
   "sections": {
     "XWiki documentation conventions (Documentation Guide)": {
       "questions": [
-        "What are the documentation guidelines for xwiki.org?",
-        "Where is the official XWiki Documentation Guide and which rules matter for a new page?",
-        "Which parts of the doc guide should I read before writing my first page?"
+        "Where are the official rules for writing xwiki.org documentation?",
+        "What do I need to know before I start writing a documentation page for an extension?",
+        "Do I write xwiki.org docs in a git repo or on the wiki?"
       ],
       "aliases": [
-        "DocGuide",
-        "xwiki docs style guide",
-        "documentation guidelines"
+        "doc guide",
+        "xwiki docs style guide"
       ]
     },
     "Diataxis: one type + one audience per page": {
       "questions": [
-        "Should my xwiki.org page be a how-to, a tutorial, a reference or an explanation?",
-        "My page mixes steps and background theory, how do I split it into separate pages?",
-        "How do I pick the audience for a documentation page: user, administrator or developer?"
+        "How do I decide if my page is a how-to, tutorial, reference or explanation?",
+        "Can one documentation page mix a tutorial and a reference section?",
+        "How do I pick the audience (user, admin or developer) for a page?"
       ],
       "aliases": [
-        "Diataxis framework",
+        "Diataxis types",
         "documentation quadrants",
         "tutorial vs how-to"
       ]
     },
     "Titles and page names": {
       "questions": [
-        "How should I name a documentation page and its URL slug?",
-        "Can a doc page title start with How to or contain the word Tutorial?",
-        "What capitalization and stop-word rules apply to documentation page titles?"
+        "How should I word the title of a how-to page so it starts with a verb?",
+        "How do I turn a page title into a kebab-case URL segment without stop words?",
+        "Why does the checker reject my page name when the parent page already has the same word?"
       ],
       "aliases": [
+        "page naming",
         "URL slug",
-        "page title rules",
-        "page naming convention"
+        "page title rules"
       ]
     },
     "Content rules per type": {
       "questions": [
-        "What format must the steps of a how-to take on xwiki.org?",
-        "Does the last step of a procedure need a screenshot of the result?",
-        "What should a reference or explanation page contain and how should it be laid out?"
+        "What must every step of a how-to procedure look like?",
+        "Do I need a screenshot on the last step of a procedure?",
+        "What should the opening sentence of a how-to or topic page say?"
       ],
       "aliases": [
-        "how-to steps format",
-        "procedure page layout"
+        "how-to structure",
+        "tutorial structure",
+        "topic page"
       ]
     },
     "How much belongs on one page": {
       "questions": [
-        "My doc page keeps growing, when should I split it into several pages?",
-        "How do I avoid copy-pasting the same paragraph across two documentation pages?",
-        "What should a hub page say in its prose compared to its child list?"
+        "When should I split a long documentation page into two pages?",
+        "How do I avoid repeating the same paragraph on several documentation pages?",
+        "What belongs in a hub page's intro compared to its child page list?"
       ],
       "aliases": [
         "page granularity",
-        "duplicate content",
         "content fragment",
-        "hub page"
+        "duplicate content"
       ]
     },
     "Page-structure fields": {
       "questions": [
-        "What do the Highlights, More and Related links fields do on a documentation page?",
-        "How do I link a documentation page to its extension technical ID?",
-        "How many FAQ entries can a documentation page have?"
+        "What do the Highlights, More and Related links fields on a documentation page do?",
+        "How many FAQ entries can I add to a documentation page?",
+        "What Technical ID format should I use for an extension documentation page?"
       ],
       "aliases": [
         "xobject fields",
         "DocumentationClass",
-        "technical id",
-        "related links"
+        "extension id",
+        "FAQ field"
       ]
     },
     "Documentation style": {
       "questions": [
-        "How should I format UI labels and code terms in xwiki.org docs?",
-        "How do I link to a GitHub file or another xwiki.org page from documentation?",
-        "Should I hard-wrap long lines in wiki page text?",
-        "Is the em dash allowed in documentation prose?"
+        "Should I wrap long lines of prose in my documentation page?",
+        "How do I mark UI buttons and menu names in the docs?",
+        "How do I link to a file on GitHub from an xwiki.org page?"
       ],
       "aliases": [
         "writing style",
-        "wiki markup style",
-        "punctuation rules"
+        "em dash",
+        "monospace text"
       ]
     },
     "Attachments, images and videos": {
       "questions": [
-        "How do I add a screenshot to an xwiki.org doc page with the image macro?",
-        "What size and width should a documentation screenshot be?",
-        "How do I embed a video or a diagram in a documentation page?",
-        "How do I draw a red box around a UI element in a screenshot?"
+        "How do I insert a screenshot with the image macro and the right size?",
+        "What dimensions and format should my screenshots have on xwiki.org?",
+        "How do I draw a red box around a button in a screenshot?",
+        "How do I embed a video in an xwiki.org documentation page?"
       ],
       "aliases": [
-        "screenshots",
+        "screenshot rules",
         "image macro",
+        "WCAG alt text",
         "webm video",
-        "PlantUML diagram"
+        "PlantUML bluegray"
       ]
     },
     "Choose the right location": {
       "questions": [
         "Where in the xwiki.org documentation tree should my new page go?",
-        "Do I need a reviewer to confirm where a new documentation page goes?",
-        "How do I decide whether an extension's docs go under xs or extensions?"
+        "Should my extension docs go under documentation.xs or documentation.extensions?",
+        "How do I propose page placement to the developer before I create pages?"
       ],
       "aliases": [
-        "documentation tree placement",
         "page hierarchy",
-        "where to put docs"
+        "documentation tree placement"
       ]
     },
     "Versioning and perspective": {
       "questions": [
-        "How do I mention a version-specific feature on a doc page?",
-        "How do I write a version note for a changed behavior in the docs?",
-        "Can I document a feature before its release?"
+        "How do I document a feature that only exists in a newer XWiki version?",
+        "How do I write a version badge that says a behaviour changed?",
+        "Should I remove documentation for old XWiki versions?"
       ],
       "aliases": [
         "version macro",
-        "since badge",
-        "deprecated feature docs"
+        "since before",
+        "deprecated content"
       ]
     },
     "Saving changes: minor directly, major via a Change Request": {
       "questions": [
-        "Do I need a change request to fix a typo in a documentation page?",
-        "When should I open a change request for documentation edits?",
-        "How do I save a small docs edit without notifying page followers?"
+        "Can I fix a typo on a documentation page without opening a change request?",
+        "When do I need to open a Change Request for a documentation change?",
+        "How do I mark an edit as minor when saving a documentation page?"
       ],
       "aliases": [
         "change request",
         "minor edit",
-        "docs pull request",
         "documentation review"
       ]
     },
     "Handling the original page after migration": {
       "questions": [
-        "What do I do with the old page after I moved its content to the new documentation?",
-        "How do I finish a documentation migration without leaving the source page behind?"
+        "What do I do with the old page after I migrate its content to the new documentation tree?",
+        "Where is the guide for handling the source page after a documentation migration?"
       ],
       "aliases": [
-        "migration cleanup",
-        "legacy documentation page",
-        "old doc page"
+        "migrated page",
+        "old documentation page",
+        "documentation migration"
       ]
     },
     "Deleting a page": {
       "questions": [
-        "Can I delete a documentation page I created earlier?",
-        "What must I check before removing a page on xwiki.org?"
+        "What must I check before I delete a documentation page?",
+        "How do I safely remove a page that other pages link to?"
       ],
       "aliases": [
-        "remove wiki page",
+        "remove page",
         "backlinks",
-        "delete page"
+        "page deletion"
       ]
     },
     "XWiki syntax traps that bite when authoring documentation": {
       "questions": [
-        "Why does a double dash in my text turn into strikethrough?",
-        "Why does my image or link render wrong in the wiki page?",
-        "How do I write a monospace span containing a URL or a command-line flag?",
-        "Why does my section anchor link point to a red create-link?"
+        "Why does my link or monospace text render wrong on the documentation page?",
+        "Why does my command-line flag with two dashes turn into strikethrough text?",
+        "How do I link to another xwiki.org page without using a full URL?",
+        "How do I link to a section heading in an xwiki.org page?"
       ],
       "aliases": [
-        "xwiki syntax gotchas",
-        "wiki markup pitfalls",
+        "XWiki syntax gotchas",
         "strikethrough dashes",
-        "anchor links"
+        "wiki syntax 2.1",
+        "anchor link",
+        "doc reference link"
       ]
     },
     "Navigation order — pinning child pages": {
       "questions": [
-        "How do I change the order of pages in the documentation navigation panel?",
-        "Why are my child pages sorted alphabetically in the tree?",
-        "How do I pin a page in the document tree macro?"
+        "How do I control the order of child pages in the documentation navigation panel?",
+        "Why are my documentation child pages sorted alphabetically instead of how I want?",
+        "Should the navigation order match the order of links on the landing page?"
       ],
       "aliases": [
-        "document tree order",
-        "sort order",
-        "navigation panel",
-        "pinned pages"
+        "document tree pin",
+        "menu order",
+        "sidebar order"
       ]
     }
   },
@@ -208,5 +205,5 @@
     ],
     "applies-to": []
   },
-  "source_hash": "b7edac4c69568e3e520e268d55a52f098c14dcaaf2e1c4b6bd68979f2e018c52"
+  "source_hash": "cc9457e29365a3468bafe459948bde7797be148eb3e75cf76a17d6dc3c4bbfc8"
 }
