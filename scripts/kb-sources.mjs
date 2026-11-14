@@ -124,9 +124,10 @@ export const pinArg = (arg) => {
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// The JSON at a REST path, null on a 404; a 5xx is retried once, any other failure throws.
+// The JSON at a REST path, null on a 404; a 5xx is retried once, any other failure throws. The wiki's
+// Cloudflare answers 403 to Node's default User-Agent and accepts curl's.
 const getJson = async (path, retry = true) => {
-  const res = await fetch(REST + path, { headers: { Accept: "application/json" } });
+  const res = await fetch(REST + path, { headers: { Accept: "application/json", "User-Agent": "curl/8.7.1" } });
   if (res.status === 404) return null;
   if (res.status >= 500 && retry) return getJson(path, false);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
