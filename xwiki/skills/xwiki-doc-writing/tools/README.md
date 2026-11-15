@@ -114,9 +114,11 @@ procedure's entry step). A region already at the target width is saved unresampl
 
 ## What each step actually protects against
 
-**`lint`** — the traps that produce a *plausible-looking* page rather than an error: a scheme-like
-token followed by a colon (`image:` emits an empty image reference), an unmatched `--` striking
-through the rest of the block, a URL inside `##…##`, an inline `{{code}}` literal (the
+**`lint`** — the traps that produce a *plausible-looking* page rather than an error: a `type` or
+`target` written as a display label (`how-to`, `admin`), which the server stores as is, leaving the
+page with no valid type or audience and silently skipping the How-to checks (`save` refuses it too),
+a scheme-like token followed by a colon (`image:` emits an empty image reference), an unmatched
+`--` striking through the rest of the block, a URL inside `##…##`, an inline `{{code}}` literal (the
 checker's missing-`language` violation), a single-brace `{macro}` (an f-string field
 halves every `{{`, and the halved macro renders as literal text), an absolute URL to a farm subwiki
 (renders external and is **never indexed as a backlink**), a `caption` carrying the capture version,

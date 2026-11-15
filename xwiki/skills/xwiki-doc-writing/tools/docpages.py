@@ -60,6 +60,18 @@ DIAGRAM_HEAD = '!theme bluegray\n' + PALETTE
 BANNED_IN_TITLE = [r'\bHow[- ]?to\b', r'\bTutorial\b', r'\bReference\b', r'\bExplanation\b',
                    r'\bfor (Developers|Administrators|Admins|Users)\b']
 
+# The stored values of the two select properties of DOC_CLASS, not their display labels ("How-to",
+# "Administrator"): GET /rest/wikis/xwiki/classes/DocApp.Code.DocumentationClass lists them. The
+# server stores any other string as is, so the page gets no valid type or audience, and every check
+# below that branches on a value (the How-to rules, the expected screenshot) silently skips it.
+DOC_TYPES = ('tutorial', 'howto', 'reference', 'explanation')
+DOC_TARGETS = ('user', 'administrator', 'developer')
+
+
+def classification_problems(p):
+    return [f'{p["ref"]}: {k} {p.get(k)!r} is not one of {"|".join(allowed)}'
+            for k, allowed in (('type', DOC_TYPES), ('target', DOC_TARGETS)) if p.get(k) not in allowed]
+
 
 def load(name='pages'):
     sys.path.insert(0, os.getcwd())
@@ -122,6 +134,7 @@ def lint(mod):
     hubs = {'.'.join(p['space'][:-1]) + '.WebHome' for p in all_pages} & refs
     for p in all_pages:
         name = p['ref']
+        problems += classification_problems(p)
 
         for field in ('content', 'faq', 'related'):
             for i, line in enumerate(strip_verbatim(p[field]).split('\n'), 1):
@@ -307,6 +320,10 @@ def save(mod, only=None):
         if only and ref not in only:
             continue
         print('===', ref)
+        invalid = classification_problems(p)
+        if invalid:
+            problems += invalid
+            continue
 
         st, _ = x.getjson(x.pageurl(x.WWW, ref))
         if st != 200:
