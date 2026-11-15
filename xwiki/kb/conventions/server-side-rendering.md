@@ -7,6 +7,10 @@ summary: Rules for code that runs on the server inside a wiki page, sheet or tem
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/
   - https://velocity.apache.org/engine/2.3/user-guide.html
+provenance: official
+last-confirmed: 2026-10-15
+related: [conventions/velocity-code-style.md, conventions/security.md, conventions/frontend.md, testing/test-value.md]
+applies-to: ["**/*.vm", "**/src/main/resources/**/*.xml"]
 ---
 
 # Server-side rendering in wiki pages

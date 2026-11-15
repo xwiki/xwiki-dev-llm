@@ -5,6 +5,9 @@ summary: Proving a merged or backported functional test on CI — what counts as
   and the in-session watch that checks it.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
+provenance: official
+last-confirmed: 2026-10-11
+related: [testing/strategy.md, servers/jenkins.md, servers/develocity.md, servers/jira.md]
 ---
 
 # Watching a merged functional test on CI

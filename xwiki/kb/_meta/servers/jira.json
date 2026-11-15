@@ -1,0 +1,216 @@
+{
+  "file": {
+    "questions": [
+      "How do I reach the XWiki issue tracker from the command line or with a script?",
+      "When should I file a new JIRA issue for XWiki, and when should I reopen an existing one?",
+      "Which fields do I have to fill in on a jira.xwiki.org issue?",
+      "How do I choose Affects Version and Fix Version for an XWiki bug?"
+    ],
+    "aliases": [
+      "jira.xwiki.org",
+      "XWiki issue tracker",
+      "jira-cli",
+      "XWiki Atlassian JIRA"
+    ]
+  },
+  "sections": {
+    "JIRA (jira.xwiki.org) — access and issue-field conventions": {
+      "questions": [
+        "How do I call the XWiki JIRA REST API with my personal access token?",
+        "Can I use jira-cli to read and update jira.xwiki.org issues?",
+        "Is XWiki's JIRA the Cloud version or a self-hosted server?"
+      ],
+      "aliases": [
+        "JIRA personal access token",
+        "XWiki JIRA authentication"
+      ]
+    },
+    "Project keys": {
+      "questions": [
+        "What JIRA project key do I use for xwiki-platform issues?",
+        "Which key applies to XCOMMONS or XRENDERING tickets, and how do I reference one in a commit?",
+        "What is the key for the xwiki-docker image or an xwiki-contrib extension?"
+      ],
+      "aliases": [
+        "issue key",
+        "JIRA project prefix"
+      ]
+    },
+    "Whether to file an issue at all": {
+      "questions": [
+        "Do I need a new JIRA ticket for a bug my unreleased code introduced?",
+        "My fix was incomplete and already released, so should I reopen the issue or file a new one?",
+        "Does a refactoring or build-only change need a JIRA issue at all?"
+      ],
+      "aliases": [
+        "when to create a ticket",
+        "reopen or new issue"
+      ]
+    },
+    "Issue-field conventions (every issue type)": {
+      "questions": [
+        "Which Component should I set on a new Improvement or Task in XWIKI?",
+        "What fields do I set on a Bug besides the summary and description?",
+        "How do I fill Fix Version when a fix is backported to stable branches?"
+      ],
+      "aliases": [
+        "Component/s",
+        "required issue fields"
+      ]
+    },
+    "Dependency-upgrade issues": {
+      "questions": [
+        "How do I file a JIRA issue for bumping a third-party library version?",
+        "What should the description contain when upgrading a dependency across several versions?",
+        "How do I write the release-note links in a dependency upgrade ticket without them being rewritten?"
+      ],
+      "aliases": [
+        "library bump ticket",
+        "Dependency Upgrades component"
+      ]
+    },
+    "Flickering tests": {
+      "questions": [
+        "How do I file a ticket for a functional test that fails intermittently?",
+        "How do I link a flaky CI failure to its existing JIRA issue?",
+        "Where do I record the fully qualified name of a flickering test?"
+      ],
+      "aliases": [
+        "flaky test",
+        "intermittent test failure",
+        "flapping test"
+      ]
+    },
+    "The documentation fields": {
+      "questions": [
+        "What URL goes in the Documentation field of a fixed issue?",
+        "What do I enter in the Documentation in Release Notes field when no entry is needed?",
+        "Why does my JQL search fail when I use != on the Documentation field?"
+      ],
+      "aliases": [
+        "Documentation in Release Notes field",
+        "N/A documentation field"
+      ]
+    },
+    "Starting work on an issue": {
+      "questions": [
+        "Should I assign the JIRA issue to myself before I start writing the fix?",
+        "What do I do if the issue I want to work on is already assigned to someone else?"
+      ],
+      "aliases": [
+        "claiming a ticket",
+        "taking an issue"
+      ]
+    },
+    "Linking the pull request": {
+      "questions": [
+        "How do I connect my GitHub pull request to an OpenProject work package?",
+        "Why is the GitHub tab empty on my OpenProject work package?"
+      ],
+      "aliases": [
+        "OpenProject PR link",
+        "work package GitHub tab"
+      ]
+    },
+    "Resolving / closing an issue": {
+      "questions": [
+        "Which resolution should I pick when another ticket's change fixed this issue?",
+        "How do I close a JIRA issue as Cannot Reproduce when no commit fixed it?",
+        "How do I find the right transition name to close an issue with jira-cli or REST?",
+        "What do I fill in the documentation fields when I close an issue?"
+      ],
+      "aliases": [
+        "Solved By resolution",
+        "Won't Fix or Duplicate resolution",
+        "closing a ticket"
+      ]
+    },
+    "Bulk edits": {
+      "questions": [
+        "How do I update many JIRA issues at once without emailing every watcher?",
+        "Can I change fields on a batch of issues through REST with notifications turned off?"
+      ],
+      "aliases": [
+        "mass update JIRA",
+        "notifyUsers false"
+      ]
+    },
+    "Attachments (screenshots)": {
+      "questions": [
+        "How do I attach a screenshot to a JIRA issue from the terminal?",
+        "When should I add before and after images to a ticket that fixes a UI problem?",
+        "jira-cli has no attach command, so how do I upload a file to an issue?"
+      ],
+      "aliases": [
+        "upload image to JIRA",
+        "attach file to issue"
+      ]
+    },
+    "Wiki-markup gotchas (descriptions and comments)": {
+      "questions": [
+        "Why does a backslash show up in my JIRA code block?",
+        "How do I put a code snippet or identifier in a JIRA description without breaking the formatting?",
+        "Why is my issue key not being auto-linked in a JIRA comment?",
+        "How can I preview my JIRA wiki markup before posting it?"
+      ],
+      "aliases": [
+        "JIRA wiki renderer",
+        "Atlassian wiki markup",
+        "JIRA markup escaping"
+      ]
+    },
+    "Identifying the current LTS (for the Affects-Version fallback)": {
+      "questions": [
+        "Which XWiki LTS version should I put in Affects Version when I am unsure?",
+        "What is the current XWiki Cycle LTS and Intermediate LTS?",
+        "How do I find which XWiki LTS lines are still supported?"
+      ],
+      "aliases": [
+        "current LTS version",
+        "Cycle LTS",
+        "Intermediate LTS",
+        "supported XWiki versions"
+      ]
+    },
+    "Verifying the volatile values": {
+      "questions": [
+        "How do I check the current XWiki dev version before setting Fix Version?",
+        "How can I list which JIRA versions are released through the REST API?",
+        "Where do I confirm which XWiki versions are currently supported?"
+      ],
+      "aliases": [
+        "check current dev version",
+        "JIRA versions API",
+        "released versions list"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/commit-messages.md",
+      "processes/release-notes.md",
+      "testing/flickers.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "aa4be15ed1bbaccec082497785f8c43197db16978de247e091818d864cfa51d4",
+  "file_hash": "ff0af982fbbf0cd702d72c0691583e6ce30d17ee5440a49989f04f3fd2ff6336",
+  "section_hashes": {
+    "JIRA (jira.xwiki.org) — access and issue-field conventions": "22f8c8fdd5dad93872a558af8f785059b48424c7faf447d48324655ff5311349",
+    "Project keys": "0605a990f910e62b572b44a468737142a59b5124db44b3f6e7f30b9910e87ea9",
+    "Whether to file an issue at all": "c45dfb40df941e71911e8b389e5f428b5967dfaa35db1127544ea9c5fc198fae",
+    "Issue-field conventions (every issue type)": "e7598481b992aeddca3dfcaabdc2f210374da475b2700ee187f4469a48097734",
+    "Dependency-upgrade issues": "e0ef8caeb86c5081875aabeafeb7e926396ec66a3df7cb1f9dc9116b18aae60e",
+    "Flickering tests": "17683f0582ac801ca1519f13f2e8e0fd9e448b84a00109447e06da522fce9d08",
+    "The documentation fields": "0a60fd8c32024564491556acf648c9d72281abf82fedd3da5438da1fcc849915",
+    "Starting work on an issue": "cb4bbe5272b853aa442724328119233b541d88a2b719a517781310fec1c392d2",
+    "Linking the pull request": "f92159a83dc9a7e30bb46137d341d36962c38cc1da66830ad509dcae6072c7f5",
+    "Resolving / closing an issue": "371c8b0e12b22da374cc0bb3171a31292915ecf6d204e166483a39f387267aa2",
+    "Bulk edits": "85a639fcd12033a756ba4e444bab871712d096ad53a011ba0dbd08b108a188cb",
+    "Attachments (screenshots)": "7daf36c7f8acb3de0f5d202992c38160571629eddc538a67d69834c44ecb06be",
+    "Wiki-markup gotchas (descriptions and comments)": "66c4d9fd9c25e246a7c8dd308a8f586a82c631b1af1bcb1cae2d576a492479b6",
+    "Identifying the current LTS (for the Affects-Version fallback)": "41f7f48b107529905eba615dfe939ad28ae0559169aa293b5addb8b14521d3f8",
+    "Verifying the volatile values": "884d0d08e9ede8953897baa63d981bd20a939930c7c666599fd142e2671f9d45"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "xwiki",
-  "version": "1.22.12",
+  "version": "2.0.19",
   "description": "Org-wide XWiki conventions, MCP servers and dev skills for all xwiki / xwiki-contrib GitHub org repos",
   "interface": {
     "displayName": "XWiki",
@@ -27,13 +27,12 @@
   },
   "hooks": [
     {
-      "event": "SessionStart",
-      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\""
+      "event": "UserPromptSubmit",
+      "command": "node \"./xwiki/scripts/inject-org-instructions.mjs\" prompt"
     },
     {
-      "event": "PostToolUse",
-      "matcher": "Write|Edit",
-      "command": "node \"./xwiki/scripts/check-line-endings.mjs\""
+      "event": "UserPromptSubmit",
+      "command": "node \"./xwiki/scripts/kb-hooks.mjs\" prompt"
     },
     {
       "event": "PreToolUse",

@@ -6,6 +6,9 @@ summary: Reading a failed docker test's video, the Selenium, browser and setup m
   WYSIWYG debug dump.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/
+provenance: official
+last-confirmed: 2026-10-17
+related: [servers/jenkins.md, servers/develocity.md, testing/strategy.md, testing/running-docker-its.md]
 ---
 
 # Diagnosing a flickering functional test

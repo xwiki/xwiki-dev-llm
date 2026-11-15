@@ -5,10 +5,14 @@
 // the routine reads only those diffs. It narrows, it does not decide what the KB should absorb.
 //
 // Usage: node scripts/kb-sources.mjs [--json]      changed, moved, unpinned and unreachable pages, unused pins
-//        node scripts/kb-sources.mjs --diff <url>  the page's wiki-syntax diff, pinned version -> current
+//        node scripts/kb-sources.mjs --diff <url>[@<version>]
+//                                                  the page's wiki-syntax diff, from the given version (any
+//                                                  page, pinned or not) or else its pin, to the current one
 //        node scripts/kb-sources.mjs --pin [url[@version]…]
 //                                                  pin the listed pages (default: every cited one) to the
-//                                                  given or current version; drop pins no KB file cites
+//                                                  given or current version; drop pins no KB file cites.
+//                                                  Name each page with the version its KB text was written
+//                                                  from: a bare --pin hides every edit made since then.
 // Exits 2 when the wiki cannot be read at all. Node built-ins and git only; anonymous REST reads.
 
 import { execFileSync } from "node:child_process";
@@ -105,19 +109,36 @@ export const editsSince = (summaries, from) =>
       comment: e.comment ?? "",
     }));
 
+// The cited pages no pin covers, as { file, key }, from [{ file, markdown }]. validate.mjs fails on
+// them: only the author knows which version a new source was written from, so it is pinned in the
+// same change — the routine pinning it later could only guess the version it found then.
+export const unpinnedSources = (files, pins) =>
+  files.flatMap(({ file, markdown }) =>
+    devSources(markdown).filter((key) => pins[key] === undefined).map((key) => ({ file, key })));
+
 // "url@1.2" → [key, "1.2"]; "url" → [key, undefined].
 export const pinArg = (arg) => {
   const m = String(arg).match(/^(.*?)@(\d+\.\d+)$/);
   return m ? [pageKey(m[1]), m[2]] : [pageKey(arg), undefined];
 };
 
+// The page and the version a --diff starts from: the one the argument names, else the page's pin.
+export const diffFrom = (arg, pins) => {
+  const [key, version] = pinArg(arg);
+  if (!key) throw new Error(`${arg}: not a dev.xwiki.org page`);
+  const from = version ?? pins[key];
+  if (!from) throw new Error(`${arg}: not pinned; name the version to diff from: <url>@<version>`);
+  return { key, from };
+};
+
 // ---- I/O -------------------------------------------------------------------------------------------
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// The JSON at a REST path, null on a 404; a 5xx is retried once, any other failure throws.
+// The JSON at a REST path, null on a 404; a 5xx is retried once, any other failure throws. The wiki's
+// Cloudflare answers 403 to Node's default User-Agent and accepts curl's.
 const getJson = async (path, retry = true) => {
-  const res = await fetch(REST + path, { headers: { Accept: "application/json" } });
+  const res = await fetch(REST + path, { headers: { Accept: "application/json", "User-Agent": "curl/8.7.1" } });
   if (res.status === 404) return null;
   if (res.status >= 500 && retry) return getJson(path, false);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -184,10 +205,8 @@ const report = async (json) => {
   if (Object.values(r).every((list) => !list.length)) console.log("nothing to sync");
 };
 
-const diff = async (url) => {
-  const key = pageKey(url);
-  const pin = key && readPins()[key];
-  if (!pin) throw new Error(`${url}: not a pinned dev.xwiki.org page`);
+const diff = async (arg) => {
+  const { key, from: pin } = diffFrom(arg, readPins());
   const page = await resolve(key);
   if (page.error) throw new Error(`${key}: ${page.error}`);
   const content = async (v) => {
@@ -197,7 +216,7 @@ const diff = async (url) => {
   };
   const dir = mkdtempSync(join(tmpdir(), "kb-sources-"));
   try {
-    const [a, b] = [`pinned-${pin}`, `current-${page.version}`];
+    const [a, b] = [`from-${pin}`, `current-${page.version}`];
     writeFileSync(join(dir, a), await content(pin));
     writeFileSync(join(dir, b), await content(page.version));
     try {

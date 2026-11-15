@@ -1,0 +1,109 @@
+{
+  "file": {
+    "questions": [
+      "How do I declare which rights a wiki page shipped in my extension needs so it can run its scripts?",
+      "Why does my extension's page silently stop working after I turn on enforced required rights?",
+      "How do I set required rights for a page in my XAR so only admins can edit it?",
+      "Which rights should a page that registers a macro or UI extension declare when I enforce them?"
+    ],
+    "aliases": [
+      "required rights",
+      "enforceRequiredRights",
+      "RequiredRightClass",
+      "page rights ceiling",
+      "XAR page rights"
+    ]
+  },
+  "sections": {
+    "Required rights on a page an extension ships (analyzer blind spots, XAR version, reading them back)": {
+      "questions": [
+        "How do I declare which rights a wiki page shipped in my extension needs?",
+        "Why does my extension's page silently stop working after I enable enforced rights?",
+        "How can I check in a test which rights an installed page actually enforces?"
+      ],
+      "aliases": [
+        "page rights declaration",
+        "required rights in XAR",
+        "enforced rights page"
+      ]
+    },
+    "The analyzer is a recommendation, and it is blind to some privileged objects": {
+      "questions": [
+        "The required rights analyzer suggests script but my wiki macro is unregistered, what level should I declare?",
+        "Why does the analyzer under-report the rights my wiki macro or UI extension object needs?",
+        "Should I trust the suggested required right level or override it for my macro page?"
+      ],
+      "aliases": [
+        "WikiMacroClass analyzer gap",
+        "XWIKI-24822",
+        "analyzer under-reports rights"
+      ]
+    },
+    "A page carrying the element must declare XAR document version 1.6": {
+      "questions": [
+        "My enforceRequiredRights page still enforces, but xar:verify fails on it. What xwikidoc version do I need?",
+        "Which XAR document version is required in the XML root element for enforceRequiredRights?",
+        "Why did xar:format change the version number of my page?"
+      ],
+      "aliases": [
+        "xwikidoc version 1.6",
+        "XAR document model 1.6",
+        "VERSION_16"
+      ]
+    },
+    "Enforcement is per-document, and reaches further only through a script save": {
+      "questions": [
+        "Does a page with enforced rights limit what the pages it includes or the macros it calls can do?",
+        "My page creates new pages from a template and the created pages get restricted rights, why?",
+        "Why does my page title show raw Velocity source after I enforce required rights?"
+      ],
+      "aliases": [
+        "include macro rights",
+        "checkRequiredRightsForSaving",
+        "title displayer rights"
+      ]
+    },
+    "Reading the enforced rights back in a test": {
+      "questions": [
+        "How do I assert in a PageTest which rights a page enforces?",
+        "Injecting DocumentRequiredRightsManager in my test fails with a SimpleDocumentCache error, how do I mock it?",
+        "How do I check the result of getRequiredRights in a unit test without parsing the XML?"
+      ],
+      "aliases": [
+        "DocumentRequiredRightsReader",
+        "MockitoOldcore required rights",
+        "PageTest rights assertion"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "Where are the security rules about scripting rights and context author right checks?",
+        "Which page covers other traps in the application data of a page-and-XClass application?",
+        "How do I write a test that actually proves a rights declaration is worth having?"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/security.md",
+      "architecture/wiki-application-data.md",
+      "testing/test-value.md"
+    ],
+    "applies-to": [
+      "**/src/main/resources/**/*.xml",
+      "**/src/test/**/*.java",
+      "**/*RequiredRight*.java"
+    ]
+  },
+  "source_hash": "9ff55e719cf83ca5ddf4013478e56dea1854d34183953daa1ca2aabd561dcaea",
+  "file_hash": "c9fddb0e5e14e35263d4c2e1f26afbea78f9d206673befd6cd575e5a47417a4d",
+  "section_hashes": {
+    "Required rights on a page an extension ships (analyzer blind spots, XAR version, reading them back)": "d8d22b11e7bc6939d3a7e3c0fae4b73314cf5eb4ec44e22243555acd012b91e0",
+    "The analyzer is a recommendation, and it is blind to some privileged objects": "58fbfc27b94c87686382946fc370862b051ef8d28bc20cd1a23469a7ecacee2a",
+    "A page carrying the element must declare XAR document version 1.6": "ad83dc6468421729660ae53f1e3821437b870eef60543021a3efe6ba0361c185",
+    "Enforcement is per-document, and reaches further only through a script save": "5f5411c579ef6028f8255c3925955081cff266473959f5394241d24d5794f32c",
+    "Reading the enforced rights back in a test": "21d30b2f3d3e2842b5cb1e9821302b681dd91631171397fa6b35d84675fa51e5",
+    "Related": "173c711e4e0d2219e558b2b4c2d0b249702f37ef9a369ec21a40120865b30eba"
+  }
+}

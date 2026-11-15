@@ -1,0 +1,117 @@
+{
+  "file": {
+    "questions": [
+      "How do I run XWiki Docker functional tests on my own machine without them failing for reasons unrelated to my change?",
+      "Why does my Docker functional test say the browser can't resolve xwikiweb or shows a dnsNotFound error?",
+      "Why do my local Docker UI tests pass but fail in CI when the wiki runs in Tomcat or Jetty containers?",
+      "How do I let a containerised XWiki reach a mock SMTP or HTTP server running on my host?",
+      "Why are leftover browser containers and Docker networks piling up after my test runs?"
+    ],
+    "aliases": [
+      "Docker ITs",
+      "UI tests",
+      "@UITest",
+      "ryuk",
+      "testcontainers"
+    ]
+  },
+  "sections": {
+    "Running Docker functional tests on a developer machine": {
+      "questions": [
+        "Which servlet engine should I pick to run Docker UI tests locally versus in CI?",
+        "What do I need to know before running the -Pdocker,integration-tests profile on my laptop?",
+        "Why does my Docker functional test fail in beforeAll before any test method runs?"
+      ],
+      "aliases": [
+        "Docker integration tests setup",
+        "local UI test run"
+      ]
+    },
+    "The browser is always a container; what changes is how it reaches XWiki": {
+      "questions": [
+        "Why does my UI test behave differently under Jetty standalone than under Tomcat in a container?",
+        "How does the browser container reach the wiki under the default servlet engine?",
+        "Why does my page object assuming a host port or host path break in the containerised configuration?"
+      ],
+      "aliases": [
+        "JETTY_STANDALONE",
+        "servletEngine",
+        "BrowserContainerExecutor",
+        "host-gateway"
+      ]
+    },
+    "Reaching outside the run: a proxy, a service on the host": {
+      "questions": [
+        "My WAR build can't download artifacts during the Docker test but Maven works, what proxy settings do I need?",
+        "How do I expose a port of a mock mail or HTTP server on my host to a wiki running in a container?",
+        "Why is my GreenMail SMTP test green locally but refused when the wiki runs under Tomcat?"
+      ],
+      "aliases": [
+        "sshPorts",
+        "host.testcontainers.internal",
+        "proxyHost JVM settings",
+        "Failsafe argLine"
+      ]
+    },
+    "A setup failure is never evidence about your change": {
+      "questions": [
+        "What does the 401 during extension installation mean in my Docker test run?",
+        "Why does my Docker test fail with Failed to start XWiki in 120 seconds, and is my code the cause?",
+        "Why do I get a dnsNotFound error or a Firefox TimeoutException when running the UI tests?",
+        "Why does my test say Can't find descriptor for the component after I pulled the branch?"
+      ],
+      "aliases": [
+        "beforeAll failure",
+        "environment setup error",
+        "Error setting up the XWiki testing environment",
+        "TZ=UTC date test failure"
+      ]
+    },
+    "Leftover containers and networks: ryuk has to reach the daemon": {
+      "questions": [
+        "How do I clean up leftover testcontainers browser containers and networks left by killed test runs?",
+        "Why do my Docker tests fail with all predefined address pools have been fully subnetted?",
+        "How do I configure a newer ryuk image because my Docker daemon rejects the old API version 1.29?"
+      ],
+      "aliases": [
+        "testcontainers ryuk",
+        "ryuk container",
+        "testcontainers.properties",
+        "docker network prune",
+        "address pool exhausted"
+      ]
+    },
+    "What several agents on one machine contend for": {
+      "questions": [
+        "Can I run two Docker functional tests at the same time from different worktrees on one machine?",
+        "Why does my second parallel UI test run provision into another wiki and report a 401?",
+        "Why does running mvn install from two worktrees make my test pick up the wrong SNAPSHOT jar?"
+      ],
+      "aliases": [
+        "parallel test runs",
+        "concurrent builds",
+        "shared ~/.m2",
+        "port 8080 conflict"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/docker-test-framework.md",
+      "testing/strategy.md",
+      "servers/jenkins.md",
+      "testing/ci-watch.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "5f9a32ca52f3cc9019c894c8309c2b0e0fd3b5c7d2a7ef3c062fa13626492562",
+  "file_hash": "e6637a31fb80fd62c7d2e0f9e60f77d98831f793d5d5da2cc64d14c2c912756f",
+  "section_hashes": {
+    "Running Docker functional tests on a developer machine": "106395fa35d41a8e8a4d3692e3568b152395534b715555bdbecea46ce707504f",
+    "The browser is always a container; what changes is how it reaches XWiki": "9a15eefdf6b1a9ac2dca857cea3b1ea987e34e20f6993b54f69b2e65c76ef59a",
+    "Reaching outside the run: a proxy, a service on the host": "53a515ad83a7c57524cb14e641d952b6697016025c0adc4a2c79b5b7d3daf75f",
+    "A setup failure is never evidence about your change": "e739e0a9bfa8eb9f725694067d220fb7ea0acc185b373d664d48c8f84f799136",
+    "Leftover containers and networks: ryuk has to reach the daemon": "e2eb45e6557978db167f1276a9c7fabfd0994669b9c44ef0e5bd9e72baefd1a4",
+    "What several agents on one machine contend for": "cdfed3eb99f9f7ab6fbe1c0e407a7efca43661e7283073e3814b78a4d25b9e8a"
+  }
+}

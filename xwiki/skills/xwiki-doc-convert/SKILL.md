@@ -130,7 +130,8 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
 6. **Rewrite each page** with the `xwiki-doc-writing` flow — correct title/page-name, page-structure
    fields, style, and latest-version perspective. The style rules apply to the sentences you *carry
    over* too, not only to the ones you write.
-7. **Update while converting** — remove obsolete information; update deprecated terminology, UI
+7. **Update while converting** — remove obsolete information (a still-bundled deprecated feature
+   is not obsolete: see `kb/conventions/documentation.md`); update deprecated terminology, UI
    names, and configuration examples; convert version-specific notes to the `{{version}}` macro and
    drop notes for versions no longer supported. **Never silently lose still-valid information.**
 8. **Move the attachments too — and add the visuals the legacy page never had.** A legacy page is rarely
@@ -151,8 +152,8 @@ Which task owns which step: **0–1** the planning session · **2** `extract` ·
    declaring the conversion done, hub prose included. Legacy pages are typically far more verbose than the
    new tree allows, and copying their prose across imports that verbosity: keep only what the reader needs
    in order to act. A **How-to/Tutorial** you extracted also gets its **result step** (legacy procedures
-   almost never have one), and the **hub page** you create over the split routes through **Highlights**
-   and the More table rather than re-telling the legacy page's introduction or listing its children.
+   almost never have one), and the **hub page** you create over the split links the children it introduces **in context**
+   rather than re-telling the legacy page's introduction or listing its children bare.
 10. **Handle the original page** — after the content is moved, follow the guide's
     [Handle Original Documentation Pages](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/)
     steps: strip the prose (leaving a link to the new location / adding the "Documentation" button),
@@ -197,7 +198,8 @@ only complete record of what the legacy page said — comparing legacy → new, 
   configuration detail, example and troubleshooting note from the legacy page is present somewhere in
   the new pages. Walk the **inventory** item by item: each one is either on a new page or marked
   obsolete in the target map — an item that is neither is the finding. (Ignore genuinely
-  obsolete/deprecated/unsupported content — that is meant to be dropped.)
+  obsolete or unsupported content — that is meant to be dropped. Deprecated content still bundled in
+  XWiki Standard is kept, marked with `{{deprecated}}`.)
 - **Meaning preserved** — the rewrite did not change what the feature does, its requirements, or the
   relationships between features; nothing was over-simplified into being wrong.
 - **Up to date** — no obsolete UI names, deprecated terminology, removed features, or references to
@@ -215,7 +217,7 @@ only complete record of what the legacy page said — comparing legacy → new, 
 - **Illustrated to the new standard** — the converted pages show as well as tell (screenshots for
   User/Administrator, code examples for Developer, a diagram where an Explanation describes a structure),
   whether or not the legacy page had any, and without adding visuals that clarify nothing; each
-  How-to/Tutorial ends on a **result step**; no hub lists its children in prose.
+  How-to/Tutorial ends on a **result step**; hubs link children in context, never as a bare list.
 - **Not more verbose than it needs to be** — the rewrite cut the legacy prose rather than reflowing it;
   no sentence survives that the reader does not need in order to act.
 - **Nothing was live half-built** — the set went public in one pass, parents first, and no reader

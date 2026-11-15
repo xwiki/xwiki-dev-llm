@@ -20,6 +20,7 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { workRoot } from "./state-dir.mjs";
 
 const site = "https://forum.xwiki.org";
 
@@ -80,7 +81,15 @@ if (authPair) {
   // require an auth_pairs entry matching the selected site.
   profileDir = mkdtempSync(join(tmpdir(), "xwiki-discourse-mcp-"));
   const profilePath = join(profileDir, "profile.json");
-  const profile = { site, auth_pairs: [authPair], read_only: false, allow_writes: true };
+  // discourse_upload_file reads a local file only from an allowed directory. Allowing the work
+  // directory, where post images are kept, lets a post embed them instead of leaving them to paste.
+  const profile = {
+    site,
+    auth_pairs: [authPair],
+    read_only: false,
+    allow_writes: true,
+    allowed_upload_paths: [workRoot()],
+  };
   writeFileSync(profilePath, JSON.stringify(profile), { mode: 0o600 });
   args.push("--profile", profilePath);
 }

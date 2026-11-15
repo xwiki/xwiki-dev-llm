@@ -32,13 +32,13 @@
 // the bottom: exit 2 refuses; advice goes out as additionalContext, which Kimi's tool hooks cannot
 // carry, so there it is dropped); opencode imports it from xwiki/opencode/plugins/xwiki-commit-gates.js.
 import { execFileSync } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { extractMessages } from "./check-commit-text.mjs";
+import { invokedDirectly } from "./invoked-directly.mjs";
 import { isScopedRemote, originRemote } from "./repo-scope.mjs";
-import { isGitCommit, takesUnstaged } from "./shell-commands.mjs";
+import { commitDirs, isGitCommit, takesUnstaged } from "./shell-commands.mjs";
 import { skillGate } from "./skill-gate.mjs";
 
 const EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
@@ -450,33 +450,37 @@ export function formatFindings(findings) {
 }
 
 /**
- * The whole hook for one Bash command in `cwd`: `{ deny, context }` texts ("" for none). The skill gate
- * runs only with a `sessionId` (to know what the session loaded) and not under Kimi Code, which records
- * no skill load.
+ * The whole hook for one Bash command in `cwd`: `{ deny, context }` texts ("" for none). Each commit is
+ * read in the repo it runs in — `cd ../other && git commit` or `git -C ../other commit` — and checked
+ * only when that repo is in scope. The skill gate runs only with a `sessionId` (to know what the
+ * session loaded) and not under Kimi Code, which records no skill load.
  */
 export function checkCommit(command, { cwd = process.cwd(), env = process.env, sessionId = null, stateDir } = {}) {
   const none = { deny: "", context: "" };
   if (!isGitCommit(command) || /^off$/i.test(env.XWIKI_LLM_COMMIT_GATES || "")) return none;
-  const remote = originRemote(cwd);
-  if (remote === null || !isScopedRemote(remote, env)) return none;
   const messages = extractMessages(command, cwd).filter((m) => m.summary !== "");
   const skip = messages.some((m) => SKIP_TRAILER.test(`${m.summary}\n${m.body}`));
-  const commit = readCommit(cwd, command);
-  if (!commit || !commit.files.length) return none;
-  const { findings, advice: tips } = skip ? { findings: [], advice: [] }
-    : checkDiff(commit, { org: remoteOrg(remote), summary: messages[0]?.summary });
-  const kimi = env.KIMI_PLUGIN_ROOT && !env.CLAUDE_PLUGIN_ROOT;
-  const skills = kimi ? "" : skillGate(sessionId, commit.files, commit.read, stateDir ? { stateDir } : {});
-  return {
-    deny: [findings.length ? formatFindings(findings) : "", skills].filter(Boolean).join("\n"),
-    context: tips.length ? `XWiki diff check — advice, not a refusal:\n- ${tips.join("\n- ")}` : "",
-  };
+  const dirs = commitDirs(command, cwd);
+  const results = (dirs.length ? dirs : [cwd]).map((dir) => {
+    const remote = originRemote(dir);
+    if (remote === null || !isScopedRemote(remote, env)) return none;
+    const commit = readCommit(dir, command);
+    if (!commit || !commit.files.length) return none;
+    const { findings, advice: tips } = skip ? { findings: [], advice: [] }
+      : checkDiff(commit, { org: remoteOrg(remote), summary: messages[0]?.summary });
+    const kimi = env.KIMI_PLUGIN_ROOT && !env.CLAUDE_PLUGIN_ROOT;
+    const skills = kimi ? "" : skillGate(sessionId, commit.files, commit.read, stateDir ? { stateDir } : {});
+    return {
+      deny: [findings.length ? formatFindings(findings) : "", skills].filter(Boolean).join("\n"),
+      context: tips.length ? `XWiki diff check — advice, not a refusal:\n- ${tips.join("\n- ")}` : "",
+    };
+  });
+  const join2 = (key) => results.map((r) => r[key]).filter(Boolean).join("\n");
+  return { deny: join2("deny"), context: join2("context") };
 }
 
 // ---- CLI (Claude Code / Kimi Code PreToolUse hook) ----------------------------------------------
-const invokedDirectly = process.argv[1]
-  && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   let result = { deny: "", context: "" };
   try {
     const payload = JSON.parse(readFileSync(0, "utf8"));

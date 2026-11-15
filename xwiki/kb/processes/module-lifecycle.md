@@ -6,6 +6,9 @@ summary: Code moved between XWiki repos must keep its git history (git subtree s
   a VOTE and the Attic (unsupported); top-level extensions are VOTEd per case.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HExtractingoutamodule
+provenance: official
+last-confirmed: 2026-08-13
+related: [processes/release.md, conventions/naming.md, architecture/platform-modules.md, conventions/versioning.md]
 ---
 
 # Module lifecycle
@@ -29,8 +32,8 @@ then remove the code from the source repo and commit.
 When the target is **xwiki-contrib**, also:
 
 - rename groupId / artifactIds / directories;
-- use `org.xwiki.contrib:parent-*` as the parent, at the **LTS** version (e.g. `13.10` while `13.10.x`
-  is the LTS branch);
+- use `org.xwiki.contrib:parent-*` as the parent, at the **LTS** version (the Cycle LTS
+  `N.10`);
 - declare the `xwiki.extension.features` EM property in the poms so the old extension id keeps
   resolving;
 - **keep the same version** (e.g. `14.7-SNAPSHOT`) to signal this is not a new extension — the

@@ -1,0 +1,69 @@
+{
+  "file": {
+    "questions": [
+      "how do I avoid OutOfMemoryError when my XWiki code handles attachments or uploads",
+      "should I read a whole request body into a byte array or stream it in XWiki Java code",
+      "my export or query loads everything into memory, how do I process large result sets in chunks",
+      "what are the rules for handling large files and payloads safely in XWiki"
+    ],
+    "aliases": [
+      "OOM",
+      "out of memory",
+      "memory-efficient I/O",
+      "streaming vs buffering",
+      "lazy loading large data"
+    ]
+  },
+  "sections": {
+    "Resource efficiency (memory and streaming)": {
+      "questions": [
+        "why does my attachment handling code run out of heap memory under real load",
+        "is it acceptable to buffer a user upload fully in memory in XWiki",
+        "what is the policy on memory use for big payloads like PDFs and exports"
+      ],
+      "aliases": [
+        "memory footprint",
+        "GC pressure",
+        "large file handling"
+      ]
+    },
+    "Rules": {
+      "questions": [
+        "which methods should I avoid on attachments or uploads, like IOUtils.toByteArray or readAllBytes",
+        "how do I copy an input stream to an output stream without loading it into memory",
+        "how can I get an attachment's size without reading its content",
+        "how do I paginate a large query so I don't load every row at once"
+      ],
+      "aliases": [
+        "IOUtils toByteArray",
+        "readAllBytes",
+        "transferTo",
+        "Query setLimit setOffset",
+        "try-with-resources"
+      ]
+    },
+    "Related": {
+      "questions": [
+        "which code style rules should I read next after the memory guidance",
+        "what secure-coding rules cover handling untrusted input like uploads"
+      ],
+      "aliases": []
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/code-style.md",
+      "conventions/security.md"
+    ],
+    "applies-to": [
+      "**/*.java"
+    ]
+  },
+  "source_hash": "d3a38feb85754c42c9458cabce12a29f0e1dda03e07c4970c5129693b8278d9d",
+  "file_hash": "4f8423a2201593d09d0055ae6334c79488ff40a93310a63ba086e481855ca0ef",
+  "section_hashes": {
+    "Resource efficiency (memory and streaming)": "33d8da2615bc2d99902c53eabac03fca11bee28778e239d73cd42dcf26bb1c1a",
+    "Rules": "a0514a27d4603d681b50acf0b5b72f3afc69dfe6b6df0e5a6c07adb94220b284",
+    "Related": "57227987f56ae85f3404aff9fe96db5491ea884dea2d992e01fd2e55f9c24b00"
+  }
+}

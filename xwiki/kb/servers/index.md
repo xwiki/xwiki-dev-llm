@@ -6,6 +6,9 @@ summary: The servers making up the xwiki.org dev ecosystem, what each is for, an
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
+provenance: official
+last-confirmed: 2026-10-20
+related: [servers/jenkins.md, servers/jira.md, servers/develocity.md, sonarqube/verification.md]
 ---
 
 # XWiki development server ecosystem

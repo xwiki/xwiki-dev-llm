@@ -1,0 +1,185 @@
+{
+  "file": {
+    "questions": [
+      "What tests do I need to write for my XWiki change, and what rules apply?",
+      "How does XWiki's testing policy work for unit tests and functional tests?",
+      "Do template, wiki page or JavaScript changes need automated tests in XWiki?",
+      "Where do I start when I have to add tests to an XWiki module?"
+    ],
+    "aliases": [
+      "testing guidelines",
+      "test policy",
+      "test strategy",
+      "QA rules for contributions"
+    ]
+  },
+  "sections": {
+    "XWiki testing strategy (overview)": {
+      "questions": [
+        "Where do I start when I have to write tests for an XWiki change?",
+        "What kinds of tests does XWiki use, and how are they named?",
+        "What is the overall testing policy for XWiki code contributions?"
+      ],
+      "aliases": [
+        "testing overview",
+        "test conventions"
+      ]
+    },
+    "Test kinds and naming": {
+      "questions": [
+        "How do I name a test class in XWiki so Maven runs it as a unit test or as an integration test?",
+        "How should I name my test methods in XWiki?",
+        "What is the difference between a *Test class and an *IT class?"
+      ],
+      "aliases": [
+        "Surefire vs Failsafe",
+        "IT suffix",
+        "test class naming"
+      ]
+    },
+    "Every change has a test; tests stay silent": {
+      "questions": [
+        "Does my bug fix need a test, and should that test fail without the fix?",
+        "Why does my test fail because of console output or stderr in the logs?",
+        "Should I use JUnit 5 assertions or Hamcrest assertThat in my XWiki test?",
+        "Is a small change to a template or JavaScript exempt from needing a test?"
+      ],
+      "aliases": [
+        "CaptureConsole",
+        "no stdout in tests",
+        "regression test",
+        "assertThat vs assertEquals"
+      ]
+    },
+    "Functional tests: scenarios and the page-object boundary": {
+      "questions": [
+        "Why is my functional test so slow, and how many test methods should one UI test class have?",
+        "Can my UI test call getDriver or a CSS selector directly, or should that go in a page object?",
+        "How do I get a page reference in a functional test without hardcoding its name?"
+      ],
+      "aliases": [
+        "page object pattern",
+        "Selenium selectors in tests",
+        "TestReference"
+      ]
+    },
+    "Functional tests: waits, cleanup and containers": {
+      "questions": [
+        "My Selenium test waits a long time for an element that never appears, how do I avoid that?",
+        "How do I restore a configuration I changed in my functional test?",
+        "Can I mount a host folder into a test Docker container?",
+        "What should I use instead of Thread.sleep in a functional test?"
+      ],
+      "aliases": [
+        "wasteful wait warning",
+        "Docker out of Docker volume",
+        "test cleanup"
+      ]
+    },
+    "URLs and runtime configuration in functional tests": {
+      "questions": [
+        "Why does the link in my scheduled email or reset-password mail point to the wrong host in a functional test?",
+        "How do I set a configuration value that is only known at runtime, like a random port?",
+        "Why does the URL from TestUtils.getURL differ from the one REST returns?",
+        "Why does my functional test log 'Block programming right' and fail because a groovy macro needs Programming Rights?"
+      ],
+      "aliases": [
+        "main wiki descriptor",
+        "wiki descriptor target",
+        "PRChecker",
+        "dynamic test configuration"
+      ]
+    },
+    "Functional-test classes: rights checks, `AllIT` and `@Order`": {
+      "questions": [
+        "How do I check in a UI test that stored code runs with the rights of its author?",
+        "Why does my AllIT fail with a DockerTestException about conflicting configuration?",
+        "Why do my functional test methods run in an unexpected order?",
+        "Which annotations does a nested test class need inside an AllIT container?"
+      ],
+      "aliases": [
+        "@Order annotation",
+        "MethodOrderer",
+        "nested test class",
+        "script right test"
+      ]
+    },
+    "Unit tests: the lightest base and oldcore": {
+      "questions": [
+        "Should my unit test use ComponentTest or OldcoreTest?",
+        "How do I get a real XClass from a mandatory document initializer in a unit test?",
+        "Why does the content author change after I save objects in a MockitoOldcore test?"
+      ],
+      "aliases": [
+        "MockitoOldcore",
+        "mandatory document initializer",
+        "unit test with XWiki documents"
+      ]
+    },
+    "Done once CI proves it; coverage": {
+      "questions": [
+        "When is a new functional test considered finished, at merge time or after CI runs?",
+        "How do I raise the jacoco coverage ratio for a module after adding tests?",
+        "My change removed code and the coverage check now fails, what should I do?"
+      ],
+      "aliases": [
+        "jacoco instructionRatio",
+        "code coverage threshold",
+        "CI builds for a new test"
+      ]
+    },
+    "Functional-test module layout": {
+      "questions": [
+        "Where should I put functional tests for a new XWiki feature module?",
+        "What goes in the -test-docker pom, and which modules does it depend on?",
+        "Where should test-only components or listeners for the wiki under test go?"
+      ],
+      "aliases": [
+        "test-docker module",
+        "pageobjects module",
+        "src/test/it",
+        "flamingo skin test"
+      ]
+    },
+    "Where the test frameworks live (per repo checkout)": {
+      "questions": [
+        "Which repository contains the ComponentTest and OldcoreTest framework classes?",
+        "Where is the rendering test framework located in xwiki-rendering?",
+        "Which module holds the Docker functional test framework source?"
+      ],
+      "aliases": [
+        "xwiki-platform-test",
+        "xwiki-commons-tool-test",
+        "xwiki-rendering-test",
+        "test framework location"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/unit-test-framework.md",
+      "testing/docker-test-framework.md",
+      "testing/test-value.md",
+      "testing/running-docker-its.md"
+    ],
+    "applies-to": [
+      "**/src/test/**/*.java",
+      "**/*-test-pageobjects/**/*.java"
+    ]
+  },
+  "source_hash": "2a499090cf34486e394211bde52af3766fae1530db13a1f4e0fd97521530f027",
+  "file_hash": "2269cf7266410f0fe7a642b3663d95a8c8dc72617689e39731f1d9fcad11aa75",
+  "section_hashes": {
+    "XWiki testing strategy (overview)": "9c88d12e960031a38b250c267917d2fb2a5d0f155b77a58c5ece564bf0c7ba58",
+    "Test kinds and naming": "76bd7740e3c062b64b8cdce2df56b11d7589d6ac77b69d49cb43f81f8b392099",
+    "Every change has a test; tests stay silent": "4c9b0f52afc0cf5ea55efd3b7d7c01180b6f54ba1466a5e37668ddc25e309380",
+    "Functional tests: scenarios and the page-object boundary": "868817f36bc44fd17bc645b79dc1e2e4e7f6f22fdcc5083fb38a8204ba335adc",
+    "Functional tests: waits, cleanup and containers": "4b63ef75f7a9397c3132d16596ac3127d60b1b0d3e570f6e9dcde42883b550f7",
+    "URLs and runtime configuration in functional tests": "1436c3cd314e731a9576d91fb8df56ef929e2f3d9219ae71f34d26d2fde4b20a",
+    "Functional-test classes: rights checks, `AllIT` and `@Order`": "fa7d62005bd303ac906ca6002bfbdb84d3114e8c019a575c08a7301a55940b4a",
+    "Unit tests: the lightest base and oldcore": "a1986c29cf91a1d68299e20b988fb873f34f882f341d173ddf864e5a442c8a21",
+    "Done once CI proves it; coverage": "1f537d4e79a60246ac4dad2e7500a3c7b06a4ff2d569a2ad7c77fee0bbcb2272",
+    "Functional-test module layout": "2f851333f5c3bb7d1858f0268b3395c08b9b385e353f5f3ecc387aa5936b6ff3",
+    "Where the test frameworks live (per repo checkout)": "c487819c0c6a5da791ed262dc4705ebed4c3cae013fe6aee048ee072b91fbb30"
+  }
+}

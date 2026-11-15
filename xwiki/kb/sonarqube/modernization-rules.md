@@ -4,6 +4,9 @@ stability: durable
 summary: Correct fixes and XWiki-specific drop conditions for the language-modernization rules —
   instanceof patterns, .toList()/.toSet(), EnumMap, lambdas, StringBuilder, text blocks and the
   collection factory methods. Holds the .toList() escape analysis and the EnumMap null-key break.
+provenance: official
+last-confirmed: 2026-08-27
+related: [sonarqube/index.md, sonarqube/verification.md, conventions/backward-compatibility.md, conventions/code-style.md]
 ---
 
 # SonarQube modernization rules
@@ -149,6 +152,10 @@ discarded). Test-code lists built only for `assertEquals` or iteration are safe.
 - **Defensive-copy setter** (preferred when the model class is XWiki-owned): keep the `.toList()` and
   make the setter copy — `this.x = x == null ? null : new ArrayList<>(x);`. That clears the Sonar issue
   *and* preserves the mutable-getter contract, so the escaping list no longer matters.
+
+Otherwise keep a mutable list explicitly: `collect(Collectors.toCollection(ArrayList::new))` is not
+flagged, S6204 matching only `Collectors.toList()` / `toUnmodifiableList()` (sonar-java
+`CollectorsToListCheck`).
 
 A REST JAXB response DTO (`*.rest.model.jaxb`) built once and only serialized is safe.
 

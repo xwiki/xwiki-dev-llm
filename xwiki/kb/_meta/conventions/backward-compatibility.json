@@ -1,0 +1,140 @@
+{
+  "file": {
+    "questions": [
+      "What are the backward compatibility rules for changing a public API in XWiki?",
+      "Can my contrib extension import xwiki-platform internal classes?",
+      "Do I need @Unstable or Revapi checks when changing test framework code?",
+      "How long can a new API stay marked unstable before it must become stable?",
+      "Why does Revapi fail my build when I moved a class to a -legacy module?"
+    ],
+    "aliases": [
+      "API compatibility",
+      "binary compatibility",
+      "Revapi",
+      "breaking change",
+      "internal package"
+    ]
+  },
+  "sections": {
+    "Backward compatibility policy": {
+      "questions": [
+        "What does XWiki require for keeping public APIs compatible across releases?",
+        "Will the build fail if my change breaks existing extensions?",
+        "What kinds of compatibility does Revapi check in XWiki and what does it ignore?"
+      ],
+      "aliases": [
+        "API stability policy",
+        "compatibility rules"
+      ]
+    },
+    "Who may use `internal` packages": {
+      "questions": [
+        "Can my extension import classes from xwiki-platform internal packages?",
+        "Which projects may use each other's internal packages in XWiki?",
+        "Is it safe to use an internal class from another project in my contrib code?"
+      ],
+      "aliases": [
+        "internal API",
+        "non-public package",
+        "private package usage"
+      ]
+    },
+    "Test code is not API": {
+      "questions": [
+        "Do I need to deprecate or add @Unstable when I change a test helper or page object?",
+        "Are test frameworks and page objects covered by backward compatibility rules?",
+        "Can I rename a method in a test utility class without a JIRA issue?"
+      ],
+      "aliases": [
+        "test utilities",
+        "page objects not API",
+        "test-jar compatibility"
+      ]
+    },
+    "`@Unstable` annotation": {
+      "questions": [
+        "How long can I keep an @Unstable annotation on a new API method?",
+        "When must I remove @Unstable from a newly introduced class or method?",
+        "What does the build check about @Unstable and @since tags?"
+      ],
+      "aliases": [
+        "unstable API",
+        "experimental API marker",
+        "@since annotation"
+      ]
+    },
+    "Evolving an interface without breaking it": {
+      "questions": [
+        "How do I add a new method to an existing interface without breaking existing implementations?",
+        "Should I create a new interface or add a default method to an interface I already published?",
+        "Is it OK for a default method in an interface to throw UnsupportedOperationException?"
+      ],
+      "aliases": [
+        "default methods",
+        "interface evolution",
+        "adding interface methods"
+      ]
+    },
+    "Deprecation": {
+      "questions": [
+        "What are the steps to deprecate a Java method in XWiki and move it out of the way?",
+        "When can I move a deprecated API into the legacy module?",
+        "Can I remove a deprecated API from a legacy module, and how is that decided?"
+      ],
+      "aliases": [
+        "@Deprecated",
+        "deprecating an API",
+        "legacy module move"
+      ]
+    },
+    "Choosing the `<criticality>` of a Revapi ignore": {
+      "questions": [
+        "Which Revapi criticality should I pick for an ignore that marks a real break?",
+        "When is a Revapi difference allowed rather than highlight or documented?",
+        "Where should I put a Revapi ignore in the pom and why does my ignore not match?"
+      ],
+      "aliases": [
+        "revapi.differences",
+        "revapi ignore",
+        "criticality highlight documented allowed"
+      ]
+    },
+    "Where Revapi does and does not look": {
+      "questions": [
+        "Why does a downstream module fail Revapi when I moved a class to a legacy module?",
+        "Which modules does Revapi analyze and how do I exclude a wrapped artifact from its checks?",
+        "Why is a green build not proof that my API change is compatible?"
+      ],
+      "aliases": [
+        "revapi coverage",
+        "revapi filter",
+        "transitive dependency check"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/code-style.md",
+      "processes/release-notes.md",
+      "decisions/check-binary-not-source-compatibility.md"
+    ],
+    "applies-to": [
+      "**/*.java",
+      "**/*.aj",
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "16701ddf8a600e4ab6959dfa825c578cc94bfccd2f39f2bf10b195cf6fb1a2a1",
+  "file_hash": "3d2051700906c9f3ea68d34ae59e85e07516b3cf335c250330c0ff5b052faf04",
+  "section_hashes": {
+    "Backward compatibility policy": "223b876a27207ffd9e3edd2b4731a5f36451c729a33efd216bc308a34c1d72e3",
+    "Who may use `internal` packages": "725ffc6e4098320855a4cd9db181d55cacfd0fb689c3cc593b69391b06e7b31b",
+    "Test code is not API": "da617ebe5a47da2765688581a34fc9134761a1b8d778cbba0e7b9c9db8f4934b",
+    "`@Unstable` annotation": "34d4da1a807c65cbbe0dda19e9cdc9ea49c9ed931dc566168a2e1fb6b36c6e40",
+    "Evolving an interface without breaking it": "4f76aac653bfaa889d268ba101d0ec327e9be67290249b5fd685bf36ac243c4e",
+    "Deprecation": "45e97109cd60155bc828d7b8ef25df7c1e42a7c137157ed79ea8bb6ecb306853",
+    "Choosing the `<criticality>` of a Revapi ignore": "53875990351040c738ab060077b418539f047b39aaf87feb42ee3f9077f58292",
+    "Where Revapi does and does not look": "94cbebf1d4cf471ee22019c8c57d61f72d1eb7ba21649387aae03ea42611bf67"
+  }
+}

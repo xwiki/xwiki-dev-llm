@@ -1,0 +1,98 @@
+{
+  "file": {
+    "questions": [
+      "How do I write an XWiki unit test with ComponentTest or OldcoreTest without tripping over the framework's setup rules?",
+      "My XWiki unit test fails with 'Following messages must be asserted', what do I do?",
+      "Why does my mock not get injected when the code asks for the component through a Provider?",
+      "Where do I stub a mock so it is ready before initialize() runs in an XWiki component test?"
+    ],
+    "aliases": [
+      "XWiki unit testing",
+      "ComponentTest",
+      "OldcoreTest",
+      "XWiki JUnit 5 test",
+      "LogCaptureExtension"
+    ]
+  },
+  "sections": {
+    "Writing a unit test with XWiki's test frameworks — temp dirs, setup order, mocked Providers, logs": {
+      "questions": [
+        "How do I write a JUnit 5 unit test for XWiki with ComponentTest or OldcoreTest?",
+        "What are the gotchas in an XWiki unit test beyond the annotations themselves?",
+        "My new XWiki unit test fails in CI because of temp files or logs, how do I fix it?"
+      ],
+      "aliases": [
+        "XWiki unit testing",
+        "xwiki-commons-tool-test",
+        "XWiki JUnit 5 test setup"
+      ]
+    },
+    "A scratch directory: `@XWikiTempDir`, never `@TempDir`": {
+      "questions": [
+        "Can I use JUnit's @TempDir in an XWiki test to get a temporary folder?",
+        "How do I get a fresh temporary folder for each test in XWiki unit tests?",
+        "Why does Jenkins complain about files my test created outside the workspace?"
+      ],
+      "aliases": [
+        "temporary folder",
+        "temp directory",
+        "TempDir"
+      ]
+    },
+    "Setup for one test before `initialize()`": {
+      "questions": [
+        "How do I stub a mock for just one test before initialize() is called in ComponentTest?",
+        "My initialize() reads a mocked value but the stub is not applied, why?",
+        "How do I set up fixture data for a single test method before the component initializes?"
+      ],
+      "aliases": [
+        "BeforeComponent",
+        "per-test setup",
+        "initialize order"
+      ]
+    },
+    "A mocked component that the code's `Provider` does not return": {
+      "questions": [
+        "My @MockComponent is not picked up, and the code gets a different mock than the one I registered",
+        "Why does InjectMockComponents mock the wrong role when my component asks for it through a Provider?",
+        "The test gets a mock of an unexpected type from Provider.get, what should I change?"
+      ],
+      "aliases": [
+        "ComponentProvider",
+        "Provider mismatch",
+        "wrong mock injected"
+      ]
+    },
+    "Every captured log must be asserted": {
+      "questions": [
+        "My test fails with 'Following messages must be asserted' for log messages I did not check, how do I fix it?",
+        "How do I assert log messages in an XWiki unit test with LogCaptureExtension?",
+        "initialize() logs a message and every test fails on it, how do I handle that log?"
+      ],
+      "aliases": [
+        "LogCaptureExtension",
+        "log assertion",
+        "captured log"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "testing/test-value.md",
+      "architecture/component-system.md"
+    ],
+    "applies-to": [
+      "**/src/test/java/**/*.java"
+    ]
+  },
+  "source_hash": "20860af9e48a6ce987cd10f308fb898f689fb9b2368439fb82f231e1a58a4f93",
+  "file_hash": "376a42c869c371fb041ab8ce0d5f60cccf1667f492bc240498928990fc8afd7c",
+  "section_hashes": {
+    "Writing a unit test with XWiki's test frameworks — temp dirs, setup order, mocked Providers, logs": "cb675a982ba99797a12065f5ecbc0c48f89006054fa0cb56c69ebf08f9dc134c",
+    "A scratch directory: `@XWikiTempDir`, never `@TempDir`": "4c2f0b21c0fd0f58bd8fa32f916eb39f6d778c224ed0debb00daee7aafc502c4",
+    "Setup for one test before `initialize()`": "008fd7ba1aab4fbbeeb251a4958859731d1345676a862950db4fd0e7171269cd",
+    "A mocked component that the code's `Provider` does not return": "fa5f9feb7d32069dda64e9f517ad3cd750321b220c60f9c4de822a07d5c81c0a",
+    "Every captured log must be asserted": "4950226e4e1006d1d20e6b51b186414d31c84044ce54e91dbeb884d935bc1f5c"
+  }
+}

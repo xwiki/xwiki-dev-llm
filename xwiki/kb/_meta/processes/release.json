@@ -1,0 +1,73 @@
+{
+  "file": {
+    "questions": [
+      "How does XWiki choose version numbers and release its projects?",
+      "Which stable or LTS branches can I backport a bug fix to?",
+      "Do commons, rendering and platform get released together with the same version?",
+      "What is the overall XWiki release cycle, from milestones to final release?"
+    ],
+    "aliases": [
+      "release train",
+      "release cadence",
+      "LTS branch policy",
+      "backport policy",
+      "XWiki release management"
+    ]
+  },
+  "sections": {
+    "Release and versioning process (outline)": {
+      "questions": [
+        "Where do I start to understand how XWiki gets versioned and released?",
+        "I'm new to the XWiki release cycle, what's the high-level overview?",
+        "What should I read before I touch version numbers or prepare a release?"
+      ],
+      "aliases": [
+        "release overview",
+        "release process outline"
+      ]
+    },
+    "Durable facts": {
+      "questions": [
+        "Can I backport my fix to the latest stable branch or only to the LTS branches?",
+        "Which branches should a fix for master be backported to?",
+        "Why does the repo have a backport label for an older stable branch, and should I use it?",
+        "Do commons, rendering and platform always share one version number?"
+      ],
+      "aliases": [
+        "backport targets",
+        "LTS backport",
+        "stable branch backport",
+        "version numbering rules"
+      ]
+    },
+    "Volatile — follow the pointer, do not cache": {
+      "questions": [
+        "Where can I find the current XWiki release plans and dates?",
+        "Who are the release managers for the next XWiki release?",
+        "What are the step-by-step instructions for cutting an XWiki release?",
+        "Where do I check which dev version is currently in development?"
+      ],
+      "aliases": [
+        "release plan",
+        "release managers",
+        "release runbook"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/versioning.md",
+      "conventions/backward-compatibility.md",
+      "processes/security-policy.md",
+      "processes/release-notes.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "5511579ebbf985cf9ea4e764a3976f46cad8cb82583e7750aed981aa1a1f0c75",
+  "file_hash": "405ff0f53e58ab3018e911f7685c5fce5c60db6566034335cd604f1d5138472b",
+  "section_hashes": {
+    "Release and versioning process (outline)": "a2637067f756da1f583949a865442eeedee4ff5be91f3bf02afc5c59b5883dd5",
+    "Durable facts": "dc0d8758b3029045776f128dc3741ad638d4dd7d2e5714ad03beca8383941431",
+    "Volatile — follow the pointer, do not cache": "c7a3d2c939e9b12c30f1b77b042b271c2cf3c993341e8566ee892ce92cd65cf3"
+  }
+}

@@ -12,6 +12,10 @@ sources:
   - http://xunitpatterns.com/Fragile%20Test.html
   - https://enterprisecraftsmanship.com/posts/when-to-mock/
   - https://martinfowler.com/bliki/TestCoverage.html
+provenance: official
+last-confirmed: 2026-10-30
+related: [testing/strategy.md, architecture/module-design.md, architecture/component-system.md, sonarqube/test-code-rules.md]
+applies-to: ["**/src/test/java/**/*.java"]
 ---
 
 # Writing a test worth having

@@ -6,6 +6,9 @@ summary: The summary line is the JIRA key followed by the issue's title verbatim
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/#HRule%3AAlwaysputaJIRAissuereferenceincommitmessages
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
+provenance: official
+last-confirmed: 2026-10-24
+related: [servers/jira.md, processes/security-policy.md, processes/release-notes.md, conventions/dependencies.md]
 ---
 
 # Commit message convention

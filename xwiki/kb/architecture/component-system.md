@@ -4,8 +4,16 @@ stability: durable
 summary: XWiki's dependency-injection model — roles (@Role interfaces), implementations (@Component),
   registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints.
 sources:
-  - https://dev.xwiki.org/xwiki/bin/view/Community/ComponentsTutorial
+  - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/WritingComponents/
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Component+Module
+provenance: official
+last-confirmed: 2026-09-12
+related: [architecture/platform-modules.md, architecture/module-design.md, conventions/code-style.md]
+applies-to: ["**/META-INF/components.txt", "**/src/main/java/**/*.java"]
+applies-when:
+  - '^\s*@(?:Component|Role|InstantiationStrategy)\b'
+  - '\bextends\s+Abstract(?:Local)?EventListener\b'
+  - '^(?:\d+:)?[a-z]\w*(?:\.\w+)*\.[A-Z]\w*\s*$'
 ---
 
 # The XWiki component system

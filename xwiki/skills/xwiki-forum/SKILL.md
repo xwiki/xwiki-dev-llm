@@ -24,6 +24,9 @@ credential is set (see `kb/servers/index.md`); without one, give the developer t
 - **Short**: the idea, why, what could go wrong, the options — bullets over paragraphs. End with the
   question you want answered (`WDYT?`).
 - A vote states what is voted and when it closes.
+- **Images are uploaded, never left to the developer to paste**: save them in the work directory,
+  the only one `discourse_upload_file` (`upload_type: composer`) may read, and embed the returned
+  `short_url` as `![alt](upload://…)`.
 - Nothing about an undisclosed vulnerability, ever: `kb/processes/security-policy.md`.
 
 ## Confirm, then post

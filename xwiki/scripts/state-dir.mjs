@@ -1,12 +1,14 @@
 // Where this plugin keeps per-machine state that lives outside any repo: the work directory
-// (plans, handoffs, drafts, extracted source), the Docker IT slot files and the commit skill gate's
-// per-session record of loaded skills. All are computed here
+// (plans, handoffs, drafts, extracted source), the Docker IT slot files, the knowledge-base
+// search index cache, the KB pointer hooks' per-session state, the commit skill gate's
+// per-session record of loaded skills and the Kimi Code sessions already given the org conventions.
+// All are computed here
 // rather than in each script, so the plugin owns exactly one root on a developer's machine and the
 // platform rules are written down once.
 
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 /**
  * The plugin's state root, following each platform's convention for state a tool keeps for itself
@@ -32,9 +34,24 @@ export function itSlotDir() {
   return process.env.XWIKI_LLM_IT_SLOT_DIR || join(stateRoot(), "it-slots");
 }
 
+/** Directory holding kb-search.mjs's index cache, rebuilt from the KB whenever it is missing. */
+export function kbIndexDir() {
+  return join(stateRoot(), "kb-index");
+}
+
+/** Directory holding the KB pointer hooks' per-session files: which pointers a session was given. */
+export function kbHookStateDir() {
+  return join(stateRoot(), "kb-hooks");
+}
+
 /** Directory holding the commit skill gate's per-session files: the skills a session loaded. */
 export function skillGateDir() {
   return join(stateRoot(), "skill-gate");
+}
+
+/** Directory marking the Kimi Code sessions already given the org conventions, one file per session. */
+export function orgInjectDir() {
+  return join(stateRoot(), "org-instructions");
 }
 
 /**
@@ -47,6 +64,6 @@ export const LEGACY_WORK_ROOT = join(homedir(), ".xwiki-llm", "work");
 // Also runnable, printing the work root: opencode reads instructions/xwiki-org.md verbatim and has
 // no SessionStart hook to append the resolved path, so that file points at this command instead of
 // repeating the platform rules.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (invokedDirectly(import.meta.url)) {
   process.stdout.write(`${workRoot()}\n`);
 }

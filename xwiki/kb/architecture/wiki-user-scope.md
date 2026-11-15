@@ -10,6 +10,13 @@ sources:
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-wiki/xwiki-platform-wiki-user/xwiki-platform-wiki-user-default/src/main/java/org/xwiki/wiki/user/internal/DefaultWikiUserConfigurationHelper.java
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-wiki/xwiki-platform-wiki-user/xwiki-platform-wiki-user-api/src/main/java/org/xwiki/wiki/user/WikiUserConfiguration.java
   - https://github.com/xwiki/xwiki-platform/blob/master/xwiki-platform-core/xwiki-platform-rest/xwiki-platform-rest-server/src/main/java/org/xwiki/rest/internal/resources/classes/AbstractUsersAndGroupsClassPropertyValuesProvider.java
+provenance: official
+last-confirmed: 2026-07-03
+related: [architecture/wiki-application-data.md, architecture/platform-modules.md]
+applies-when:
+  - '\bUserScope\b'
+  - '\buserScope\b'
+  - '\bWikiUserConfiguration\b'
 ---
 
 # Subwiki user scope (local vs global users and groups)

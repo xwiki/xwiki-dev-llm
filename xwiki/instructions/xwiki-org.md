@@ -78,38 +78,17 @@ follows.
 - Do **not** trust the version string in a repo's `CLAUDE.md` — it goes stale. Read the real version
   from the root `pom.xml` (`<version>`) or the SNAPSHOT jar names under `~/.m2`.
 
-## KB — how to go deeper
+## Knowledge base
 
-Fuller *declarative* knowledge lives in this plugin's **KB** knowledge base. When a question is
-about how XWiki works or what its rules are — rather than performing a task — consult the KB. The
-**`xwiki-knowledge`** skill is the entry point for both reading and extending it, and `kb/index.md`
-is the full, described map. **Volatile facts are never cached** (current version, build/issue status,
-role holders): the relevant file gives a `verify:` recipe instead (read `pom.xml`, query the
-`sonarqube`/`discourse` MCP, or `curl` the dev wiki — the upstream source of truth).
+Fuller *declarative* XWiki knowledge — conventions, architecture, dev servers, processes, ADRs —
+lives in this plugin's **KB** (`kb/`). It is searched for you: hooks add pointers
+(`[tag] file#Section — …`) to your prompt and to your edits. Otherwise search it through the
+**`xwiki-knowledge`** skill (its `kb-search` CLI, 2–3 reformulated queries). Read only the pointed
+`## Section`. `[volatile]` facts: follow the file's `verify:` recipe, never quote a value from it.
+`[proposed: under discussion]` ADRs are not rules.
 
-KB map — topic files under `kb/`; **`kb/index.md` describes each one**, read it to choose:
-
-- `conventions/` — `code-style`, `code-comments`, `commit-messages`, `versioning`,
-  `backward-compatibility`, `security`, `script-services`, `performance`, `logging`, `naming`,
-  `frontend`, `server-side-rendering`, `velocity-code-style`,
-  `translations`, `dependencies`; and the xwiki.org documentation rules — `documentation`,
-  `documentation-migration`, `documentation-mechanics`, `page-deletion` — applied by
-  `xwiki-doc-writing` / `xwiki-doc-convert`.
-- `architecture/` — `component-system`, `platform-modules`, `macro-refactoring`,
-  `wiki-user-scope`, `solr-search`, `wiki-application-data`, `required-rights`, `module-design`,
-  `data-migrations`.
-- `testing/` — `strategy`, `test-value`, `running-docker-its`, `ci-watch`, `flickers`, `manual-tests`.
-- `sonarqube/` — which SonarCloud fixes are *correct* in XWiki and which look mechanical but
-  silently break something. Read `sonarqube/index.md` first, then **only** the family file for the
-  rule at hand: `syntax-rules`, `simplification-rules`, `modernization-rules`, `dead-code-rules`,
-  `constant-and-resource-rules`, `test-code-rules`, plus `verification`. Applied by
-  `xwiki-fix-sonarqube-issue`.
-- `servers/` — `index` (reaching and writing to every dev server), `jira`, `jenkins`, `develocity`.
-- `processes/` — `release`, `release-notes`, `security-policy`, `module-lifecycle`.
-- `decisions/` — ADRs (the *why* behind durable architectural choices).
-
-**Capturing learnings:** when a task relies on or fetches a durable, generic XWiki fact whose topic
-is absent from (or contradicts) the map above, or the developer corrects you on a convention or
-architecture point, **proactively offer** to capture it via the `xwiki-knowledge` EXTEND flow
-(reviewed PR only — never a silent or private write). Stay silent for trivial, personal, secret,
-session-specific, or already-present facts.
+**Capturing learnings:** when a task relies on or fetches a durable, generic XWiki fact that the KB
+lacks (or contradicts), or the developer corrects you on a convention or architecture point,
+**proactively offer** to capture it via the `xwiki-knowledge` EXTEND flow (reviewed PR only — never
+a silent or private write). Stay silent for trivial, personal, secret, session-specific, or
+already-present facts.

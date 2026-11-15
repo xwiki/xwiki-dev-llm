@@ -59,9 +59,10 @@ assumed. When the user asks for that step:
     advisories, from the patched versions' release date in the product's release notes. A product
     without any (every contrib extension) gets the day that job first finds the artifact released
     (SPAPP-38). A re-import keeps the status but recomputes a hand-edited embargo date (SPAPP-36).
-- **Request the CVE once the advisory is completed and announced**, without waiting for the
-  release: a CVE ID can take a while to arrive and publication is blocked without one. Only the
-  embargo and publication need the release.
+- **Request the CVE as the live policy's CVE step says** (once the advisory is completed and
+  announced, without waiting for the release: an ID can take a while to arrive). While that step is
+  struck through (XWiki SAS becoming a CNA), request no CVE ID from GitHub: tell the user that
+  publication waits for the CVE ID. Only the embargo and publication need the release.
 - Publishing/disclosing the advisory (making it public) happens only once the embargo date is
   reached **and** a CVE ID has been received — never publish opportunistically. A vulnerability
   that is already public (an issue filed public, a public report) follows this same process: no

@@ -16,6 +16,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HandleExtensionPages/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/
+provenance: official
+last-confirmed: 2026-10-20
+related: [conventions/page-deletion.md, conventions/documentation.md, conventions/documentation-mechanics.md]
 ---
 
 # A migration publishes once, at the end

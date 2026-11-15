@@ -1,0 +1,227 @@
+{
+  "file": {
+    "questions": [
+      "What rules apply when writing a page on xwiki.org documentation?",
+      "How should I structure and title a new xwiki.org documentation page?",
+      "Which Documentation Guide rules do I follow before publishing a page on xwiki.org?"
+    ],
+    "aliases": [
+      "DocGuide",
+      "Documentation Guide",
+      "xwiki.org doc conventions",
+      "Diataxis"
+    ]
+  },
+  "sections": {
+    "XWiki documentation conventions (Documentation Guide)": {
+      "questions": [
+        "Where are the official rules for writing xwiki.org documentation?",
+        "What do I need to know before I start writing a documentation page for an extension?",
+        "Do I write xwiki.org docs in a git repo or on the wiki?"
+      ],
+      "aliases": [
+        "doc guide",
+        "xwiki docs style guide"
+      ]
+    },
+    "Diataxis: one type + one audience per page": {
+      "questions": [
+        "How do I decide if my page is a how-to, tutorial, reference or explanation?",
+        "Can one documentation page mix a tutorial and a reference section?",
+        "How do I pick the audience (user, admin or developer) for a page?"
+      ],
+      "aliases": [
+        "Diataxis types",
+        "documentation quadrants",
+        "tutorial vs how-to"
+      ]
+    },
+    "Titles and page names": {
+      "questions": [
+        "How should I word the title of a how-to page so it starts with a verb?",
+        "How do I turn a page title into a kebab-case URL segment without stop words?",
+        "Why does the checker reject my page name when the parent page already has the same word?"
+      ],
+      "aliases": [
+        "page naming",
+        "URL slug",
+        "page title rules"
+      ]
+    },
+    "Content rules per type": {
+      "questions": [
+        "What must every step of a how-to procedure look like?",
+        "Do I need a screenshot on the last step of a procedure?",
+        "What should the opening sentence of a how-to or topic page say?"
+      ],
+      "aliases": [
+        "how-to structure",
+        "tutorial structure",
+        "topic page"
+      ]
+    },
+    "How much belongs on one page": {
+      "questions": [
+        "When should I split a long documentation page into two pages?",
+        "How do I avoid repeating the same paragraph on several documentation pages?",
+        "What belongs in a hub page's intro compared to its child page list?"
+      ],
+      "aliases": [
+        "page granularity",
+        "content fragment",
+        "duplicate content"
+      ]
+    },
+    "Page-structure fields": {
+      "questions": [
+        "What do the Highlights, More and Related links fields on a documentation page do?",
+        "How many FAQ entries can I add to a documentation page?",
+        "What Technical ID format should I use for an extension documentation page?"
+      ],
+      "aliases": [
+        "xobject fields",
+        "DocumentationClass",
+        "extension id",
+        "FAQ field"
+      ]
+    },
+    "Documentation style": {
+      "questions": [
+        "Should I wrap long lines of prose in my documentation page?",
+        "How do I mark UI buttons and menu names in the docs?",
+        "How do I link to a file on GitHub from an xwiki.org page?"
+      ],
+      "aliases": [
+        "writing style",
+        "em dash",
+        "monospace text"
+      ]
+    },
+    "Attachments, images and videos": {
+      "questions": [
+        "How do I insert a screenshot with the image macro and the right size?",
+        "What dimensions and format should my screenshots have on xwiki.org?",
+        "How do I draw a red box around a button in a screenshot?",
+        "How do I embed a video in an xwiki.org documentation page?"
+      ],
+      "aliases": [
+        "screenshot rules",
+        "image macro",
+        "WCAG alt text",
+        "webm video",
+        "PlantUML bluegray"
+      ]
+    },
+    "Choose the right location": {
+      "questions": [
+        "Where in the xwiki.org documentation tree should my new page go?",
+        "Should my extension docs go under documentation.xs or documentation.extensions?",
+        "How do I propose page placement to the developer before I create pages?"
+      ],
+      "aliases": [
+        "page hierarchy",
+        "documentation tree placement"
+      ]
+    },
+    "Versioning and perspective": {
+      "questions": [
+        "How do I document a feature that only exists in a newer XWiki version?",
+        "How do I write a version badge that says a behaviour changed?",
+        "Should I remove documentation for old XWiki versions?"
+      ],
+      "aliases": [
+        "version macro",
+        "since before",
+        "deprecated content"
+      ]
+    },
+    "Saving changes: minor directly, major via a Change Request": {
+      "questions": [
+        "Can I fix a typo on a documentation page without opening a change request?",
+        "When do I need to open a Change Request for a documentation change?",
+        "How do I mark an edit as minor when saving a documentation page?"
+      ],
+      "aliases": [
+        "change request",
+        "minor edit",
+        "documentation review"
+      ]
+    },
+    "Handling the original page after migration": {
+      "questions": [
+        "What do I do with the old page after I migrate its content to the new documentation tree?",
+        "Where is the guide for handling the source page after a documentation migration?"
+      ],
+      "aliases": [
+        "migrated page",
+        "old documentation page",
+        "documentation migration"
+      ]
+    },
+    "Deleting a page": {
+      "questions": [
+        "What must I check before I delete a documentation page?",
+        "How do I safely remove a page that other pages link to?"
+      ],
+      "aliases": [
+        "remove page",
+        "backlinks",
+        "page deletion"
+      ]
+    },
+    "XWiki syntax traps that bite when authoring documentation": {
+      "questions": [
+        "Why does my link or monospace text render wrong on the documentation page?",
+        "Why does my command-line flag with two dashes turn into strikethrough text?",
+        "How do I link to another xwiki.org page without using a full URL?",
+        "How do I link to a section heading in an xwiki.org page?"
+      ],
+      "aliases": [
+        "XWiki syntax gotchas",
+        "strikethrough dashes",
+        "wiki syntax 2.1",
+        "anchor link",
+        "doc reference link"
+      ]
+    },
+    "Navigation order — pinning child pages": {
+      "questions": [
+        "How do I control the order of child pages in the documentation navigation panel?",
+        "Why are my documentation child pages sorted alphabetically instead of how I want?",
+        "Should the navigation order match the order of links on the landing page?"
+      ],
+      "aliases": [
+        "document tree pin",
+        "menu order",
+        "sidebar order"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/documentation-mechanics.md",
+      "conventions/documentation-migration.md",
+      "conventions/page-deletion.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "cc9457e29365a3468bafe459948bde7797be148eb3e75cf76a17d6dc3c4bbfc8",
+  "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
+  "section_hashes": {
+    "XWiki documentation conventions (Documentation Guide)": "5243a5c6cc67bde84fde799382e04afc2cc4924067ead0da9f07b08f21921967",
+    "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
+    "Titles and page names": "f615fb1e9ddcf7541bfb1beadb405143f6d5d17a0d7bc13c1be9c387d479aa4d",
+    "Content rules per type": "3724cb8e3a7095c12aca427fd3f6946ce4f6f739f0c97e424c7800ec6075e71d",
+    "How much belongs on one page": "b0939995820f66508ac6f7c36531f98bd89798f1e51fcdcdb0e954a25943a9d0",
+    "Page-structure fields": "639c8a0cabdb84b538aba2d1f1aa24964f995d5a64c33b4c3130ca8423ccbbbe",
+    "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",
+    "Attachments, images and videos": "8a9f4b2f4e26b25704e049caa760ba65e60d6c10a068022bca409ec73afb28ce",
+    "Choose the right location": "e48d459fdc5c6274d53931779e501e9840708a4d665df61f274083610c99af06",
+    "Versioning and perspective": "515b9a62fbbf377da701d7cfe8a86ded52f26985cfe2948149de95e4edfdf6c1",
+    "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
+    "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
+    "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
+    "XWiki syntax traps that bite when authoring documentation": "8459bc8ac60f849bb8888ad464acdbcf7a58a26f176a4320020b603da4941806",
+    "Navigation order — pinning child pages": "d5522b550471a8c8f79e0cf8fb211e892f59a27cebf95dceb5c002109a63c95d"
+  }
+}

@@ -1,0 +1,526 @@
+[
+  {
+    "id": "b01",
+    "group": "b",
+    "question": "I'd like to change the signature of 2 public methods of org.xwiki.rendering.wikimodel.WikiPageUtil (in xwiki-rendering-wikimodel), breaking binary backward compatibility:\n\n```\n// Now\npublic static boolean isValidXmlNameStartChar(char ch, boolean colonEnabled)\npublic static boolean isValidXmlNameChar(char ch, boolean colonEnabled)\n\n// Proposed\npublic static boolean isValidXmlNameStartChar(int codePoint, boolean colonEnabled)\npublic static boolean isValidXmlNameChar(int codePoint, boolean colonEnabled)\n```\n\nThe reason is that these 2 methods implement XML 1.0's NameStartChar/NameChar productions (see https://www.w3.org/TR/xml/#NT-NameStartChar), and those productions include the supplementary range #x10000-#xEFFFF, which simply cannot be expressed with a char argument since a char stops at 0xFFFF.\n\nAbout the backward compatibility break:\n\nSource compatibility is preserved: a char widens to an int implicitly, so any existing code calling isValidXmlNameStartChar('a', true) still compiles unchanged.\n\nBinary compatibility is broken: the method descriptor changes from (CZ)Z to (IZ)Z, so an extension compiled against 18.7.x or earlier and not recompiled would get a NoSuchMethodError. Revapi reports it and we'd need an ignore\n\nI think the break is acceptable because these 2 methods look unused outside of WikiPageUtil itself\n\nThe alternative would be to deprecate the char versions and add int overloads, but I don't like it much: both overloads can coexist, so existing sources would silently keep binding to the deprecated char one, which is exactly the one that gives the wrong answer for supplem",
+    "kind": "fact",
+    "key_points": [
+      "Keep the old char methods as @Deprecated and add the new int code-point methods instead of changing the signatures and breaking binary compatibility",
+      "The deprecated method's implementation just calls the new one, and the deprecated method goes into the legacy module",
+      "Exceptions to the deprecation rule are only for cases where keeping the old method is impossible, very complex or dangerous, or where it never really worked",
+      "A hard break leaves extensions with no working alternative until they upgrade to the XWiki version that adds the new API, which isn't an LTS yet and is probably still @Unstable"
+    ],
+    "gold": {
+      "answer": "Don't break binary compatibility. Follow XWiki's deprecation rule: add the new int code-point methods, deprecate the char versions, have them simply call the new methods, and move them to the legacy module. Skipping the deprecation rule is only justified in exceptional cases: when keeping the old method is impossible, very complex or dangerous, or when it never really worked. A plain change like this one is not such a case. Breaking the API would leave any extension that uses these methods broken on recent XWiki, with no alternative until it moves to the version that adds the new API. That API won't be in an LTS for months and will probably stay @Unstable for about another year. With deprecation, extensions keep using the old API until they update their parent pom. In the end the proposer dropped the vote and went the deprecation/legacy route.",
+      "url": "https://forum.xwiki.org/t/18812/5",
+      "created": "2026-09-02T07:43:32.280Z",
+      "cat": "dev"
+    }
+  },
+  {
+    "id": "b02",
+    "group": "b",
+    "question": "Question 1: What exactly are the \"Context Elements\" I can select when creating a UIExtensionClass and how/where (in the Class code vs on the target page) to access them?",
+    "kind": "fact",
+    "key_points": [
+      "Context elements declare the context information the UI extension needs during execution (e.g. current user, current document)",
+      "They are used to generate the cache key",
+      "They only really matter when async rendering or caching is enabled for the UI extension",
+      "Without async/caching the code runs in the current context, so everything is accessible normally"
+    ],
+    "gold": {
+      "answer": "The \"Context elements\" property of a UIExtensionClass object lists the context information the extension needs while it runs (current user, current document, etc.). It is also used to build the cache key. The property only really matters when you enable async rendering or caching for the UI extension. Without those, the extension code runs in the current request context, so you can already access everything (current doc, user, etc.) the usual way, and you don't need to read the context elements in any special way.",
+      "url": "https://forum.xwiki.org/t/16637/2",
+      "created": "2025-03-06T11:31:08.709Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b03",
+    "group": "b",
+    "question": "I'd like to propose that we officially adopt Vitest as the JavaScript/TypeScript unit test library for XWiki Standard, and that we retire the jasmine-maven-plugin.\n\nThis is narrow on purpose. It is about unit tests for front-end code in xwiki-platform. It is not about functional/E2E tests (Docker + Selenium on the Java side, Playwright on the Cristal side), and it is not about React component testing, which was already settled in Choice of the testing framework for React (BlockNote).",
+    "kind": "fact",
+    "key_points": [
+      "Vitest is the JS/TS unit test library for xwiki-platform, with jsdom as the default environment, configured by merging the module's Vite config",
+      "Conventions: a test:unit npm script, tests in __tests__ next to the code, named *.test.ts, explicit imports from vitest (no globals: true)",
+      "AMD/RequireJS and globals-based webjar code is tested with @xwiki/platform-test-requirejs",
+      "No new Jasmine tests; existing specs are converted to Vitest when their code moves to xwiki-platform-node, except the CKEditor 4 specs, which stay until CKEditor 4 is dropped"
+    ],
+    "gold": {
+      "answer": "Vitest is the unit test library for JavaScript and TypeScript in XWiki Standard. This covers xwiki-platform only; contrib extensions are out of scope for now.\n\n- **Test environment:** jsdom is the default. It is configured by merging the module's own Vite config.\n- **Legacy code:** AMD/RequireJS code and globals-based webjar code are tested with @xwiki/platform-test-requirejs.\n- **Conventions:**\n  - a `test:unit` npm script\n  - tests in `__tests__` next to the code they test\n  - test files named `*.test.ts`\n  - explicit imports from `vitest` (no `globals: true`)\n- **Coverage:** no JS coverage threshold is enforced for now.\n\n**Jasmine:**\n- No new Jasmine tests should be written.\n- The jasmine-maven-plugin and the integration-tests-chrome profile stay until the last spec in a module is converted or deleted. XWIKI-19316 stays open until then.\n- The CKEditor 4 Jasmine specs stay until CKEditor 4 is dropped.\n- A web-war Jasmine spec is converted to Vitest when the code it tests moves to xwiki-platform-node. The converted test goes in that package's `__tests__` (\"tests go where the code goes\").\n\n**Plain webjar modules without a node setup:** a test-only frontend-maven-plugin execution is fine. Moving the code to xwiki-platform-node should not be done as part of a bug fix.\n\n**Still open:** whether to use Vitest Browser Mode for legacy DOM code. This will be decided when someone migrates that code (xwiki.js, eventsBridge.js, suggest.js or exporter.js).",
+      "url": "https://forum.xwiki.org/t/18866/9",
+      "created": "2026-09-17T20:08:08.394Z",
+      "cat": "dev"
+    }
+  },
+  {
+    "id": "b04",
+    "group": "b",
+    "question": "I wnant to update my xWiki to the newest version to 16.10. sudo apt install xwiki-tomcat9-mariadb. Then i get the message:  xwiki-tomcat9-mariad is already the newest version (16.7.1). Any Idea, why i can't updated to the version 16.10.0?",
+    "kind": "fact",
+    "key_points": [
+      "apt reports 16.7.1 as the newest version because the XWiki APT repository is disabled or missing, so apt can't see newer releases",
+      "An Ubuntu release upgrade (e.g. 22.04 to 24.04) disables third-party repositories by commenting out their entries in /etc/apt/sources.list.d/",
+      "Fix: re-enable the XWiki repository entry in /etc/apt/sources.list.d/ (or in Software & Updates), or redo the APT configuration step from the XWiki InstallationViaAPT guide, then run apt update and upgrade"
+    ],
+    "gold": {
+      "answer": "apt can't see the newer XWiki version because the XWiki APT repository is no longer active. A common cause is an Ubuntu release upgrade, for example from 22.04 to 24.04: during the upgrade, every custom or third-party repository is disabled by commenting out its entries in the files under /etc/apt/sources.list.d/. After the upgrade, review the files in /etc/apt/sources.list.d/, update them if needed (the XWiki one doesn't need changes), and re-enable the non-standard ones. On a desktop Ubuntu you can also do this in the Software & Updates application. The simplest fix is to redo the APT configuration step from the XWiki installation guide (https://www.xwiki.org/xwiki/bin/view/Documentation/AdminGuide/Installation/InstallationViaAPT/#HAPTConfiguration), then run apt update and upgrade again.",
+      "url": "https://forum.xwiki.org/t/15957/4",
+      "created": "2024-11-20T09:43:27.513Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b05",
+    "group": "b",
+    "question": "The $field variable does contain the properties based on this:\n\nhttps://www.xwiki.org/xwiki/bin/view/FAQ/Bindings%20available%20inside%20the%20Custom%20Display%20property\n\nI was successful to retrieve properties like\n\n$field.name\n\n$field.prettyName\n\n$field.Type\n\nbut was unable to identify the property to determine the size of the control (\"size\" in the UI).\n\nIs this property available in the \"$filed\" object and if, what would the name be?",
+    "kind": "fact",
+    "key_points": [
+      "Use $field.getProperty('size').value to get the size",
+      "Meta-properties of the class field are reached with getProperty(name), and .value gives the value",
+      "$field.getProperties() lists all meta-properties so you can find their names"
+    ],
+    "gold": {
+      "answer": "The class property definition's meta-properties, including \"size\", can be read through $field.getProperty(name). For the size, use $field.getProperty('size').value. To see every available meta-property and its value, loop over $field.getProperties() inside the custom display:\n\n{{velocity}}\n#foreach ($prop in $field.getProperties())\n* $prop.name - $prop.value\n#end\n{{/velocity}}",
+      "url": "https://forum.xwiki.org/t/17214/2",
+      "created": "2025-07-13T12:09:06.894Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b06",
+    "group": "b",
+    "question": "After updatinmg vrom xwiki 17 to 18, all users have admin rights. This is disabled on all groups (but wiki admin).\n\nAll users including myself are in the last listed group only. To take admin rights away, i have to fix this for each new user which is annoying and risky, because i cannot say, when a new user (login right is given through ldap) will log in for the first time.\n\nIs there a way to fix this?",
+    "kind": "fact",
+    "key_points": [
+      "Granting Programming right implies Admin right, so the group with programming right makes all its members admins",
+      "Remove the Programming right from the group the users belong to, at the group level, so new LDAP users are covered",
+      "After removal, make sure regular users have view right on the start page and on the skin page(s), or the start page and skin won't load for them"
+    ],
+    "gold": {
+      "answer": "The cause is the Programming right granted to the group that all users belong to. In XWiki, programming right includes admin right, so every member of that group also gets admin. Untick the Programming right for that group, and do it at the group level so that new LDAP users are covered automatically. Removing it can then stop regular users from seeing the start page, and the skin may no longer load. To fix that, give view access on the start page and on the skin page(s) to all groups.",
+      "url": "https://forum.xwiki.org/t/18342/3",
+      "created": "2026-03-27T13:53:45.950Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b07",
+    "group": "b",
+    "question": "Performing an xwql query with “select …” using velocity and $services.xwql.query(“…”).execute() works. But I cannot get the same query to work using the REST call https://<hostname>/xwiki/rest/wikis/xwiki/query?q=select ....\n\nIs this possible? Or does this only work when using a page?\n\nI have tried some simple queries without the “select” part using REST and they work.",
+    "kind": "fact",
+    "key_points": [
+      "Full 'select ...' XWQL statements don't work in the REST /query endpoint; this is expected, not a bug",
+      "The REST endpoint builds the select/from part itself (like 'select doc.fullName from XWikiDocument doc') and appends the q= fragment",
+      "The q= parameter should contain only the where conditions, joins and ordering, with no select clause",
+      "Full select statements work through the Query API ($services.query.xwql(...).execute()) in a script/page"
+    ],
+    "gold": {
+      "answer": "This is expected. In Velocity, $services.xwql.query(\"...\").execute() uses the Query API directly, so you can write full XWQL statements, including a select clause. The REST /wikis/{wiki}/query endpoint works differently: it builds the select and from parts itself. The q= parameter should contain only the rest of the query (where conditions, joins, order by). The endpoint always wraps your fragment into something like `select doc.fullName from XWikiDocument doc <your fragment>`, which keeps the REST output consistent and safe. So with REST, leave out the select clause. If you need a custom select (custom returned columns), REST /query won't do it. Use the Query API from a script (Velocity/Groovy) instead, for example on a page.",
+      "url": "https://forum.xwiki.org/t/17929/2",
+      "created": "2025-11-18T18:10:48.718Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b08",
+    "group": "b",
+    "question": "I managed to have a counter of users with this velocity code:\n\n```\n$services.query.hql(\"select count(distinct obj.name) from BaseObject obj where obj.className = 'XWiki.XWikiUsers'\").execute()[0]\n```\n\nOr this one:\n\n```\n$services.user.group.getMembers('xwiki:XWiki.XWikiAllGroup').size()\n```\n\nHow can I adapt it to count only active users?\n\nHow is the \"active\" field named in the database?",
+    "kind": "fact",
+    "key_points": [
+      "The active flag is the 'active' property of the XWiki.XWikiUsers object (0 = inactive, 1 = active)",
+      "Query it with XWQL, e.g. $services.query.xwql('where doc.object(XWiki.XWikiUsers).active = 1').execute(), and count the results",
+      "getMembers() returns DocumentReferences; to read a user's properties, use $services.user.getProperties(userReference)"
+    ],
+    "gold": {
+      "answer": "Use the Query Module and filter on the `active` property of the `XWiki.XWikiUsers` object. The property is an integer: 1 means active and 0 means inactive. For example, this lists the inactive users:\n\n```\n{{velocity}}\n$services.query.xwql('where doc.object(XWiki.XWikiUsers).active = 0').execute()\n{{/velocity}}\n```\n\nTo get active users, use `active = 1` instead. Take `.size()` of the result, or use a count query, to get the number.\n\nIf you start from `$services.user.group.getMembers(...)`, keep in mind that it returns a `Collection<DocumentReference>`. To read a user's properties, call `$services.user.getProperties(...)` with that user's reference, for example `$services.user.getProperties($userRef.toString())`. If you call `getProperties` without the right user reference argument, you get the properties of the current user instead.",
+      "url": "https://forum.xwiki.org/t/15827/4",
+      "created": "2024-10-29T09:36:04.326Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b09",
+    "group": "b",
+    "question": "my problem is about the API of the Wiki Manager, because i want to automate the creation and deletion of wikis.\n\nI want to create and delete Wikis by sending simple http requests. Until now i am kinda able to do that but it doesn't seem right, how the create request is handled by Xwiki. The documentation of API calls is also quite flavorless , so i am kinda at a dead end right now.\n\nI am using a webextension,  RESTED, at the moment to test the request functionality though everytime i send the request, Wxiki tells me the following:\n\nThe wiki is sort of created but only the basics, so as soon as i click on it, i am led to the wizard to install a flavor.\n\nBut when i send the request again it kinda works and the wiki gets created, though it is not 100% reproducable. (The same lines appear as in the first image, but then the whole installation process similar to the basic installation through the frontend wizard happens)\n\nThis is my request body:\n\nwikiprettyname=testwiki123&wikiname=testwiki123&wikialias=&description=test+description&template=&flavor=org.xwiki.platform%3Axwiki-platform-distribution-flavor-wiki%3A%3A%3A16.5.0&set_as_template=&form_token=vJ7nfHDDDxUZlDdgUodFcw&ownerId=XWiki.sdcloud-admin&userScope=global_only&membershipType=open&members=&step=create\n\nIs there a more stable way of using the Wiki Manager or something in the works ? Because i cannot use this.",
+    "kind": "fact",
+    "key_points": [
+      "Use the Wiki Manager REST endpoint (/wikimanager) instead of posting the UI wizard form",
+      "The endpoint is provided by the extension org.xwiki.platform:xwiki-platform-wiki-rest-default, which is not installed by default",
+      "Install it from the Extension Manager (Administration > Extensions > Advanced search by extension id), choosing the version that matches your XWiki version"
+    ],
+    "gold": {
+      "answer": "Don't post the Wiki Manager wizard form (the UI create action). Use the Wiki Manager REST API instead. That API is not installed by default: it comes from the extension org.xwiki.platform:xwiki-platform-wiki-rest-default. To install it, go to Administration > Extensions (/xwiki/bin/admin/XWiki/XWikiPreferences?section=XWiki.Extensions), open Advanced search, and search for the extension id org.xwiki.platform:xwiki-platform-wiki-rest-default using the version that matches your XWiki (e.g. 16.6.0). Once it is installed, the /wikimanager REST endpoint is available, and you can create and delete wikis with HTTP requests.",
+      "url": "https://forum.xwiki.org/t/15375/5",
+      "created": "2024-08-20T13:11:43.486Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b10",
+    "group": "b",
+    "question": "The example input\n\n```\n(% onclick=\"window.alert('hi')\" style=\"cursor:pointer\" title=\"click me\" %)(((This shows a **Alert Box**)))\n```\n\nrendered in XWiki 14 to\n\n```\n   <div onclick=\"window.alert('hi')\" style=\"cursor:pointer\" title=\"click me\"><p>This shows a <strong>Alert Box</strong></p></div>\n```\n\nwith XWiki 17.2 (at least) it will be rendered to\n\n```\n <div data-xwiki-translated-attribute-onclick=\"window.alert('hi')\" style=\"cursor:pointer\" title=\"click me\"><p>This shows a <strong>Alert Box</strong></p></div>\n```\n\nThis means the HTML attribute onclick will result into \"data-xwiki-translated-attribute-onclick\"\n\nThis makes it very difficult to generate \"clickable\" structures like tables or full paragraphs.\n\nA workaround with {{html clean=\"false\"}} is very complicated if more than a few words should be clickable.\n\nAs other attributes like onhover are effected too - can the old behavior reactivated / configured?",
+    "kind": "fact",
+    "key_points": [
+      "The renaming of on* attributes (e.g. onclick → data-xwiki-translated-attribute-onclick) is intentional, not a bug",
+      "It is an HTML sanitization measure to protect against XSS attacks",
+      "You can configure a custom list of attributes that are allowed and not sanitized",
+      "This configuration is documented in the XML Module (HTML sanitizer) documentation"
+    ],
+    "gold": {
+      "answer": "This was changed on purpose to protect against possible XSS attacks. XWiki now sanitizes event-handler attributes such as onclick and renames them to data-xwiki-translated-attribute-*. You can still configure it: you can give XWiki a custom list of attributes that should not be sanitized. How to do this is documented in the XML Module extension documentation (https://extensions.xwiki.org/xwiki/bin/view/Extension/XML%20Module), which covers the HTML sanitizer configuration.",
+      "url": "https://forum.xwiki.org/t/16856/2",
+      "created": "2025-04-16T08:22:49.122Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b11",
+    "group": "b",
+    "question": "A workflow has an \"Allow custom publication comment\" attribute (introduced in XAWORKFLOW-86), which is documented as follows:\n\nAllow custom publication comment:\n\nAdd the possibility for editors to define a publication comment that will be used in the history of the target document.\n\nHowever, I could not find any further instructions whatsoever regarding how to use it - neither what it's intended for, i.e. the idea behind it, nor how to actually use / modify it in practice.\n\nIt looks as if it uses a property of the actual Draft document as the source, and the property has to be set manually in the page's object editor.\n\nWhat I was looking for and had expected was some kind of comment setting I could specify when \"Publish\"ing a page, as a justification for the re-publishing or a high-level summary of the changes in the newly published version, compared to the previously published one.\n\nHowever this does not seem to be the case and does not seem to be the properties purpose - or is this feature simply unfinished and would need some additional UI? (However storing it at the draft page does not seem to make much sense for the purpose I had in mind.)\n\nDoes anyone here have experience with that or can shed some light on it?",
+    "kind": "fact",
+    "key_points": [
+      "You first enable \"Allow custom publication comment?\" (set to Yes) on the workflow configuration page",
+      "The comment is set in the \"Publication comment\" field of the draft's PublicationWorkflow.PublicationWorkflowClass object, using the object editor",
+      "When you publish, that comment is used as the version comment in the published document's history; if the field is empty, the default comment is used",
+      "There is no other UI (for example, no prompt at Publish time) for entering the comment"
+    ],
+    "gold": {
+      "answer": "The custom publication comment can only be set in the object editor of the draft, meaning the document that holds the PublicationWorkflow.PublicationWorkflowClass object. To use it:\n1. Edit the workflow configuration page and set \"Allow custom publication comment?\" to Yes.\n2. On a draft that uses this workflow, edit its PublicationWorkflow.PublicationWorkflowClass object in object mode.\n3. Fill in the \"Publication comment\" field.\n4. Publish the document.\n\nThe comment you entered becomes the version comment in the history of the published (target) document. If you leave the field empty, the default publication comment is used. There is no other place in the UI, such as a prompt when you click Publish, where you can enter this comment.",
+      "url": "https://forum.xwiki.org/t/18851/2",
+      "created": "2026-09-14T15:36:39.683Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b12",
+    "group": "b",
+    "question": "I'm looking for a working example code for a Jira request (e.g. create new issue) using the \"Jira Scripting API\" macro.\n\nI've installed the \"Jira Macro\" and \"Jira Administration\" and they both work. - At least I can display processes using the Jira macro.\n\nHowever, since we also want to create processes from xwiki, \"Jira Scripting\" would be ideal - especially since the creation is done with a dedicated user and the authentication data should not be displayed to the user.\n\nHas anyone ever managed this successfully?\n\nUnfortunately, the example code on the macro page (https://extensions.xwiki.org/xwiki/bin/view/Extension/JIRA+Module) only creates an empty table.",
+    "kind": "fact",
+    "key_points": [
+      "The Jira Scripting API does not use the credentials of the Jira instance defined in Jira Administration; only the Jira Macro does",
+      "Get the REST client with services.get(\"jira\").getJiraRestClient(...) (the jira script service)",
+      "Pass a JIRAServer object built from the Jira URL, user name and password"
+    ],
+    "gold": {
+      "answer": "The Jira Scripting API doesn't pick up the user name and password from the Jira instances set up in Jira Administration. Only the Jira Macro uses that configuration. With the scripting API you have to pass the URL and credentials yourself when you get the REST client, for example in Groovy:\n\ndef client = services.get(\"jira\").getJiraRestClient(new JIRAServer(\"${jiraURL}\", \"${jiraUser}\", \"${jiraPwd}\"))\n\nFill jiraURL, jiraUser and jiraPwd with your own values. You can then use the client for requests such as creating an issue.",
+      "url": "https://forum.xwiki.org/t/15973/3",
+      "created": "2024-11-21T15:03:56.877Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b13",
+    "group": "b",
+    "question": "I've been trying to define a link in a groovy script. However it seems the link syntax isn't interpreted.\n\n```\n{{groovy}}\n[[name of link>>http://www.example.com]]\n{{/groovy}}\n```\n\nI want to do that since I have a script in Groovy which retrieves URLs and Titles of certain XWiki - Pages and then shows them in the form of (hyper)links using XWiki Syntax (or is supposed to show them)\n\nIs this intentional, and if yes, is there another way to achieve what is wanted by me ?",
+    "kind": "fact",
+    "key_points": [
+      "Groovy is not a templating language, so plain text in the {{groovy}} macro is not output as wiki content",
+      "You must explicitly print the wiki syntax (e.g. print '[[label>>url]]')",
+      "The printed XWiki link syntax is then rendered as a link"
+    ],
+    "gold": {
+      "answer": "Yes, this is intentional. Unlike Velocity, Groovy is not a templating language, so plain text inside a {{groovy}} macro is not output. It is read as Groovy code. To get wiki syntax rendered, print it explicitly, for example:\n\n```\n{{groovy}}\nprint '[[name of link>>http://www.example.com]]'\n{{/groovy}}\n```\n\nThe printed XWiki syntax is then rendered as a link.",
+      "url": "https://forum.xwiki.org/t/15413/2",
+      "created": "2024-08-27T11:10:35.773Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b14",
+    "group": "b",
+    "question": "Is realtime editing supported inside AWM object editors (e.g. textarea/WYSIWYG fields in class forms)?\n\nOr is realtime strictly limited to the standard page editing UI?\n\nIf not supported out of the box:\n\nIs there a recommended way to enable it?\n\nOr a pattern to follow (e.g. redirecting to page edit instead of inline editing)?",
+    "kind": "fact",
+    "key_points": [
+      "Realtime editing is not supported for WYSIWYG/textarea fields in AWM/object class forms; it only works when editing the page content itself",
+      "The limitation is tracked in the issue XWIKI-21624",
+      "There is no built-in way to enable it, and it is not expected soon because WYSIWYG work is focused on the move to BlockNote",
+      "How realtime should interact with other form fields is still an open design question"
+    ],
+    "gold": {
+      "answer": "No. Realtime collaborative editing does not work for WYSIWYG/textarea fields in AppWithinMinutes (object/class) forms. It only works in the standard page content editor. The limitation is tracked as XWIKI-21624. There is no out-of-the-box way to turn it on, and no work on it is planned for the near future. The WYSIWYG editor team is focused on switching to BlockNote, so any realtime support for object fields would have to be built again for BlockNote. There is also an open design question about how realtime editing should work alongside the other form fields.",
+      "url": "https://forum.xwiki.org/t/18463/2",
+      "created": "2026-04-30T11:57:15.806Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b15",
+    "group": "b",
+    "question": "Now, I'd like to create a class that extends the bootstrap classes table-bordered, table-striped, table-condensed and table-hover. Something like :\n\n```\n.myClass {\n  &:extend(.table-bordered, .table-striped, .table-condensed, .table-hover);\n}\n```\n\nI quite often apply those 4 classes to tables, so I'd like to have a more concise way to do this, e.g. I'd like to have to apply only 1 class (myClass) instead of all 4.\n\nBut it doesn't work. I guess LESS doesn't know where to find those classes (which are defined in skins/flamingo/less/bootstrap/tables.less).\n\nAny idea how to make it work ?",
+    "kind": "fact",
+    "key_points": [
+      "Use LESS mixins instead of &:extend()",
+      "Call the Bootstrap classes as mixins inside the custom class: .table-bordered(); .table-striped(); .table-condensed(); .table-hover();",
+      "This goes in the StyleSheetExtension's LESS content, so one class (myClass) applies all four table styles"
+    ],
+    "gold": {
+      "answer": "You don't need `&:extend()`. In the LESS code of the XWiki.StyleSheetExtension object, call the Bootstrap classes as mixins inside your own class:\n\n```\n.myClass {\n  .table-bordered();\n  .table-striped();\n  .table-condensed();\n  .table-hover();\n}\n```\n\nApplying `myClass` to a table then gives it the styles of all four Bootstrap table classes at once.",
+      "url": "https://forum.xwiki.org/t/15313/4",
+      "created": "2024-08-09T08:55:46.040Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b16",
+    "group": "b",
+    "question": "I successfully deployed a dex authentication provider which XWiki connects to via OpenID. However, only the email and the user ID are taken over by XWiki. Is there any way to log the JSON response from the OpenID provider in XWiki to allow me to debug what's going on?\n\nI have the following in xwiki.properties\n\n```\noidc.provider=https://theprovider.foo\noidc.clientid=the-client-id\noidc.secret=some-secret-42\noidc.scope=openid,profile,email\noidc.user.nameFormater=${oidc.user.preferredUsername._clean}\noidc.endpoint.userinfo.method=GET\noidc.skipped=false\n```\n\nI though that having openid in the oidc.scope is enough to retrieve the userinfo but apparently it does not work. [...] My guess is that either a scope is wrongly set or the field names are different and I need to set up some oidc.user.mapping=... in the xwiki.properties configuration, but I am only guessing.\n\nI really need to see the JSON that arrives at XWiki…",
+    "kind": "fact",
+    "key_points": [
+      "Set the org.xwiki.contrib.oidc logger to TRACE level",
+      "This can be done in logback.xml with <logger name=\"org.xwiki.contrib.oidc\" level=\"trace\"/>",
+      "Or set it in the Logging administration UI, which is not kept across restarts",
+      "Make sure the logback.xml you edit is the one XWiki actually loads (for example in Docker)"
+    ],
+    "gold": {
+      "answer": "To see what the OpenID Connect authenticator receives from the provider, turn on TRACE logging for the `org.xwiki.contrib.oidc` package. You can do this in WEB-INF/classes/logback.xml by adding `<logger name=\"org.xwiki.contrib.oidc\" level=\"trace\"/>`. Make sure you edit the logback.xml that XWiki actually loads, because with Docker deployments the file you change may not be the one in use. You can also set the level of `org.xwiki.contrib.oidc` to TRACE in the wiki's Logging administration UI. The UI change works immediately without a restart, but it is reset when XWiki restarts, so you have to set it again after each restart.",
+      "url": "https://forum.xwiki.org/t/16654/12",
+      "created": "2025-03-11T09:08:20.488Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b17",
+    "group": "b",
+    "question": "I am trying to use the Flash Messages Application, but the messages won't appear. I remember testing it a few years ago when it worked, but I can't figure out why it doesn't right now. Is there something I need to configure?\n\nFlash Messages are created as terminal pages, place of creation is /bin/view/Flash/, which is both standard, start/end date is set appropriately, group is XWikiAllGroup, App version is 1.1.10, XWiki is 17.10.12.",
+    "kind": "fact",
+    "key_points": [
+      "The group field must use the full group page reference, including the space",
+      "Use XWiki.XWikiAllGroup instead of XWikiAllGroup",
+      "With only the short group name, the flash message isn't displayed in the top banner"
+    ],
+    "gold": {
+      "answer": "The group on the flash message has to be set with its full page reference, including the space: XWiki.XWikiAllGroup, not just XWikiAllGroup. If you use only the short name, the message won't show in the top banner.",
+      "url": "https://forum.xwiki.org/t/18761/2",
+      "created": "2026-08-18T06:11:08.227Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b18",
+    "group": "b",
+    "question": "I have the problem that an unpublished blog entry cannot be viewed or edited by other users.\n\nIs it possible to allow certain users to view and, if necessary, edit unpublished blog entries?\n\nThe reason for this is that, for example, an admin user must review newly created blog entries before they are published and released.",
+    "kind": "fact",
+    "key_points": [
+      "By default, an unpublished blog post has a rights setting that lets only its author view it",
+      "You can change the permissions on the blog post page to grant view/edit rights to other users or groups (e.g. reviewers/admins)"
+    ],
+    "gold": {
+      "answer": "Yes. By default, the Blog application puts a rights setting on an unpublished blog post that lets only the current user (the author) view it. To let reviewers such as admins see or edit the post before it is published, change the permissions on that blog post page and grant view rights (and edit rights if needed) to the other users or groups.",
+      "url": "https://forum.xwiki.org/t/18152/2",
+      "created": "2026-01-23T06:55:38.080Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b19",
+    "group": "b",
+    "question": "Is there a way to easily disable the new realtime editing feature?\n\nThe reason I ask is I just started getting the \" Connecting to the collaborative session. Please wait…\" message whenever I edit a page.\n\nI am the only editor of my xwiki and I don't have the time to debug what's wrong - probably something to do with my apache reverse proxy configuration.",
+    "kind": "fact",
+    "key_points": [
+      "Disable realtime editing by removing the CKEditor plugin 'xwiki-realtime' through config.removePlugins in the CKEditor configuration",
+      "config.removePlugins is a single setting, so assigning it more than once means the last assignment overwrites the earlier ones",
+      "List all removed plugins together, e.g. config.removePlugins = ['save', 'xwiki-realtime'];"
+    ],
+    "gold": {
+      "answer": "You can turn off realtime editing by removing the 'xwiki-realtime' plugin in XWiki's CKEditor configuration (the advanced JavaScript config). If your config already removes other plugins, for example `config.removePlugins = 'save';`, don't add a second `config.removePlugins = 'xwiki-realtime';` line. The later assignment overwrites the earlier one. Put all the plugins in a single setting instead, for example `config.removePlugins = ['save', 'xwiki-realtime'];`. After that, the WYSIWYG editor no longer opens a realtime session.",
+      "url": "https://forum.xwiki.org/t/14430/11",
+      "created": "2024-04-13T09:15:13.425Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b20",
+    "group": "b",
+    "question": "When using Bootstrap's clearfix utility to clear floated content within a container, you might include the following wiki syntax:\n\n```\n(% class=\"clearfix visible-md-block\" %)((()))\n```\n\nHowever, after saving the page in the WYSIWYG editor, the syntax is modified as follows:\n\n```\n(% class=\"clearfix visible-md-block\" %)\n(((\n \n)))\n```\n\nThis change introduces extra space, which affects the layout of the floating content.\n\nIs there a specific reason why the WYSIWYG editor alters the ((())) syntax? Any idea for a solution or a workaround?",
+    "kind": "fact",
+    "key_points": [
+      "When saving, the WYSIWYG editor adds a non-breaking-space paragraph to the empty ((())) group, which renders as <p>&nbsp;</p> inside the clearfix div",
+      "Workaround: add an XWiki.StyleSheetExtension (SSX) with custom CSS",
+      "The CSS hides paragraphs inside the clearfix container, e.g. `.clearfix p { display: none; }` (optionally also `.page-break p`)"
+    ],
+    "gold": {
+      "answer": "When you save in the WYSIWYG editor, it adds a non-breaking-space paragraph to the empty group. In view mode this renders as <div class=\"clearfix ...\"><p>&nbsp;</p></div>, and that paragraph creates the extra space. Inside the editor, the Flamingo/Sandstone CSS hides the .visible-*-block classes with display:none !important, but that rule doesn't apply in page view mode.\n\nWorkaround: create an XWiki.StyleSheetExtension object (a stylesheet loaded on the pages where it's used) that hides the inserted paragraph:\n\n```\n.page-break p,\n.clearfix p {\n    display: none;\n}\n```\n\nWith this, the layout is correct again even though the editor keeps the &nbsp; paragraph in the source.",
+      "url": "https://forum.xwiki.org/t/16688/4",
+      "created": "2025-03-14T15:14:28.870Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b21",
+    "group": "b",
+    "question": "I see how this user is setting a column width on a table directly. I would like to default the minimum column width in a way that will default a rule for any pdf export. I can't expect my non-technical users to edit source.\n\nI have a table with several smaller columns (containing a single sentence's worth of text) followed by a column containing a paragraph's worth of text. I want the lion's share of the width in the exported pdf devoted to the last column, however what's happening is too extreme. The sentence size columns are literally a single character or two in width (due to kerning looks like) including the headers.\n\nThere is actually some nuance here too. If a column only contains single character it would be ideal to be a single character width. The minimum should apply only before the column starts wrapping text.\n\nThe pdf view looks like it's close to flexing the column width so that the row length is as short as possible, but for this case that doesn't work out well. [...] It works well in the webapp itself though, which makes it frustrating.",
+    "kind": "fact",
+    "key_points": [
+      "Before printing, the PDF export converts absolute and unspecified column widths into explicit relative (percentage) widths, which is why widths differ from the normal view.",
+      "This is done because absolute widths can't be respected in the PDF, and to keep column widths the same across print pages when a table is split.",
+      "The relative widths are computed from the screen width, which is wider than the print page, so narrow columns become too small.",
+      "Fix: in a custom PDF export template, add CSS that sets #xwikicontent to max-width: 210mm (A4) before printing and back to max-width: none in @media print; for more control, use custom table CSS in the skin/color theme or in the PDF template."
+    ],
+    "gold": {
+      "answer": "The column widths differ between the normal view and the PDF export because the PDF export sets explicit column widths before printing. Absolute widths are converted to relative ones, and columns with no width get explicit relative widths. For example, `|left|(% width=\"200px\" %)right` becomes something like `|(% width=\"35%\" %)left|(% width=\"65%\" %)right`. There are two reasons for this. Absolute widths can't be respected in the generated PDF. And without explicit widths, the same column would have different widths on consecutive print pages when a table is split across pages.\n\nThe problem is that these relative widths are computed from the screen width, which is usually much larger than the print page. A percentage that looks fine on screen can be too small on paper.\n\nThe fix is to limit the content width to the print page width while the widths are computed, using CSS in a custom PDF export template:\n\n```\n/* Style applied before printing. */\n#xwikicontent {\n  /* A4 width, used by default, but may depend on the PDF template. */\n  max-width: 210mm;\n}\n\n@media print {\n  /* ... print styles from the default PDF template ... */\n  #xwikicontent {\n    /* No need to limit the width once the relative column widths are computed. */\n    max-width: none;\n  }\n}\n```\n\nIf that still doesn't look right, add custom CSS for your tables. Put it in the skin or color theme to apply it to both view and PDF export, or in a custom PDF export template to apply it to PDF export only.",
+      "url": "https://forum.xwiki.org/t/16264/3",
+      "created": "2025-01-15T16:59:21.406Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b22",
+    "group": "b",
+    "question": "I have a weird problem. the orignal text in the editor is shown in round brackets, After saving, emojis are displayed.\n\nIs there a possibility to supress that behavior? kann I set a global variable?",
+    "kind": "fact",
+    "key_points": [
+      "The emojis are produced by the Icon Transformation (rendering transformation) extension",
+      "It can be disabled globally following the Icon Transformation extension's installation/configuration instructions",
+      "Alternatively, escape individual occurrences with xwiki/2.1 verbatim syntax, e.g. {{{(n)}}}"
+    ],
+    "gold": {
+      "answer": "Yes. The emojis come from the Icon Transformation extension, which turns emoticon text such as (n) into icons when the page is rendered. To turn this off for the whole wiki, disable the Icon Transformation as described in the \"Prerequisites & Installation Instructions\" section of its documentation (https://extensions.xwiki.org/xwiki/bin/view/Extension/Icon%20Transformation). To stop the conversion in just one place, wrap the text in verbatim syntax in xwiki/2.1, for example {{{(n)}}}, so it is shown as typed.",
+      "url": "https://forum.xwiki.org/t/18491/2",
+      "created": "2026-05-08T13:16:11.594Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b23",
+    "group": "b",
+    "question": "How can I create a URL e.g., on a normal page (document) htat is calculated upon page request and contains, e.g., a user's name?\n\nIn my case, I want to provide a link to the edit page of a current user's profile so they have quick access to adding their personal data.\n\nThe link should look something like https://[your xwiki domain/bin/edit/XWiki/[user]?editor=inline&category=profile, and [user] should be replaced by the id of the current user.\n\nI guess $xcontext.getUser() should be invoked here somehow, or maybe $xwiki.getDocument($context.user).getObject('XWiki.XWikiUsers').getProperty('first_name').getValue())?\n\nWould this best be done with velocity?",
+    "kind": "fact",
+    "key_points": [
+      "Get the current user reference with $services.user.getCurrentUserReference() (or $xcontext.getUser())",
+      "Get the user's profile document with $xwiki.getDocument(userReference)",
+      "Build the edit URL with the document's getURL(\"edit\") method",
+      "Put this in a {{velocity}} macro and link with [[label>>path:$url]]"
+    ],
+    "gold": {
+      "answer": "Use Velocity. Get the current user's reference, preferably with the user script service `$services.user.getCurrentUserReference()` (`$xcontext.getUser()` also works). Pass that reference to `$xwiki.getDocument()` to get the user's profile document. Then call the document's `getURL(\"edit\")` method to get its edit URL, and use it in a link with the `path:` prefix:\n\n```\n{{velocity}}\n#set($profileUrl = $xwiki.getDocument($services.user.getCurrentUserReference()).getURL(\"edit\"))\n[[Edit Profile>>path:$profileUrl]]\n{{/velocity}}\n```",
+      "url": "https://forum.xwiki.org/t/16967/2",
+      "created": "2025-05-17T10:08:55.186Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b24",
+    "group": "b",
+    "question": "I tried to change the fielddisplayer for the field \"status\", so that it shows me the status as text instead of an Icon.\n\nFor this I tried out the example in the \"Jira Macro\" desription, to add a new fielddisplayer by xwiki components.\n\n```\n{{groovy}}\nimport org.xwiki.rendering.block.*\nimport org.xwiki.rendering.listener.reference.*\n\ndef field = xcontext.method.input.get(0)\ndef issue = xcontext.method.input.get(1)\ndef parameters = xcontext.method.input.get(2)\nString text = xcontext.method.defaultDisplayer.displayField(field, issue,parameters).get(0).getProtectedString()\n\ndef reference = new ResourceReference(text, ResourceType.URL)\ndef labelBlocks = [new WordBlock(\"Lien\")]\nxcontext.method.output.value = [new LinkBlock(labelBlocks, reference, true)]\n{{/groovy}}\n```\n\nFor the field \"summary\" it works perfectly, but \"status\" seems to ignore it.\n\n```\n{{jira fields=\"status!lien,summary!lien,status!lien\" id=\"6753\" source=\"jql\"}}\nfixVersion = \"Januar- Version 2025\"  AND type = Bug\n{{/jira}}\n```\n\nDows anyone has an idea how I can change the status too, so it shows the text instead of a Icon?",
+    "kind": "fact",
+    "key_points": [
+      "Status has a dedicated JIRAFieldDisplayer (StatusJIRAFieldDisplayer), and it takes precedence over the type displayer set with the field!type syntax",
+      "Summary works because it has no dedicated displayer and falls back to a type (text) displayer",
+      "To override it, register the wiki component with hint 'status' (the field name) instead of 'type/lien'",
+      "Give the component a priority below 1000 so it overrides the default; no change to the macro's fields parameter is needed"
+    ],
+    "gold": {
+      "answer": "The JIRA Macro already has a dedicated JIRAFieldDisplayer for the \"status\" field (StatusJIRAFieldDisplayer). A dedicated field displayer always wins, so you can't replace it with a custom type displayer using the `status!lien` syntax. That syntax works for \"summary\" only because summary has no dedicated displayer and is set up to use the type/text type displayer.\n\nTo replace a field's displayer, override the existing component. Write the same wiki component (implementing JIRAFieldDisplayer), but set the component hint to `status` instead of `type/lien`, and give it a priority lower than 1000 so it takes precedence over the default one. You don't need to change the macro call: whenever the status field is displayed, your custom component is used.",
+      "url": "https://forum.xwiki.org/t/16262/2",
+      "created": "2025-01-15T09:21:06.452Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b25",
+    "group": "b",
+    "question": "I have been customizing a theme and i can´t figure out which value has to be set to see make the ticks in the rights-section visible.\n\nRight now the colors are set to very light grey on white, which is barely visible.\n\nHave you got any hints on where to start?",
+    "kind": "fact",
+    "key_points": [
+      "The tick and cross colors come from the color theme variables @brand-success and @brand-danger (base colors section)",
+      "You may need to restart the instance before color theme changes take effect",
+      "As a fallback, override the color with CSS on #usersandgroupstable button.rights-edit.yes / .no",
+      "Put the custom CSS in a StyleSheetExtension or in the color theme's Advanced LESS section"
+    ],
+    "gold": {
+      "answer": "The yes/no icons in the rights management UI get their style from the color theme's colors. They're tied to the base color variables @brand-success (green, allowed) and @brand-danger (red, denied). Change those in the color theme's base colors section. Because of how the older derived colors are computed, you may need to restart the instance before the change shows up. If that doesn't work, override the icons with custom CSS, either in a StyleSheetExtension (skin extension) or directly in the Advanced (LESS code) section of the color theme:\n\n#usersandgroupstable button.rights-edit.yes { color: <yourGreen> }\n#usersandgroupstable button.rights-edit.no { color: <yourRed> }",
+      "url": "https://forum.xwiki.org/t/15524/3",
+      "created": "2024-09-11T14:22:03.036Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b26",
+    "group": "b",
+    "question": "We use a Xwiki as docker installation on http port :\n\nhttp://serv-xwiki:8080\n\nUsers acces Xwiki by a ReverseProxy on https port :\n\nhttps://wiki.mydomain.fr/\n\nWe have an error message when a user create a page.\n\nThe Team that is in charge of ReverseProxy anlysed the logs and said to me :\n\nIt seems the page try to call directly  Xwiki by server hostname on port 443 (https) https://serv-xwiki.\n\nOn the Server where the docker is executed, the Xwiki is not published on port https only on http.\n\nThe page is created and we can display it or modified it without any error.\n\nI searched in Wiki config file but i didn't fond any static URL.\n\nDo you have an idea?",
+    "kind": "fact",
+    "key_points": [
+      "Configure Tomcat's HTTP Connector in server.xml so it reports the reverse proxy's public URL",
+      "Set proxyName to the public hostname and proxyPort to 443",
+      "Set scheme=\"https\" and secure=\"true\" on the connector",
+      "With Docker, mount the custom server.xml over /usr/local/tomcat/conf/server.xml and restart the container"
+    ],
+    "gold": {
+      "answer": "XWiki builds URLs from what the servlet container reports. Behind an HTTPS reverse proxy, Tomcat reports its internal host and scheme, so the generated URLs point at https://serv-xwiki. The fix is to configure Tomcat's HTTP connector so it reports the public proxy URL. In a custom server.xml, set these attributes on the port-8080 Connector: proxyName=\"wiki.mydomain.fr\", proxyPort=\"443\", scheme=\"https\" and secure=\"true\" (plus URIEncoding=\"UTF-8\"). In the Docker setup, mount the file over the container's config with a docker-compose volume: `./tomcat-conf/server.xml:/usr/local/tomcat/conf/server.xml:ro`. Then restart the container.",
+      "url": "https://forum.xwiki.org/t/16102/7",
+      "created": "2024-12-13T13:04:13.973Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b27",
+    "group": "b",
+    "question": "It's not the first time it happens but it's getting worst over time at every XWiki restart, and now XWiki doesn't want to restart at all. Stuck on this \"Not all security plugin configured\"\n\nThis is related to /data/xwiki/solr/ratings folder\n\nIf we wipe the ratings folder it works well.\n\nUnfortunately, we can't wipe ratings folder because LikeAPI was implemented storing data inside solr.\n\nAnd this function is used by users who have a lot of wiki pages in favorite so we can't really wipe it and say \"deal with it\"\n\nIs there any solution please ?\n\nWe are using XWiki 15.10.15",
+    "kind": "fact",
+    "key_points": [
+      "The 'Not all security plugins configured' warning is expected and is not the cause; a problem in one core would show its own error and would not block the whole instance",
+      "This is a known issue for instances upgraded from XWiki older than 12.10.6 or 13.2 that still have old Solr cores",
+      "Workaround: in the core.properties file of each Solr core subfolder (<permdir>/store/solr/*), set loadOnStartup=false",
+      "This keeps the core data (e.g. ratings/likes); no need to wipe it"
+    ],
+    "gold": {
+      "answer": "The log only shows normal startup messages. The \"Not all security plugins configured\" warning is expected and is not the cause. If the problem really came from the ratings core alone, you would see an error for that core, and it would not block the whole XWiki instance.\n\nIf the instance was upgraded, once or several times, from XWiki older than 12.10.6 or 13.2, this is a known problem with old Solr cores being loaded at startup. The usual workaround is to look at the core.properties file in each subfolder of <permdir>/store/solr/ and make sure each one contains loadOnStartup=false. You keep the data (for example the ratings/likes core); you don't need to delete it.",
+      "url": "https://forum.xwiki.org/t/17537/2",
+      "created": "2025-08-22T13:20:24.230Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b28",
+    "group": "b",
+    "question": "Is there a way of developing rendering macros in Java with some kind of “Hot deployment” where the deployment will basically be perfomed automatically within seconds without any server restart and without having to do copy deployment artifacts manually?",
+    "kind": "fact",
+    "key_points": [
+      "XWiki has no instant hot deployment for Java macros that takes only seconds",
+      "Raise the extension version in pom.xml on every iteration (e.g. 1.0 -> 1.0.1 -> 1.0.2) so an upgrade is offered",
+      "Rebuild with Maven, then upgrade the extension through the Extension Manager in the admin UI",
+      "This avoids copying the JAR into WEB-INF/lib and restarting the server"
+    ],
+    "gold": {
+      "answer": "XWiki has no hot deployment that takes only seconds. The usual workflow is to let the Extension Manager upgrade the extension. Each time, raise the extension's version in its pom.xml (for example 1.0, then 1.0.1, then 1.0.2) so the Extension Manager sees a new version and offers an upgrade. Rebuild with Maven (mvn install), then upgrade the extension from the Administration UI. This is described in the \"Using the Extension Manager\" section of the Creating Extensions tutorial. You don't need to copy the JAR into WEB-INF/lib or restart the server.",
+      "url": "https://forum.xwiki.org/t/15700/2",
+      "created": "2024-10-10T15:07:50.078Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b29",
+    "group": "b",
+    "question": "we alter ldap server in xwiki.cfg but it is not effective in active configuration. there is old server hostname used.\n\nother configuration changes become effective but not the server name.\n\nis there any other place where this value is stored and overwrites the value in xwiki.cfg",
+    "kind": "fact",
+    "key_points": [
+      "LDAP settings can also be configured in the wiki's LDAP administration UI",
+      "Values set in the administration UI (wiki preferences) override the ones in xwiki.cfg",
+      "Check and update or clear the server hostname in the LDAP administration section"
+    ],
+    "gold": {
+      "answer": "LDAP settings can also be set in the wiki's LDAP administration UI. Those values are stored in the wiki preferences, and when present they override the ones in xwiki.cfg. Look at the LDAP section of the wiki administration: the old server hostname is probably still set there. Update or clear it there so the new value takes effect.",
+      "url": "https://forum.xwiki.org/t/15932/2",
+      "created": "2024-11-15T09:56:33.821Z",
+      "cat": "discuss"
+    }
+  },
+  {
+    "id": "b30",
+    "group": "b",
+    "question": "the rendering framework page states that HTML 4.01 is supported as output syntax, but in github there is just a parser, no renderer and when trying to render to HTML 4.01 syntax I get an error. XHTML 1.0 works fine, I also have the required org.xwiki.rendering:xwiki-rendering-syntax-html dependency. Is HTML 4.01 still supported as output syntax?\n\nCaused by: org.xwiki.component.manager.ComponentLookupException: Can't find descriptor for the component with type [interface org.xwiki.rendering.renderer.BlockRenderer] and hint [html/4.01]",
+    "kind": "fact",
+    "key_points": [
+      "HTML 4.01 is not supported as an output/renderer syntax (it only has a parser).",
+      "The documentation claiming HTML 4.01 output support was an error.",
+      "The supported HTML-type output syntaxes are XHTML 1.0 and HTML5."
+    ],
+    "gold": {
+      "answer": "No. HTML 4.01 is not supported as an output (renderer) syntax. The documentation saying it was supported was a mistake. For HTML-like output, XWiki Rendering supports XHTML 1.0 (xhtml/1.0) and HTML5 (html/5.0) renderers. HTML 4.01 only has a parser, which is why the BlockRenderer lookup for the html/4.01 hint fails.",
+      "url": "https://forum.xwiki.org/t/16754/2",
+      "created": "2025-03-24T14:18:22.783Z",
+      "cat": "discuss"
+    }
+  }
+]

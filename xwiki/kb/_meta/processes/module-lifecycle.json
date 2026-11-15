@@ -1,0 +1,103 @@
+{
+  "file": {
+    "questions": [
+      "How do I move a module out of xwiki-platform into another repository without losing its git history?",
+      "How do I retire or archive an XWiki extension that nobody maintains anymore?",
+      "What's the process for moving a contrib extension into the official xwiki GitHub org?",
+      "How do I pull code from another repo into xwiki-platform while keeping its commits?"
+    ],
+    "aliases": [
+      "git subtree",
+      "split repository",
+      "archive module",
+      "promote extension",
+      "graduate extension"
+    ]
+  },
+  "sections": {
+    "Module lifecycle — extracting, merging in, retiring, top-level extensions": {
+      "questions": [
+        "What are my options for moving an XWiki module to a different repository?",
+        "Which git command keeps the history when I move code between XWiki repos?",
+        "How do I change who owns an XWiki module or where it lives?"
+      ],
+      "aliases": [
+        "repo migration",
+        "code move between repositories",
+        "change module ownership"
+      ]
+    },
+    "Extracting a module out (to xwiki-contrib or the Attic)": {
+      "questions": [
+        "How do I split a subdirectory out of xwiki-platform into its own GitHub repository?",
+        "What do I have to change in the pom.xml when moving an extension to xwiki-contrib?",
+        "Why do I keep the same version number after moving my extension to xwiki-contrib?",
+        "How do I make an old extension id still resolve after I rename its artifact?"
+      ],
+      "aliases": [
+        "git subtree split",
+        "move to contrib",
+        "rename groupId artifactId",
+        "extension id redirect"
+      ]
+    },
+    "Merging a module in": {
+      "questions": [
+        "How do I bring an external GitHub repo into xwiki-platform as a subdirectory and keep its history?",
+        "My module was developed in a separate repo; how do I fit it into the platform module hierarchy?",
+        "Why does my build break on the release machine after I merged a module in?"
+      ],
+      "aliases": [
+        "git subtree add",
+        "import repo",
+        "fold in repository",
+        "bring contrib into platform"
+      ]
+    },
+    "Retiring a module (the XWiki Attic)": {
+      "questions": [
+        "How do I shut down an XWiki extension that is no longer maintained?",
+        "What happens to a retired module's repo, JIRA project and extensions.xwiki.org page?",
+        "Do I need a community vote before archiving an XWiki project?"
+      ],
+      "aliases": [
+        "deprecate module",
+        "end of life extension",
+        "archive repository",
+        "sunset project"
+      ]
+    },
+    "Top-level extensions (own repo in the `xwiki` org, own release cycle)": {
+      "questions": [
+        "What does an extension need before it can get its own repo in the xwiki GitHub org?",
+        "How do I get my contrib extension promoted to its own xwiki-<name> project with an independent release cycle?",
+        "Can an extension move back from the xwiki org to xwiki-contrib if its quality drops?"
+      ],
+      "aliases": [
+        "official extension",
+        "graduate to xwiki org",
+        "independent release cycle"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "architecture/platform-modules.md",
+      "conventions/naming.md",
+      "conventions/versioning.md",
+      "processes/release.md"
+    ],
+    "applies-to": [
+      "**/pom.xml"
+    ]
+  },
+  "source_hash": "0c6f4dac866f3bf454598ed80638a49fbfbb46c0f968c94b2823069161260be2",
+  "file_hash": "5f8802eaeff7170904000fe6f2bfe65fd84632fa43256460bd1389bdf82ac0c5",
+  "section_hashes": {
+    "Module lifecycle — extracting, merging in, retiring, top-level extensions": "36ab97b8cfac15850ce757f3f8a2bbfeb1f3d878302744fc2cb1a645a183a4dd",
+    "Extracting a module out (to xwiki-contrib or the Attic)": "149ecc13dc4602ea697afee667c4072e1f662e251327f40734ac39e51761cce2",
+    "Merging a module in": "bf05b20f1c9da0dc4a646cc584877cd7cd550e9345717a81fdcc79fb5e744375",
+    "Retiring a module (the XWiki Attic)": "5bf73ec61e04e2db9b07b599511f54aba00caf50d840231af8e1d028bf5fa4f4",
+    "Top-level extensions (own repo in the `xwiki` org, own release cycle)": "735334ad5ff86c4e3a5a114a7d89a27bfad78ef01b84afd38d153105d6c85f7c"
+  }
+}

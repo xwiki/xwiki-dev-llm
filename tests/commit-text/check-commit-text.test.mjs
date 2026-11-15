@@ -39,6 +39,16 @@ test('a pom.xml tracking issues in GitHub only blocks the mention', () => {
   assert.deepEqual(tokens(repo({ 'pom.xml': pom })), ['@since']);
 });
 
+test('a commit made in another repo (cd, git -C) is judged by that repo, not the session\'s', () => {
+  const jira = repo({ 'pom.xml': '<project><issueManagement><system>jira</system></issueManagement></project>' });
+  const github = repo({ 'pom.xml': '<project><issueManagement><system>GitHub</system></issueManagement></project>' });
+  const found = (cwd, command) => checkCommitText(command, { cwd })?.findings.map((f) => f.token);
+  assert.deepEqual(found(github, `cd ${jira} && ${commit}`), ['@since', '#259']);
+  assert.deepEqual(found(github, commit.replace('git commit', `git -C ${jira} commit`)), ['@since', '#259']);
+  assert.deepEqual(found(jira, `cd ${github} && ${commit}`), ['@since']);
+  assert.deepEqual(found(jira, commit.replace('git commit', `git -C ${github} commit`)), ['@since']);
+});
+
 test('without a pom.xml, the origin remote\'s org decides', () => {
   assert.equal(usesJiraIssues(repo({}, 'git@github.com:xwiki/xwiki-dev-llm.git')), true);
   assert.equal(usesJiraIssues(repo({}, 'https://github.com/xwiki-contrib/some-tool.git')), true);

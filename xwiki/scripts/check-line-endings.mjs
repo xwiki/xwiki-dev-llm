@@ -5,21 +5,21 @@
 // via an explicit `eol` attribute. On a mismatch it reports a clear message so the model rewrites
 // the file correctly. This enforces line endings deterministically and at near-zero token cost (it
 // only speaks up on a real violation) instead of relying on a skill being consulted on every write.
-// Written in Node (ships with Claude Code and Kimi Code, and runs under opencode's Bun) so it works
-// on Windows, macOS and Linux.
+// Written in Node (ships with Claude Code, and runs under opencode's Bun) so it works on Windows,
+// macOS and Linux.
 //
 // Two consumers share the checkLineEndings() function below:
-//   - Claude Code / Kimi Code: this file run directly as a PostToolUse hook (CLI section at bottom).
+//   - Claude Code: this file run directly as a PostToolUse hook (CLI section at bottom).
 //   - opencode: imported by xwiki/opencode/plugins/xwiki-line-endings.js from a tool.execute.after hook.
 //
-// Kimi Code note: Kimi's PostToolUse hooks are observation-only and cannot block execution. The same
-// stderr warning is emitted, but the model must act on it itself; the file is not rejected. opencode
-// surfaces the message by throwing from the tool hook.
+// Not wired into Kimi Code: Kimi runs PostToolUse hooks fire-and-forget and discards their result,
+// and its Write/Edit tools name the file `path`, not `file_path`. opencode surfaces the message by
+// throwing from the tool hook.
 
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { invokedDirectly } from "./invoked-directly.mjs";
 
 // Inspect filePath and return { eol, problem } when it violates the repo's declared line-ending
 // policy, or null when there is nothing to enforce (not a git repo, binary file, no eol declared,
@@ -96,7 +96,7 @@ export function formatLineEndingMessage(filePath, { eol, problem }) {
   );
 }
 
-// ---- CLI entrypoint (Claude Code / Kimi Code PostToolUse hook) --------------------------------
+// ---- CLI entrypoint (Claude Code PostToolUse hook) ---------------------------------------------
 // Only runs when this file is executed directly, not when imported (e.g. by the opencode plugin).
 function runAsHook() {
   // Read the hook payload from stdin.
@@ -114,8 +114,6 @@ function runAsHook() {
   process.exit(2);
 }
 
-const invokedDirectly =
-  process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-if (invokedDirectly) {
+if (invokedDirectly(import.meta.url)) {
   runAsHook();
 }

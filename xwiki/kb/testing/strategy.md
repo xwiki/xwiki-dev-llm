@@ -1,7 +1,7 @@
 ---
 title: XWiki testing strategy (overview)
 stability: durable
-summary: The kinds of tests XWiki uses, their naming, that every change comes with a test failing
+summary: The kinds of tests XWiki uses, their class and method naming, that every change comes with a test failing
   without it, the no-stdout rule, the prefer-the-lightest-base
   rule, the assertion rule (JUnit 5 where it fits, Hamcrest assertThat where it reports better), the
   scenario rule (no two @Test methods build the same fixture, a distinct fixture is what justifies a
@@ -13,13 +13,17 @@ summary: The kinds of tests XWiki uses, their naming, that every change comes wi
   Programming Rights to a test's own content, asserting whose rights code runs with, the assertion channel
   (browser vs REST), the bare @UITest on an AllIT container, the functional-test module layout
   (which pom lists which module under which profile, the -test-docker pom), getting a mandatory class in an
-  @OldcoreTest, MockitoOldcore's save authors, mocking a raw injected Provider, a functional test being
+  @OldcoreTest, MockitoOldcore's save authors, a functional test being
   done only once CI has proven it on every branch, coverage, and where
   each test framework lives. Procedures live in the test skills.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HBestPractices
+provenance: official
+last-confirmed: 2026-11-01
+related: [testing/test-value.md, testing/running-docker-its.md, testing/flickers.md, testing/ci-watch.md]
+applies-to: ["**/src/test/**/*.java", "**/*-test-pageobjects/**/*.java"]
 ---
 
 # XWiki testing strategy (overview)
@@ -38,7 +42,11 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
 - **Integration / functional tests** — class names end with `*IT.java`, run by Failsafe, activated
   by the `integration-tests` profile (Docker-based functional tests also need the `docker` profile).
 
-## Durable rules
+Test methods are named after the method under test plus a qualifier
+(`importWithHeterogeneousEncodings()`), or after the use case where that does not fit, one use case per
+method where possible. No `public` on the class, the test methods or JUnit lifecycle methods.
+
+## Every change has a test; tests stay silent
 
 - **A change comes with an automated test, and a fix's test fails without the fix** — "Code
   committed must have associated automated tests" (Testing page), by PR or direct commit alike, and
@@ -58,8 +66,6 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   injected `LogCaptureConfiguration`; an unexpected error is fixed, `registerExcludes(...)` being
   technical debt.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HStdout2Fstderrvalidationerrors)
-- **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
-  oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
 - **Assertions: the JUnit 5 one where it fits, Hamcrest `assertThat` where it reports better** —
   JUnit 5 has no substring or collection matcher, and `assertTrue(content.contains(x))` fails with
   `expected: <true> but was: <false>`, never showing `content`, where
@@ -68,6 +74,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   restates the matcher is then noise — keep one only where it says something the matcher does not,
   as `assertThat(reason, actual, matcher)`.
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting/#HBestpractices)
+
+## Functional tests: scenarios and the page-object boundary
+
 - **A functional test is a scenario, not a unit test — never pay for the same fixture twice** — a
   `*IT` pays a wiki start, a browser start and a page load per navigation, so what drives its runtime
   is the number of *fixtures*, not the number of assertions. Write scenarios: a method builds its
@@ -132,6 +141,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   `ViewPage` (`BasePage`) already waits for the window `load` event and every pending request, so
   images and async content (anything filled in by a request after the page loads) are in place —
   don't add a wait of your own for them.
+
+## Functional tests: waits, cleanup and containers
+
 - **Don't pay the timeout (Docker functional tests)** — never wait on a timer (`Thread.sleep()`),
   and never burn the full Selenium wait timeout waiting for something that will not appear. The waiting APIs (`findElement`, `findElements`, and
   the `waitUntil…` helpers) are for elements *expected to be present*; to assert an element's
@@ -152,6 +164,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   run beside it (Docker out of Docker), so a host path is not the agent's. Copy files in and out (`withCopyFileToContainer(MountableFile.forHostPath(…), …)`,
   `copyFileFromContainer`).
   (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HDockeroutofDocker)
+
+## URLs and runtime configuration in functional tests
+
 - **A URL generated outside a request uses the wiki descriptor** (XWiki 18.8.0+) — a scheduler mail
   or a reset-password link takes its host/port from the main wiki descriptor, which the framework
   points at the browser's address. Change it for the whole instance with the `wikiDescriptorTarget`
@@ -185,6 +200,9 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   patterns of several merged `@UITest`s are OR-ed together. A pattern anchored on the test class's
   own name must allow a prefix (`.*:.*MyIT\..*`), the page being `NestedMyIT…` inside an `AllIT`
   (see `TestReference` above).
+
+## Functional-test classes: rights checks, `AllIT` and `@Order`
+
 - **Asserting whose rights code runs with — use Script Right, not Programming Right** — to check
   in a functional test that some stored code runs with the rights of the right author (not a more
   privileged author's), have the unprivileged author's code output a value that only executed
@@ -208,6 +226,13 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   without `@Order` run in an order JUnit leaves unspecified. Keep the source order of the methods
   aligned with their `@Order` values, and place a new method according to its value rather than
   appending it. (https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting/#HScenarios)
+
+## Unit tests: the lightest base and oldcore
+
+- **Prefer the lightest base that works** — use `@ComponentTest` rather than `@OldcoreTest` when
+  oldcore is not required; code that loads and saves documents requires it ([[test-value]]).
+  What the frameworks do that their annotations do not show (temp dir, setup order, a
+  mocked component a `Provider` does not return, logs): [[unit-test-framework]].
 - **A mandatory class in an `@OldcoreTest`** — to get a real XClass from its
   `MandatoryDocumentInitializer` (rather than mocking `BaseObject`s), list the initializer in
   `@ComponentList` and call `oldcore.getSpyXWiki().initializeMandatoryDocuments(context)` in the
@@ -219,9 +244,8 @@ This is the declarative map of how testing works in XWiki. For **doing** the wor
   effective metadata author only when the content is dirty. A change made only through objects
   dirties the metadata, so after one user saves a page and another modifies its objects, the content
   author is still the first user and only the metadata author is the second.
-- **A `@MockComponent` the code's `Provider` does not return** — `@InjectMockComponents` silently mocked
-  the role the provider asks for, which differs from the registered one: fix the provider in the
-  production code ([[component-system]]), not the mock's type.
+## Done once CI proves it; coverage
+
 - **A functional test is done once CI has proven it, not when its PR is merged** — a new or modified
   `*IT`, a flicker fix included, must have run and passed on CI on **every branch** it was merged or
   backported to, in N (default 3) builds of distinct commits containing the merge. What counts as
@@ -264,7 +288,8 @@ xwiki-platform-<feature>/
   `maven-failsafe-plugin` declared in `<build><plugins>`, `xwiki.surefire.captureconsole.skip` set to
   `true`, test-scoped dependencies on `xwiki-platform-test-docker` and the feature's
   `-test-pageobjects`, the modules under test as ordinary runtime dependencies (the framework
-  installs them as extensions; `extraJARs` is a last resort), and the `clover` profile copied from a
+  installs them as extensions; `extraJARs` is a last resort, a Hibernate mapping being the routine
+  exception: [[docker-test-framework]]), and the `clover` profile copied from a
   sibling module. A macro the minimal WAR lacks (`{{display}}`) is a dependency of the `-ui` module
   using it, which real installs need too, not an `extraJARs` of the test.
 - **Test-only code for the wiki under test** — a component override, an event listener, a script

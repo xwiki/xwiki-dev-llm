@@ -15,6 +15,9 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/refactoring-operations-pages/delete-page/consequences/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/base/page/linking-references/updating-links/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/
+provenance: official
+last-confirmed: 2026-07-30
+related: [conventions/documentation-migration.md, conventions/documentation-mechanics.md, conventions/documentation.md, architecture/macro-refactoring.md]
 ---
 
 # Deleting a page on xwiki.org

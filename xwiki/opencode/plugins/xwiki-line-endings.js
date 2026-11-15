@@ -41,7 +41,8 @@ const server = async () => {
   return {
     "tool.execute.after": async (input, output) => {
       if (!isFileWrite(input.tool)) return;
-      const message = check(output?.args?.filePath);
+      // opencode 1.x passes the call's args on `input` after the call (on `output` before it).
+      const message = check((input.args ?? output?.args)?.filePath);
       if (message) throw new Error(message);
     },
   };

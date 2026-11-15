@@ -1,0 +1,117 @@
+{
+  "file": {
+    "questions": [
+      "How do I record the release note for a fix I merged, so it shows up in New and Noteworthy?",
+      "Where are XWiki release notes stored, and how do I add an entry to one without creating a page by hand?",
+      "Which JIRA fields link an issue to its documentation and to its release note entry?",
+      "How do I publish release notes for my xwiki-contrib extension that isn't part of XWiki Standard?"
+    ],
+    "aliases": [
+      "changelog",
+      "New and Noteworthy",
+      "What's new page",
+      "RN app",
+      "releasenotes API"
+    ]
+  },
+  "sections": {
+    "Release notes and the documentation fields of an issue": {
+      "questions": [
+        "What JIRA field do I fill in with the link to the documentation page once my issue is fixed?",
+        "Is a release note entry required if my change already has documentation, or do they count separately?",
+        "What is the difference between the documentation link and the release note link on an XWiki JIRA issue?"
+      ],
+      "aliases": [
+        "documentation custom field",
+        "customfield_10270"
+      ]
+    },
+    "The two JIRA fields": {
+      "questions": [
+        "Which JIRA custom field holds the URL of the documentation page, and which one holds the release note URL?",
+        "What do I write in Documentation in Release Notes when my change has no documentation page, and is N/A allowed there?"
+      ],
+      "aliases": [
+        "customfield_10273",
+        "JIRA documentation field"
+      ]
+    },
+    "Extensions not bundled in XWiki Standard": {
+      "questions": [
+        "Where do the release notes go for an xwiki-contrib extension that is not part of XWiki Standard?",
+        "What release notes field does an extension version page on extensions.xwiki.org have, and how do I read it?",
+        "My extension is tracked in JIRA or OpenProject. How does its release note get listed?"
+      ],
+      "aliases": [
+        "Repository application release notes",
+        "extension version notes",
+        "OpenProject release notes"
+      ]
+    },
+    "How a release note is stored": {
+      "questions": [
+        "Why doesn't the text I write in a release note page appear as a new entry in New and Noteworthy?",
+        "How are release note pages and their entry pages laid out in the wiki, and what objects does each carry?",
+        "How is a version like 18.8.0-rc-1 turned into a release note page name?",
+        "Why does a bugfix release note show a list of JIRA issues instead of entries?"
+      ],
+      "aliases": [
+        "ReleaseNoteClass",
+        "EntryClass",
+        "Entry###"
+      ]
+    },
+    "The REST endpoints (since Release Notes Application 2.7)": {
+      "questions": [
+        "How do I create a release note or a change from a script through the REST API?",
+        "Why does my POST to the release notes endpoint return 409, and how do I tell it already ran?",
+        "Can I update an entry after creating it through the release notes REST API, and what version do I need?",
+        "How do I turn the reference returned by the API into a URL I can paste in a JIRA field?"
+      ],
+      "aliases": [
+        "releasenotes REST endpoint",
+        "release notes web service"
+      ]
+    },
+    "Writing an entry": {
+      "questions": [
+        "How should I word the title and summary of a release note entry so users understand it?",
+        "Do I need a screenshot in my release note entry for a UI change, and where should it come from?",
+        "Which category, importance and audience should I pick for my release note entry?"
+      ],
+      "aliases": [
+        "changelog entry wording",
+        "release note screenshot"
+      ]
+    },
+    "Access": {
+      "questions": [
+        "How do I call the xwiki.org REST API from a script, and what User-Agent should I send?",
+        "Where are my xwiki.org credentials stored for writing release notes, and how do I authenticate to JIRA with the API token?"
+      ],
+      "aliases": [
+        "xwiki-credentials file",
+        "JIRA_API_TOKEN"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "servers/jira.md",
+      "servers/index.md",
+      "processes/release.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "874273e19a0019a0d3509afea8a6e8b82ba414197b680e7bba6a861410b7890c",
+  "file_hash": "33f6e1333cc0a46698b1662c4ed675f2cfa12927a3411511995bd7dfe625b5d2",
+  "section_hashes": {
+    "Release notes and the documentation fields of an issue": "d6c4528a4b197b439755fc0cb8e6d4ce6472cd5e910a90c6238c6d7eed937aa5",
+    "The two JIRA fields": "9f59d644d4d8a7ca603b6fd2a707ce6cad0998264bd02a8b8288546b699666ac",
+    "Extensions not bundled in XWiki Standard": "f185dcef2116d514352d31d09179c96761bfe6526bebf6ae1c45f68ad2ce5768",
+    "How a release note is stored": "6cc8e2bb8b18a7fa178d0e0b98abf8c0fe1d9afd5f805300b1c84eeed17b9768",
+    "The REST endpoints (since Release Notes Application 2.7)": "1917cdd9486962897f0b10779b00031528c38b92f14175fde655ef9db344a15b",
+    "Writing an entry": "9cb17faddddf7d6fb066160936efea892bc02257120e0a26006a6e58620c75a5",
+    "Access": "b3f3539a1de88a4f1169274000e6eff1c0e4955022b4b9762767f7437f247ba5"
+  }
+}

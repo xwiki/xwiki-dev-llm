@@ -1,0 +1,66 @@
+{
+  "file": {
+    "questions": [
+      "how do I confirm a functional test I merged actually passed on CI?",
+      "my merged IT is green on CI but did it really run?",
+      "how to track CI results for a test across backport branches after merging"
+    ],
+    "aliases": [
+      "backport verification",
+      "post-merge CI monitoring",
+      "functional test watch",
+      "IT verification on Jenkins",
+      "integration test proof"
+    ]
+  },
+  "sections": {
+    "Watching a merged functional test on CI": {
+      "questions": [
+        "how do I prove a merged functional test is stable on every branch it landed on",
+        "what do I do after merging a functional test to master and backporting it"
+      ],
+      "aliases": []
+    },
+    "What counts as \"it ran and passed\"": {
+      "questions": [
+        "how do I tell if a functional test really ran on Jenkins or was skipped",
+        "my CI build is green but the test class isn't in the output, is that a pass?",
+        "why does Develocity show 0 tests for my failsafe goal"
+      ],
+      "aliases": [
+        "test not executed",
+        "cached failsafe result",
+        "AllIT nested test check"
+      ]
+    },
+    "The in-session watch": {
+      "questions": [
+        "how do I keep checking CI builds for my merged test over several hours",
+        "how to schedule recurring checks on a merged PR's functional test in Claude Code",
+        "how do I record which branches and builds I've verified for a backport"
+      ],
+      "aliases": [
+        "CI polling",
+        "recurring CI check",
+        "state file for test verification",
+        "CronCreate schedule"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "testing/strategy.md",
+      "servers/jenkins.md",
+      "servers/develocity.md",
+      "servers/jira.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "e9ae27b5ba2a0f90e1ce0c2277fa3e924d0662a22d2c92c4608bce6019b4ef1b",
+  "file_hash": "121559653ff043c24bda44497e50ddf61aaf77f8173f25ca90935444f3d51a9b",
+  "section_hashes": {
+    "Watching a merged functional test on CI": "9f03fb4823d84dbb0ee9f12d20d595abbc1819b31b5a1ece59eda8ba748d3822",
+    "What counts as \"it ran and passed\"": "2d516b88535bc1ec2b711701b58b48fa8df483e34faa7fe13556ceaec907a36c",
+    "The in-session watch": "51ef748453495c499cc827439384784a5c9434825bd4f51a84293569212dd1e1"
+  }
+}
