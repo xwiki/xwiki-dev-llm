@@ -57,6 +57,9 @@ DIAGRAM_HEAD = '!theme bluegray\n' + PALETTE
 
 # Words that must not appear in a title: the page type and the audience are both carried by the
 # path and the badge already.
+BANNED_IN_TITLE = [r'\bHow[- ]?to\b', r'\bTutorial\b', r'\bReference\b', r'\bExplanation\b',
+                   r'\bfor (Developers|Administrators|Admins|Users)\b']
+
 # The stored values of the two select properties of DOC_CLASS, not their display labels ("How-to",
 # "Administrator"): GET /rest/wikis/xwiki/classes/DocApp.Code.DocumentationClass lists them. The
 # server stores any other string as is, so the page gets no valid type or audience, and every check
@@ -68,10 +71,6 @@ DOC_TARGETS = ('user', 'administrator', 'developer')
 def classification_problems(p):
     return [f'{p["ref"]}: {k} {p.get(k)!r} is not one of {"|".join(allowed)}'
             for k, allowed in (('type', DOC_TYPES), ('target', DOC_TARGETS)) if p.get(k) not in allowed]
-
-
-BANNED_IN_TITLE = [r'\bHow[- ]?to\b', r'\bTutorial\b', r'\bReference\b', r'\bExplanation\b',
-                   r'\bfor (Developers|Administrators|Admins|Users)\b']
 
 
 def load(name='pages'):
