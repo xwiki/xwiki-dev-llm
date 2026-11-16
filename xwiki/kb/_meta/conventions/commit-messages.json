@@ -17,31 +17,30 @@
   "sections": {
     "Commit message convention": {
       "questions": [
-        "What should the first line of my commit say when it references a JIRA issue?",
-        "How do I describe what my particular commit does when several commits share one issue?",
-        "How do I stop GitHub from auto-linking @since, @param or #123 in my commit message?"
+        "What should the first line of my commit message look like in XWiki?",
+        "Should I copy the JIRA issue title into the commit summary or write my own sentence?",
+        "What do I put in the body bullets when one issue has several commits?",
+        "Which dependency upgrades need a JIRA issue and which can be filed under [Misc]?"
       ],
       "aliases": [
-        "commit subject",
-        "commit header",
-        "commit body bullets",
-        "backticks in commit message",
-        "git commit title"
+        "commit title",
+        "XWIKI-NNNNN commit prefix",
+        "[Misc] tag"
       ]
     }
   },
   "proposed": {
     "related": [
       "servers/jira.md",
-      "conventions/dependencies.md",
       "processes/security-policy.md",
+      "conventions/dependencies.md",
       "processes/release-notes.md"
     ],
     "applies-to": []
   },
-  "source_hash": "bc0f4d5cd01f64f1a28644c6394842c04462f57a767a137bedc4e9de5e332e07",
+  "source_hash": "b168a2a8d1dbb74a952887f7ee2183de4951ad2a33348cda77b61bbb0565792a",
   "file_hash": "514313a53c9014f66a613dd0b37b26eb2a2726b44cf5e81f136fe2054b7a8a27",
   "section_hashes": {
-    "Commit message convention": "0cfec834d00ccb35af3ce682ab9d732dbf41687fd3612a2732614875c2c53098"
+    "Commit message convention": "51937806f982d236382ca0de81d754bf27fae9fda359846b57fec22e5719b062"
   }
 }

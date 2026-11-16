@@ -89,9 +89,9 @@ it explain the **user-visible problem**, not just the code change — but mind t
 ## Dependency-upgrade issues
 
 A dependency upgrade that ships to users needs its own issue, component **Dependency Upgrades**; one
-that only reaches developers may be `[Misc]`, or filed under **Development Issues only** (telling the
-two apart: [[commit-messages]]). Either way the summary is `Upgrade to <dependency> <version>`, and
-the description is the **raw release-note URLs of every version being crossed** — one line each, from
+that only reaches developers needs none, and takes **Development Issues only** when filed (telling the
+two apart: [[commit-messages]]). Whichever component it takes, the issue's summary is
+`Upgrade to <dependency> <version>`, and the description is the **raw release-note URLs of every version being crossed** — one line each, from
 the version after the one currently declared up to the target — not just the target's; skipping the
 intermediates hides the changes actually being pulled in. Keep them as bare URLs, which means setting
 the description over REST: `jira-cli` runs a body through its Markdown converter and rewrites a plain

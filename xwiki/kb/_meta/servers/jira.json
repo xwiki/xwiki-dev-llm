@@ -61,13 +61,15 @@
     },
     "Dependency-upgrade issues": {
       "questions": [
-        "How do I file a JIRA ticket for upgrading a third-party library and what goes in the description?",
-        "Which release-note URLs should I list when bumping a dependency across several versions?"
+        "How do I file a Jira ticket for upgrading a third-party library like Jetty?",
+        "Which release-note URLs go in the description of a dependency upgrade issue?",
+        "Which component should a library bump issue use if only developers are affected?",
+        "How do I write the release-note links in a dependency upgrade ticket without them being rewritten?"
       ],
       "aliases": [
-        "library upgrade ticket",
-        "Dependency Upgrades component",
-        "upgrade to dependency issue"
+        "library bump",
+        "dependency bump",
+        "Dependency Upgrades component"
       ]
     },
     "Flickering tests": {
@@ -195,14 +197,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "38aed85f669d8b8a61d60fcbb32f27925cf6d667723d6ed396fa482d5fda23b3",
+  "source_hash": "b12fbafb6ff07441be0331750638db0570583852d22ac341ded74d507cfaca77",
   "file_hash": "ff0af982fbbf0cd702d72c0691583e6ce30d17ee5440a49989f04f3fd2ff6336",
   "section_hashes": {
     "JIRA (jira.xwiki.org) — access and issue-field conventions": "22f8c8fdd5dad93872a558af8f785059b48424c7faf447d48324655ff5311349",
     "Project keys": "0605a990f910e62b572b44a468737142a59b5124db44b3f6e7f30b9910e87ea9",
     "Whether to file an issue at all": "c50ea0060d58c1efe6e249be09159c64ad0e7d1a167b8ccfcb378098e2db83c8",
     "Issue-field conventions (every issue type)": "e7598481b992aeddca3dfcaabdc2f210374da475b2700ee187f4469a48097734",
-    "Dependency-upgrade issues": "6485177e93cec6e01388d15141eb1a0700cb46c8c0f48c74a3177ac63407815e",
+    "Dependency-upgrade issues": "80039ec4b08cd625a54a39919f1abd2446fcff0f9c64164cac7797878227d628",
     "Flickering tests": "17683f0582ac801ca1519f13f2e8e0fd9e448b84a00109447e06da522fce9d08",
     "The documentation fields": "0a60fd8c32024564491556acf648c9d72281abf82fedd3da5438da1fcc849915",
     "Starting work on an issue": "cb4bbe5272b853aa442724328119233b541d88a2b719a517781310fec1c392d2",
