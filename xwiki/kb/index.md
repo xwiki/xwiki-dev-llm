@@ -91,19 +91,19 @@ in the topic file. Read the entry to choose, then read the file — never act on
 ### testing/
 - **strategy** — when a change needs a test, the kinds of test and their naming, the rules a test
   must satisfy, the functional-test module layout (procedures: the test skills).
-- **test-value** — a test worth having: its level, outcomes over calls, when to `verify()`, what a
-  hard test says.
+- **test-value** — a test worth having: its level, outcomes over calls, when to `verify()`.
 - **unit-test-framework** — unit-test mechanics: temp dir, setup order, `Provider` role
   mismatch, logs.
 - **running-docker-its** — running the Docker functional tests locally: networking, proxy and host
-  ports, setup failures, a stale build, ryuk leftovers, parallel runs. Commands in `xwiki-build`.
+  ports, setup failures, ryuk leftovers, parallel runs. Commands in `xwiki-build`.
+- **typescript-test-mocks** — mocking in the Vitest tests of xwiki-platform's Node packages.
 - **docker-test-framework** — `@UITest` options `-D` can't set, debugging, skips, HBM, two users.
 - **ci-watch** — proving on CI that a merged or backported functional test ran and passed, and the
   in-session watch.
 - **flickers** — diagnosing a flickering functional test: its video, the Selenium and browser
-  mechanics behind most flickers, forcing a race, the realtime debug dump.
+  mechanics behind most flickers, forcing a race.
 - **manual-tests** — the manual tests on test.xwiki.org: where steps, runs and automation status
-  live, a release's runs, the deprecated automation fields.
+  live, a release's runs.
 
 ### sonarqube/
 Which SonarCloud fixes are *correct* in XWiki, and — the question that actually matters — which look
