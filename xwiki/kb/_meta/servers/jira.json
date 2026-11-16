@@ -38,13 +38,14 @@
     },
     "Whether to file an issue at all": {
       "questions": [
-        "Do I need a new JIRA ticket for a bug my unreleased code introduced?",
-        "My fix was incomplete and already released, so should I reopen the issue or file a new one?",
-        "Does a refactoring or build-only change need a JIRA issue at all?"
+        "When is a bug in unreleased code not worth a new JIRA issue, and should I reopen the old one instead?",
+        "Do I need a ticket for a refactoring or build-only change with no user impact?",
+        "How do I tell whether a bug predates the dev version or was introduced by it?"
       ],
       "aliases": [
-        "when to create a ticket",
-        "reopen or new issue"
+        "when to create a jira ticket",
+        "reopen vs new issue",
+        "Development Issues only component"
       ]
     },
     "Issue-field conventions (every issue type)": {
@@ -60,13 +61,13 @@
     },
     "Dependency-upgrade issues": {
       "questions": [
-        "How do I file a JIRA issue for bumping a third-party library version?",
-        "What should the description contain when upgrading a dependency across several versions?",
-        "How do I write the release-note links in a dependency upgrade ticket without them being rewritten?"
+        "How do I file a JIRA ticket for upgrading a third-party library and what goes in the description?",
+        "Which release-note URLs should I list when bumping a dependency across several versions?"
       ],
       "aliases": [
-        "library bump ticket",
-        "Dependency Upgrades component"
+        "library upgrade ticket",
+        "Dependency Upgrades component",
+        "upgrade to dependency issue"
       ]
     },
     "Flickering tests": {
@@ -194,14 +195,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "aa4be15ed1bbaccec082497785f8c43197db16978de247e091818d864cfa51d4",
+  "source_hash": "38aed85f669d8b8a61d60fcbb32f27925cf6d667723d6ed396fa482d5fda23b3",
   "file_hash": "ff0af982fbbf0cd702d72c0691583e6ce30d17ee5440a49989f04f3fd2ff6336",
   "section_hashes": {
     "JIRA (jira.xwiki.org) — access and issue-field conventions": "22f8c8fdd5dad93872a558af8f785059b48424c7faf447d48324655ff5311349",
     "Project keys": "0605a990f910e62b572b44a468737142a59b5124db44b3f6e7f30b9910e87ea9",
-    "Whether to file an issue at all": "c45dfb40df941e71911e8b389e5f428b5967dfaa35db1127544ea9c5fc198fae",
+    "Whether to file an issue at all": "c50ea0060d58c1efe6e249be09159c64ad0e7d1a167b8ccfcb378098e2db83c8",
     "Issue-field conventions (every issue type)": "e7598481b992aeddca3dfcaabdc2f210374da475b2700ee187f4469a48097734",
-    "Dependency-upgrade issues": "e0ef8caeb86c5081875aabeafeb7e926396ec66a3df7cb1f9dc9116b18aae60e",
+    "Dependency-upgrade issues": "6485177e93cec6e01388d15141eb1a0700cb46c8c0f48c74a3177ac63407815e",
     "Flickering tests": "17683f0582ac801ca1519f13f2e8e0fd9e448b84a00109447e06da522fce9d08",
     "The documentation fields": "0a60fd8c32024564491556acf648c9d72281abf82fedd3da5438da1fcc849915",
     "Starting work on an issue": "cb4bbe5272b853aa442724328119233b541d88a2b719a517781310fec1c392d2",
