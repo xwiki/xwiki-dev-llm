@@ -65,7 +65,9 @@ These overlaps are intended and stay:
 
 At most **5 fixes**, highest value first: a rule stated twice with drifting wording beats a rule
 stated twice identically, which beats wording that is merely long, which beats a missing pointer. A
-common theme only breaks ties: it never displaces a higher-value fix the finder listed.
+common theme only breaks ties: it never displaces a higher-value fix the finder listed. Removing a
+restatement from a `references/` file includes the same restatement in its `SKILL.md`, except the
+one-line guardrail step 2 keeps there.
 A fix is one of:
 
 - **Move a rule to its one home and point to it.** The home is the narrowest file every reader of
@@ -77,9 +79,12 @@ A fix is one of:
   shell or Maven mechanics) with what must hold and the non-obvious fact behind it. Keep the steps of
   a fragile or irreversible operation and any convention the model cannot infer.
 - **Complete a one-way pointer** between two skills a model could confuse, restating from the other
-  side the boundary the existing pointer already draws.
+  side the boundary the existing pointer already draws — no wider (not "anything else"), and never
+  inside a row or sentence whose rule it would contradict. Not in a file at ≥95% of its budget unless
+  the batch also shrinks that file.
 - **Lower a size budget** in `scripts/size-budgets.json` to the new size plus about 10%, when that
-  is below the current entry. Never raise one.
+  is below the current entry. Never raise one. When `scripts/size-budgets.json` is off limits
+  (step 1), give the entry and its new value in the PR body instead.
 
 Never: change a version field; edit a manifest, `.mcp.json`, a hook, a `.mjs`/`.js`/`.sh` script, a
 validator threshold, a test or this file; rename or delete a skill, KB topic or `references/` file;
