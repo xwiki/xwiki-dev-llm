@@ -19,7 +19,7 @@
 // (a backport). A version naming the release line just before the next one comes back as advice, not a
 // refusal: it was right when written, before the version bump a rebased or late-merged change crossed.
 // Heuristics never refuse either (tests changed with the coverage threshold untouched, a page or script
-// changed with no test, `[Misc]` on a production change).
+// changed with no test, `[Misc]` on a production change, a raw `getValue` written into a page's output).
 //
 // Escape hatches, for a finding that is wrong: a `Diff-Check: skip` trailer in the commit message
 // (kept in history, so a reviewer sees it), or XWIKI_LLM_COMMIT_GATES=off in the environment.
@@ -157,6 +157,7 @@ const HOME = {
   encoding: `${KB}/code-style.md#File encoding`,
   license: `${KB}/code-style.md#Formatting`,
   misc: `${KB}/commit-messages.md`,
+  rawValue: `${KB}/security.md#Rendering an XObject property`,
 };
 
 const MAIN_JAVA = /(^|\/)src\/main\/(java|aspect)\/.*\.(java|aj)$/;
@@ -401,10 +402,49 @@ function advice(files, { summary, read }) {
     out.push(`${pages[0].path}${pages.length > 1 ? ` and ${pages.length - 1} more` : ""} changed with no test in the commit: `
       + "a page or script change is normally covered by a page test or a functional test (skill xwiki-test-guidelines).");
   }
+  out.push(...rawValueAdvice(pages, read));
   const production = files.filter((f) => /(^|\/)src\/main\//.test(f.path));
   if (/^\[Misc\]/.test(summary || "") && production.length) {
     out.push(`\`[Misc]\` on a commit changing ${production[0].path}${production.length > 1 ? ` and ${production.length - 1} more` : ""}: `
       + `a change users can see needs its JIRA issue (${HOME.misc}).`);
+  }
+  return out;
+}
+
+// A raw `getValue(...)` written into the output: directly, or through a variable `#set` from it and not
+// reassigned since. Output is a line that is not a directive, outside a call's arguments. Reported when the
+// commit adds (or rewrites: a refactor is the moment to fix it) either the `#set` or the output line, once
+// per file. A heuristic: it reads line by line, so it misses a value passed through another variable or a
+// macro, and flags a variable used in a script block (`{'k': $v}`, `$v.length()`).
+const RAW_SET = /^\s*#set\s*\(\s*\$(\w+)\s*=\s*"?\$!?[\w.]+(\([^)]*\))?\.getValue\(/;
+const ANY_SET = /^\s*#set\s*\(\s*\$(\w+)\s*=/;
+const RAW_OUT = /(^|[^(,\s])\s*\$!?[\w.]+\.getValue\(/;
+const ESCAPED = /escape\(|escapetool/;
+const outputs = (line, name) => new RegExp(`(^|[^(,\\s])\\s*\\$!?\\{?${name}\\b`).test(line);
+
+function rawValueAdvice(pages, read) {
+  const out = [];
+  for (const f of pages.filter((p) => /\.(xml|vm)$/.test(p.path))) {
+    const added = new Set(f.added.map((a) => a.no));
+    const raw = new Map(); // variable name → line number of its raw #set
+    const lines = (read(f.path) || "").split("\n");
+    for (const [i, text] of lines.entries()) {
+      const no = i + 1;
+      const line = text.replace(/##.*$/, "");
+      const set = ANY_SET.exec(line);
+      if (set) {
+        const rawSet = RAW_SET.test(line) && !ESCAPED.test(line);
+        if (rawSet) raw.set(set[1], no); else raw.delete(set[1]);
+        continue;
+      }
+      if (/^\s*#/.test(line) || ESCAPED.test(line)) continue;
+      const name = [...raw.keys()].find((n) => outputs(line, n) && (added.has(no) || added.has(raw.get(n))));
+      if (name || (added.has(no) && RAW_OUT.test(line))) {
+        out.push(`${f.path}:${no}: ${name ? `\`$${name}\` holds a` : "a"} raw \`getValue\` goes into the output `
+          + `unescaped: escape it for its context (${HOME.rawValue}).`);
+        break;
+      }
+    }
   }
   return out;
 }
