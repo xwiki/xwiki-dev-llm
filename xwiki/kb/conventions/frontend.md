@@ -9,6 +9,7 @@ summary: JavaScript must be AMD/RequireJS modules prefixed xwiki-, shipped as We
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFrontendDevelopmentPractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/use-css-properties/
