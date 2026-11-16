@@ -837,14 +837,12 @@
     "fact": "Pointer targets must be at least 24×24 CSS px (LESS `@target-size-minimum`) and should be at least 44×44 (`@target-size-recommended`); exceptions (inline targets, enough surrounding space, a duplicate target with the same function, user-determined size, essential presentation) are applied in good faith.",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
-        "version": "41.1",
-        "sections": [
-          "WCAG"
-        ]
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules",
+        "version": "1.1",
+        "sections": []
       },
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Target size exceptions",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules/Target size exceptions",
         "version": "3.1",
         "sections": []
       }
@@ -859,16 +857,14 @@
     "fact": "Hiding elements: visually and semantically → CSS `display: none` or the HTML `hidden` attribute, avoiding a dedicated class such as `.hidden` (`type=\"hidden\"` for inputs); visually only → class `sr-only`; semantically only → `role=\"presentation\"`, only on DOM leaf nodes, `aria-hidden` as last resort. Icons only with a text alternative (may be visually hidden).",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Properly hiding elements",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules/Properly hiding elements",
         "version": "1.1",
         "sections": []
       },
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
-        "version": "41.1",
-        "sections": [
-          "WCAG"
-        ]
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules",
+        "version": "1.1",
+        "sections": []
       }
     ],
     "kb_target": "kb/conventions/frontend.md",
