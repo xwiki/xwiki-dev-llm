@@ -50,8 +50,8 @@ assumed. When the user asks for that step:
   backport lands on another branch or the version ranges change. Remind the user of it, with the
   link, rather than treating the GHSA draft as the end of the job; do it for them only when asked:
   - The import page needs wiki admin rights (SPAPP-35). It and the advisory sheet's status buttons
-    are `/bin/` pages, which ignore Basic auth (`kb/servers/index.md`): use the user's logged-in
-    browser. "Mark announced" only appears once the advisory is completed.
+    are `/bin/` pages, which accept the user's Basic auth (`kb/servers/index.md`). "Mark announced"
+    only appears once the advisory is completed.
   - Check the import over REST: the page `SecurityAdvisoryApplication.SecurityEntries.<GHSA ID>`
     (read it by name: `/query` takes Solr only), its `SecurityAdvisoryApplicationClass` object and
     one `SecurityAdvisoryImpactedPackageClass` per package, ranges in Maven syntax.
