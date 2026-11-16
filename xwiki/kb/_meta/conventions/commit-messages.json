@@ -17,30 +17,31 @@
   "sections": {
     "Commit message convention": {
       "questions": [
-        "What should the first line of my commit message look like in XWiki?",
-        "Should I copy the JIRA issue title into the commit summary or write my own sentence?",
-        "What do I put in the body bullets when one issue has several commits?",
-        "Which dependency upgrades need a JIRA issue and which can be filed under [Misc]?"
+        "What should the first line of my XWiki commit say, and should I copy the JIRA title or write my own summary?",
+        "How do I describe what this particular commit changes when several commits share one JIRA issue?",
+        "Do dependency upgrades need a JIRA issue, or can I commit them as [Misc]?",
+        "How do I word a commit for a security fix so it doesn't disclose the vulnerability?"
       ],
       "aliases": [
-        "commit title",
-        "XWIKI-NNNNN commit prefix",
-        "[Misc] tag"
+        "commit message format",
+        "commit summary line",
+        "JIRA key in commit message",
+        "commit body bullets"
       ]
     }
   },
   "proposed": {
     "related": [
       "servers/jira.md",
-      "processes/security-policy.md",
       "conventions/dependencies.md",
+      "processes/security-policy.md",
       "processes/release-notes.md"
     ],
     "applies-to": []
   },
-  "source_hash": "b168a2a8d1dbb74a952887f7ee2183de4951ad2a33348cda77b61bbb0565792a",
+  "source_hash": "3b1780470e62a74bceaad9a70575cbbc71a4c167f47f883d7f698d746525ac9c",
   "file_hash": "514313a53c9014f66a613dd0b37b26eb2a2726b44cf5e81f136fe2054b7a8a27",
   "section_hashes": {
-    "Commit message convention": "51937806f982d236382ca0de81d754bf27fae9fda359846b57fec22e5719b062"
+    "Commit message convention": "a3e85ade56762b3803ed03baa36bcdd108eb9e99a6288ccaa329fb7b483f7fac"
   }
 }

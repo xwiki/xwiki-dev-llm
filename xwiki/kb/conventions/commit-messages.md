@@ -49,7 +49,7 @@ The documented format is:
   `[Misc]`.
 - **Dependency upgrades split on the same test:** a dependency that only ever reaches developers —
   a `devDependencies`/`peerDependencies` entry, a build or test-scoped Maven dependency — may be
-  `[Misc]` (if an issue is filed anyway, its component is in [[jira]]); one that ships to users
+  `[Misc]` or have an issue (its component is in [[jira]]); one that ships to users
   (declared in `dependencies`, or a runtime Maven dependency) needs an issue. Check where the dependency is actually declared before choosing: a shared version
   catalog (pnpm `catalog:`, a `pom.xml` property) hides that distinction, and the same artifact can
   be dev-only in one module and runtime in another — one runtime declaration is enough to require
