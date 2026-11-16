@@ -57,8 +57,8 @@ version"). The one exception is an issue closed without commits (Won't Fix, Dupl
 be reopened. The Affects Version tell above misses this case, since the defect usually predates the
 dev version.
 
-A change with no effect on users or extension developers (refactoring, build-only work) needs no
-issue; when one is filed anyway it takes the **`Development Issue Only`** component, which is excluded
+A change with no effect on users or extension developers (refactoring, build-only work) does not
+require an issue; when one is filed it takes the **`Development Issues only`** component, which is excluded
 from the release notes.
 
 ## Issue-field conventions (every issue type)
@@ -88,9 +88,10 @@ it explain the **user-visible problem**, not just the code change — but mind t
 
 ## Dependency-upgrade issues
 
-A dependency upgrade that ships to users needs its own issue (the `[Misc]` split is in
-[[commit-messages]]): summary `Upgrade to <dependency> <version>`, component **Dependency Upgrades**.
-The description is the **raw release-note URLs of every version being crossed** — one line each, from
+A dependency upgrade that ships to users needs its own issue, component **Dependency Upgrades**; one
+that only reaches developers may have one, under **Development Issues only** (telling the
+two apart: [[commit-messages]]). Whichever component it takes, the issue's summary is
+`Upgrade to <dependency> <version>`, and the description is the **raw release-note URLs of every version being crossed** — one line each, from
 the version after the one currently declared up to the target — not just the target's; skipping the
 intermediates hides the changes actually being pulled in. Keep them as bare URLs, which means setting
 the description over REST: `jira-cli` runs a body through its Markdown converter and rewrites a plain
