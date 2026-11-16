@@ -60,8 +60,7 @@ xwiki.org, extensions, test, dev and design all run XWiki; program against the R
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
 - **`/bin/` honors HTTP Basic auth too**, so a `/bin/` action with no REST equivalent (such as
-  extensions' `ImportExtension`) needs no browser. Its `data-xwiki-form-token` is the REST one when
-  the cookie session is shared.
+  extensions' `ImportExtension`) needs no browser.
 - **REST writes need a CSRF form token** (XWiki 14.10.8+/15.2+): send it in the **`XWiki-Form-Token`
   request header**; every REST response returns the current token in that same header (so any GET
   yields one). Retry once on `403 "Invalid or missing form token."` (it can rotate on server

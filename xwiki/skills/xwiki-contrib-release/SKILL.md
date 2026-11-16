@@ -97,8 +97,8 @@ import creates:
 - **Never give a Project id to `importExtension`**: it only matches `ExtensionClass` ids, so it creates
   a duplicate page named after the pom `<name>`, and every later "Update project" goes to that page.
   If it happens, delete the duplicate (its `Versions/<version>` child first) and update again.
-- **No browser needed**: these `/bin/` URLs accept the developer's Basic auth (`kb/servers/index.md`),
-  e.g. through `xwikidoc.py`'s opener. A `GET` of the import URL is enough.
+- **No browser needed**: a `GET` of the import URL with the developer's Basic auth is enough
+  (`kb/servers/index.md`).
 
 Verify that `lastVersion` is `X.Y` on the `ProjectClass`/`ExtensionClass` object, and that
 `Extension/<Space>/Versions/X.Y/` exists. Also check the page history: the import can be followed,

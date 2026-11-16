@@ -46,8 +46,7 @@ XWiki instance: its work packages are **`xwiki-openproject`**'s.
 
   The token stays constant per server run but can rotate on restart — **retry once on `403`** with the
   token from the error response. Sending it when it isn't needed is harmless. An `application/xml`
-  page `PUT` is exempt; form-encoded object `POST` and property writes are not. Take it from a
-  `/rest` response (see [[servers/index]]).
+  page `PUT` is exempt; form-encoded object `POST` and property writes are not.
 
 Path template used throughout (with `{S}` standing for the possibly-repeated `/spaces/{name}`
 segments):

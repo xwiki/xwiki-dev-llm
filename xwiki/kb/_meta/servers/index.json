@@ -52,16 +52,18 @@
     },
     "Accessing / writing to the XWiki-run sites via REST": {
       "questions": [
-        "How do I update a page or attachment on xwiki.org through the REST API with a CSRF token?",
-        "Where do I store my xwiki.org login so scripts can write to the wiki without leaking the password?",
-        "Why does my REST call on a subwiki like dev.xwiki.org return 404 or an empty list?",
-        "How do I upload an attachment via REST and why does it return 400?"
+        "How do I write a page through the REST API and why do I get a 403 invalid form token?",
+        "How do I upload an attachment to an xwiki.org page with curl and why do I get a 400?",
+        "How do I pick the right wiki id in the REST URL for dev.xwiki.org or test.xwiki.org?",
+        "How do I authenticate to xwiki.org REST with my credentials without leaking the password?",
+        "Can a script call an xwiki.org /bin/ action like ImportExtension with Basic auth, without a browser?"
       ],
       "aliases": [
-        "xwiki REST API writes",
-        "xwiki-credentials file",
-        "form token 403",
-        "subwiki REST path"
+        "xwiki rest api",
+        "wiki rest writes",
+        "xwiki.org api",
+        "xwiki credentials",
+        "bin basic auth"
       ]
     },
     "Posts an LLM co-wrote": {
@@ -98,13 +100,13 @@
     ],
     "applies-to": []
   },
-  "source_hash": "0960c330f638699ece20e0e200c768431292d28eca3a79df404d9f9694f09d3d",
+  "source_hash": "d491bd8fc04eb382604ae15cd04ef5891d0d9dc10cacf42c085f3fd5234c16b5",
   "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
   "section_hashes": {
     "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
     "Server map": "815ae8f9f7faff11ff884d1047b6bb4eac11e3c21582ec37f96249a9c369794e",
     "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
-    "Accessing / writing to the XWiki-run sites via REST": "c7db39fba918a294f95a680d02c9a4d6ba815e2a4687d6a9b3daae2196dabb91",
+    "Accessing / writing to the XWiki-run sites via REST": "f0a714a98a31b55c7e79553b57f239b8be3f9d866b2aa5327687903a675f84e4",
     "Posts an LLM co-wrote": "36c6581b775db79de2b0ce733c2e210ce8b7a38173419842144850e73008cb45",
     "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
   }
