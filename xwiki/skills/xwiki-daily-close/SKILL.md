@@ -93,5 +93,7 @@ Walk both lists in order, your work first:
 | Post a forum conclusion | Show the draft, apply the developer's edits, post it with the discourse MCP, then `dc accept` it. |
 | Reply, or request a review | Draft it (with the attribution line), show it, post it. |
 
+A forum topic or reply outside this sweep (brainstorming, proposal, vote) is `xwiki-forum`'s.
+
 After each write, `dc done <itemId> <action>` — the next report counts them. A "no" or "later" is
 not re-offered in the same run.

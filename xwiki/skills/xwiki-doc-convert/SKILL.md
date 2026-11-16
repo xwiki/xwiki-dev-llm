@@ -75,14 +75,11 @@ through it task after task, keeping the status in that plan so a fresh session c
 - **Read the inventory, never the raw legacy source.** That is what the `extract` task produced it
   for; re-reading the legacy page spends the context the plan was meant to save.
 
-**Nothing reaches xwiki.org until the whole set is ready.** xwiki.org is public: for the weeks a
-conversion is in flight, every reader who lands on it sees whatever is currently there. A page
-published on its own is a page with **red links** to the siblings and hubs that do not exist yet,
-often with **no parent page**, and sometimes with a defect the author has not caught. So the
+**Nothing reaches xwiki.org until the whole set is ready** — why, and the publishing rules, are in
+`kb/conventions/documentation-migration.md` → *A migration publishes once, at the end*. So the
 `page-*` tasks are **preparation** tasks — they draft into `pages.py`, capture screenshots, and lint
 offline — and **one final `publish` task puts the whole set live in a single pass**, parents before
-children. Publish order matters even within that pass: a child saved before its parent is briefly
-live with a broken hierarchy. A partially converted tree is never the visible state of the wiki.
+children. A partially converted tree is never the visible state of the wiki.
 
 The steps below are the *content* of the conversion; `references/conversion-plan.md` says which task
 owns each one, and holds the PLAN.md / task-file templates and the resume rules. Read it in the
