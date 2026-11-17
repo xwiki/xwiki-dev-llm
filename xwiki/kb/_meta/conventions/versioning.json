@@ -17,15 +17,14 @@
   "sections": {
     "Versions in code and issues (@since / @Deprecated, affected version)": {
       "questions": [
-        "What version goes in @since for a new method I'm adding to an existing class?",
-        "Which version do I write in @Deprecated(since=...) when I deprecate a method?",
-        "How do I find the current dev version of XWiki to put in @since?",
-        "Do I need @since on a new test helper or page object class?"
+        "What version string do I write in @since for a method I just added?",
+        "Which version should I put in the Affects Version field when reporting a bug?",
+        "How do I deprecate a method that was changed on two stable branches?"
       ],
       "aliases": [
         "since version",
-        "API version tag",
-        "deprecated since"
+        "deprecated since",
+        "affected version"
       ]
     },
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": {
@@ -65,10 +64,10 @@
       "**/*.java"
     ]
   },
-  "source_hash": "a97d4956e23b4b8fe9db67477c0a43e2a7547971559e9e3b206143fc5007e767",
+  "source_hash": "26494a75d1c89e05f91454ec2c17e9dede200868a197c85d4acbacb2a0dc6da0",
   "file_hash": "1459980600af03867789060917666021f78060bf38ac22562b25d91b1d03f73f",
   "section_hashes": {
-    "Versions in code and issues (@since / @Deprecated, affected version)": "efa084cdb67795705ed73ca069be8bc102b7782fb093f73df95201e28a930981",
+    "Versions in code and issues (@since / @Deprecated, affected version)": "b9e4cfe8c8cf88a58efda02be6ec7e2a79ee6293e4673788b0acc42968a24bc6",
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "65b853dd07da27dd0ef3f17093b596e8e12f888416dc24619146f897b65d31c0",
     "Affected version of an issue": "b378f6370bb5c31b05d6bdd2174bc0b92cc6759b5a71555955bd1fe1cf99bc81"
   }

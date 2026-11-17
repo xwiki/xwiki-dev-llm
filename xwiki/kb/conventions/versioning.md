@@ -2,10 +2,10 @@
 title: Versions in code and issues (@since / @Deprecated, affected version)
 stability: durable
 summary: Every version has three parts (X.Y.Z), contrib included. Use the next release of the
-  current dev version, written <X.Y.0>RC1, for @since and
-  @Deprecated(since=…). The current version itself is volatile — read it from pom.xml, and another
-  branch's from its pom.xml on origin, never from local tags. A deprecation
-  done on several branches lists ALL its versions, comma-separated, in the annotation. An issue's
+  current dev version, written <X.Y.0>RC1, for @since and @Deprecated(since=…). The current version
+  itself is volatile — read it from pom.xml, and another branch's from its pom.xml on origin, never
+  from local tags. A deprecation done on several branches lists ALL its versions, comma-separated,
+  in the annotation. An issue's
   affected version is always set: the oldest released version that has the problem, else the Cycle
   LTS's .0.
 sources:
@@ -28,10 +28,9 @@ applies-when:
 **The format rule is durable:** for `@since` and `@Deprecated(since = "…")` tags, use the **next
 release of the actual current dev version**, written as `<X.Y.0>RC1` (e.g. `18.5.0RC1`).
 
-**Every version has three numeric segments**, `Major.Minor.Bugfix[-rc-number|-SNAPSHOT]`, the
-`Bugfix` written even when it is 0 ([Version Types](https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/#HVersionTypes),
-since 16.0.0): release, tag, `-SNAPSHOT`, tracker version and `@since` alike. Contrib extensions
-follow it too, as they follow all of dev.xwiki.org
+**Every version has three numeric segments**, the last written even when it is 0 (since 16.0.0,
+[Version Types](https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/#HVersionTypes)):
+release, tag, `-SNAPSHOT`, tracker version and `@since` alike, contrib extensions included
 ([Development Practices](https://contrib.xwiki.org/xwiki/bin/view/Main/WebHome#HDevelopmentPractices)).
 Write `18.3.0RC1`, never `18.3RC1`; `2.31.0`, never `2.31`. Older two-part versions (`14.10`) are
 history, not a model.

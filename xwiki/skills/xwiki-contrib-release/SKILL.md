@@ -15,7 +15,9 @@ another preflight check fails, stop and report.
 
 ## 1. Preflight
 
-Read from the root `pom.xml`: the `<version>` (must be `X.Y.Z-SNAPSHOT` for the version asked), the
+Read from the root `pom.xml`: the `<version>` (`X.Y.Z-SNAPSHOT` for the version asked; a legacy
+two-part `X.Y-SNAPSHOT` releases `X.Y.0`, `kb/conventions/versioning.md`, so `release:prepare` then
+gets `-DreleaseVersion=X.Y.0 -DdevelopmentVersion=X.Y.1-SNAPSHOT`), the
 tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or `openproject`), and the
 `<parent>` XWiki version (it sets the JDK, see xwiki-build). Then all of these must hold:
 
@@ -40,9 +42,6 @@ tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or 
    at the contrib guide (Nexus account, GPG key) and stop. With the automatic JIRA release
    (`xwiki.release.jira.skip` false), the JIRA credentials of
    https://github.com/xwiki-contrib/parent#enable-automatic-jira-release are needed too.
-
-Versions have three parts (`kb/conventions/versioning.md`): a pom still on `X.Y-SNAPSHOT` releases
-`X.Y.0`, so `release:prepare` gets `-DreleaseVersion=X.Y.0 -DdevelopmentVersion=X.Y.1-SNAPSHOT`.
 
 ## 2. Prepare
 
