@@ -175,12 +175,14 @@
       "questions": [
         "Why does my link or monospace text render wrong on the documentation page?",
         "Why does my command-line flag with two dashes turn into strikethrough text?",
+        "Why did != in a table cell or a macro name in monospace text render wrong?",
         "How do I link to another xwiki.org page without using a full URL?",
         "How do I link to a section heading in an xwiki.org page?"
       ],
       "aliases": [
         "XWiki syntax gotchas",
         "strikethrough dashes",
+        "monospace does not escape",
         "wiki syntax 2.1",
         "anchor link",
         "doc reference link"
@@ -207,7 +209,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "e151955117d817bc3c8872f64e91b72ba7ca93f93ada644ad3020918951982f8",
+  "source_hash": "ad4144e066624c1dbc39e0ed33d1ad881989d043a5814a93b680739999c27c1d",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
@@ -223,7 +225,7 @@
     "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
     "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
     "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
-    "XWiki syntax traps that bite when authoring documentation": "8459bc8ac60f849bb8888ad464acdbcf7a58a26f176a4320020b603da4941806",
+    "XWiki syntax traps that bite when authoring documentation": "2a64a4073b8e7015806baf7c4cd30b558de4567ed8fc102ed3e75dfe2ec1ea1b",
     "Navigation order — pinning child pages": "d5522b550471a8c8f79e0cf8fb211e892f59a27cebf95dceb5c002109a63c95d"
   }
 }

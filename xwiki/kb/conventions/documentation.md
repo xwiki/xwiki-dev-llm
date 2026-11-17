@@ -602,15 +602,16 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   page render a red validation banner. Before `(((` it also swallows the word and leaks a literal `)))`
   into the page. **Rephrase** ("…image, as follows:") — never escape it. The same applies to any
   scheme-like token followed by `:` — `attach:`, `url:`, `mailto:`. **Grep every draft for these.**
-- **`--` is strikethrough, and `##…##` does not protect it.** A monospace span such as
-  `##--flag-name=value##` renders as `<del>flag-name=value</del>`: the leading dashes are *eaten*. An
-  **unmatched** `--` opens a `<del>` that runs **to the end of the block**, silently striking through
-  every remaining sentence. So every occurrence is a defect, not just paired ones. Use
-  `{{code language="none"}}--flag{{/code}}` inline, or a block code macro. Command-line flags are
-  exactly the content that trips this.
-- **`##…##` does not work around a URL.** `##http://localhost:8080/##` renders as
-  `http://localhost:8080/#` plus a stray `#`, because the autolinker eats one hash. Use
-  `{{code language="none"}}` for URLs.
+- **`##…##` protects nothing parsed before it**, and each case renders plausibly. Escape the
+  character with `~` inside the span — no code macro needed:
+  - `--` is strikethrough: `##--flag=value##` renders `<del>flag=value</del>`, and an **unmatched**
+    `--` strikes through to the end of the block, so every occurrence is a defect. Write `##~--flag##`.
+  - A URL: `##http://localhost:8080/##` loses a `#` to the autolinker. Write
+    `##http:~/~/localhost:8080/##` (`~http://` does not work).
+  - `!=` in a table row starts a header cell: `|##RewriteCond %{HTTPS} !=on##|` loses the `!=` and
+    moves `on` to a new cell (` !^` survives; outside a table it is harmless). Write `~!=`.
+  - A macro executes: `##{{deprecated/}}##` renders a *"Failed to execute the [deprecated] macro"*
+    box, in a Change Request description too. Write `##~{{deprecated/}}##`.
 - **Never link a page of the xwiki.org farm by URL — use `doc:<wiki>:<ref>`.** `extensions`, `dev`,
   `design`, `snippets`, `rendering`, `commons`, `contrib`, `cristal` and `test` are **subwikis of the
   same farm** as `www.xwiki.org` (`GET /rest/wikis` lists them), so write
@@ -646,8 +647,9 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   generated anchor id. Rephrase the heading and put the URL in the body inside a code macro.
 - **A blank line between two list items ends the list**, so numbering restarts at 1. Keep list items on
   consecutive lines.
-- **Angle brackets inside `##…##` are safe** — `##<prefix>_xwiki-data##` renders as literal monospace.
-  XWiki 2.1 does not accept raw HTML outside `{{html}}`, so `<…>` placeholders need no escaping.
+- **Angle brackets inside `##…##` are safe in page content** — `##<prefix>_xwiki-data##` and
+  `##xwiki-tomcat<version>-<database>##` render literally: XWiki 2.1 has no raw HTML outside
+  `{{html}}`, so `<…>` placeholders need no escaping.
 - **Section anchors work, but the syntax differs per page syntax — check which one the page uses.**
   The anchor id is `H` + the heading text with whitespace dropped, letters, digits and `:_.-` kept,
   and every other character replaced by its hex code — so `== My heading ==` gives `HMyheading`, but
