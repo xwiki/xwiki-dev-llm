@@ -145,6 +145,15 @@ def lint(mod):
                     problems.append(f'{where} double hyphen (strikethrough trap): {line[:80]}')
                 if re.search(r'##[^#]*https?://', line):
                     problems.append(f'{where} URL inside ## monospace: {line[:80]}')
+                # Both are parsed before the monospace span, so `##…##` protects neither (18.9.0):
+                # `!=` past a row's start opens a header cell, and a macro executes. An escaped
+                # `~{{…}}` is already dropped by `strip_verbatim`.
+                if re.match(r'[|!]', line) and re.search(r'(?<=.)(?<!~)!=', line):
+                    problems.append(f'{where} != inside a table row opens a header cell, use '
+                                    f'{{{{code language="none"}}}} in the cell: {line[:80]}')
+                if any('{{' in span for span in re.findall(r'##(.*?)##', line)):
+                    problems.append(f'{where} macro inside ## monospace executes, escape it as '
+                                    f'##~{{{{…}}}}##: {line[:80]}')
                 # A `{{macro}}` written in an f-string field arrives as `{macro}` and renders as
                 # literal text; no violation object and no rendered error box says so.
                 if re.search(r'(?<!\{)\{/', line) or re.search(r'/\}(?!\})', line):
