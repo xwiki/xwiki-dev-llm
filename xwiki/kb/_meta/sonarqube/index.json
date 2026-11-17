@@ -51,15 +51,16 @@
     },
     "Rules not worth fixing (denylist)": {
       "questions": [
-        "Should I fix the cognitive complexity warning S3776 or split the method?",
-        "Why can't I remove the explicit toString() in a log call to satisfy S2629?",
-        "Is it fine to suppress the S1181 catch Throwable warning, or is it a false positive?",
-        "Which SonarCloud issues are false positives in XWiki that I should not touch?"
+        "Should I try to fix the cognitive complexity warning SonarCloud raises on a big method?",
+        "Sonar says to catch Throwable instead of Exception, can I just change it?",
+        "Why does Sonar want me to remove the eager toString in a log call, and should I?",
+        "Sonar wants a field or method made protected or renamed, is that a safe change in XWiki?"
       ],
       "aliases": [
-        "false positives",
-        "won't fix Sonar issues",
-        "Sonar ignore list"
+        "sonar false positives",
+        "ignored sonar rules",
+        "wontfix sonar",
+        "sonar rule exclusions"
       ]
     },
     "Universal drop conditions": {
@@ -110,13 +111,13 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "f9bb558dc746eb111d31593cd155670d5e747d4706651553fc18933c87fe1a91",
+  "source_hash": "8a020430016b4a03b878c19dd287aeff18203d32a9097add7f3cba4e189fc9af",
   "file_hash": "652068777d8b2fd8117fb78f9cd20e836f9af0307c60200e25e6971fd130bc20",
   "section_hashes": {
     "SonarQube rule fixes — index / map": "2edb79a79891d19c7e83659726700693f4c0ab75cdad9c344773811a5d74192a",
     "How to use this (READ)": "ecb3ecf919e57fdada1be4741a4e66b53dcd49896bc0a5ab519ec7831a489548",
     "Rule map": "f9151eec5ae0edd6cb159430aecc67f99c38175d8904f6c648efcb0a1d8d9fd0",
-    "Rules not worth fixing (denylist)": "dd89582ee8f4fb8fb0697068a60409d5c05dd747279f85c1b7fb9dc686aff485",
+    "Rules not worth fixing (denylist)": "6b4a1207f73817e47bfa339fd3fee7996a3e8be1a1eec5d45b155a9412c7f62a",
     "Universal drop conditions": "14e06f40a07c623c245a9128fcf7f4f955731982aee7de78e64648870cba8a64",
     "Retiring an issue that should not be fixed": "d0bb6f4ad7c015a8346af59b0be27826d4dd7aae51f12fb0d82b66308ec6ff07",
     "Related": "9781163269b195c78dc28a840ccc246c0894224096941f78d42cb31b975aa7c3"
