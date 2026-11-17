@@ -170,10 +170,9 @@ framework, a published name, or what a test fixture exercises. "It is deliberate
 published API weigh deprecate + `-legacy` first. One reason repeated at many sites is one pom-wide
 exclusion ([[code-style]]).
 
-When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**:
-add `@SuppressWarnings("java:SXXXX")` with a `//` comment above it stating why. Marking the issue
-*Accepted* in SonarCloud alone hides the reasoning from the next developer, who will try to "fix" it
-again. The full convention is in [[code-style]].
+When an issue is then a genuine false positive, the resolution is **in the code, not in SonarCloud**
+(marking it *Accepted* there alone is not enough): the `@SuppressWarnings` convention and why is
+[[code-style]] § *Suppressing a static-analysis warning*.
 
 *Accepted* has a second and unrelated use: **claiming** the issues an open PR already fixes, so that
 the next sweep — which discovers work with `issueStatuses=OPEN` — does not redo them. That claim says

@@ -5,7 +5,9 @@ description: Find and fix open SonarCloud (SonarQube) issues in the current XWik
 
 # Fix a SonarCloud (SonarQube) issue
 
-Finds open issues via the SonarCloud REST API, fixes them and opens a PR.
+Finds open issues via the SonarCloud REST API, fixes them and opens a PR. A failing quality gate
+the daily CI sweep (`xwiki-ci-check`) hands over is fixed here; the sweep attributes it and opens its
+PR its own way (its quality-gate reference).
 Works in whatever XWiki / xwiki-contrib repo the session runs in. Requires the
 `SONARQUBE_TOKEN` and per-repo `SONARQUBE_PROJECT_KEY` env vars (see the plugin README). The
 SonarCloud organization is `xwiki`. The repo you are working in is the local clone — read files from
