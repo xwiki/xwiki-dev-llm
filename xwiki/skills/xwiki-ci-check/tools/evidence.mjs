@@ -16,7 +16,9 @@
  *   node evidence.mjs --build <build URL> --grep <regex> [--max 60]
  */
 
-import { CI, failedNodesOf, getJSON, stagesOf, stepConsole, stepLog, tree } from '../../../scripts/jenkins.mjs';
+import {
+  CI, environmentOf, failedNodesOf, getJSON, stagesOf, stepConsole, stepLog, tree
+} from '../../../scripts/jenkins.mjs';
 
 const USAGE = 'Usage: node evidence.mjs --build <build URL> (--test <Class#method> | --grep <regex>) [--max <n>]';
 
@@ -62,8 +64,6 @@ export function serverErrors(stdout, max = 40) {
   return [...new Set(kept)].slice(0, max);
 }
 
-const environmentOf = suite => String(suite.enclosingBlockNames?.slice(-1)[0] || 'main')
-  .replace(/ - Docker tests.*$/, '');
 
 async function testEvidence(build, test) {
   const [className, method] = test.split('#');
