@@ -8,6 +8,9 @@
 //        node scripts/kb-sources.mjs --diff <url>[@<version>]
 //                                                  the page's wiki-syntax diff, from the given version (any
 //                                                  page, pinned or not) or else its pin, to the current one
+//        node scripts/kb-sources.mjs --text <url>[@<version>]
+//                                                  the page's wiki syntax at that version (default: current),
+//                                                  preceded by a line naming the page and version
 //        node scripts/kb-sources.mjs --new [YYYY-MM-DD]
 //                                                  the documentation pages created since that date (default:
 //                                                  8 weeks ago) that no KB file, eval/backlog.json fact or
@@ -193,10 +196,12 @@ export const unpinnedSources = (files, pins) =>
   files.flatMap(({ file, markdown }) =>
     devSources(markdown).filter((key) => pins[key] === undefined).map((key) => ({ file, key })));
 
-// "url@1.2" → [key, "1.2"]; "url" → [key, undefined].
+// "url@1.2" → [key, "1.2"]; "url" → [key, undefined]. A page name may hold literal spaces, which
+// pageKey reads as the end of the URL.
 export const pinArg = (arg) => {
-  const m = String(arg).match(/^(.*?)@(\d+\.\d+)$/);
-  return m ? [pageKey(m[1]), m[2]] : [pageKey(arg), undefined];
+  const s = String(arg).trim().replace(/ /g, "+");
+  const m = s.match(/^(.*?)@(\d+\.\d+)$/);
+  return m ? [pageKey(m[1]), m[2]] : [pageKey(s), undefined];
 };
 
 // The page and the version a --diff starts from: the one the argument names, else the page's pin.
@@ -326,6 +331,18 @@ const seen = (args) => {
   writeFileSync(join(repoRoot, SEEN_FILE), JSON.stringify(sorted, null, 2) + "\n");
 };
 
+const text = async (arg) => {
+  const [key, version] = pinArg(arg);
+  if (!key) throw local(`${arg}: not a dev.xwiki.org page`);
+  const page = await resolve(key);
+  if (page.error) throw new Error(`${key}: ${page.error}`);
+  const v = version ?? page.version;
+  const rev = await getJson(`${page.path}/history/${v}`);
+  if (!rev) throw new Error(`${key}: version ${v} is gone from the wiki's history`);
+  console.log(`${key}@${v} (current: ${page.version})\n`);
+  console.log((rev.content ?? "").replace(/\r\n/g, "\n"));
+};
+
 const diff = async (arg) => {
   const { key, from: pin } = diffFrom(arg, readPins());
   const page = await resolve(key);
@@ -373,6 +390,7 @@ const isMain =
 if (isMain) {
   const args = process.argv.slice(2);
   const run = args[0] === "--diff" ? diff(args[1])
+    : args[0] === "--text" ? text(args[1])
     : args[0] === "--pin" ? pin(args.slice(1))
     : args[0] === "--new" ? listNew(args[1])
     : args[0] === "--seen" ? Promise.resolve().then(() => seen(args.slice(1)))
