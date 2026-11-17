@@ -93,7 +93,7 @@ the same build, or of one class flickering in exactly the same builds (`cofailin
 | `deep` | inside the per-run budget: root-cause it. Everything else is reported, not analysed |
 | `recalled` | concluded on an earlier morning and unchanged: the paste reuses it, so do not redo it |
 | `evidence`, `blame.suspects` | present **only** on `deep` incidents — the others are deliberately one line each |
-| `develocity` | on a `deep` class-1 incident: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
+| `develocity` | on a `deep` class-1 incident, and on a flicker about to be filed: 28 days of that test's executions everywhere it runs (`references/deep-analysis.md`) |
 | `jira` | the open flicker issue, if the test already has one |
 | `jiraClosed` | a **closed** flicker issue naming this exact test, fixed or not (`resolution`). Never suppresses anything (`references/fix-signals.md`) |
 | `failedIn` | how often it failed over the whole window (`2/8 builds, 1/4 envs`) — `ageDays` is only the current streak, which is why a *proven* flicker can read `0d` |

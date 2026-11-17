@@ -19,8 +19,9 @@
  * repository root, which the plugin does not ship.
  */
 
+import { isPseudoTest } from '../../../scripts/jenkins.mjs';
 import { closedFlickers, knownFlickers } from '../../../scripts/jira-flickers.mjs';
-import { develocityFacts } from './dv-test-history.mjs';
+import { develocityFacts, regressionOf } from './dv-test-history.mjs';
 import { gateFacts, nameAuthors } from './sonar-gate.mjs';
 import { recallable } from './memory.mjs';
 import { readFileSync } from 'node:fs';
@@ -48,7 +49,8 @@ const USAGE = `Usage: node ci-check.mjs [options]
   --absence <days>    Days without a build that make a dev/LTS branch an incident (default 3)
   --max-console <n>   Consecutive broken builds whose log is read, per job (default 4)
   --no-github         Skip blame attribution and the "already commented?" check
-  --no-develocity     Skip the Develocity history of deep class-1 incidents (one call each)
+  --no-develocity     Skip the Develocity history (deep class-1 incidents, flicker filing gate);
+                      no flicker issue is filed without it
   --rehearse-stabilise Pick the stabilisation candidate even past an open release blocker, so the
                       dry run can exercise references/stabilise.md. Marks the work order a
                       rehearsal: commit-comment.mjs and pull-request.mjs refuse --write from it.
@@ -277,6 +279,25 @@ for (const incident of incidents) {
 // the room, or that an open PR names, must not still be printed under "issues to open". Computing
 // the group first and the answer second is how the paste came to contradict its own rule, which the
 // room pass makes an everyday case: a flicker is exactly what people claim in chat.
+//
+// **And after Develocity.** Jenkins' eight builds are what made the flicker look proven, and they
+// cannot tell a step from a flake on a single-environment job, nor when the step is older than they
+// are — so the test's 28-day history is read before anything is filed, and a test that has failed
+// every run on this branch since a given day is withheld as the regression it is (`regressionOf`).
+// Unreachable, the filing waits a day: an issue filed late costs nothing, a wrong one is what got
+// XWIKI-25778 closed as Invalid on 2026-11-17. Not promoted to a breakage, which would start a
+// culprit hunt and a commit comment on the strength of this rule alone.
+let develocityOff = args.develocity ? null : 'disabled with --no-develocity';
+// One test Develocity has never run says nothing about the next one; anything else is the server,
+// the key or the checkout, and asking again only spends the run's time.
+const develocityRead = incident => {
+  const facts = develocityFacts(incident.tests[0], { match: incident.evidence?.[0] });
+  if (facts.unavailable && !facts.unknownTest) {
+    develocityOff = facts.unavailable;
+    process.stderr.write(`develocity history unavailable: ${facts.unavailable}\n`);
+  }
+  return facts;
+};
 for (const incident of incidents) {
   if (incident.kind !== 'flicker' || !incident.proven || incident.jira || incident.beyondHorizon) continue;
   // On the incident that carries the cause, never on its peers: they are its branch list, and a
@@ -288,6 +309,22 @@ for (const incident of incidents) {
   // answer §5 gives is to comment on that issue rather than open a new one.
   if (incident.jiraClosed) continue;
   if (settled(incident)) continue;
+  if (develocityOff) {
+    incident.flickerWithheld = `not filed until its Develocity history can be read (${develocityOff})`;
+    continue;
+  }
+  const facts = develocityRead(incident);
+  if (facts.unavailable) {
+    incident.flickerWithheld = `not filed until its Develocity history can be read (${facts.unavailable})`;
+    continue;
+  }
+  incident.develocity = facts;
+  const since = regressionOf(facts, incident.branch);
+  if (since) {
+    incident.flickerWithheld = `failing every run on ${incident.branch} since ${since} (Develocity) — a regression,`
+      + ' not a flicker';
+    continue;
+  }
   incident.flickerGroup = `${incident.repo}/${incident.signature.split('#')[0].split(/[.$]/).pop()}`;
 }
 
@@ -349,23 +386,18 @@ for (const incident of deep) {
 // Deep class-1 incidents only — ~120 requests and ~10 s each — and off at the first refusal: no
 // checkout, no `python3`, no key, no network, and the sweep carries on with what Jenkins gave it,
 // which is the whole of its behaviour before this pass existed.
-let develocityOff = args.develocity ? null : 'disabled with --no-develocity';
 for (const incident of deep) {
-  if (develocityOff || incident.class !== 1 || !incident.tests?.length) continue;
+  if (develocityOff || incident.develocity || incident.class !== 1 || !incident.tests?.length) continue;
   // A class-level failure (`@AfterAll`, `@BeforeAll`) has no method to look up: SubWikiIT's teardown
   // came back "null failures in null executions" on 2026-10-19.
-  if (incident.tests[0].endsWith('#')) continue;
+  // Nor has a whole class failing to set up (`initializationError`): Develocity records no such test.
+  if (incident.tests[0].endsWith('#') || isPseudoTest(incident.tests[0])) continue;
   // Tests grouped by a root cause they share: no one test's history is that cause's.
   if (incident.rootCause) continue;
   // The test that names the incident, and the incident's own error line so that a test failing two
   // different ways is described by the failure *this* incident is about.
-  const facts = develocityFacts(incident.tests[0], { match: incident.evidence?.[0] });
-  if (facts.unavailable) {
-    develocityOff = facts.unavailable;
-    process.stderr.write(`develocity history unavailable: ${facts.unavailable}\n`);
-    continue;
-  }
-  incident.develocity = facts;
+  const facts = develocityRead(incident);
+  if (!facts.unavailable) incident.develocity = facts;
 }
 
 // ---- The quality gate: what failed it, and whose code is under it -----------------------------
@@ -623,9 +655,8 @@ if (blockers.length && !args.rehearseStabilise) {
   // from Develocity — so the candidate gets the history whether or not it won a deep slot. One extra
   // invocation, once per run, and only on the mornings nothing more urgent is open.
   if (!pick.develocity && !develocityOff && pick.tests?.length) {
-    const facts = develocityFacts(pick.tests[0], { match: pick.evidence?.[0] });
-    if (facts.unavailable) develocityOff = facts.unavailable;
-    else pick.develocity = facts;
+    const facts = develocityRead(pick);
+    if (!facts.unavailable) pick.develocity = facts;
   }
   // The configuration the failure concentrates in *on this branch*: `develocity` counts the test
   // everywhere it runs, and its worst configuration may be another branch's.
@@ -867,6 +898,8 @@ function digest(incident, keys) {
     crossBranch: incident.crossBranch,
     primary: incident.primary,
     flickerGroup: incident.flickerGroup,
+    // Why a proven flicker gets no issue today: its Develocity history is a step, or unreadable.
+    flickerWithheld: incident.flickerWithheld,
     // For a gate failure this is the whole of the evidence, and it is the only place the report can
     // learn who wrote the code under the failing condition — so it is carried whether or not the
     // incident won a deep slot.

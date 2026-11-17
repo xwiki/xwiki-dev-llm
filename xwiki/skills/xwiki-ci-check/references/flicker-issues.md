@@ -8,7 +8,10 @@ that is `proven` (failed in ≥ 2 distinct builds across ≥ 2 distinct days), h
 answered whole by a `fixState` — filing an issue is a write, and §3's rule is that an answered
 incident earns none — and carries its cause (`primary` is not `false`): a peer under a primary that
 fails every build belongs to a test that is broken, not flaky, and the breakage is what gets
-reported and commented on. Everything else is listed in the paste under "Flickers not filed", with the
+reported and commented on. The tool also withholds it, in `flickerWithheld`, when the test's
+Develocity history shows a step — failing every run on that branch since a given day, after passing
+before — or cannot be read: a regression is not a flicker, and an issue filed a day late costs
+nothing. Everything else is listed in the paste under "Flickers not filed", with the
 reason on its line: a failure seen once is not a flicker, it is an event — and that is exactly the
 shape of a Docker or GitHub blip. The evidence threshold *is* the confirmation step, made
 structural, because a routine running at 06:00 has nobody to ask.
