@@ -79,14 +79,11 @@ XWiki Standard distribution — **XWiki Standard must keep working with `compati
 
 ## Mocks in TypeScript unit tests
 
-The Vitest tests of `xwiki-platform-node` mock with `vitest-mock-extended`, as the mock-dependencies
-page on xwiki.org shows (it wins where this section disagrees). What it does not say:
-
-- Never stub with an object literal cast `as unknown as T`: the cast hides every member the code under
-  test calls that the stub forgot. `mock<T>()` is typed and needs no cast.
-- A `fallbackMockImplementation` runs on every unstubbed call, `toString` included, so do not set it on
-  a mock Vue receives as a prop or that gets stringified.
-- `mockDeep` does not reach `provider.get().method`: stub `get` to return a `mock<X>()`.
+The Vitest tests of `xwiki-platform-node` mock their dependencies with typed `vitest-mock-extended`
+mocks, never an object literal cast `as unknown as T`. How, and the traps (`fallbackMockImplementation`
+on a Vue prop, `mockDeep` and a provider): the
+[mock-dependencies page](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/front-end/test/mock-dependencies/)
+on xwiki.org.
 
 ## HTML, CSS, accessibility
 
