@@ -5,7 +5,7 @@ summary: How the CI versions the feature-deploy-* branches of a change spanning 
   why the poms keep the standard version, and how to build such branches locally without polluting
   the standard snapshots of ~/.m2.
 sources:
-  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
 provenance: official
 last-confirmed: 2026-11-17
 related: [processes/release.md, conventions/versioning.md, servers/jenkins.md]
