@@ -67,9 +67,8 @@ a Fix Version by name across them, so resolving against `XWIKI` is enough.)
 `18.8.0` and `18.8.0-rc-1` are different release notes, and picking the wrong one puts the entries
 where nobody will read them.
 
-The Fix Version is also the version the entries are stored against: for a `.0` cycle that is the RC
-(`18.8.0-rc-1`), and the final release note aggregates them. Do not "helpfully" retarget to the
-final version.
+The Fix Version is also the version the entries are stored against: never "helpfully" retarget
+them to the final (`kb/processes/release-notes.md` → *How a release note is stored*).
 
 **The release note.** One call says whether it exists and, if so, the page it lives in:
 
