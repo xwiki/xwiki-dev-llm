@@ -111,9 +111,11 @@ Source: the guide's [Page Titles and Page Names](https://dev.xwiki.org/xwiki/bin
 | Explanation | **Does not** start with a verb; a phrase naming the subject, answering "why" — "Conflict Resolution" |
 
 An "-ing" word naming a topic is not a verb — "Rendering Macros" is a valid Reference title. The accepted
-words are held by the `verb` check (its `NOUN_ING_WORDS` constant, per
+words are the "Nouns ending in "ing"" field of the Documentation Administration on xwiki.org (since
+Documentation Application 1.19, per
 [Page Titles and Names](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/PageTitlesNames/)):
-add a word there rather than marking the violation a false positive.
+ask an admin to add a word there rather than marking the violation a false positive. A one-word title
+or page name ("Formatting") is not reported.
 
 **Titles use English title case** — capitalise the significant words, not just the first:
 *"Edit a Page Using the WYSIWYG Editor"*, not *"Edit a Page using the WYSIWYG Editor"*. A title may be
