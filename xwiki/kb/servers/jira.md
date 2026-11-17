@@ -10,7 +10,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://www.xwiki.org/xwiki/bin/view/Main/Support/
 provenance: official
-last-confirmed: 2026-11-01
+last-confirmed: 2026-11-17
 related: [conventions/versioning.md, conventions/commit-messages.md, processes/release-notes.md, testing/flickers.md]
 ---
 
@@ -70,10 +70,13 @@ below). When filing/curating an issue — Bug, Improvement, New Feature **or Tas
   `Rendering`, `Platform - …`): required for triage. Elsewhere (contrib), optional: set one when
   the project defines a fitting component.
 - **Affects Version/s** — always set, per [[versioning]].
-- **Fix Version/s** — the version the fix ships in: normally the next release of the current dev
-  version. Note the naming: JIRA version names use dashes (e.g. `18.7.0-rc-1`), whereas the source
-  `@since` / `@Deprecated(since=…)` tag for the *same* release uses `18.7.0RC1` — see [[versioning]]
-  for the tag format. Add the stable-branch fix versions too when the fix is backported.
+- **Fix Version/s** — only on an issue whose fix is in progress or done, as the version the fix ships
+  in: normally the next release of the current dev version. An issue merely **reported** gets none,
+  except a regression (the next versions of the supported branches) and a `Development Issues only`
+  Task (the version it is due before). Note the naming: JIRA version names use dashes (e.g.
+  `18.7.0-rc-1`), whereas the source `@since` / `@Deprecated(since=…)` tag for the *same* release
+  uses `18.7.0RC1` — see [[versioning]] for the tag format. Add the stable-branch fix versions too
+  when the fix is backported.
 - **Issue links** — link every related issue it names (the one that introduced the code involved, the
   one it follows up on, …) with a real JIRA link, by default **`Related`**; naming it in the
   description alone does not show up in either issue's links.
