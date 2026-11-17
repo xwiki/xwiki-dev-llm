@@ -14,10 +14,12 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/use-css-properties/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
+  - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/front-end/test/mock-dependencies/
+  - https://www.npmjs.com/package/vitest-mock-extended
 provenance: official
-last-confirmed: 2026-11-03
+last-confirmed: 2026-11-17
 related: [conventions/server-side-rendering.md, conventions/backward-compatibility.md, conventions/naming.md, conventions/translations.md]
-applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css"]
+applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css", "xwiki-platform-core/xwiki-platform-node/src/main/node/**/*.test.ts"]
 ---
 
 # Front-end conventions
@@ -74,6 +76,17 @@ the same care as a Java API: keep the old name working from **`compatibility.js`
 folder of the skin resources), wrapping it so a call logs a deprecation warning naming the
 replacement and the version. Before deprecating, check the old API is no longer used anywhere in the
 XWiki Standard distribution — **XWiki Standard must keep working with `compatibility.js` absent**.
+
+## Mocks in TypeScript unit tests
+
+The Vitest tests of `xwiki-platform-node` mock with `vitest-mock-extended`, as the mock-dependencies
+page on xwiki.org shows (it wins where this section disagrees). What it does not say:
+
+- Never stub with an object literal cast `as unknown as T`: the cast hides every member the code under
+  test calls that the stub forgot. `mock<T>()` is typed and needs no cast.
+- A `fallbackMockImplementation` runs on every unstubbed call, `toString` included, so do not set it on
+  a mock Vue receives as a prop or that gets stringified.
+- `mockDeep` does not reach `provider.get().method`: stub `get` to return a `mock<X>()`.
 
 ## HTML, CSS, accessibility
 
