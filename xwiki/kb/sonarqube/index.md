@@ -92,7 +92,7 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   rule's *variable* half is a different matter and is **not** denylisted — see [[syntax-rules]].
 - **`S4144`** "implementation is identical to method X" — **splits on the pair's NAMES**: same
   operation ⇒ deliberate duplication, extract one private helper (no signature or behaviour change);
-  different operations ⇒ the identical body is a defect, so report it and leave the issue open.
+  different operations ⇒ the identical body is a defect, so file a JIRA issue and leave Sonar's open.
 - **`S115`** constant naming — a cross-module rename of published API, breaking.
 - **`S1214`** constants-in-interface — **denylisted on published API only**, and the decision is
   recorded in the code rather than in SonarCloud. Inside an `internal` package it is a normal fix, and
