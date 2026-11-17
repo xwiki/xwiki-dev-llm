@@ -51,6 +51,11 @@ plugins), `--strict-mcp-config` (no MCP), `--plugin-dir` (only the plugin under 
 questions, `backlog.json` and results unreadable: the score must measure the knowledge base, not a live
 fetch of xwiki.org nor the gold.
 
+`run.mjs` gives the sessions a copy of `--plugin` at `<out>/plugins/<hash of the label>/xwiki`, a path of
+the same length for every label: the prompt hook's block is cut at a character budget that counts its
+header, which names the plugin's directory, so versions run from paths of different lengths could be
+given a different number of pointers for the same KB.
+
 Groups (a), (b) and (d) run in `repo-stub/`, a git repo with an `xwiki/xwiki-platform` origin and a
 stub `pom.xml` (18.10.0-SNAPSHOT), so the plugin's scoped hooks fire. Group (c) runs each task in its
 own throwaway repo (`tools/task-repo.mjs`): a fresh `git init` that fetches only the task's `base` from
@@ -166,6 +171,28 @@ and lands only the ones the model needs, with numbers showing they help and harm
 
 Cost: about $50 for a batch of 14 facts, most of it the (a)+(d) comparison (300 sessions and their
 judging).
+
+## Tried and rejected: pruning by model knowledge
+
+The reverse of a batch was measured in November 2026 and rejected: remove the KB text blocks the model
+already gets right without them, to cut what must be kept in sync. Five files (95 blocks) were split
+into facts, one question per fact; a block passed when every fact scored 3, none harmful, in one
+closed-book Sonnet run and in two runs with the code clones and without the block, judged against the
+whole section (judged against the block alone, an answer contradicting a neighbouring rule still
+scored 3). 15 of 84 blocks passed, and their removal passed the (a)+(d) gate. A robustness check then
+failed every one of the 9 lowest-risk blocks at least once (a second phrasing per fact, 5 more runs
+closed-book and 5 with the code each), Java textbook facts included; nothing was removed.
+
+- Three passing runs do not show that a model reliably knows a fact: a fact it gets right most of the
+  time fails about once in 10 to 20 runs, and a removed fact has nothing left to correct it.
+- The gate protects the rest of the KB, not the removed facts: only one group (a) question touched one,
+  and it caught a block that passes with the code but not without it.
+- A block restated in text every session gets (`xwiki-org.md`) is a duplicate, the consolidation
+  routine's concern, not model knowledge.
+
+Worth re-measuring only for a new model generation: the same robustness check on those 9 blocks
+(`sonarqube/simplification-rules.md` S1612, S1066, S6353, S3012, S7158, S1596; `component-system.md`
+injection; `code-style.md` component system; `versioning.md` same version) costs about $10.
 
 ## Metrics
 
