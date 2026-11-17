@@ -31,8 +31,9 @@ architectural convention for back-end XWiki code.
 - **Implementation** — a class annotated `@Component` that implements a role. It is registered so
   the container can instantiate and inject it.
 - **Registration** — implementations are listed in `META-INF/components.txt` (one fully-qualified
-  class name per line). The build can generate this automatically when the
-  `component-maven-plugin` is configured; otherwise it is maintained by hand.
+  class name per line), maintained by hand: nothing generates it. The build's Spoon checks fail a
+  `@Component` class missing from it (unless `staticRegistration = false`), an entry listed twice or
+  without its class, and a file not ending with a newline.
 - **Injection** — depend on a role with `@Inject` on a field. Prefer the `jakarta.inject.*`
   annotations (`@Inject`, `@Named`, `Provider`) in new code; see [[code-style]] for the
   javax→jakarta migration.

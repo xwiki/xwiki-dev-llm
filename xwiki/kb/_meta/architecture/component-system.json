@@ -28,16 +28,15 @@
     },
     "The core concepts": {
       "questions": [
-        "What is the difference between a role and a component implementation in XWiki?",
-        "How do I declare an interface that other modules can plug into?",
-        "Why does my injected Provider come back empty for a generic interface?",
-        "What does @Component do, and how does it relate to components.txt?"
+        "What's the difference between a @Role interface and a @Component class in XWiki?",
+        "Why does my injection of a generic role like Provider<MyRole<String>> give me nothing or the wrong implementation?",
+        "Do I have to edit META-INF/components.txt by hand when I add a new component class?",
+        "Which annotations should I use to inject a dependency into a field, @Inject or @Autowired?"
       ],
       "aliases": [
-        "@Role annotation",
-        "@Component annotation",
         "service interface",
-        "extension point"
+        "extension point",
+        "components.txt registration"
       ]
     },
     "Hints (multiple implementations of a role)": {
@@ -143,11 +142,11 @@
       "**/src/main/java/**/*.java"
     ]
   },
-  "source_hash": "373f3e52fbd3758ed7204d4c677221a118d6d3c2c84c1b310ac998d46c602387",
+  "source_hash": "829a577012d138478635f10df6cbc3e441280abc29dd8ed23fa646e4bb21ca81",
   "file_hash": "fe6a2936cd49582abaa3269286efa1909c9ac24e47dffbc996230384d90fce66",
   "section_hashes": {
     "The XWiki component system": "16ed1f424585dbd7722be4f569fd0814437bf12bfb9314975afd1ec5dcca44cd",
-    "The core concepts": "770aeba45e27b36bd8ebabb9409f6e92fc4c3ea36f0de3ea3b83dea1af0abc15",
+    "The core concepts": "3275164d383115e2cff2927f8332fb77ebfca0a55dbb508f0a1ad62011c72e3e",
     "Hints (multiple implementations of a role)": "c21d6db11bf74bdfbe39778bddffe8b317117d44d88e028ac53b3e3f23d22ac0",
     "Instantiation strategy": "70f592547319a1a83748ee56eadb74a6f8781d4d9ca779cab6b5cfa001a108b4",
     "Programmatic lookup": "e61b5103ecf95d6a0a679fa1ec3e67a9dbcbb9b2f7bbb46d4466ca520096f428",
