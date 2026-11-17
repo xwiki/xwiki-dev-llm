@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 process.env.XDG_STATE_HOME = mkdtempSync(join(tmpdir(), 'kb-state-'));
 const {
-  bodyHash, buildIndex, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, sidecarOf, splitSections,
+  bodyHash, buildIndex, isLinkList, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, sidecarOf, splitSections,
   tokenize, versionMatches,
 } = await import('../../xwiki/scripts/kb-search.mjs');
 const { kbIndexDir } = await import('../../xwiki/scripts/state-dir.mjs');
@@ -131,6 +131,15 @@ test('sections: one per ##, fenced ## ignored, the intro headed by the file titl
     ['Versions in code', 'The @since format', 'Deprecation', 'Checking a branch version']);
   assert.match(sections[1].text, /## not a heading/);
   assert.deepEqual(splitSections('# Only a title\n\n## A\n\ntext\n', 'T').map((s) => s.heading), ['A']);
+});
+
+test('a Related section of only [[topic]] bullets is never a hit; one with its own text can be', () => {
+  const links = { heading: 'Related', text: '- [[security]] — the escaping rules\n  that apply here.\n- [[naming]] — names.' };
+  const routing = { heading: 'Related', text: '- [[index]] — the server map.\n- Use the `xwiki-ci-check` skill to act on it.' };
+  assert.equal(isLinkList(links), true);
+  assert.equal(isLinkList(routing), false);
+  assert.equal(isLinkList({ heading: 'Rules', text: '- [[security]] — x' }), false);
+  assert.equal(isLinkList({ heading: 'Related', text: 'Prose only.' }), false);
 });
 
 test('tokenizer: identifiers split and kept whole, stopwords dropped, plurals folded', () => {

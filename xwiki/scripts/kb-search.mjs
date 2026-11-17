@@ -31,7 +31,7 @@ import { kbIndexDir } from "./state-dir.mjs";
 import { invokedDirectly } from "./invoked-directly.mjs";
 
 // Bump whenever the index's shape or anything feeding it (tokenizer, fields, weights) changes.
-export const INDEX_FORMAT = 4;
+export const INDEX_FORMAT = 5;
 
 const FIELD_WEIGHTS = { heading: 3, questions: 2, context: 1, body: 1 };
 const K1 = 1.2;
@@ -101,6 +101,18 @@ export function parseFrontmatter(text) {
     }
   }
   return { data, body: src.slice(m[0].length) };
+}
+
+/**
+ * A `## Related` section holding only `[[topic]]` bullets: a list of links to other topics. Pointing a
+ * session at it never answers anything, so it is never a hit.
+ * It stays in the index, so the corpus statistics, and every other section's score, are unchanged. A
+ * Related section with its own text (routing to a skill or server) is a hit like any other.
+ */
+export function isLinkList(section) {
+  if (section.heading.trim().toLowerCase() !== "related") return false;
+  const items = section.text.split("\n").filter((l) => /^\s*[-*] /.test(l));
+  return items.length > 0 && items.every((l) => /^\s*[-*] \[\[[^\]]+\]\]/.test(l));
 }
 
 /**
@@ -351,7 +363,9 @@ export function buildIndex(root, { skillsRoot = null } = {}) {
       length += countInto(tf, context, FIELD_WEIGHTS.context);
       length += countInto(tf, tokenize(s.text), FIELD_WEIGHTS.body);
       const idx = sections.length;
-      sections.push({ file: rel, section: s.heading, first: firstLine(s.text), length });
+      const section = { file: rel, section: s.heading, first: firstLine(s.text), length };
+      if (isLinkList(s)) section.linkList = true;
+      sections.push(section);
       totalLength += length;
       for (const [t, w] of tf) (postings[t] ??= []).push(idx, w);
     }
@@ -523,6 +537,7 @@ export function search(index, query, { k = DEFAULT_K, version, skills = false } 
   const scores = new Map();
   for (const best of byWord.values()) for (const [s, v] of best) scores.set(s, (scores.get(s) || 0) + v);
   let ranked = [...scores]
+    .filter(([s]) => !index.sections[s].linkList)
     .filter(([s]) => skills || index.files[index.sections[s].file].kind !== "skill")
     .filter(([s]) => !version || versionMatches(index.files[index.sections[s].file].versions, version))
     .sort((a, b) => b[1] - a[1] || a[0] - b[0]);
