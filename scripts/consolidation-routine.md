@@ -28,8 +28,10 @@ it stay.
 - List the open PRs: `gh api 'repos/xwiki/xwiki-dev-llm/pulls?state=open&per_page=100'`, and each one's
   files with `gh api --paginate 'repos/xwiki/xwiki-dev-llm/pulls/<n>/files?per_page=100' --jq '.[].filename'`.
 - Note every file any open PR changes: you never edit those files (the PR would conflict), and you
-  pass them to the finder with `--exclude`. A path master has renamed since the PR's base (e.g.
-  `xwiki/okf/` → `xwiki/kb/`) counts under its current name: the file is still the one it edits.
+  pass them to the finder with `--exclude`. A file master renamed after the PR's base (`okf/` became
+  `kb/`) is still the one the PR edits: a listed path missing from master is looked up in
+  `git diff -M --name-status <the PR's base.sha> origin/master` (fetch that commit if the clone is
+  shallow), and its current name is the one you avoid and exclude.
 - **A consolidation PR is still open** (title starting `[Misc] Weekly consolidation:`): go to step 8.
   For steps 2–7, open nothing, comment nothing, push nothing. One unreviewed batch is the limit — a
   second one would only queue, conflict with the first, and spend a committer's attention twice;
@@ -80,9 +82,10 @@ A fix is one of:
 - **Complete a one-way pointer** between two skills a model could confuse, restating from the other
   side the boundary the existing pointer already draws — no wider (not "anything else"), and never
   inside a row or sentence whose rule it would contradict. Not in a file at ≥95% of its budget unless
-  the batch also shrinks that file, nor in a description that would then pass 1,024 characters (the
-  validator fails it), nor in the description of an EXPLICIT INVOCATION ONLY skill, which no model
-  selects on its own: a pointer there routes nothing.
+  the batch also shrinks that file. It goes in the `SKILL.md` body, not the description, when the
+  description would then pass 1,024 characters (the validator fails it) or the skill is EXPLICIT
+  INVOCATION ONLY, whose description is kept for its own do-not-use cases: an explicit run reads the
+  body.
 - **Lower a size budget** in `scripts/size-budgets.json` to the new size plus about 10%, when that
   is below the current entry. Never raise one. When `scripts/size-budgets.json` is off limits
   (step 1), give the entry and its new value in the PR body instead.
