@@ -1663,7 +1663,7 @@
     "kb_target": "kb/processes/release.md",
     "probe": "I just added a new Checkstyle rule to the build on master. Does it need backporting, and what if it fails on stable-17.10.x?",
     "status": "candidate",
-    "note": "A model treats build and test tooling as master-only and backports only bug fixes; it would also backport a check without fixing what it reports on the branch. partial: kb/processes/release.md#Durable facts (backport targets are the LTS branches)."
+    "note": "Not to land before https://forum.xwiki.org/t/19108 agrees: the rule is on the page, but the thread is open (runtime dependencies a tooling backport drags in; proposed semver rule). A model treats build and test tooling as master-only and backports only bug fixes; it would also backport a check without fixing what it reports on the branch. partial: kb/processes/release.md#Durable facts (backport targets are the LTS branches)."
   },
   {
     "id": "AC1",
