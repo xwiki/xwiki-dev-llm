@@ -136,6 +136,7 @@ Applied by `xwiki-fix-sonarqube-issue`, which owns the *procedure*.
   still reach.
 - **security-policy** — scoring and labelling a vulnerability, keeping it private until disclosure,
   and merging its fix.
+- **feature-deploy-branches** — cross-repo branch versions.
 - **module-lifecycle** — moving a module between repos with its history, and retiring one.
 - **release-notes** — how a release note is stored and created, and which releases owe one. Applied by
   `xwiki-release-documentation`.
@@ -160,4 +161,4 @@ each grounded in a cited source. `_template.md` holds the format and the groundi
 
 New knowledge enters **only through a reviewed git PR** — never silent local writes. Use the
 `xwiki-knowledge` skill, which holds the gate checklist and drafts the entry.
-When you add a topic, **update this map and the mirror in `instructions/xwiki-org.md`**.
+When you add a topic, **update this map**.
