@@ -1,30 +1,30 @@
 {
   "file": {
     "questions": [
-      "What version number should I put in @since for a new method or class I'm adding?",
-      "How do I write the version in @Deprecated when I deprecate something on several branches?",
-      "Which affected version should I set on a JIRA bug, the latest release or the oldest one that has the problem?",
-      "Should I write 18.3RC1 or 18.3.0RC1 in a @since tag?"
+      "Which version string do I put in @since and @Deprecated(since=...) when I add code to XWiki?",
+      "What version number should I use for a new method, since the release it ships in isn't out yet?",
+      "Why does XWiki write versions as 18.3.0RC1 instead of 18.3, and what do I write for a brand new line?",
+      "How do I find the current dev version number to put in @since without guessing?"
     ],
     "aliases": [
-      "API version tag",
-      "deprecation version",
-      "Affects Version",
-      "since tag in javadoc",
-      "version to write in code"
+      "@since tag",
+      "since version",
+      "version numbering",
+      "RC1 version naming",
+      "@Deprecated since"
     ]
   },
   "sections": {
     "Versions in code and issues (@since / @Deprecated, affected version)": {
       "questions": [
-        "Do I need a @since tag on a new test helper class or a page object I'm adding?",
-        "Which version goes in @since when I add a new public method to an existing class?",
-        "Do I put @since on a private method, or on a test method?"
+        "What version string do I write in @since for a method I just added?",
+        "Which version should I put in the Affects Version field when reporting a bug?",
+        "How do I deprecate a method that was changed on two stable branches?"
       ],
       "aliases": [
-        "since annotation",
-        "version tag in javadoc",
-        "API versioning"
+        "since version",
+        "deprecated since",
+        "affected version"
       ]
     },
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": {
@@ -64,10 +64,10 @@
       "**/*.java"
     ]
   },
-  "source_hash": "ccac54b61f6f02158ff8e2c3199b9b0382f0dd579d3d5af43a5d6ab1b735c4c1",
-  "file_hash": "54e4b99466576f8cd595d6c0b54092f6e191e6bf031b15441f6024af7332d331",
+  "source_hash": "26494a75d1c89e05f91454ec2c17e9dede200868a197c85d4acbacb2a0dc6da0",
+  "file_hash": "1459980600af03867789060917666021f78060bf38ac22562b25d91b1d03f73f",
   "section_hashes": {
-    "Versions in code and issues (@since / @Deprecated, affected version)": "3bf315a1716ed054ceab4c0b1249f92dab03c65e79b1851b6b69b59a30961eed",
+    "Versions in code and issues (@since / @Deprecated, affected version)": "b9e4cfe8c8cf88a58efda02be6ec7e2a79ee6293e4673788b0acc42968a24bc6",
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "65b853dd07da27dd0ef3f17093b596e8e12f888416dc24619146f897b65d31c0",
     "Affected version of an issue": "b378f6370bb5c31b05d6bdd2174bc0b92cc6759b5a71555955bd1fe1cf99bc81"
   }

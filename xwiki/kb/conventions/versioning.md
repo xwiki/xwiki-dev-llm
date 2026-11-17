@@ -1,14 +1,16 @@
 ---
 title: Versions in code and issues (@since / @Deprecated, affected version)
 stability: durable
-summary: Use the next release of the current dev version, written <X.Y.0>RC1, for @since and
-  @Deprecated(since=…). The current version itself is volatile — read it from pom.xml, and another
-  branch's from its pom.xml on origin, never from local tags. A deprecation
-  done on several branches lists ALL its versions, comma-separated, in the annotation. An issue's
+summary: Every version has three parts (X.Y.Z), contrib included. Use the next release of the
+  current dev version, written <X.Y.0>RC1, for @since and @Deprecated(since=…). The current version
+  itself is volatile — read it from pom.xml, and another branch's from its pom.xml on origin, never
+  from local tags. A deprecation done on several branches lists ALL its versions, comma-separated,
+  in the annotation. An issue's
   affected version is always set: the oldest released version that has the problem, else the Cycle
   LTS's .0.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
+  - https://contrib.xwiki.org/xwiki/bin/view/Main/WebHome#HDevelopmentPractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/#HRule:Non-codeissuesareallowed
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HDeprecation
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HUseone40sinceperversion
@@ -26,8 +28,12 @@ applies-when:
 **The format rule is durable:** for `@since` and `@Deprecated(since = "…")` tags, use the **next
 release of the actual current dev version**, written as `<X.Y.0>RC1` (e.g. `18.5.0RC1`).
 
-**Always three numeric segments** (since XWiki 16.0.0). Write `18.3.0RC1`, never `18.3RC1`;
-`17.10.10`, `18.4.3`. A two-segment version like `18.3RC1` is invalid.
+**Every version has three numeric segments**, the last written even when it is 0 (since 16.0.0,
+[Version Types](https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/#HVersionTypes)):
+release, tag, `-SNAPSHOT`, tracker version and `@since` alike, contrib extensions included
+([Development Practices](https://contrib.xwiki.org/xwiki/bin/view/Main/WebHome#HDevelopmentPractices)).
+Write `18.3.0RC1`, never `18.3RC1`; `2.31.0`, never `2.31`. Older two-part versions (`14.10`) are
+history, not a model.
 
 ## `@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason
 
