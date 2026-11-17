@@ -415,10 +415,11 @@ function advice(files, { summary, read }) {
 // reassigned since. Output is a line that is not a directive, outside a call's arguments. Reported when the
 // commit adds (or rewrites: a refactor is the moment to fix it) either the `#set` or the output line, once
 // per file. A heuristic: it reads line by line, so it misses a value passed through another variable or a
-// macro, and flags a variable used in a script block (`{'k': $v}`, `$v.length()`).
-const RAW_SET = /^\s*#set\s*\(\s*\$(\w+)\s*=\s*"?\$!?[\w.]+(\([^)]*\))?\.getValue\(/;
+// macro, and flags a variable used in a script block (`{'k': $v}`, `$v.length()`). Only `getValue` with an
+// argument counts, the XObject form: `$entry.getValue()` on a map entry is not a property.
+const RAW_SET = /^\s*#set\s*\(\s*\$(\w+)\s*=\s*"?\$!?\{?[\w.]+(\([^)]*\))?\.getValue\(\s*['"$]/;
 const ANY_SET = /^\s*#set\s*\(\s*\$(\w+)\s*=/;
-const RAW_OUT = /(^|[^(,\s])\s*\$!?[\w.]+\.getValue\(/;
+const RAW_OUT = /(^|[^(,\s])\s*\$!?\{?[\w.]+(\([^)]*\))?\.getValue\(\s*['"$]/;
 const ESCAPED = /escape\(|escapetool/;
 const outputs = (line, name) => new RegExp(`(^|[^(,\\s])\\s*\\$!?\\{?${name}\\b`).test(line);
 

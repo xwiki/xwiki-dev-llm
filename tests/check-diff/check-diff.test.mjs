@@ -389,12 +389,15 @@ test('a raw getValue written into the output is advice, a rewritten line include
   const set = "#set ($v = $doc.getValue('v'))";
   assert.match(advised(body([set, 'Text']), body([set, 'Text $!{v}'])), /:3: `\$v` holds a raw/);
   assert.match(advised(body(['Text']), body(["Version $doc.getValue('v')"])), /:2: a raw `getValue`/);
-  // Escaped at the #set, escaped by a later #set, only compared, passed to a call or in a comment: no advice.
+  assert.match(advised(body(['Text']), body(["Type $doc.getObject('X.Y').getValue('t')"])), /:2: a raw/);
+  // Escaped at the #set, escaped by a later #set, only compared, passed to a call, in a comment, or a map
+  // entry's value: no advice.
   for (const lines of [
     ["#set ($v = $services.rendering.escape($doc.getValue('v'), 'xwiki/2.1'))", 'Text $v'],
     [set, "#set ($v = $services.rendering.escape($v, 'xwiki/2.1'))", 'Text $v'],
     [set, '#if ($v)', '$escapetool.xml($v)', '#end'],
     [set, '## Text $v'],
+    ['#foreach ($entry in $map.entrySet())', '<td>$entry.getValue()</td>', '#end'],
   ]) {
     assert.doesNotMatch(advised('<content/>\n', body(lines)), /raw `getValue`/, lines.join(' / '));
   }

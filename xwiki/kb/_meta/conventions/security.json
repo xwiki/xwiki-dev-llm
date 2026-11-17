@@ -88,13 +88,16 @@
     },
     "Rendering an XObject property — display it, never parse its raw value": {
       "questions": [
-        "how do I show an object property's value in a page without running its content as wiki syntax?",
-        "what is the difference between getValue and get when reading an xobject property in Velocity?"
+        "what's the difference between getValue and get on an object property in Velocity?",
+        "how do I show a property of an XObject on a page without running its content with the wrong rights?",
+        "why does $object.get return the displayed value and not the stored one?"
       ],
       "aliases": [
+        "BaseObject",
         "doc.display",
-        "xobject property",
-        "class property rendering"
+        "object property",
+        "xobject field",
+        "BaseObject getValue"
       ]
     },
     "Parsing XML — use the XML Module helpers": {
@@ -134,10 +137,10 @@
   },
   "proposed": {
     "related": [
+      "processes/security-policy.md",
       "conventions/script-services.md",
       "conventions/server-side-rendering.md",
-      "conventions/translations.md",
-      "processes/security-policy.md"
+      "conventions/translations.md"
     ],
     "applies-to": [
       "**/*.vm",
@@ -146,7 +149,7 @@
       "**/*.groovy"
     ]
   },
-  "source_hash": "c25f86e8137700386fd41876900ff02cb2f9b66a431663fdb1be38ca38b9dc4b",
+  "source_hash": "364c35d48171222bf8256d7791877700029486836a588dc3638e4cc5b26c6dfd",
   "file_hash": "24a684258ea1feb5937bd72034e983ce85561e5d5dc82d40ff701704924730e1",
   "section_hashes": {
     "Secure-coding conventions (escaping, untrusted input, right checks)": "c177ed0dd512fa61a043c7b78ee17a34ed41b3ecec1ec3cba8e849f683aab43b",
@@ -155,7 +158,7 @@
     "Structural interpolation — bind covers values, never identifiers or references": "919cd2b7d677cebcd20c2050cfee995acc0ca56577d9adacc1ca181f96706c5f",
     "Only Velocity runs on Script Right — every other language also needs Programming Right": "e1b8a7b2b2d3c3b3310b368872331973dda7bf46d1b22d7a6cd50769d3201f8f",
     "Right checks in script services — check the context *author*, not only the user": "918988129059fbefe7d5f3d812f72132766655229a1fbd0d5de6557597e1a5ff",
-    "Rendering an XObject property — display it, never parse its raw value": "d67bb3e791b3cc62656b645295de9bc167c9b78290083a89c65ad3cf438914e0",
+    "Rendering an XObject property — display it, never parse its raw value": "9073d6f4919aecb5507a344e4c6a655141004540a16be31b182896ea418a45e2",
     "Parsing XML — use the XML Module helpers": "8c51de928e1809212fd407d47dad318f6f7b226e55ab9aee6d4348c7768df70a",
     "HTML cleaning is not escaping; sanitization is configurable": "e664ebdc46fb81a41b57c53d81f3164a9466ef6d01c71783a56b184b38a5ae29",
     "Related": "f004b3c045d93f32123e83ee9a930b5336f139318253fb64bd8421416bdd802c"

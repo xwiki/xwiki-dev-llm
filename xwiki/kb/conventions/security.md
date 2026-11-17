@@ -144,7 +144,7 @@ metadata author. `$object.getValue('property')` inserted into content that is pa
 or evaluated as Velocity runs it with the rights of the *rendering* page's author instead — for a
 sheet, usually an admin, while the value comes from whoever can edit the page it displays. Where the
 raw value must go into wiki syntax, escape it for that context (*Escaping mechanisms*), and fix such a
-line whenever an edit rewrites it, a refactor or a search-and-replace included. Despite its name,
+line whenever an edit touches it, a refactor included. Despite its name,
 `$object.get('property')` returns the **displayed** property: read or compare the value with
 `getValue`.
 
