@@ -2,7 +2,8 @@
 // keeps them, and which ones the routine must read.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { changesUrl, classify, devSources, diffFrom, editsSince, pageKey, pinArg, restPaths, unpinnedSources, versionCmp }
+import { backlogErrors, backlogKeys, changesUrl, classify, devSources, diffFrom, editsSince, newPages, pageIdKey, pageKey, pinArg,
+  restPaths, unpinnedSources, versionCmp }
   from '../../scripts/kb-sources.mjs';
 
 const VIEW = 'https://dev.xwiki.org/xwiki/bin/view/';
@@ -114,5 +115,50 @@ test('a cited page without a pin is reported, once per citing file', () => {
   assert.deepEqual(unpinnedSources(files, pins), [
     { file: 'a.md', key: `${VIEW}Community/New` },
     { file: 'b.md', key: `${VIEW}Community/New` },
+  ]);
+});
+
+test('a REST pageId names the same page as its view URL, escaped dots included', () => {
+  assert.equal(pageIdKey('dev:Community.Accessibility.DevelopmentRules.WebHome'), `${VIEW}Community/Accessibility/DevelopmentRules`);
+  assert.equal(pageIdKey('dev:Community.DevelopmentPractices'), `${VIEW}Community/DevelopmentPractices`);
+  assert.equal(pageIdKey('dev:Community.Accessibility.DevelopmentRules.Target size exceptions.WebHome'),
+    pageKey(`${VIEW}Community/Accessibility/DevelopmentRules/Target+size+exceptions/`));
+  assert.equal(pageIdKey('dev:ReleasePlans.ReleasePlan18\\.10\\.0'), `${VIEW}ReleasePlans/ReleasePlan18.10.0`);
+});
+
+test('a new page is a Community page created in the window that nothing here cites yet', () => {
+  const since = Date.UTC(2026, 10, 2);
+  const at = (d) => Date.UTC(2026, 10, d);
+  const summaries = [
+    { pageId: 'dev:Community.Accessibility.Resources.WebHome', version: '1.1', modified: at(14), modifier: 'xwiki:XWiki.VincentMassol' },
+    { pageId: 'dev:Community.Accessibility.Resources.WebHome', version: '2.1', modified: at(15) },
+    { pageId: 'dev:Community.Building.WebHome', version: '1.1', modified: at(3) },
+    { pageId: 'dev:Community.Moved.WebHome', version: '3.2', modified: at(14) },
+    { pageId: 'dev:Community.Old.WebHome', version: '1.1', modified: at(1) },
+    { pageId: 'dev:Community.Translated.WebHome', version: '1.1', modified: at(4), language: 'fr' },
+    { pageId: 'dev:ReleasePlans.ReleasePlan18\\.10\\.0', version: '1.1', modified: at(5) },
+    { pageId: 'dev:Onboarding.NewTopic.WebHome', version: '1.1', modified: at(6), modifier: 'xwiki:XWiki.surli' },
+  ];
+  assert.deepEqual(newPages(summaries, since, new Set([`${VIEW}Community/Building`])), [
+    { key: `${VIEW}Onboarding/NewTopic`, date: '2026-11-06', author: 'surli' },
+    { key: `${VIEW}Community/Accessibility/Resources`, date: '2026-11-14', author: 'VincentMassol' },
+  ]);
+});
+
+test('a backlog URL with literal spaces names the whole page', () => {
+  assert.deepEqual(backlogKeys([{ sources: [{ url: `${VIEW}Community/Accessibility/DevelopmentRules/Target size exceptions` }] }]),
+    [pageKey(`${VIEW}Community/Accessibility/DevelopmentRules/Target%20size%20exceptions`)]);
+});
+
+test('a backlog the batch routine cannot use is reported', () => {
+  const ok = { id: 'S01', fact: 'f', kb_target: 'kb/x.md', sources: [{ url: `${VIEW}Community/A`, version: '1.1' }],
+    probe: 'q?', status: 'candidate' };
+  assert.deepEqual(backlogErrors([ok, { ...ok, id: 'S02', status: 'dropped', note: 'declined in <url>' }]), []);
+  assert.deepEqual(backlogErrors({}), ['not a JSON array']);
+  assert.deepEqual(backlogErrors([ok, ok]), ['entry 1 (S01): duplicate id']);
+  assert.deepEqual(backlogErrors([{ ...ok, status: 'done' }]), ['entry 0 (S01): a done fact needs a note']);
+  assert.deepEqual(backlogErrors([{ ...ok, status: 'open', sources: [{ url: 'https://example.org/' }] }]), [
+    'entry 0 (S01): sources need a dev.xwiki.org url and the version read',
+    'entry 0 (S01): status is not candidate, done or dropped',
   ]);
 });

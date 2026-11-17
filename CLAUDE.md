@@ -35,8 +35,10 @@ and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/
 its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
 logic with `validate.mjs` through `scripts/md-blocks.mjs`). The same routine opens at most one
 `[Misc] Weekly KB source sync:` PR, bringing a KB file in line with the dev.xwiki.org pages in its
-`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`; its finder is
-`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file.
+`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`, and adding the
+new rules it finds there or on new dev.xwiki.org pages to `eval/backlog.json`; its finder is
+`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file (`--seen` writes
+`scripts/kb-source-seen.json`, the new pages read and found to hold nothing for the KB).
 
 A second weekly routine, prompted by `scripts/kb-batch-routine.md`, lands one measured batch of
 `eval/backlog.json` facts in the KB and opens at most one `[Misc] Weekly KB batch:` PR, only when the

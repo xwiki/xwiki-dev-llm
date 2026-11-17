@@ -35,7 +35,8 @@ this file: a gap you hit in them goes under `## Routine notes`, written as the e
 - **A batch PR is open** (title starting `[Misc] Weekly KB batch:`): stop, open nothing. One
   unreviewed batch is the limit.
 - List the other open PRs and their files (consolidation step 1): a `kb_target` one of them touches,
-  or whose `_meta` sidecar or index entry it touches, is not picked this week.
+  whose `_meta` sidecar or index entry it touches, or whose `eval/backlog.json` entries it adds or
+  changes (a source sync's), is not picked this week.
 - Read the batch PRs closed in the last 8 weeks, body and comments, inline ones included. Each fact of
   one closed unmerged was declined: this run's PR sets it `dropped`, "declined in <PR URL>" plus the
   committer's reason when given. It is never measured again.

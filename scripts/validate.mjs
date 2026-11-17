@@ -72,7 +72,7 @@ import {
 import { corpus, sidecarCurrent } from "./kb-pipeline/gen-metadata.mjs";
 import { duplicateHooks, duplicateKeys } from "./json-keys.mjs";
 import { sidecarOf } from "../xwiki/scripts/kb-search.mjs";
-import { PINS_FILE, unpinnedSources } from "./kb-sources.mjs";
+import { BACKLOG_FILE, PINS_FILE, backlogErrors, unpinnedSources } from "./kb-sources.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(repoRoot, p), "utf8");
@@ -460,6 +460,16 @@ for (const { file, key } of unpinnedSources(kbFiles, pins)) {
   errors.push(`${file}: cites ${key}, which has no pin in ${PINS_FILE} — run ` +
     `\`node scripts/kb-sources.mjs --pin ${key}@<version>\` with the page version the text was written from`);
 }
+
+// ---- 16. The KB batch backlog is usable --------------------------------------------------------
+// The weekly source sync writes it unattended and the batch routine reads nothing else.
+let backlog;
+try {
+  backlog = JSON.parse(read(BACKLOG_FILE));
+} catch (e) {
+  errors.push(`${BACKLOG_FILE}: ${e.message}`);
+}
+if (backlog) for (const e of backlogErrors(backlog)) errors.push(`${BACKLOG_FILE}: ${e}`);
 
 // ---- Report ----------------------------------------------------------------------------------
 if (errors.length) {

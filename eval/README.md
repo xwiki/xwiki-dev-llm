@@ -25,9 +25,12 @@ group (a)/(b) question with the default Sonnet, more for a group (c) task, plus 
   [KB batches](#kb-batches)), in the group (a) format. Gold = `gold.reference`, the page text with its
   `gold.source` (`<url>@<version>`).
 - `backlog.json` — the dev.xwiki.org facts a KB batch can take, most valuable first and grouped by
-  `kb_target` (an existing KB file or a new one to create). Each fact cites its `sources` (`url`, the
-  page `version` it was read at, `sections`) and a `probe` question; `status` `done` or `dropped` (with
-  where or why in `note`) marks a fact never to retry.
+  `kb_target` (an existing KB file or a new one to create); the weekly source sync adds the new rules
+  it finds, with ids `S01`, `S02`…. Each fact is one rule as its page states it, and cites its `sources`
+  (`url`, the page `version` it was read at, `sections`), a `probe` question a developer would ask
+  without naming it, and a `note` saying what a model gets wrong without it, then after `partial:` any
+  `<file>#<section>` holding part of it; `status` `done` or `dropped` (with where or why in `note`)
+  marks a fact never to retry. `validate.mjs` checks the fields.
 - `tools/` — `run.mjs` (sessions), `judge.mjs` (grading and scoreboard), `analyze.mjs` (two versions
   compared over repeated runs), `recall.mjs` (retrieval only, no LLM), `grade-det.mjs` (the group (c)
   points a diff settles mechanically), `task-repo.mjs` (group (c) isolation), `code-dir.mjs` (the

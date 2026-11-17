@@ -209,20 +209,34 @@ PR and `--lossless` does not apply.
 - **A sync PR is still open** (title starting `[Misc] Weekly KB source sync:`): stop, for step 1's
   reasons. Read the sync PRs closed in the last 8 weeks (step 1's query, with `"Weekly KB source
   sync"`): a KB edit from one closed unmerged was declined — for that page, pin the version it read
-  and edit nothing.
+  and edit nothing; a backlog entry from one was declined — add it with `status` `dropped` and the
+  `note` "declined in <PR URL>", so it is never proposed again.
 - Start from `origin/master`, never from step 7's branch: the two PRs must merge independently. The
   open-PR files of step 1, plus those of the PR step 7 just opened, are off limits.
 - `node scripts/kb-sources.mjs` lists the pages edited since their pin, with each edit's author and
   comment and the KB files citing the page; `--diff <url>` prints the page's wiki-syntax diff. Exit 2
   means the wiki cannot be read: skip this step and say so in the run log. Take at most **5** changed
   pages whose citing files are not off limits; the rest wait.
+- `node scripts/kb-sources.mjs --new` lists the documentation pages created in the last 8 weeks that
+  no KB file, backlog fact or `scripts/kb-source-seen.json` record cites, oldest first. Take at most
+  **5** of them too, and read each whole; the rest wait, and stay listed until handled.
+- **`eval/backlog.json` is off limits** (an open PR changes it): skip every page that adds a rule the
+  KB lacks — no KB edit, no pin, no seen record, not counted in the 5 — so a later run still sees it.
 - For each page, read its diff against every citing file:
   - **It changes a rule a citing file states:** edit the file to say what the page now says, at the
     same strength. CLAUDE.md's conventions hold — the KB summarizes, detail stays upstream where
     `sources:` sends the reader; one home per fact; a size budget is raised only under its three
     tests, stated in the PR body.
-  - **It adds a rule the KB lacks:** no KB edit. New facts enter the KB in benchmarked extraction
-    batches, so list it under `## For a committer` as a candidate for the next one.
+  - **It adds a rule the KB lacks:** no KB edit. New facts enter the KB only through the benchmarked
+    batches, which read `eval/backlog.json` alone: add one `candidate` per rule, as the page states it
+    and at its strength, in the format of `eval/README.md`'s `backlog.json` entry. Place it after the
+    last `candidate` with the same `kb_target`, else after the last `candidate`. A rule an entry
+    already holds gets none: a `candidate` takes the page's current wording and version, a `done` or
+    `dropped` one is left as it is.
+  - **It removes text a citing file states:** the rule may have moved, not gone. Find where it went —
+    the page the diff now links in its place, its parent, a page a backlog fact cites — and add that
+    page to the citing file's `sources:`, pinned at the version you read. Not found: `## For a
+    committer`.
   - **Anything else** — wording, layout, examples, detail the KB leaves upstream, or the page catching
     up with what the KB already says (a KB rule written back upstream): no KB edit.
   - **It contradicts the KB**: no KB edit; quote both texts under `## For a committer`. The KB may
@@ -243,12 +257,19 @@ PR and `--lossless` does not apply.
   — no diff spans a move — then pin it if it is on dev.xwiki.org (`kb-sources.mjs` tracks no other
   wiki, so a source elsewhere stays unpinned). Otherwise list it under `## For a committer`. Any
   other unreachable reason is transient: leave it. `--pin` also drops unused pins.
-- Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given the diff, the page diffs and this
-  step, asking: does each KB edit state what the page now says — no more, no less, same strength; was
-  a pin moved past a rule change the KB states but was not edited; does an edit copy upstream detail;
-does the edited text sit in a section whose heading and first line name it.
-- Nothing to edit or pin: open nothing. Otherwise branch `claude/kb-source-sync-<YYYY-MM-DD>`, one
-  commit and the PR as in step 7, titled `[Misc] Weekly KB source sync: <what changed, in a few
-  words>`. The body: a table — page | versions (the `viewer=changes` link the finder prints) | edit
-  authors | KB edit or "pin only", and why; `## For a committer`, when there is anything; the
+- For each `--new` page: a rule a KB file states puts the page in that file's `sources:`, pinned at
+  the version you read; a rule the KB lacks becomes a backlog entry as above; a page with neither (an
+  audit, a plan, a list of links) is recorded with `kb-sources.mjs --seen <url>@<version>` and named
+  in the PR body. A page whose citing file is off limits waits, unrecorded.
+- Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given
+  the diff, the page diffs, the `--new` pages and this step, asking: does each KB edit state what the
+  page now says — no more, no less, same strength; was a pin moved past a rule change the KB states
+  but was not edited; does an edit copy upstream detail; does the edited text sit in a section whose
+  heading and first line name it; does each backlog entry state one rule as its page does, which the
+  KB and the backlog do not already hold; was a page recorded as seen although it holds a rule.
+- Nothing to edit, pin, add to the backlog or record as seen: open nothing. Otherwise branch
+  `claude/kb-source-sync-<YYYY-MM-DD>`, one commit and the PR as in step 7, titled `[Misc] Weekly KB
+  source sync: <what changed, in a few words>`. The body: a table — page | versions (the
+  `viewer=changes` link the finder prints, none for a `--new` page) | edit authors | KB edit, "pin
+  only", backlog ids added or "seen", and why; `## For a committer`, when there is anything; the
   validator results in one line.

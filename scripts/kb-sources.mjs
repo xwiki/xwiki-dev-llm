@@ -8,15 +8,22 @@
 //        node scripts/kb-sources.mjs --diff <url>[@<version>]
 //                                                  the page's wiki-syntax diff, from the given version (any
 //                                                  page, pinned or not) or else its pin, to the current one
+//        node scripts/kb-sources.mjs --new [YYYY-MM-DD]
+//                                                  the documentation pages created since that date (default:
+//                                                  8 weeks ago) that no KB file, eval/backlog.json fact or
+//                                                  seen record cites yet, oldest first
+//        node scripts/kb-sources.mjs --seen url@version…
+//                                                  record --new pages read and found to hold nothing for the KB
 //        node scripts/kb-sources.mjs --pin [url[@version]…]
 //                                                  pin the listed pages (default: every cited one) to the
 //                                                  given or current version; drop pins no KB file cites.
 //                                                  Name each page with the version its KB text was written
 //                                                  from: a bare --pin hides every edit made since then.
-// Exits 2 when the wiki cannot be read at all. Node built-ins and git only; anonymous REST reads.
+// Exits 2 when the wiki cannot be read at all, 1 on a local error (bad argument, unreadable JSON).
+// Node built-ins and git only; anonymous REST reads.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,6 +31,13 @@ import { fileURLToPath } from "node:url";
 const VIEW = "https://dev.xwiki.org/xwiki/bin/view/";
 const REST = "https://dev.xwiki.org/xwiki/rest/wikis/dev/";
 export const PINS_FILE = "scripts/kb-source-pins.json";
+export const BACKLOG_FILE = "eval/backlog.json";
+const SEEN_FILE = "scripts/kb-source-seen.json";
+// The spaces holding the development documentation; the rest of the wiki is application code, release
+// plans and scheduler pages.
+const DOC_SPACES = ["Community", "Onboarding"];
+const NEW_WINDOW_DAYS = 56;
+const NEW_MAX_DAYS = 182;
 const DEV_URL = /https?:\/\/dev\.xwiki\.org\/xwiki\/bin\/view\/[^\s"'<>()[\]]*/;
 
 // The page a source URL names, as a canonical view URL (no anchor, query or trailing slash), or null
@@ -95,6 +109,69 @@ export const classify = (cited, pins, current) => {
   }
   result.unusedPins = Object.keys(pins).filter((k) => !cited.has(k)).sort();
   return result;
+};
+
+// The page a REST `pageId` names ("dev:Community.Some\\.Page.WebHome"), as pageKey's canonical view URL:
+// references split on unescaped dots, and a nested page is named without its WebHome.
+export const pageIdKey = (pageId) => {
+  const ref = String(pageId).replace(/^[^:]*:/, "");
+  const segments = [];
+  let current = "";
+  for (let i = 0; i < ref.length; i++) {
+    if (ref[i] === "\\" && i + 1 < ref.length) current += ref[++i];
+    else if (ref[i] === ".") (segments.push(current), (current = ""));
+    else current += ref[i];
+  }
+  segments.push(current);
+  if (segments.length > 1 && segments.at(-1) === "WebHome") segments.pop();
+  return pageKey(VIEW + segments.map(encodeURIComponent).join("/"));
+};
+
+// The documentation pages created at or after `since` (ms) that `known` (a Set of keys: cited, pinned,
+// in the backlog or seen) does not hold, from the wiki's modifications listing, oldest first. Created
+// means a 1.1 version in the window: a moved page keeps its history, so a move never shows here.
+export const newPages = (summaries, since, known) => {
+  const found = new Map();
+  for (const m of summaries) {
+    if (m.version !== "1.1" || m.modified < since || m.language) continue;
+    const key = pageIdKey(m.pageId);
+    if (!key || known.has(key) || !DOC_SPACES.some((d) => key.startsWith(`${VIEW}${d}/`))) continue;
+    found.set(key, { key, modified: m.modified, date: new Date(m.modified).toISOString().slice(0, 10),
+      author: String(m.modifier ?? "").replace(/^.*\./, "") });
+  }
+  return [...found.values()].sort((a, b) => a.modified - b.modified || a.key.localeCompare(b.key))
+    .map(({ modified, ...p }) => p);
+};
+
+// The pages a backlog fact cites. A URL there may hold literal spaces ("…/Target size exceptions"),
+// which pageKey reads as the end of the URL.
+export const backlogKeys = (entries) =>
+  entries.flatMap((f) => (f.sources ?? []).map((s) => pageKey(String(s.url ?? "").trim().replace(/ /g, "+"))))
+    .filter(Boolean);
+
+// What makes eval/backlog.json unusable by the batch routine, as messages: a missing field, a duplicate
+// id, an unknown status, a settled fact without the note saying where it went or why.
+export const backlogErrors = (entries) => {
+  if (!Array.isArray(entries)) return ["not a JSON array"];
+  const errors = [];
+  const ids = new Set();
+  entries.forEach((e, i) => {
+    const at = `entry ${i} (${e?.id ?? "no id"})`;
+    if (typeof e?.id !== "string" || !e.id) errors.push(`${at}: no id`);
+    else if (ids.has(e.id)) errors.push(`${at}: duplicate id`);
+    else ids.add(e.id);
+    for (const f of ["fact", "kb_target"]) {
+      if (typeof e?.[f] !== "string" || !e[f]) errors.push(`${at}: no ${f}`);
+    }
+    const badSource = (s) => !pageKey(String(s?.url ?? "").replace(/ /g, "+")) || !s.version;
+    if (!Array.isArray(e?.sources) || !e.sources.length || e.sources.some(badSource)) {
+      errors.push(`${at}: sources need a dev.xwiki.org url and the version read`);
+    }
+    const needs = { candidate: "probe", done: "note", dropped: "note" }[e?.status];
+    if (!needs) errors.push(`${at}: status is not candidate, done or dropped`);
+    else if (!e[needs]) errors.push(`${at}: a ${e.status} fact needs a ${needs}`);
+  });
+  return errors;
 };
 
 // The edits after `from`, newest first, from a REST history listing.
@@ -205,6 +282,50 @@ const report = async (json) => {
   if (Object.values(r).every((list) => !list.length)) console.log("nothing to sync");
 };
 
+// A local failure: exit 1, which the routine must not read as "the wiki cannot be read" (exit 2).
+const local = (message) => Object.assign(new Error(message), { local: true });
+
+const readJson = (file) => {
+  try {
+    return JSON.parse(readFileSync(join(repoRoot, file), "utf8"));
+  } catch (e) {
+    throw local(`${file}: ${e.message}`);
+  }
+};
+const readSeen = () => (existsSync(join(repoRoot, SEEN_FILE)) ? readJson(SEEN_FILE) : {});
+
+const listNew = async (date) => {
+  const day = 24 * 3600 * 1000;
+  const since = date ? Date.parse(`${date}T00:00:00Z`) : Math.floor(Date.now() / day - NEW_WINDOW_DAYS) * day;
+  if ((date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) || Number.isNaN(since)) {
+    throw local("--new takes a YYYY-MM-DD date");
+  }
+  if (since < Date.now() - NEW_MAX_DAYS * day) throw local(`--new looks back at most ${NEW_MAX_DAYS} days`);
+  const known = new Set([...citedPages().keys(), ...Object.keys(readPins()),
+    ...backlogKeys(readJson(BACKLOG_FILE)), ...Object.keys(readSeen())]);
+  const summaries = [];
+  for (let start = 0; ; start += 100) {
+    const page = (await getJson(`modifications?start=${start}&number=100`))?.historySummaries ?? [];
+    summaries.push(...page);
+    if (page.length < 100 || page.at(-1).modified < since) break;
+  }
+  const found = newPages(summaries, since, known);
+  for (const p of found) console.log(`new          ${p.key}  ${p.date}  ${p.author}`);
+  const from = new Date(since).toISOString().slice(0, 10);
+  if (!found.length) console.log(`no new documentation page since ${from}`);
+};
+
+const seen = (args) => {
+  const records = readSeen();
+  for (const arg of args) {
+    const [key, version] = pinArg(arg);
+    if (!key || !version) throw local(`${arg}: name the page and the version read: <url>@<version>`);
+    records[key] = version;
+  }
+  const sorted = Object.fromEntries(Object.entries(records).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(join(repoRoot, SEEN_FILE), JSON.stringify(sorted, null, 2) + "\n");
+};
+
 const diff = async (arg) => {
   const { key, from: pin } = diffFrom(arg, readPins());
   const page = await resolve(key);
@@ -253,9 +374,11 @@ if (isMain) {
   const args = process.argv.slice(2);
   const run = args[0] === "--diff" ? diff(args[1])
     : args[0] === "--pin" ? pin(args.slice(1))
+    : args[0] === "--new" ? listNew(args[1])
+    : args[0] === "--seen" ? Promise.resolve().then(() => seen(args.slice(1)))
     : report(args.includes("--json"));
   run.catch((e) => {
     console.error(e.message);
-    process.exit(2);
+    process.exit(e.local ? 1 : 2);
   });
 }
