@@ -80,7 +80,8 @@ A fix is one of:
   shell or Maven mechanics) with what must hold and the non-obvious fact behind it. Keep the steps of
   a fragile or irreversible operation and any convention the model cannot infer.
 - **Complete a one-way pointer** between two skills a model could confuse, restating from the other
-  side the boundary the existing pointer already draws — no wider (not "anything else"), and never
+  side the boundary the existing pointer already draws, with any carve-out it states (who opens the
+  PR, with which tool) — no wider (not "anything else"), and never
   inside a row or sentence whose rule it would contradict. Not in a file at ≥95% of its budget unless
   the batch also shrinks that file. It goes in the `SKILL.md` body, not the description, when the
   description would then pass 1,024 characters (the validator fails it) or the skill is EXPLICIT
@@ -146,7 +147,9 @@ affected skill, old vs new.
   - `node scripts/consolidation-candidates.mjs --lossless` — for every sentence it prints, either
     show where its fact is stated now (file and the sentence there; a script's comments count) or
     restore it. A pointer-only replacement is always printed, since the wording at the home differs:
-    check each fact of the removed sentence, not the sentence. A fact stated nowhere else is a
+    check each fact of the removed sentence, not the sentence, and that the text left beside the
+    pointer keeps the home's qualifiers ("alone", "only", "unless"): `--lossless` finds the old
+    sentence at its home even when that text states it more strongly. A fact stated nowhere else is a
     dropped rule: undo that fix.
   - `node scripts/validate.mjs`
   - `claude plugin validate ./xwiki`
