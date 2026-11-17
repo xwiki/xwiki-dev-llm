@@ -62,6 +62,6 @@ does not exist until the POST allocates it. So:
    Either way, read the change back and check `screenshots` — a property write can answer success
    and store nothing (`xwiki-rest-api`).
 
-Copy the file — never link the documentation page's attachment, or refreshing that page later
-rewrites what old release notes show. Never pre-create the entry page to get around the ordering: a
-page sitting at the next `Entry###` corrupts the allocation.
+Why the file is copied, never linked, and the entry page never pre-created:
+`kb/processes/release-notes.md` → *Writing an entry* and *The REST endpoints (since Release Notes
+Application 2.7)*.

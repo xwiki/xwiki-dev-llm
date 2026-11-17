@@ -77,15 +77,15 @@
     },
     "Retiring an issue that should not be fixed": {
       "questions": [
-        "How do I deal with a Sonar issue that is a genuine false positive?",
-        "What is the right way to suppress a SonarCloud warning so the next developer understands why?",
-        "Is it enough to mark the issue as accepted or won't fix in the SonarCloud UI?"
+        "How do I close a SonarCloud issue I have decided not to fix? Is marking it Accepted enough?",
+        "When is it acceptable to add a @SuppressWarnings annotation for a Sonar rule in XWiki code?",
+        "For a Sonar finding that is a false positive, should I suppress it, deprecate something, or file a JIRA issue?"
       ],
       "aliases": [
-        "suppress sonar issue",
-        "mark accepted",
-        "wontfix",
-        "false positive"
+        "mark Sonar issue accepted",
+        "suppress Sonar warning",
+        "Sonar false positive suppression",
+        "wontfix"
       ]
     },
     "Related": {
@@ -107,11 +107,11 @@
       "conventions/logging.md"
     ],
     "applies-to": [
-      "**/*.java",
-      "**/pom.xml"
+      "**/src/main/java/**/*.java",
+      "**/src/test/java/**/*.java"
     ]
   },
-  "source_hash": "8a020430016b4a03b878c19dd287aeff18203d32a9097add7f3cba4e189fc9af",
+  "source_hash": "7eaa655de8c570f4ddcfb4f648eb597a0874ea077068b5e12d459e5a0270a41c",
   "file_hash": "652068777d8b2fd8117fb78f9cd20e836f9af0307c60200e25e6971fd130bc20",
   "section_hashes": {
     "SonarQube rule fixes — index / map": "2edb79a79891d19c7e83659726700693f4c0ab75cdad9c344773811a5d74192a",
@@ -119,7 +119,7 @@
     "Rule map": "f9151eec5ae0edd6cb159430aecc67f99c38175d8904f6c648efcb0a1d8d9fd0",
     "Rules not worth fixing (denylist)": "6b4a1207f73817e47bfa339fd3fee7996a3e8be1a1eec5d45b155a9412c7f62a",
     "Universal drop conditions": "14e06f40a07c623c245a9128fcf7f4f955731982aee7de78e64648870cba8a64",
-    "Retiring an issue that should not be fixed": "d0bb6f4ad7c015a8346af59b0be27826d4dd7aae51f12fb0d82b66308ec6ff07",
+    "Retiring an issue that should not be fixed": "1cc873f2fd8b2cce633f45849c5145f7b910797564eb2b05e6ff98f69c36c1ad",
     "Related": "9781163269b195c78dc28a840ccc246c0894224096941f78d42cb31b975aa7c3"
   }
 }
