@@ -18,22 +18,17 @@ A change spanning several repositories lives on a branch named `feature-deploy-<
 
 ## The CI sets the branch version
 
-- The CI build of a `feature-deploy-*` branch (`vars/xwikiBuild.groovy` in xwiki-jenkins-pipeline)
-  rewrites the version before building: `<X.Y.Z>-<branch>-SNAPSHOT` for the project, its node packages
-  and the `commons.version`/`platform.version` properties. The parent moves to that version **only if
-  it was deployed** upstream, otherwise the branch builds against master's snapshots. The artifacts go
-  to nexus-snapshots without colliding with master's.
-- So the poms of the branch keep the **standard version** (`X.Y.Z-SNAPSHOT`): a branch version stored
-  in them gets the branch name appended a second time.
+- Before building a `feature-deploy-*` branch, the CI (`vars/xwikiBuild.groovy` in
+  xwiki-jenkins-pipeline) rewrites the version to `<X.Y.Z>-<branch>-SNAPSHOT` and deploys it to
+  nexus-snapshots. The parent moves to that version only if the upstream branch deployed it;
+  otherwise master's snapshots are used.
+- So the poms keep the standard `X.Y.Z-SNAPSHOT`: a stored branch version gets the branch name
+  appended twice.
 
 ## Building the branches locally
 
-Installing them under the standard version mixes them into `~/.m2` with the master snapshots every
-other local build resolves. Switch first, from the root of each repository, with xwiki-dev-tools'
-`xbranch-set-version.sh -av X.Y.Z-SNAPSHOT`, and restore with `xbranch-reset-version.sh` before
-recording the change.
-
-- `-a` replaces the version in every pom textually, parent included: always use it in the repository
-  without parent, and whenever the parent has to move too — without it the script goes through Maven,
-  which first has to resolve the not-yet-built branch parent.
-- `-v` takes the current **standard** version, sparing a slower and more fragile Maven evaluation.
+Installed under the standard version, they mix into `~/.m2` with master's snapshots. From the root of
+each repository, switch with xwiki-dev-tools' `xbranch-set-version.sh -v X.Y.Z-SNAPSHOT` and restore
+with `xbranch-reset-version.sh` before recording the change. Add `-a` when the parent's branch exists
+too: it rewrites every pom textually, parent included (xwiki-commons always takes that path). Both
+scripts need GNU `sed`.
