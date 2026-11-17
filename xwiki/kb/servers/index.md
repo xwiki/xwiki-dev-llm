@@ -7,7 +7,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
 provenance: official
-last-confirmed: 2026-10-20
+last-confirmed: 2026-11-16
 related: [servers/jenkins.md, servers/jira.md, servers/develocity.md, sonarqube/verification.md]
 ---
 
@@ -59,9 +59,8 @@ xwiki.org, extensions, test, dev and design all run XWiki; program against the R
 (`/xwiki/rest/…`), not the `/xwiki/bin/…` UI URLs.
 The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 
-- **Only `/rest` honors HTTP Basic auth.** The `/bin/` (view/edit/save) endpoints resolve Basic-auth
-  requests to `XWiki.Guest`, so a `form_token` scraped from a `/bin/edit` page is the *guest* token
-  and gets rejected — authenticate and read/write through `/rest`.
+- **`/bin/` honors HTTP Basic auth too**, so a `/bin/` action with no REST equivalent (such as
+  extensions' `ImportExtension`) needs no browser.
 - **REST writes need a CSRF form token** (XWiki 14.10.8+/15.2+): send it in the **`XWiki-Form-Token`
   request header**; every REST response returns the current token in that same header (so any GET
   yields one). Retry once on `403 "Invalid or missing form token."` (it can rotate on server

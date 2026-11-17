@@ -205,8 +205,7 @@ traps are commented in the file, next to the lines they protect.
 - The **form token is session-bound**. `xwikidoc.py` keeps a cookie jar for that reason; without one,
   object writes fail intermittently with `403 Invalid or missing form token.`
 - The tools send `curl/8.0` as User-Agent, the one Cloudflare lets through (`kb/servers/index.md`).
-- Only `/rest` honours Basic auth. A `/bin/` URL is fetched as **guest**, which is the right lens for
-  the rendered-page checks in `verify` but means a Live Data table rendered there shows no rows.
+- A Live Data table on a fetched `/bin/` page shows no rows: they load client-side.
 - **A Change Request is created through the application's `/changerequest/` form endpoint — it has no
   REST API** — and these tools do not do it. From a cookie
   session (POST `j_username`, `j_password` and the login page's `form_token` to

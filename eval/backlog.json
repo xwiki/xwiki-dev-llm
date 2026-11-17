@@ -256,13 +256,13 @@
   },
   {
     "id": "B35",
-    "fact": "A WCAG issue in JIRA gets the label wcag and the broken rule's id/name (WCAG 2.1 rule ids field), with a screenshot of the element and DOM.",
+    "fact": "Before filing a WCAG issue in JIRA, search the open issues labelled wcag; a new one gets the label wcag, the number and name of the broken success criterion in the WCAG 2.1 Rule ids field (e.g. 2.4.1 Bypass Blocks), and a screenshot of the element showing both the page and its DOM tree.",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/WCAGTesting/Reading through WCAG reports",
-        "version": "9.3",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility",
+        "version": "50.1",
         "sections": [
-          "Understanding an issue to report it properly"
+          "Report an Accessibility Issue"
         ]
       }
     ],
@@ -307,11 +307,11 @@
   },
   {
     "id": "C21",
-    "fact": "Translations added on l10n.xwiki.org need no JIRA issue; if one is created anyway it takes the `Development Issue Only` component; an issue about a translation key (adding/changing keys in code) does go in the release notes.",
+    "fact": "Translations made on l10n.xwiki.org don't need a JIRA issue, and they shouldn't appear in the Release Notes; never create a translation issue in a product project (XWIKI, XCOMMONS, XRENDERING, etc.) — to track one anyway, use the `l10n.xwiki.org` component of the XINFRA project. The exception is an issue about a translation key (e.g. a missing key): it goes in the project of the module holding the key, and appears in the Release Notes.",
     "sources": [
       {
         "url": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA",
-        "version": "6.1",
+        "version": "6.3",
         "sections": [
           "Rule: Don't create unnecessary issues"
         ]
@@ -535,11 +535,11 @@
   },
   {
     "id": "A24",
-    "fact": "Since 18.10.0RC1 the `release` profile attaches a CycloneDX SBOM (classifier `cyclonedx`, JSON, transitive dependencies except `provided`), not for test modules (artifactId with a `test`/`tests`/`pageobject(s)` dash-part); skip with `-Dxwiki.cyclonedx.skip=true` or the pom property; distributions (WAR) set `xwiki.cyclonedx.projectType=application`.",
+    "fact": "Since 18.10.0RC1 the `release` profile attaches a CycloneDX SBOM (classifier `cyclonedx`, JSON, transitive dependencies except `provided`), not for test modules (artifactId with a `test`/`tests`/`pageobject(s)` dash-part); skip with `-Dxwiki.cyclonedx.skip=true` or the pom property; distributions (WAR) set `xwiki.cyclonedx.projectType=application`; it also lists the npm packages bundled in the webjars and the npm package repackaged by each third-party webjar (e.g. `org.webjars:jquery` as `pkg:npm/jquery`), and the WAR's SBOM is verified: the release fails if it lacks some npm packages (e.g. `jquery`) or contains the servlet API.",
     "sources": [
       {
         "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Building",
-        "version": "170.1",
+        "version": "172.1",
         "sections": [
           "Using Profiles"
         ]
@@ -837,14 +837,12 @@
     "fact": "Pointer targets must be at least 24×24 CSS px (LESS `@target-size-minimum`) and should be at least 44×44 (`@target-size-recommended`); exceptions (inline targets, enough surrounding space, a duplicate target with the same function, user-determined size, essential presentation) are applied in good faith.",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
-        "version": "41.1",
-        "sections": [
-          "WCAG"
-        ]
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules",
+        "version": "1.1",
+        "sections": []
       },
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Target size exceptions",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules/Target size exceptions",
         "version": "3.1",
         "sections": []
       }
@@ -859,16 +857,14 @@
     "fact": "Hiding elements: visually and semantically → CSS `display: none` or the HTML `hidden` attribute, avoiding a dedicated class such as `.hidden` (`type=\"hidden\"` for inputs); visually only → class `sr-only`; semantically only → `role=\"presentation\"`, only on DOM leaf nodes, `aria-hidden` as last resort. Icons only with a text alternative (may be visually hidden).",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/Properly hiding elements",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules/Properly hiding elements",
         "version": "1.1",
         "sections": []
       },
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle",
-        "version": "41.1",
-        "sections": [
-          "WCAG"
-        ]
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/DevelopmentRules",
+        "version": "1.1",
+        "sections": []
       }
     ],
     "kb_target": "kb/conventions/frontend.md",
@@ -1050,28 +1046,31 @@
   },
   {
     "id": "B02",
-    "fact": "Automatic WCAG validation (axe-core, WCAG 2.2 AA) runs at the end of the constructor of each BasePage page object when the `wcag` @UITest option is on; a violation never fails an individual test but fails the test suite. Failing rules go to target/wcag-reports/wcagFails.txt (build breaks), warning rules to wcagWarnings.txt, set in WCAGContext (15.8+ adds wcagIncompletes.txt and wcagOverview.txt; wcagStopOnError since 15.10.7/16.1.0); in CI it runs only on the first configuration of the docker-latest job.",
+    "fact": "Automatic WCAG validation (Axe Core, WCAG 2.2 AA) reuses the Docker functional tests: when enabled, the constructor of each BasePage page object validates the page once loaded; enable it locally with the `wcag` option of @UITest or `-Dxwiki.test.ui.wcag=true`. A violation doesn't fail the test that found it but the test suite at the end: a failing rule fails the suite and the build, a warning rule only logs a warning; the rule types are defined in WCAGContext. Reports go to target/wcag-reports/, per test class: wcagOverview-<TestClass>.txt (always), wcagFails-, wcagWarnings- and wcagIncompletes-<TestClass>.txt (checks Axe Core couldn't decide, to verify manually). On the CI it runs once a day, in the docker-latest run of the XWiki Environment Tests job, on the first configuration only.",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/WCAGTesting",
-        "version": "44.11",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/AutomatedTesting",
+        "version": "1.1",
         "sections": [
-          "Testing"
+          "How It Works",
+          "Failing and Warning Rules",
+          "Reports",
+          "On the CI"
         ]
       }
     ],
     "kb_target": "kb/testing/web-standards.md",
     "probe": "\"All my `*IT` methods pass but the AllIT suite fails with WCAG violations. Where do I look and which test caused it?\"",
     "status": "candidate",
-    "note": "A suite-level failure with every test green looks like a framework bug; nobody guesses that constructing a page object triggers an audit, or where the report is. Also DT § Configurations options (wcag, wcagStopOnError) + § CI Jobs. Partial: kb/conventions/frontend.md#HTML, CSS, accessibility (only \"WCAG 2.2 AA\")."
+    "note": "A suite-level failure with every test green looks like a framework bug; nobody guesses that constructing a page object triggers an audit, or where the report is. Also DT § Configurations options (wcagStopOnError). Partial: kb/conventions/frontend.md#HTML, CSS, accessibility (only \"WCAG 2.2 AA\")."
   },
   {
     "id": "B37",
-    "fact": "xwiki-platform-distribution-flavor-test-webstandards validates XHTML5 and RSS of all pages (plus legacy Dutch Web Guidelines tests, which skip hidden pages except a whitelist in its pom); xwiki-platform-distribution-flavor-test-escaping tries to find injections automatically.",
+    "fact": "xwiki-platform-distribution-flavor-test-webstandards validates HTML 5 (WebStandardsTest) and RSS of all pages (plus legacy Dutch Web Guidelines tests, which skip hidden pages except a whitelist in its pom); xwiki-platform-distribution-flavor-test-escaping tries to find injections automatically.",
     "sources": [
       {
         "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing",
-        "version": "173.1",
+        "version": "175.1",
         "sections": [
           "XHTML, CSS & WCAG Validations"
         ]
@@ -1081,6 +1080,57 @@
     "probe": "\"The webstandards test fails on my new page. What does it check?\"",
     "status": "candidate",
     "note": "An agent seeing these modules fail does not know what they assert. Also § Security Testing."
+  },
+  {
+    "id": "S01",
+    "fact": "The automatic WCAG validation covers the static interface of each page; to also validate a dynamic state, such as an open menu or a modal, call `validateWCAG()` on the page object in the test once the state is displayed.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/AutomatedTesting",
+        "version": "1.1",
+        "sections": [
+          "How It Works"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "I added a modal to the page; how do I make sure the WCAG checks cover it in my functional test?",
+    "status": "candidate",
+    "note": "Models assume the per-page-load validation also covers states opened later by the test."
+  },
+  {
+    "id": "S02",
+    "fact": "Once all the violations of a WCAG warning rule are fixed, make it a failing rule (in WCAGContext), so that no new violation can be added without breaking the build.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/AutomatedTesting",
+        "version": "1.1",
+        "sections": [
+          "Failing and Warning Rules"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "I fixed the last remaining violations of a WCAG warning rule. Anything else to change?",
+    "status": "candidate",
+    "note": "Models stop at fixing the violations and leave the rule a warning, so regressions go unnoticed."
+  },
+  {
+    "id": "S03",
+    "fact": "Vue components are validated with Axe Core in their unit tests, not by the functional tests' page-object validation.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/AutomatedTesting",
+        "version": "1.1",
+        "sections": [
+          "Vue Components"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "I wrote a new Vue component. How do I check its accessibility in tests?",
+    "status": "candidate",
+    "note": "Models write a Docker functional test for it or skip the check. How: the xwiki.org page \"Test the accessibility of a Vue component\" (documentation/xs/dev/front-end/test/test-vue-component-accessibility, v1.1) — vitest with @xwiki/platform-test-accessibility, mountHelper and runTest (axe-core after each test), assertAxe for intermediate states."
   },
   {
     "id": "B28",
@@ -1101,11 +1151,11 @@
   },
   {
     "id": "B36",
-    "fact": "Docker CI jobs: docker-latest runs nightly (all tests on the latest supported configs, WCAG on the first config only), docker-all weekly (smoke tests on all supported configs), docker-unsupported monthly (smoke tests on configs to support in the future). Configurations live in xwiki-jenkins-pipeline/vars/dockerConfigurations.groovy, schedules in JenkinsfileEnvironmentTests.",
+    "fact": "Docker CI jobs: docker-latest runs nightly (all tests on the latest supported configs), docker-all weekly (smoke tests on all supported configs), docker-unsupported monthly (smoke tests on configs to support in the future). Configurations live in xwiki-jenkins-pipeline/vars/dockerConfigurations.groovy, schedules in JenkinsfileEnvironmentTests.",
     "sources": [
       {
         "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting",
-        "version": "80.1",
+        "version": "83.1",
         "sections": [
           "CI Jobs"
         ]

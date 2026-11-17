@@ -1,6 +1,6 @@
 ---
 name: xwiki-doc-convert
-description: Convert OLD XWiki documentation into the new xwiki.org documentation tree. Old documentation = pages under https://www.xwiki.org/xwiki/bin/view/Documentation/ and all extension pages under https://extensions.xwiki.org/xwiki/bin/view/Extension/ (the Extensions wiki). New documentation = https://www.xwiki.org/xwiki/bin/view/documentation/ (and pages nested under it). Use when migrating/refactoring a legacy page (or an extension page) into the new tree — treating the legacy content as source material, re-classifying it by Diataxis type, dropping obsolete content, and verifying nothing useful was lost. A conversion is run as a persisted, resumable plan of tasks, so also use this skill to RESUME, continue or check the status of a conversion already under way. For authoring/reviewing a page that is already in the new tree, use xwiki-doc-writing instead; to export a subtree to a (translated) PDF, use xwiki-doc-export; xwiki-release-documentation records the legacy pages it had to edit as migration candidates for this skill, and never converts them itself.
+description: Convert OLD XWiki documentation into the new xwiki.org documentation tree. Old = pages under https://www.xwiki.org/xwiki/bin/view/Documentation/ and the extension pages of https://extensions.xwiki.org/xwiki/bin/view/Extension/; new = https://www.xwiki.org/xwiki/bin/view/documentation/ and below. Use when migrating/refactoring a legacy page (or an extension page) into the new tree — treating it as source material, re-classifying it by Diataxis type, dropping obsolete content, and verifying nothing useful was lost. A conversion runs as a persisted, resumable plan of tasks, so also use this skill to RESUME, continue or check the status of a conversion under way. For authoring/reviewing a page already in the new tree use xwiki-doc-writing; to export a subtree to a (translated) PDF use xwiki-doc-export; xwiki-release-documentation records the legacy pages it had to edit as migration candidates for this skill and never converts them itself.
 ---
 
 # Converting old documentation into the new documentation
@@ -75,14 +75,11 @@ through it task after task, keeping the status in that plan so a fresh session c
 - **Read the inventory, never the raw legacy source.** That is what the `extract` task produced it
   for; re-reading the legacy page spends the context the plan was meant to save.
 
-**Nothing reaches xwiki.org until the whole set is ready.** xwiki.org is public: for the weeks a
-conversion is in flight, every reader who lands on it sees whatever is currently there. A page
-published on its own is a page with **red links** to the siblings and hubs that do not exist yet,
-often with **no parent page**, and sometimes with a defect the author has not caught. So the
+**Nothing reaches xwiki.org until the whole set is ready** — why, and the publishing rules, are in
+`kb/conventions/documentation-migration.md` → *A migration publishes once, at the end*. So the
 `page-*` tasks are **preparation** tasks — they draft into `pages.py`, capture screenshots, and lint
 offline — and **one final `publish` task puts the whole set live in a single pass**, parents before
-children. Publish order matters even within that pass: a child saved before its parent is briefly
-live with a broken hierarchy. A partially converted tree is never the visible state of the wiki.
+children. A partially converted tree is never the visible state of the wiki.
 
 The steps below are the *content* of the conversion; `references/conversion-plan.md` says which task
 owns each one, and holds the PLAN.md / task-file templates and the resume rules. Read it in the

@@ -80,9 +80,10 @@ per `kb/servers/jira.md`. Pass `--no-input` only when every required field is su
    incomplete: reopen only while **none** of its Fix Version/s is released.
 2. Read `kb/servers/jira.md` and resolve the fields: issue type, **Component/s**, **Affects
    Version/s** (oldest affected, else last LTS — verify the version values, don't cache them),
-   **Fix Version/s**. Write the description in JIRA wiki markup, explaining the *user-visible* problem,
-   following "Wiki-markup gotchas" in that file, preview it with the render endpoint described there,
-   and send it over REST (see the gotcha above).
+   **Fix Version/s** (usually none until the issue is closed — see that file). Write the description
+   in JIRA wiki markup, explaining the *user-visible* problem, following "Wiki-markup gotchas" in that
+   file, preview it with the render endpoint described there, and send it over REST (see the gotcha
+   above).
 3. Show the user the drafted summary + description + fields, then create.
 4. Read the description back rendered, link the related issues (see `kb/servers/jira.md`), then
    report the created key and URL.

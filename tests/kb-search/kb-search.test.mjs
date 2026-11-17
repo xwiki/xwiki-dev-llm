@@ -17,7 +17,6 @@ const { kbIndexDir } = await import('../../xwiki/scripts/state-dir.mjs');
 const script = join(dirname(fileURLToPath(import.meta.url)), '../../xwiki/scripts/kb-search.mjs');
 
 const FILES = {
-  'index.md': '# Map\n\n## Routing\n\nzebracorn routing table\n',
   'glossary.md': '# Glossary\n\n- rights, permissions, ACL, access rights\n',
   'decisions/_template.md': '---\ntitle: <title>\nstatus: accepted  # proposed | accepted\n---\n\n## Context\n\nzebracorn\n',
   'conventions/versioning.md': `---
@@ -142,7 +141,7 @@ test('tokenizer: identifiers split and kept whole, stopwords dropped, plurals fo
   assert.deepEqual(tokenize('status bus analysis'), ['status', 'bus', 'analysis']);
 });
 
-test('corpus: the root index, the glossary and templates are not searchable', () => {
+test('corpus: the root glossary and templates are not searchable', () => {
   const index = buildIndex(kb());
   assert.deepEqual(Object.keys(index.files).sort(), ['architecture/rights.md', 'conventions/versioning.md',
     'decisions/binary-compat.md', 'decisions/new-idea.md', 'servers/ci.md']);

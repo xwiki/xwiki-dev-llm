@@ -9,14 +9,17 @@ summary: JavaScript must be AMD/RequireJS modules prefixed xwiki-, shipped as We
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HFrontendDevelopmentPractices
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/XhtmlCssCodeStyle/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/FrontendResources/Icons/
   - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/flamingo-skin/style-variables/use-css-properties/
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/SkinExtensionsTutorial/
+  - https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/front-end/test/mock-dependencies/
+  - https://www.npmjs.com/package/vitest-mock-extended
 provenance: official
-last-confirmed: 2026-11-03
+last-confirmed: 2026-11-17
 related: [conventions/server-side-rendering.md, conventions/backward-compatibility.md, conventions/naming.md, conventions/translations.md]
-applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css"]
+applies-to: ["**/src/main/webjar/**/*.js", "**/src/main/webapp/**/*.js", "**/src/main/resources/**/*.js", "**/*.less", "**/*.css", "xwiki-platform-core/xwiki-platform-node/src/main/node/**/*.test.ts"]
 ---
 
 # Front-end conventions
@@ -73,6 +76,14 @@ the same care as a Java API: keep the old name working from **`compatibility.js`
 folder of the skin resources), wrapping it so a call logs a deprecation warning naming the
 replacement and the version. Before deprecating, check the old API is no longer used anywhere in the
 XWiki Standard distribution — **XWiki Standard must keep working with `compatibility.js` absent**.
+
+## Mocks in TypeScript unit tests
+
+The Vitest tests of `xwiki-platform-node` mock their dependencies with typed `vitest-mock-extended`
+mocks, never an object literal cast `as unknown as T`. How, and the traps (`fallbackMockImplementation`
+on a Vue prop, `mockDeep` and a provider): the
+[mock-dependencies page](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/front-end/test/mock-dependencies/)
+on xwiki.org.
 
 ## HTML, CSS, accessibility
 

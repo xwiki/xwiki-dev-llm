@@ -28,7 +28,10 @@ it stay.
 - List the open PRs: `gh api 'repos/xwiki/xwiki-dev-llm/pulls?state=open&per_page=100'`, and each one's
   files with `gh api --paginate 'repos/xwiki/xwiki-dev-llm/pulls/<n>/files?per_page=100' --jq '.[].filename'`.
 - Note every file any open PR changes: you never edit those files (the PR would conflict), and you
-  pass them to the finder with `--exclude`.
+  pass them to the finder with `--exclude`. A file master renamed after the PR's base (`okf/` became
+  `kb/`) is still the one the PR edits: a listed path missing from master is looked up in
+  `git diff -M --name-status <the PR's base.sha> origin/master` (fetch that commit if the clone is
+  shallow), and its current name is the one you avoid and exclude.
 - **A consolidation PR is still open** (title starting `[Misc] Weekly consolidation:`): go to step 8.
   For steps 2–7, open nothing, comment nothing, push nothing. One unreviewed batch is the limit — a
   second one would only queue, conflict with the first, and spend a committer's attention twice;
@@ -47,7 +50,7 @@ node scripts/consolidation-candidates.mjs --exclude <files of open PRs, comma-se
 
 It lists near-duplicate paragraphs (25–50% shared, below the validator's 50%), files at ≥95% of
 their size budget, similar skill descriptions, one-way skill pointers, KB text restated in skills,
-KB topics no skill cites and orphan `references/` files, and split candidates. **It narrows, it does not decide**:
+orphan `references/` files, and split candidates. **It narrows, it does not decide**:
 open both sides of every candidate you consider and judge whether they really state the same rule.
 These overlaps are intended and stay:
 
@@ -57,15 +60,15 @@ These overlaps are intended and stay:
 - the same practice in two skills that never load together (e.g. "pipe REST output through `jq`" in
   the JIRA and the OpenProject references), and a file's one-line boilerplate header;
 - a skill that already points to the topic in another form ("see `xwiki-knowledge` → versioning")
-  although `kb-restated` says "does not cite it";
-- a KB topic no skill cites — search and the pointer hooks reach it; only one missing from
-  `kb/index.md` (or its sub-index) is an orphan.
+  although `kb-restated` says "does not cite it".
 
 ### 3. Pick this week's batch
 
 At most **5 fixes**, highest value first: a rule stated twice with drifting wording beats a rule
 stated twice identically, which beats wording that is merely long, which beats a missing pointer. A
-common theme only breaks ties: it never displaces a higher-value fix the finder listed.
+common theme only breaks ties: it never displaces a higher-value fix the finder listed. Removing a
+restatement from a `references/` file includes the same restatement in its `SKILL.md`, except the
+one-line guardrail step 2 keeps there.
 A fix is one of:
 
 - **Move a rule to its one home and point to it.** The home is the narrowest file every reader of
@@ -77,9 +80,15 @@ A fix is one of:
   shell or Maven mechanics) with what must hold and the non-obvious fact behind it. Keep the steps of
   a fragile or irreversible operation and any convention the model cannot infer.
 - **Complete a one-way pointer** between two skills a model could confuse, restating from the other
-  side the boundary the existing pointer already draws.
+  side the boundary the existing pointer already draws — no wider (not "anything else"), and never
+  inside a row or sentence whose rule it would contradict. Not in a file at ≥95% of its budget unless
+  the batch also shrinks that file. It goes in the `SKILL.md` body, not the description, when the
+  description would then pass 1,024 characters (the validator fails it) or the skill is EXPLICIT
+  INVOCATION ONLY, whose description is kept for its own do-not-use cases: an explicit run reads the
+  body.
 - **Lower a size budget** in `scripts/size-budgets.json` to the new size plus about 10%, when that
-  is below the current entry. Never raise one.
+  is below the current entry. Never raise one. When `scripts/size-budgets.json` is off limits
+  (step 1), give the entry and its new value in the PR body instead.
 
 Never: change a version field; edit a manifest, `.mcp.json`, a hook, a `.mjs`/`.js`/`.sh` script, a
 validator threshold, a test or this file; rename or delete a skill, KB topic or `references/` file;
@@ -97,7 +106,7 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   growing fast (`growth4w`)?
 - **Skill:** which `##` sections only one branch of a run, one mode or one sub-agent reads? Those
   move to `references/`, handed over by path; `SKILL.md` keeps the decision flow.
-- **KB topic:** do its sections belong to different topics of `kb/index.md`
+- **KB topic:** do its sections belong to different KB topics
   (`foreignSections`), or do different skills each read only one part (`sectionReaders`)?
 - **KB section:** the `##` section is what kb-search retrieves, and one far above the KB's p90
   section size (`splitSections` in `xwiki/scripts/kb-search.mjs`; about 2.6 KB today) gets skipped,
@@ -108,7 +117,7 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   before creating a file — but not one whose readers differ (a topic on *running* tests is not the
   home of rules for *writing* them), and not where `foreignSections` merely echoes a deliberate
   rules-vs-storage split. Check a new name against its siblings, and list what must follow: the
-  `kb/index.md` entry (≤240 bytes each); the topic's search sidecar (`kb/_meta/`, regenerated
+  topic's `summary:` and search sidecar (`kb/_meta/`, regenerated
   by `scripts/kb-pipeline/gen-metadata.mjs`); its `sources:` pins and `applies-to:`/`related:`
   frontmatter (the edit hooks match on these); the eval gold sections naming a moved heading
   (`eval/questions/a.json`, `a-sections.json`); the skill pointers; the README row; and any open PR
@@ -204,20 +213,34 @@ PR and `--lossless` does not apply.
 - **A sync PR is still open** (title starting `[Misc] Weekly KB source sync:`): stop, for step 1's
   reasons. Read the sync PRs closed in the last 8 weeks (step 1's query, with `"Weekly KB source
   sync"`): a KB edit from one closed unmerged was declined — for that page, pin the version it read
-  and edit nothing.
+  and edit nothing; a backlog entry from one was declined — add it with `status` `dropped` and the
+  `note` "declined in <PR URL>", so it is never proposed again.
 - Start from `origin/master`, never from step 7's branch: the two PRs must merge independently. The
   open-PR files of step 1, plus those of the PR step 7 just opened, are off limits.
 - `node scripts/kb-sources.mjs` lists the pages edited since their pin, with each edit's author and
   comment and the KB files citing the page; `--diff <url>` prints the page's wiki-syntax diff. Exit 2
   means the wiki cannot be read: skip this step and say so in the run log. Take at most **5** changed
   pages whose citing files are not off limits; the rest wait.
+- `node scripts/kb-sources.mjs --new` lists the documentation pages created in the last 8 weeks that
+  no KB file, backlog fact or `scripts/kb-source-seen.json` record cites, oldest first. Take at most
+  **5** of them too, and read each whole; the rest wait, and stay listed until handled.
+- **`eval/backlog.json` is off limits** (an open PR changes it): skip every page that adds a rule the
+  KB lacks — no KB edit, no pin, no seen record, not counted in the 5 — so a later run still sees it.
 - For each page, read its diff against every citing file:
   - **It changes a rule a citing file states:** edit the file to say what the page now says, at the
     same strength. CLAUDE.md's conventions hold — the KB summarizes, detail stays upstream where
     `sources:` sends the reader; one home per fact; a size budget is raised only under its three
     tests, stated in the PR body.
-  - **It adds a rule the KB lacks:** no KB edit. New facts enter the KB in benchmarked extraction
-    batches, so list it under `## For a committer` as a candidate for the next one.
+  - **It adds a rule the KB lacks:** no KB edit. New facts enter the KB only through the benchmarked
+    batches, which read `eval/backlog.json` alone: add one `candidate` per rule, as the page states it
+    and at its strength, in the format of `eval/README.md`'s `backlog.json` entry. Place it after the
+    last `candidate` with the same `kb_target`, else after the last `candidate`. A rule an entry
+    already holds gets none: a `candidate` takes the page's current wording and version, a `done` or
+    `dropped` one is left as it is.
+  - **It removes text a citing file states:** the rule may have moved, not gone. Find where it went —
+    the page the diff now links in its place, its parent, a page a backlog fact cites — and add that
+    page to the citing file's `sources:`, pinned at the version you read. Not found: `## For a
+    committer`.
   - **Anything else** — wording, layout, examples, detail the KB leaves upstream, or the page catching
     up with what the KB already says (a KB rule written back upstream): no KB edit.
   - **It contradicts the KB**: no KB edit; quote both texts under `## For a committer`. The KB may
@@ -238,12 +261,21 @@ PR and `--lossless` does not apply.
   — no diff spans a move — then pin it if it is on dev.xwiki.org (`kb-sources.mjs` tracks no other
   wiki, so a source elsewhere stays unpinned). Otherwise list it under `## For a committer`. Any
   other unreachable reason is transient: leave it. `--pin` also drops unused pins.
-- Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given the diff, the page diffs and this
-  step, asking: does each KB edit state what the page now says — no more, no less, same strength; was
-  a pin moved past a rule change the KB states but was not edited; does an edit copy upstream detail;
-does the edited text sit in a section whose heading and first line name it.
-- Nothing to edit or pin: open nothing. Otherwise branch `claude/kb-source-sync-<YYYY-MM-DD>`, one
-  commit and the PR as in step 7, titled `[Misc] Weekly KB source sync: <what changed, in a few
-  words>`. The body: a table — page | versions (the `viewer=changes` link the finder prints) | edit
-  authors | KB edit or "pin only", and why; `## For a committer`, when there is anything; the
+- For each `--new` page: a rule a KB file states puts the page in that file's `sources:`, pinned at
+  the version you read; a rule the KB lacks becomes a backlog entry as above; a page with neither (an
+  audit, a plan, a list of links) is recorded with `kb-sources.mjs --seen <url>@<version>` and named
+  in the PR body. A page whose citing file is off limits waits, unrecorded.
+- Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given
+  the diff, the page diffs, the `--new` pages and this step, and told to check every KB edit and
+  backlog entry against the page text itself — `kb-sources.mjs --text <url>@<version>` at the version
+  it cites — never against your summary of it, asking: does each KB edit state what the
+  page now says — no more, no less, same strength; was a pin moved past a rule change the KB states
+  but was not edited; does an edit copy upstream detail; does the edited text sit in a section whose
+  heading and first line name it; does each backlog entry state one rule as its page does, which the
+  KB and the backlog do not already hold; was a page recorded as seen although it holds a rule.
+- Nothing to edit, pin, add to the backlog or record as seen: open nothing. Otherwise branch
+  `claude/kb-source-sync-<YYYY-MM-DD>`, one commit and the PR as in step 7, titled `[Misc] Weekly KB
+  source sync: <what changed, in a few words>`. The body: a table — page | versions (the
+  `viewer=changes` link the finder prints, none for a `--new` page) | edit authors | KB edit, "pin
+  only", backlog ids added or "seen", and why; `## For a committer`, when there is anything; the
   validator results in one line.

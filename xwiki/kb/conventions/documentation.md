@@ -72,6 +72,8 @@ Scope facts:
 - All **new** and refactored documentation lives under the documentation root
   https://www.xwiki.org/xwiki/bin/view/documentation/ — **not** under the old `Documentation` space
   or the Extensions wiki (those are the *old* documentation, being migrated out).
+- The guide governs that tree and the pages migrated into it — **not** dev.xwiki.org (development
+  practices, contributor guides), whose pages are not held to its Diataxis, structure or naming rules.
 - Documentation pages are **wiki pages**, not files in a git repo — authored in XWiki syntax on the
   wiki, and a major change usually goes through a Change Request (see "Saving changes" below).
 - All documentation is written in **English**, and a feature must be tested on a real wiki running an

@@ -39,7 +39,7 @@ every day.
 
 | Rule keys | Family file |
 |---|---|
-| S1116 S1124 S1128 S1161 S1197 S1611 S1659 S2209 S3252 S3878 S6208 S6213 S6355 S7476 | [[syntax-rules]] |
+| S1116 S1124 S1128 S1161 S1197 S1611 S1659 S2209 S3252 S3878 S5993 S6208 S6213 S6355 S7476 | [[syntax-rules]] |
 | S1066 S1125 S1126 S1155 S1264 S1488 S1596 S1602 S1612 S1858 S1905 S2130 S2864 S3012 S3024 S3358 S3706 S4201 S6353 S6397 S7158 | [[simplification-rules]] |
 | S1604 S1640 S1643 S6126 S6201 S6204 S6211 S6485 | [[modernization-rules]] |
 | S125 S1068 S1118 S1130 S1144 S1172 S1185 S1481 S1854 | [[dead-code-rules]] |
@@ -86,12 +86,13 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   exception and creates a fresh **`S1163`**. The other S899 shape is `queue.offer()` on an unbounded
   queue (always `true`), where "doing something" with the result is a design decision.
 - **`S2386`** "make this member `protected`" — reduces the visibility of a public static member →
-  Revapi `java.field.visibilityReduced`, the same break as **`S5993`**.
+  Revapi `java.field.visibilityReduced`.
 - **`S6213`** "rename this **method**…" (`record`, `yield`, `var`) — a rename of a public method is an
   API change, and the pool sits on the `record(…)` methods of the `*QuestionRecorder` classes. The
   rule's *variable* half is a different matter and is **not** denylisted — see [[syntax-rules]].
-- **`S4144`** "implementation is identical to method X" — deduplicating two methods that legitimately
-  mean different things is a design decision.
+- **`S4144`** "implementation is identical to method X" — **splits on the pair's NAMES**: same
+  operation ⇒ deliberate duplication, extract one private helper (no signature or behaviour change);
+  different operations ⇒ the identical body is a defect, so file a JIRA issue and leave Sonar's open.
 - **`S115`** constant naming — a cross-module rename of published API, breaking.
 - **`S1214`** constants-in-interface — **denylisted on published API only**, and the decision is
   recorded in the code rather than in SonarCloud. Inside an `internal` package it is a normal fix, and
@@ -113,12 +114,6 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   still extends it (then it stays OPEN). Suppress a published name or a drop-in extension of a
   third-party class (`StringUtils`, `EscapeTool`, SLF4J `Logger`).
 - **`S5845`** assert on dissimilar types — erasure can make the assertion correct as written.
-- **`S5993`** reduce an abstract class's constructor to `protected` — **only outside an `internal`
-  package**, where it is a real Revapi `java.method.visibilityReduced` break. Inside one it is a clean
-  mechanical pool: `revapi.json` excludes `**.internal.**` from the API check, and JLS §6.6.2.2 lets
-  both `super(…)` and `new AbstractX(…){…}` reach a `protected` constructor from any package while
-  plain `new AbstractX(…)` is already illegal on an abstract class, so no compilable caller can break.
-  Split the pool on `/internal/` in the path.
 - **`S5411`** boxed → primitive `boolean`, **`S1168`** return empty instead of `null` — real
   behaviour changes. **`S1172`** remove an unused parameter — a signature change on anything
   **non-`private`**; its `private` subset is a normal mechanical pool, see [[dead-code-rules]].

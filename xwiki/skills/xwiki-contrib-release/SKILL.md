@@ -97,9 +97,8 @@ import creates:
 - **Never give a Project id to `importExtension`**: it only matches `ExtensionClass` ids, so it creates
   a duplicate page named after the pom `<name>`, and every later "Update project" goes to that page.
   If it happens, delete the duplicate (its `Versions/<version>` child first) and update again.
-- **Use the developer's logged-in browser** (claude-in-chrome). These `/bin/` URLs reject Basic auth
-  (`kb/servers/index.md`), and a scripted form login answers 401. From that tab, `fetch()` and REST writes
-  (with the `XWiki-Form-Token` header from `<html data-xwiki-form-token>`) work.
+- **No browser needed**: a `GET` of the import URL with the developer's Basic auth is enough
+  (`kb/servers/index.md`).
 
 Verify that `lastVersion` is `X.Y` on the `ProjectClass`/`ExtensionClass` object, and that
 `Extension/<Space>/Versions/X.Y/` exists. Also check the page history: the import can be followed,

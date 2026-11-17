@@ -17,7 +17,7 @@ required directory layout. Keep new content that way.
 
 ```
 claude plugin validate ./xwiki   # manifest schema
-node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB index, KB search metadata current, no repeated JSON key or hook, size budgets, copied paragraphs)
+node scripts/validate.mjs        # repo consistency (skills, version untouched + in sync, KB search metadata current, no repeated JSON key or hook, size budgets, copied paragraphs)
 node --test                      # unit tests: tests/**/*.test.mjs, outside the shipped plugin
 ```
 
@@ -35,8 +35,10 @@ and opens at most one `[Misc] Weekly consolidation:` PR: its prompt is `scripts/
 its candidate finder `scripts/consolidation-candidates.mjs` (which shares its paragraph and budget
 logic with `validate.mjs` through `scripts/md-blocks.mjs`). The same routine opens at most one
 `[Misc] Weekly KB source sync:` PR, bringing a KB file in line with the dev.xwiki.org pages in its
-`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`; its finder is
-`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file.
+`sources:` that were edited since the version pinned in `scripts/kb-source-pins.json`, and adding the
+new rules it finds there or on new dev.xwiki.org pages to `eval/backlog.json`; its finder is
+`scripts/kb-sources.mjs`, and `--pin` is the only thing that writes that file (`--seen` writes
+`scripts/kb-source-seen.json`, the new pages read and found to hold nothing for the KB).
 
 A second weekly routine, prompted by `scripts/kb-batch-routine.md`, lands one measured batch of
 `eval/backlog.json` facts in the KB and opens at most one `[Misc] Weekly KB batch:` PR, only when the
@@ -164,7 +166,8 @@ Inside `xwiki/`:
   only where it would otherwise get them wrong: a fragile or irreversible operation, or a convention
   it cannot infer. A spelled-out recipe takes away its judgment, goes stale, and can be wrong.
 - A skill's `description` must clearly state *when* to use it (and when to use a sibling skill
-  instead) — that text is the only thing Claude sees when deciding to invoke it.
+  instead) — that text is the only thing Claude sees when deciding to invoke it. It stays within the
+  Agent Skills limit of 1,024 characters: routing phrases first, what the skill does inside second.
 - Mirror substantive changes to the plugin's capabilities in `README.md`, which documents the
   install flow and holds one table row per skill and per always-on feature — a row, not a section:
   the detail belongs in the skill's own `SKILL.md`, which is where both a developer and the model

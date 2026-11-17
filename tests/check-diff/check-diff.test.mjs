@@ -373,3 +373,32 @@ test('heuristics come back as advice, never as a refusal', () => {
   assert.match(r2.context, /no test in the commit/);
   assert.match(r2.context, /\[Misc\]/);
 });
+
+test('a raw getValue written into the output is advice, a rewritten line included', () => {
+  const page = 'xwiki-platform-core/xwiki-platform-foo/xwiki-platform-foo-ui/src/main/resources/Foo/FooSheet.xml';
+  const sheet = (set) => `<content>{{velocity}}\n${set}\n#if ($v == '1')\nOne\n#end\n`
+    + `[[label&gt;&gt;Main.WebHome||queryString="v=\${v}"]]\n{{/velocity}}</content>\n`;
+  const advised = (before, after) => run(repo({ [page]: before }, { [page]: after })).context;
+  // A rewrite that keeps the behaviour still gets the advice.
+  const r = run(repo({ [page]: sheet("#set($v = $doc.getValue('v'))") },
+    { [page]: sheet("#set ($v = $doc.getValue('v'))") }));
+  assert.equal(r.deny, '');
+  assert.match(r.context, /FooSheet\.xml:6: `\$v` holds a raw `getValue`/);
+  // A new output line using an older raw #set, and a raw getValue written directly.
+  const body = (lines) => `<content>{{velocity}}\n${lines.join('\n')}\n{{/velocity}}</content>\n`;
+  const set = "#set ($v = $doc.getValue('v'))";
+  assert.match(advised(body([set, 'Text']), body([set, 'Text $!{v}'])), /:3: `\$v` holds a raw/);
+  assert.match(advised(body(['Text']), body(["Version $doc.getValue('v')"])), /:2: a raw `getValue`/);
+  assert.match(advised(body(['Text']), body(["Type $doc.getObject('X.Y').getValue('t')"])), /:2: a raw/);
+  // Escaped at the #set, escaped by a later #set, only compared, passed to a call, in a comment, or a map
+  // entry's value: no advice.
+  for (const lines of [
+    ["#set ($v = $services.rendering.escape($doc.getValue('v'), 'xwiki/2.1'))", 'Text $v'],
+    [set, "#set ($v = $services.rendering.escape($v, 'xwiki/2.1'))", 'Text $v'],
+    [set, '#if ($v)', '$escapetool.xml($v)', '#end'],
+    [set, '## Text $v'],
+    ['#foreach ($entry in $map.entrySet())', '<td>$entry.getValue()</td>', '#end'],
+  ]) {
+    assert.doesNotMatch(advised('<content/>\n', body(lines)), /raw `getValue`/, lines.join(' / '));
+  }
+});

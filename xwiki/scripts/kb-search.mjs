@@ -257,9 +257,9 @@ export function loadSidecar(root, rel, text) {
   return { file: terms(meta.file), sections };
 }
 
-/** Whether a KB file is searchable: not the root index nor glossary, and no `_template.md`. */
+/** Whether a KB file is searchable: not the root glossary, and no `_template.md`. */
 export function isCorpusFile(rel) {
-  return rel !== "index.md" && rel !== "glossary.md" && !/(^|\/)_template\.md$/.test(rel);
+  return rel !== "glossary.md" && !/(^|\/)_template\.md$/.test(rel);
 }
 
 /** Cache key of a KB root: the index format plus every Markdown file's and sidecar's path, size and mtime. */

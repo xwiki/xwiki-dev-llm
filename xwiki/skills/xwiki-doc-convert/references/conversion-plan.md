@@ -177,21 +177,14 @@ work, not by a session: a small task is merged, never given a session of its own
 
 ## Nothing is published until the end
 
-xwiki.org is public and a conversion runs for weeks. A page saved the moment it is drafted is a page
-the world can find while its hub does not exist, its siblings are red links and its parent is a 404 —
-and a defect in it stays visible until someone happens to look. Publishing once, at the end, is what
-keeps the visible state of the wiki either "not converted yet" or "converted", never "half".
+Publishing once, at the end, is what keeps the visible state of the wiki either "not converted yet"
+or "converted", never "half". Why, and the rules, are in `kb/conventions/documentation-migration.md`
+→ *A migration publishes once, at the end*. For the plan's tasks:
 
 - `page-*` tasks **draft and lint**; they never call `docpages.py save`.
-- The `publish` task saves everything **parents before children**, so no page is ever live under a
-  missing parent. Sort the page set by path depth before saving it.
 - The **offline `lint` is the only gate the drafting tasks have.** Whatever the live checker would
   have told them has to be decidable offline instead; when a `publish` round finds a class of defect
   the lint could have caught, add the check rather than only fixing the page.
-- **Forward links are fine while drafting** — a page may link to a sibling that does not exist yet,
-  because they go live together. That is the point of the batch.
-- If the developer wants something visible early, publish a **complete subtree** (a hub plus its
-  children), never a single leaf.
 
 ## Resume protocol
 

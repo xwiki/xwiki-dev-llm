@@ -1,6 +1,6 @@
 ---
 name: xwiki-release-documentation
-description: "EXPLICIT INVOCATION ONLY. Audit the documentation of fixed XWiki issues — for a whole release (every issue the developer fixed in a Fix Version) or for one named issue — and close the gaps: decide, from the actual diff, whether the change needs a documentation page and/or a release-note entry, write them, and fill the issue's `Documentation` and `Documentation in Release Notes` JIRA fields with the resulting URLs. Release-note entries are created through the Release Notes Application REST endpoints. Use ONLY when the developer names it — `/xwiki-release-documentation`, \"document my fixed issues for 18.8.0\", \"run the release documentation sweep\", \"document XWIKI-24710 for the release\". Do NOT use it for \"write docs for this\" or \"document this page\" — those are xwiki-doc-writing. For the prose of a page use xwiki-doc-writing; to migrate an old page use xwiki-doc-convert; for JIRA reads/writes use xwiki-jira; for wiki reads/writes use xwiki-rest-api; for a contrib extension release announcement use xwiki-contrib-release-blog-post."
+description: "EXPLICIT INVOCATION ONLY. Audit the documentation of fixed XWiki issues — for a whole release (every issue the developer fixed in a Fix Version) or for one named issue — and close the gaps: decide, from the actual diff, whether the change needs a documentation page and/or a release-note entry, write them (entries through the Release Notes Application REST endpoints), and fill the issue's `Documentation` and `Documentation in Release Notes` JIRA fields with their URLs. Use ONLY when the developer names it — `/xwiki-release-documentation`, \"document my fixed issues for 18.8.0\", \"run the release documentation sweep\", \"document XWIKI-24710 for the release\". Do NOT use it for \"write docs for this\" or \"document this page\" — those are xwiki-doc-writing. For the prose of a page use xwiki-doc-writing; to migrate an old page use xwiki-doc-convert; for JIRA use xwiki-jira; for wiki reads/writes use xwiki-rest-api; for a contrib extension release announcement use xwiki-contrib-release-blog-post."
 ---
 
 # XWiki release documentation
@@ -67,9 +67,8 @@ a Fix Version by name across them, so resolving against `XWIKI` is enough.)
 `18.8.0` and `18.8.0-rc-1` are different release notes, and picking the wrong one puts the entries
 where nobody will read them.
 
-The Fix Version is also the version the entries are stored against: for a `.0` cycle that is the RC
-(`18.8.0-rc-1`), and the final release note aggregates them. Do not "helpfully" retarget to the
-final version.
+The Fix Version is also the version the entries are stored against: never "helpfully" retarget
+them to the final (`kb/processes/release-notes.md` → *How a release note is stored*).
 
 **The release note.** One call says whether it exists and, if so, the page it lives in:
 

@@ -10,7 +10,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://www.xwiki.org/xwiki/bin/view/Main/Support/
 provenance: official
-last-confirmed: 2026-11-01
+last-confirmed: 2026-11-17
 related: [conventions/versioning.md, conventions/commit-messages.md, processes/release-notes.md, testing/flickers.md]
 ---
 
@@ -57,8 +57,8 @@ version"). The one exception is an issue closed without commits (Won't Fix, Dupl
 be reopened. The Affects Version tell above misses this case, since the defect usually predates the
 dev version.
 
-A change with no effect on users or extension developers (refactoring, build-only work) needs no
-issue; when one is filed anyway it takes the **`Development Issue Only`** component, which is excluded
+A change with no effect on users or extension developers (refactoring, build-only work) does not
+require an issue; when one is filed it takes the **`Development Issues only`** component, which is excluded
 from the release notes.
 
 ## Issue-field conventions (every issue type)
@@ -70,10 +70,10 @@ below). When filing/curating an issue — Bug, Improvement, New Feature **or Tas
   `Rendering`, `Platform - …`): required for triage. Elsewhere (contrib), optional: set one when
   the project defines a fitting component.
 - **Affects Version/s** — always set, per [[versioning]].
-- **Fix Version/s** — the version the fix ships in: normally the next release of the current dev
-  version. Note the naming: JIRA version names use dashes (e.g. `18.7.0-rc-1`), whereas the source
-  `@since` / `@Deprecated(since=…)` tag for the *same* release uses `18.7.0RC1` — see [[versioning]]
-  for the tag format. Add the stable-branch fix versions too when the fix is backported.
+- **Fix Version/s** — none on an issue only reported: it is set when the issue is closed (see
+  *Resolving / closing an issue*). Two exceptions: a regression gets the next versions of the
+  supported branches, and a non-code roadmap Task (design, investigation, decision — `Development
+  Issues only`) gets the version it must be done before.
 - **Issue links** — link every related issue it names (the one that introduced the code involved, the
   one it follows up on, …) with a real JIRA link, by default **`Related`**; naming it in the
   description alone does not show up in either issue's links.
@@ -88,9 +88,10 @@ it explain the **user-visible problem**, not just the code change — but mind t
 
 ## Dependency-upgrade issues
 
-A dependency upgrade that ships to users needs its own issue (the `[Misc]` split is in
-[[commit-messages]]): summary `Upgrade to <dependency> <version>`, component **Dependency Upgrades**.
-The description is the **raw release-note URLs of every version being crossed** — one line each, from
+A dependency upgrade that ships to users needs its own issue, component **Dependency Upgrades**; one
+that only reaches developers may have one, under **Development Issues only** (telling the
+two apart: [[commit-messages]]). Whichever component it takes, the issue's summary is
+`Upgrade to <dependency> <version>`, and the description is the **raw release-note URLs of every version being crossed** — one line each, from
 the version after the one currently declared up to the target — not just the target's; skipping the
 intermediates hides the changes actually being pulled in. Keep them as bare URLs, which means setting
 the description over REST: `jira-cli` runs a body through its Markdown converter and rewrites a plain
@@ -153,7 +154,11 @@ the PR's URL on the work package once the PR is opened (`notify=false`).
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
 (you are the one resolving/verifying it). The distinction that is easy to get wrong:
 
-- **A change fixed it** → resolution **Fixed** (set the Fix Version/s where the project has them).
+- **A change fixed it** → resolution **Fixed**, with Fix Version/s (where the project has them) set to
+  the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`). JIRA version
+  names use dashes, unlike the `18.7.0RC1` of a `@since` tag ([[versioning]]). When one of them does
+  not exist yet in JIRA (e.g. a contrib project whose next version was not created after its last
+  release), ask the developer rather than closing without it or creating it.
 - **A change made for another issue fixed it** → **Solved By**, linked to that issue, with **its Fix
   Version/s**, so that querying JIRA by version finds it (e.g. a security issue fixed by a
   non-security change).

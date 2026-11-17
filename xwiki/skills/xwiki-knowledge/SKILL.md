@@ -17,7 +17,7 @@ the KB is `../../kb/` and its search engine `../../scripts/kb-search.mjs` (Claud
    `node <kb-search.mjs> "<query>"` with **2–3 reformulations** (the developer's words, the XWiki
    term, the symptom). Each hit is `[tag] file#Section — Title: first line`, plus `related:` files;
    follow a `related:` pointer when the hit is close but not it. `--version X` drops entries whose
-   `versions:` excludes the branch's version. `kb/index.md` is no longer the entry point.
+   `versions:` excludes the branch's version.
 2. **Read only the named `## Section`** of the file, not the whole file.
 3. **Respect the tag and the frontmatter:**
    - `[rule]` (`stability: durable`) → the inline content is the answer; use it directly.
@@ -83,8 +83,7 @@ Then:
    The search and pointer hooks also read `last-confirmed` (date; breaks near-ties), `related`
    (topics shown beside a hit) and, when the rule concerns certain files, `applies-to` (path globs)
    and `applies-when` (regexes over added text); copy their form from a sibling topic.
-2. **Update `kb/index.md`** — the topic line (`node scripts/validate.mjs` checks every topic is
-   listed). Then, in this repo, **regenerate the topic's search sidecar** (`kb/_meta/`) with
+2. **Regenerate the topic's search sidecar** (`kb/_meta/`) in this repo with
    `node scripts/kb-pipeline/gen-metadata.mjs`: a sidecar whose topic body changed is ignored, so
    the topic is found less well until it is regenerated.
 3. **Leave what you touched shorter than you found it.** Cut what has gone stale, what your new

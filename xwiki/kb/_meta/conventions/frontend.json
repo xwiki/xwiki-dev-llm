@@ -56,6 +56,20 @@
         "JavaScript breaking change"
       ]
     },
+    "Mocks in TypeScript unit tests": {
+      "questions": [
+        "How do I mock a dependency in a Vitest test in xwiki-platform-node without casting to unknown?",
+        "What is the right way to create typed mocks with vitest-mock-extended in XWiki?",
+        "Why does my mocked Vue prop return the wrong value in a Vitest test?",
+        "My mockDeep test behaves oddly with a provider, what am I doing wrong?"
+      ],
+      "aliases": [
+        "vitest-mock-extended",
+        "mockDeep",
+        "Vitest mocks",
+        "as unknown as cast"
+      ]
+    },
     "HTML, CSS, accessibility": {
       "questions": [
         "How do I show an icon or caret in my XWiki page without a CSS background image?",
@@ -79,18 +93,21 @@
       "conventions/translations.md"
     ],
     "applies-to": [
-      "**/*.js",
-      "**/*.css",
+      "**/src/main/webjar/**/*.js",
+      "**/src/main/webapp/**/*.js",
+      "**/src/main/resources/**/*.js",
       "**/*.less",
-      "**/*.vm"
+      "**/*.css",
+      "xwiki-platform-core/xwiki-platform-node/src/main/node/**/*.test.ts"
     ]
   },
-  "source_hash": "5605203d3d5403c765a43310ee79d1efdc3ae79920b5d6b485ffe4583a041a8f",
+  "source_hash": "794091552f6c4daea486c4d90782668929ae09315860fe7bc2556ea4ce058b7b",
   "file_hash": "3ef48cb81fc46933c535e982b8af41b8cf8a3ddddb99f882fd0ee72ba5f3cf55",
   "section_hashes": {
     "JavaScript modules": "b0c3be44bea528bef47b7fb63edb6755ecb7c764ecdfb997ab99c8b2be7d97b6",
     "Never mix server-side scripting into JavaScript": "f1f3233d94e6bf2ff6c23ce87dff720a3641236c8e3024fd47e965fdb3c91d8f",
     "JavaScript backward compatibility": "d47f1bba0218b52bb39d45ef960e2791568e695e8fe8a3d594f00a11ceafa58b",
+    "Mocks in TypeScript unit tests": "3e3734a24b446847d72e0178daede2ee0854eeaeb78faed2a40601de66b5de77",
     "HTML, CSS, accessibility": "38b62635a7cf7c629da9f0a79a5677dae3bfee847bc948f60772336bfb554393"
   }
 }
