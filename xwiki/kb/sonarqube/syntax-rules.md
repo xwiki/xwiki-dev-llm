@@ -181,6 +181,22 @@ The dense sites are the declaration preamble of long legacy methods (`XWiki.java
 un-wrap it entirely rather than keeping a half-split declaration. Nothing about scoping or
 initialisation order changes, so there is no drop condition beyond a comment on the line.
 
+## S5993 — an `abstract` class's constructor should not be `public`
+
+`public Foo(` → `protected Foo(`, one keyword. **Not a backward-compatibility break in any package**,
+so there is nothing to split the pool on: the only two ways to reach an abstract class's constructor
+are `super(…)` in a subclass and `new AbstractX(…){…}`, and [JLS §6.6.2.2] permits both on a
+`protected` one from anywhere — plain `new AbstractX(…)` is already illegal. `revapi:check` agrees on
+published, non-`internal` API, because XWiki's `revapi.json` reclassifies every *source*-compatibility
+difference to EQUIVALENT severity and this change is source-only. Confirmed by sweeping all 162 open
+sites across the three repos with `revapi:check` green in every one of the 33 modules.
+
+Two things to watch: the line grows by three characters, so it can cross the 120-column limit; and
+drop a site whose declaration line already carries an open method-metric issue (`S3776`, `S107`,
+`S1541`), since rewriting the line hands that finding to your own PR — see [[verification]].
+
+[JLS §6.6.2.2]: https://docs.oracle.com/javase/specs/jls/se21/html/jls-6.html#jls-6.6.2.2
+
 ## S6355 — `@Deprecated` should carry `since`
 
 **Fixable whenever the element's own `@deprecated` Javadoc tag names the version** — which in XWiki it
