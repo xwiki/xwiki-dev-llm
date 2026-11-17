@@ -286,7 +286,8 @@ export function gate(questions, [base, head], opts = {}) {
     const per = (recs) => mean(ds.map((q) => ptrs(recs[q.id]).length));
     const [pb, ph] = [base, head].map((side) => side.runs.map((r) => per(r.recs)));
     rows.push({ condition: '(d) pointers per session within the base maximum',
-      value: `${mean(ph).toFixed(2)} vs base max ${Math.max(...pb).toFixed(2)}`, pass: mean(ph) <= Math.max(...pb) });
+      // The mean of equal per-run means can land a rounding error above them (3.7, 3.7, 3.7 → 3.7000000000000006).
+      value: `${mean(ph).toFixed(2)} vs base max ${Math.max(...pb).toFixed(2)}`, pass: mean(ph) <= Math.max(...pb) + 1e-9 });
   }
   return rows;
 }
