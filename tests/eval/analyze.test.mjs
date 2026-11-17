@@ -115,6 +115,16 @@ test('the batch gate passes batch 1: (e) CI above 0, (a) and harmful flat, (d) p
   assert.match(rows.at(-1).value, /4\.00 vs base max 5\.00/);
 });
 
+test('the (d) row passes when both sides give the same pointers, whatever the floating-point rounding', () => {
+  // The KB prune pilot's (d) runs: nine questions given 4 pointers and one given 1, on both sides (3.7 per session).
+  const qs = Array.from({ length: 10 }, (_, i) => ({ id: `d${i}`, group: 'd' }));
+  const runs = () => [0, 1, 2].map(() => Object.fromEntries(qs.map((q, i) =>
+    [q.id, { ...d01, hook_pointers: d01.hook_pointers.slice(0, i === 0 ? 1 : 4) }])));
+  const row = gate(qs, [side('master', runs()), side('branch', runs())]).at(-1);
+  assert.match(row.value, /3\.70 vs base max 3\.70/);
+  assert.equal(row.pass, true);
+});
+
 test('the batch gate fails on an (e) CI reaching 0, an (a) loss, a new harmful answer it caused or more (d) pointers', () => {
   const [base, head] = [side('master', merge(runsOf(1), aRuns(3, false), dRuns(4))), side('branch', merge(runsOf(1), aRuns(1, true), dRuns(5)))];
   const rows = gate([...eQuestions, a26q, d01q], [base, head], { changed: ['xwiki/kb/conventions/frontend.md'] });
