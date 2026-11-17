@@ -58,15 +58,16 @@
     },
     "Mocks in TypeScript unit tests": {
       "questions": [
-        "How do I mock a dependency in a Vitest test in xwiki-platform-node without type casts?",
-        "Why does my mockDeep stub return undefined when I call provider.get().method in a TypeScript test?",
-        "Why does my mock break when Vue stringifies it or passes it as a prop?"
+        "How do I mock a dependency in a Vitest test in xwiki-platform-node without casting to unknown?",
+        "What is the right way to create typed mocks with vitest-mock-extended in XWiki?",
+        "Why does my mocked Vue prop return the wrong value in a Vitest test?",
+        "My mockDeep test behaves oddly with a provider, what am I doing wrong?"
       ],
       "aliases": [
         "vitest-mock-extended",
-        "Vitest mocks",
         "mockDeep",
-        "TypeScript test doubles"
+        "Vitest mocks",
+        "as unknown as cast"
       ]
     },
     "HTML, CSS, accessibility": {
@@ -89,7 +90,7 @@
       "conventions/server-side-rendering.md",
       "conventions/backward-compatibility.md",
       "conventions/naming.md",
-      "testing/test-value.md"
+      "conventions/translations.md"
     ],
     "applies-to": [
       "**/src/main/webjar/**/*.js",
@@ -100,13 +101,13 @@
       "xwiki-platform-core/xwiki-platform-node/src/main/node/**/*.test.ts"
     ]
   },
-  "source_hash": "40e93f02570f4ad0d9cc2adde60a81bea65406590a7e7eff5080c996faef28ed",
+  "source_hash": "794091552f6c4daea486c4d90782668929ae09315860fe7bc2556ea4ce058b7b",
   "file_hash": "3ef48cb81fc46933c535e982b8af41b8cf8a3ddddb99f882fd0ee72ba5f3cf55",
   "section_hashes": {
     "JavaScript modules": "b0c3be44bea528bef47b7fb63edb6755ecb7c764ecdfb997ab99c8b2be7d97b6",
     "Never mix server-side scripting into JavaScript": "f1f3233d94e6bf2ff6c23ce87dff720a3641236c8e3024fd47e965fdb3c91d8f",
     "JavaScript backward compatibility": "d47f1bba0218b52bb39d45ef960e2791568e695e8fe8a3d594f00a11ceafa58b",
-    "Mocks in TypeScript unit tests": "76646d0483bb66a394d474e0ebc625105384552fcfb46ffc64163e2d6096d616",
+    "Mocks in TypeScript unit tests": "3e3734a24b446847d72e0178daede2ee0854eeaeb78faed2a40601de66b5de77",
     "HTML, CSS, accessibility": "38b62635a7cf7c629da9f0a79a5677dae3bfee847bc948f60772336bfb554393"
   }
 }
