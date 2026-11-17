@@ -281,7 +281,8 @@ export function editPointers(index, filePath, { projectDir, seen = new Set(), k 
   const sectionFor = (file, matched) => {
     if (!matched) return best.get(file) ?? firstSectionHit(index, file);
     const terms = new Set(tokenize(matched));
-    const named = index.sections.find((s) => s.file === file && tokenize(s.section).some((t) => terms.has(t)));
+    const named = index.sections.find((s) => s.file === file && !s.linkList
+      && tokenize(s.section).some((t) => terms.has(t)));
     return named ? sectionHit(index, named) : firstSectionHit(index, file);
   };
   const hits = [];

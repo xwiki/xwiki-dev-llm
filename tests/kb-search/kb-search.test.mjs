@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 
 process.env.XDG_STATE_HOME = mkdtempSync(join(tmpdir(), 'kb-state-'));
 const {
-  bodyHash, buildIndex, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, sidecarOf, splitSections,
+  bodyHash, buildIndex, isLinkList, kbSearch, loadIndex, parseFrontmatter, promptToQuery, search, sidecarOf,
+  splitSections,
   tokenize, versionMatches,
 } = await import('../../xwiki/scripts/kb-search.mjs');
 const { kbIndexDir } = await import('../../xwiki/scripts/state-dir.mjs');
@@ -131,6 +132,27 @@ test('sections: one per ##, fenced ## ignored, the intro headed by the file titl
     ['Versions in code', 'The @since format', 'Deprecation', 'Checking a branch version']);
   assert.match(sections[1].text, /## not a heading/);
   assert.deepEqual(splitSections('# Only a title\n\n## A\n\ntext\n', 'T').map((s) => s.heading), ['A']);
+});
+
+test('a Related section of only [[topic]] bullets is never a hit; one with its own text can be', () => {
+  const related = (text) => ({ heading: 'Related', text });
+  assert.equal(isLinkList(related('- [[security]] — escaping\n  that applies here.\n- [[naming]] — names.')), true);
+  assert.equal(isLinkList(related('- [[index]] — the server map.\n- Use the `xwiki-ci-check` skill.')), false);
+  assert.equal(isLinkList(related('Read these first.\n\n- [[index]] — the server map.')), false);
+  assert.equal(isLinkList(related('Prose only.')), false);
+  assert.equal(isLinkList({ heading: 'Rules', text: '- [[security]] — x' }), false);
+
+  // The link list is the best match for the query, yet search never returns it; the routing one it does.
+  const root = kb({
+    'servers/mail.md': '---\ntitle: Mail\n---\n\n## Sending\n\nzorblat delivery uses SMTP.\n\n'
+      + '## Related\n\n- [[conventions/versioning]] — zorblat zorblat zorblat routing.\n',
+    'servers/queue.md': '---\ntitle: Queue\n---\n\n## Workers\n\nThe queue runs workers.\n\n'
+      + '## Related\n\n- Use the `xwiki-ci-check` skill for zorblat zorblat routing.\n',
+  });
+  const ids = search(buildIndex(root), 'zorblat routing').map((h) => h.id);
+  assert.ok(!ids.includes('servers/mail.md#Related'), ids.join(', '));
+  assert.ok(ids.includes('servers/mail.md#Sending'), ids.join(', '));
+  assert.ok(ids.includes('servers/queue.md#Related'), ids.join(', '));
 });
 
 test('tokenizer: identifiers split and kept whole, stopwords dropped, plurals folded', () => {
