@@ -162,3 +162,8 @@ test('a backlog the batch routine cannot use is reported', () => {
     'entry 0 (S01): status is not candidate, done or dropped',
   ]);
 });
+
+test('a page argument may hold literal spaces', () => {
+  assert.deepEqual(pinArg(`${VIEW}Community/Accessibility/DevelopmentRules/Target size exceptions@3.1`),
+    [pageKey(`${VIEW}Community/Accessibility/DevelopmentRules/Target%20size%20exceptions`), '3.1']);
+});

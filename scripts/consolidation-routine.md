@@ -260,7 +260,9 @@ PR and `--lossless` does not apply.
   audit, a plan, a list of links) is recorded with `kb-sources.mjs --seen <url>@<version>` and named
   in the PR body. A page whose citing file is off limits waits, unrecorded.
 - Run step 5's checks (a KB body edit's sidecar included), then one fresh critic as in step 6, given
-  the diff, the page diffs, the `--new` pages and this step, asking: does each KB edit state what the
+  the diff, the page diffs, the `--new` pages and this step, and told to check every KB edit and
+  backlog entry against the page text itself — `kb-sources.mjs --text <url>@<version>` at the version
+  it cites — never against your summary of it, asking: does each KB edit state what the
   page now says — no more, no less, same strength; was a pin moved past a rule change the KB states
   but was not edited; does an edit copy upstream detail; does the edited text sit in a section whose
   heading and first line name it; does each backlog entry state one rule as its page does, which the
