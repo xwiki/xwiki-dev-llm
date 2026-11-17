@@ -600,16 +600,16 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   page render a red validation banner. Before `(((` it also swallows the word and leaks a literal `)))`
   into the page. **Rephrase** ("…image, as follows:") — never escape it. The same applies to any
   scheme-like token followed by `:` — `attach:`, `url:`, `mailto:`. **Grep every draft for these.**
-- **`##…##` protects nothing parsed before it**, and each case renders plausibly:
+- **`##…##` protects nothing parsed before it**, and each case renders plausibly. Escape the
+  character with `~` inside the span — no code macro needed:
   - `--` is strikethrough: `##--flag=value##` renders `<del>flag=value</del>`, and an **unmatched**
-    `--` strikes through to the end of the block, so every occurrence is a defect. Use
-    `{{code language="none"}}--flag{{/code}}` — command-line flags are what trips this.
-  - A URL: `##http://localhost:8080/##` loses a `#` to the autolinker. Use `{{code language="none"}}`.
+    `--` strikes through to the end of the block, so every occurrence is a defect. Write `##~--flag##`.
+  - A URL: `##http://localhost:8080/##` loses a `#` to the autolinker. Write
+    `##http:~/~/localhost:8080/##` (`~http://` does not work).
   - `!=` in a table row starts a header cell: `|##RewriteCond %{HTTPS} !=on##|` loses the `!=` and
-    moves `on` to a new cell (` !^` survives; outside a table it is harmless). Use
-    `{{code language="none"}}` in the cell.
+    moves `on` to a new cell (` !^` survives; outside a table it is harmless). Write `~!=`.
   - A macro executes: `##{{deprecated/}}##` renders a *"Failed to execute the [deprecated] macro"*
-    box, in a Change Request description too. Escape it: `##~{{deprecated/}}##`.
+    box, in a Change Request description too. Write `##~{{deprecated/}}##`.
 - **Never link a page of the xwiki.org farm by URL — use `doc:<wiki>:<ref>`.** `extensions`, `dev`,
   `design`, `snippets`, `rendering`, `commons`, `contrib`, `cristal` and `test` are **subwikis of the
   same farm** as `www.xwiki.org` (`GET /rest/wikis` lists them), so write

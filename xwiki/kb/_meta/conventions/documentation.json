@@ -207,7 +207,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "4738ea1e5df60b7a5a7cf8dfd5da78f4b01ba051a324475f3c7d30de4c0305eb",
+  "source_hash": "5de6d3a649a99b82d0ac870269693dc1224d0c9443fcea5c9588cd651963f205",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "5243a5c6cc67bde84fde799382e04afc2cc4924067ead0da9f07b08f21921967",
@@ -223,7 +223,7 @@
     "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
     "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
     "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
-    "XWiki syntax traps that bite when authoring documentation": "1980da2f4e50bc66aa8349d8430339cabe3e9b4f341e6fabc45b0e6557197e46",
+    "XWiki syntax traps that bite when authoring documentation": "2a64a4073b8e7015806baf7c4cd30b558de4567ed8fc102ed3e75dfe2ec1ea1b",
     "Navigation order — pinning child pages": "d5522b550471a8c8f79e0cf8fb211e892f59a27cebf95dceb5c002109a63c95d"
   }
 }
