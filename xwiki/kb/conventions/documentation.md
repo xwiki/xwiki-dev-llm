@@ -600,24 +600,16 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   page render a red validation banner. Before `(((` it also swallows the word and leaks a literal `)))`
   into the page. **Rephrase** ("…image, as follows:") — never escape it. The same applies to any
   scheme-like token followed by `:` — `attach:`, `url:`, `mailto:`. **Grep every draft for these.**
-- **`--` is strikethrough, and `##…##` does not protect it.** A monospace span such as
-  `##--flag-name=value##` renders as `<del>flag-name=value</del>`: the leading dashes are *eaten*. An
-  **unmatched** `--` opens a `<del>` that runs **to the end of the block**, silently striking through
-  every remaining sentence. So every occurrence is a defect, not just paired ones. Use
-  `{{code language="none"}}--flag{{/code}}` inline, or a block code macro. Command-line flags are
-  exactly the content that trips this.
-- **`##…##` does not work around a URL.** `##http://localhost:8080/##` renders as
-  `http://localhost:8080/#` plus a stray `#`, because the autolinker eats one hash. Use
-  `{{code language="none"}}` for URLs.
-- **`!=` in a table row is eaten, and `##…##` does not protect it.** `|##RewriteCond %{HTTPS} !=on##|`
-  renders as `RewriteCond %{HTTPS}` + a non-breaking space + `on`: `!=` is a header-cell separator in
-  the alternative table syntax, consumed before the monospace span is considered. It is `!=`-specific
-  (` !^` in the next row survives) and table-specific. `~!` "works" only by eating the space. Use
-  `{{code language="none"}}` in the cell.
-- **A macro name written in prose renders as the macro.** `##{{deprecated}}##` emits a live
-  *"Failed to execute the [deprecated] macro"* error box — the macro is parsed before the monospace
-  span. `{{code language="none"}}{{deprecated}}{{/code}}` fixes it and stays inline. It also bites in a
-  Change Request description, which is rendered wiki syntax that no file-change check ever reads.
+- **`##…##` protects nothing parsed before it**, and each case renders plausibly:
+  - `--` is strikethrough: `##--flag=value##` renders `<del>flag=value</del>`, and an **unmatched**
+    `--` strikes through to the end of the block, so every occurrence is a defect. Use
+    `{{code language="none"}}--flag{{/code}}` — command-line flags are what trips this.
+  - A URL: `##http://localhost:8080/##` loses a `#` to the autolinker. Use `{{code language="none"}}`.
+  - `!=` in a table row starts a header cell: `|##RewriteCond %{HTTPS} !=on##|` loses the `!=` and
+    moves `on` to a new cell (` !^` survives; outside a table it is harmless). Use
+    `{{code language="none"}}` in the cell.
+  - A macro executes: `##{{deprecated/}}##` renders a *"Failed to execute the [deprecated] macro"*
+    box, in a Change Request description too. Escape it: `##~{{deprecated/}}##`.
 - **Never link a page of the xwiki.org farm by URL — use `doc:<wiki>:<ref>`.** `extensions`, `dev`,
   `design`, `snippets`, `rendering`, `commons`, `contrib`, `cristal` and `test` are **subwikis of the
   same farm** as `www.xwiki.org` (`GET /rest/wikis` lists them), so write
@@ -653,13 +645,9 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   generated anchor id. Rephrase the heading and put the URL in the body inside a code macro.
 - **A blank line between two list items ends the list**, so numbering restarts at 1. Keep list items on
   consecutive lines.
-- **Angle brackets inside `##…##` are NOT reliably safe.** `##xwiki-tomcat<version>-<database>##`
-  rendered live as `xwiki-tomcat-`: both placeholders were eaten as HTML tags, silently, in prose and
-  in an FAQ property. Re-measured on 18.7.0, `<Object>`, `<?>` and `<I extends InputSource>` survive
-  while lowercase `<version>` and `<database>` do not, so the predicate is unsettled — **probe, do not
-  escape defensively**: PUT a probe page on a local instance, read `/bin/get/<ref>?xpage=plain`, then
-  delete it (~20 seconds; there is no `/rest/wikis/<wiki>/rendering` endpoint). Prefer rewriting the
-  placeholder away (`##xwiki-tomcat11-mariadb##`) over a `{{code}}` macro mid-sentence.
+- **Angle brackets inside `##…##` are safe in page content** — `##<prefix>_xwiki-data##` and
+  `##xwiki-tomcat<version>-<database>##` render literally: XWiki 2.1 has no raw HTML outside
+  `{{html}}`, so `<…>` placeholders need no escaping.
 - **Section anchors work, but the syntax differs per page syntax — check which one the page uses.**
   The anchor id is `H` + the heading text with whitespace dropped, letters, digits and `:_.-` kept,
   and every other character replaced by its hex code — so `== My heading ==` gives `HMyheading`, but
