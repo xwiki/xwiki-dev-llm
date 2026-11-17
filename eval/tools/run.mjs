@@ -10,7 +10,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { claudeStream, pool } from './claude.mjs';
 import { codeRepos, agentFiles } from './code-dir.mjs';
-import { clonesDir, evalDir, kbDirOf, loadQuestions, outRoot, parseArgs, pluginDir as pluginDirOf, runDir, taskClone } from './common.mjs';
+import {
+  clonesDir, evalDir, kbDirOf, loadQuestions, outRoot, parseArgs, pluginDir as pluginDirOf, runDir, stagePlugin, taskClone,
+} from './common.mjs';
 import { makeTaskRepo, sessionResult } from './task-repo.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -18,11 +20,12 @@ if (!args.label || !args.questions) {
   console.error('usage: node run.mjs --label <name> --questions a,b,c,d [--plugin dir] [--out dir] [--clones dir] [--model sonnet] [--only a01]');
   process.exit(2);
 }
-const pluginDir = pluginDirOf(args);
 const label = args.label;
 const model = args.model || 'sonnet';
 const only = args.only ? new Set(args.only.split(',')) : null;
 const out = outRoot(args);
+// Sessions see a staged copy, so every label's plugin path has the same length (see stagePlugin).
+const pluginDir = stagePlugin(pluginDirOf(args), out, label);
 const outDir = runDir(args);
 fs.mkdirSync(outDir, { recursive: true });
 

@@ -1,5 +1,6 @@
 // Locations and argument parsing shared by the benchmark tools. Every location is an option or derived
 // from one: nothing here names a machine path.
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +37,19 @@ export function runDir(args, label = args.label) {
 /** The plugin under test: `--plugin`, else this checkout's xwiki/. */
 export function pluginDir(args) {
   return path.resolve(args.plugin || path.join(repoRoot, 'xwiki'));
+}
+
+/**
+ * A copy of `plugin` at a path whose length does not depend on where the plugin came from or on the run's
+ * label: `<out>/plugins/<16 hex of the label's hash>/xwiki`. The prompt hook cuts its block at a character
+ * budget that counts the header, and the header names the plugin's directory, so two versions compared
+ * from paths of different lengths can be given a different number of pointers for the same KB.
+ */
+export function stagePlugin(plugin, out, label) {
+  const dir = path.join(out, 'plugins', createHash('sha256').update(label).digest('hex').slice(0, 16), 'xwiki');
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.cpSync(plugin, dir, { recursive: true });
+  return dir;
 }
 
 /** A plugin's knowledge base: kb/, or okf/ in a snapshot older than the rename. */
