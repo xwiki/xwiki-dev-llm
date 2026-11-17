@@ -15,7 +15,7 @@ another preflight check fails, stop and report.
 
 ## 1. Preflight
 
-Read from the root `pom.xml`: the `<version>` (must be `X.Y-SNAPSHOT` for the version asked), the
+Read from the root `pom.xml`: the `<version>` (must be `X.Y.Z-SNAPSHOT` for the version asked), the
 tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or `openproject`), and the
 `<parent>` XWiki version (it sets the JDK, see xwiki-build). Then all of these must hold:
 
@@ -29,7 +29,7 @@ tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or 
    `Documentation`; OpenProject **Reference Documentation**, `kb/processes/release-notes.md`) set
    to the page URL(s), or `N/A` when no page describes the change. Otherwise write or update the
    pages with **xwiki-doc-writing** first, badging what is new
-   `{{version product="<extension>" since="X.Y"}}` (documenting before the release is accepted,
+   `{{version product="<extension>" since="X.Y.Z"}}` (documenting before the release is accepted,
    `kb/conventions/documentation.md`), fill the fields, read them back, then release. Left for
    after the release, this step (which may need a local instance for screenshots) stalls the
    hand-off while the version is already public and unannounced.
@@ -41,6 +41,9 @@ tracker (`xwiki.issueManagement.system`: `jira`, the contrib-parent default, or 
    (`xwiki.release.jira.skip` false), the JIRA credentials of
    https://github.com/xwiki-contrib/parent#enable-automatic-jira-release are needed too.
 
+Versions have three parts (`kb/conventions/versioning.md`): a pom still on `X.Y-SNAPSHOT` releases
+`X.Y.0`, so `release:prepare` gets `-DreleaseVersion=X.Y.0 -DdevelopmentVersion=X.Y.1-SNAPSHOT`.
+
 ## 2. Prepare
 
 ```
@@ -48,8 +51,8 @@ mvn release:prepare -B -ntp -Pintegration-tests,docker -Darguments="-DskipTests"
 ```
 
 - Keep `-Pintegration-tests,docker` and `-Darguments` even without functional tests, or some modules
-  are left with wrong versions. `-B` takes the defaults: release `X.Y`, tag `<artifactId>-X.Y`, next
-  `X.(Y+1)-SNAPSHOT`.
+  are left with wrong versions. `-B` takes the defaults: release `X.Y.Z`, tag `<artifactId>-X.Y.Z`,
+  next `X.Y.(Z+1)-SNAPSHOT`.
 - Not on `master`: add `-DpushChanges=false`. Otherwise the plugin pushes the current branch's name
   instead of `master`.
 - An unrelated enforcer failure: `-Dxwiki.enforcer.skip=true` inside `-Darguments`, and report it.
@@ -70,15 +73,16 @@ mvn release:perform -B -ntp -Pintegration-tests,docker -Darguments="-DskipTests 
 Run it in the background with the output in a log: it's long. The contrib parent closes and
 releases the staging repository itself (`Remote staging repositories released.`). Check that each
 artifact's
-`https://nexus.xwiki.org/nexus/content/groups/public/<groupId path>/<artifactId>/X.Y/<artifactId>-X.Y.<pom|jar|xar>`
+`https://nexus.xwiki.org/nexus/content/groups/public/<groupId path>/<artifactId>/X.Y.Z/<artifactId>-X.Y.Z.<pom|jar|xar>`
 returns 200. If the pom turns the automatic release off, the staging repository stays open. Closing,
 testing and releasing it is the developer's call: never release it on their behalf.
 
 ## 5. Tracker version
 
-- **JIRA**: create `X.(Y+1)`. Without the automatic JIRA release, also release `X.Y`.
+- **JIRA**: create the pom's new version without `-SNAPSHOT`. Without the automatic JIRA release,
+  also release `X.Y.Z`.
 - **OpenProject**: `PATCH /api/v3/versions/<id>` `{"status":"closed"}`, then `POST /api/v3/versions`
-  for `X.(Y+1)`, with the same `sharing` as the previous versions.
+  for that next version, with the same `sharing` as the previous versions.
 
 ## 6. extensions.xwiki.org import
 
@@ -100,8 +104,8 @@ import creates:
 - **No browser needed**: a `GET` of the import URL with the developer's Basic auth is enough
   (`kb/servers/index.md`).
 
-Verify that `lastVersion` is `X.Y` on the `ProjectClass`/`ExtensionClass` object, and that
-`Extension/<Space>/Versions/X.Y/` exists. Also check the page history: the import can be followed,
+Verify that `lastVersion` is `X.Y.Z` on the `ProjectClass`/`ExtensionClass` object, and that
+`Extension/<Space>/Versions/X.Y.Z/` exists. Also check the page history: the import can be followed,
 in the same second, by an "Updated last version of the extension" save. That save can write back
 the pre-import page and revert fields such as a changed pom `<name>` (XWIKI-25208, "Updating a
 project in the repository may be reverted by the concurrent last-version update of the project
@@ -134,7 +138,7 @@ Documentation** (find its `customFieldN` key in the work package schema).
   `git push origin :<tag>` if it was pushed): the rollback doesn't. Without `release.properties`,
   revert the two release commits by hand.
 - Perform failed after uploading: have someone with Nexus rights drop the staging repository. A
-  version that reached the public repository can't be re-released: release `X.Y.1`.
+  version that reached the public repository can't be re-released: release `X.Y.(Z+1)`.
 
 ## 9. Hand off and report
 
