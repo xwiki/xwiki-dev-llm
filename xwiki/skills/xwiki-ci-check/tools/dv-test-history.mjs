@@ -204,7 +204,11 @@ export function develocityFacts(test, { days = 28, match = null, timeoutMs = 300
     // Trimmed: a 401 answers with its whole problem document, and this string is carried in the
     // work order, where the reader needs the cause and not the server's JSON.
     const said = (run.stderr || '').trim().split('\n').filter(Boolean).pop();
-    return { unavailable: (said || `dv-test-history exited ${run.status}`).slice(0, 160) };
+    // `unknownTest`: Develocity answered, and has no execution of *this* test — true of one test, not
+    // of the server. Read as an outage, one `AllIT#initializationError` turned the history off for
+    // every incident after it (master, 2026-11-17).
+    return { unavailable: (said || `dv-test-history exited ${run.status}`).slice(0, 160),
+      ...(/^No test cases found/.test(said || '') ? { unknownTest: true } : {}) };
   }
   try {
     return factsOf(JSON.parse(readFileSync(raw, 'utf8')),
@@ -263,7 +267,14 @@ function factsOf(raw, markdown, { match, server, report, days }) {
     configs: failing.slice(0, 3).map(([name, row]) =>
       `${name} — ${row.fail_count}/${row.runs} (${percent(row.fail_count, row.runs)})`),
     // Every failing configuration, as numbers: what a proof's repeat count is computed from.
-    rates: failing.map(([name, row]) => ({ name, failures: row.fail_count, runs: row.runs })),
+    // `passBefore`/`passInSpan`/`passAfter` are the clean runs before the configuration's first
+    // failure, between its first and last, and after its last: what tells a step from a flicker
+    // (`regressionOf`).
+    rates: failing.map(([name, row]) => ({
+      name, failures: row.fail_count, runs: row.runs,
+      passBefore: row.pass_before ?? null, passInSpan: row.pass_in_span ?? null, passAfter: row.pass_after ?? null,
+      firstFail: Number.isFinite(row.first_fail) ? day(row.first_fail) : null
+    })),
     // The analyser's own conclusions, in its words. Capped because a report with many distinct
     // failures lists one bullet per failure and this is a work-order field, not a document.
     findings: keyFindings(markdown).slice(0, 6),
@@ -276,6 +287,29 @@ function factsOf(raw, markdown, { match, server, report, days }) {
       : undefined,
     report
   };
+}
+
+/**
+ * The day a test started failing on `branch` for good, when its Develocity history says it did — or
+ * null when it does not.
+ *
+ * A flicker passes some of the time after it first fails; a regression never does. So: every
+ * configuration of this branch that failed has failed at least twice, has passed before its first
+ * failure (it is a change, not a test that never worked) and has not passed once since. Jenkins'
+ * eight builds cannot see this on a single-environment job, nor when the step is older than they
+ * are; `PDFExportIT#liveData` on master (XWIKI-25778, 2026-11-17) passed 19–20 runs per
+ * configuration, then failed all 4–5 since 2026-11-13, and was filed as a flicker.
+ *
+ * @param {object} facts what `develocityFacts` returned
+ * @param {string} branch the incident's branch, which prefixes Develocity's configuration names
+ * @returns {string|null} the day of the earliest first failure, e.g. "2026-11-13"
+ */
+export function regressionOf(facts, branch) {
+  const rates = (facts?.rates || []).filter(rate => rate.name.startsWith(`${branch} /`));
+  if (!rates.length) return null;
+  const step = rates.every(rate => rate.failures >= 2 && rate.passBefore > 0
+    && rate.passInSpan === 0 && rate.passAfter === 0);
+  return step ? rates.map(rate => rate.firstFail).filter(Boolean).sort()[0] || null : null;
 }
 
 /**

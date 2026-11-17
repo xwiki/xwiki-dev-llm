@@ -457,6 +457,7 @@ function noOneOwes(incident, horizonDays) {
       : `${incident.jiraClosed.key} was closed${incident.jiraClosed.resolution ? ' as fixed' : ''} with no Fix Version — find its commit before`
         + ' assuming this branch has it or lacks it';
   }
+  if (incident.flickerWithheld) return incident.flickerWithheld;
   if (incident.kind === 'flicker' && !incident.proven) {
     return 'not proven yet — an issue is earned by two builds on two days';
   }
