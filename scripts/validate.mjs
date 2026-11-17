@@ -308,7 +308,10 @@ const DESCRIPTION_MAX = 1024;
 for (const skill of skills) {
   const fm = read(`xwiki/skills/${skill}/SKILL.md`).match(/^---\r?\n([\s\S]*?)\r?\n---/);
   const m = fm?.[1].match(/^description:[ \t]*(.*(?:\r?\n[ \t]+\S.*)*)/m);
-  if (!m) continue;
+  if (!m) {
+    errors.push(`xwiki/skills/${skill}/SKILL.md: no description — it is the only text that routes the skill`);
+    continue;
+  }
   const raw = m[1].trim();
   let value = raw.replace(/\s*\r?\n\s*/g, " ");
   if (raw.startsWith('"')) {
