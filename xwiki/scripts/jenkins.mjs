@@ -257,12 +257,16 @@ export async function outcomes(buildUrl) {
 /**
  * The environment of a suite, e.g. "MariaDB latest, Jetty 12-jdk25, S3, Firefox". It appears
  * nowhere else in the report, so it has to be taken from the suite's enclosing block names.
+ *
+ * Searched for, not taken from a fixed position: the names run innermost first and end with the
+ * enclosing parallel stage — `["Build for <env> - Docker tests #4 for …", "<env> - Docker tests #4
+ * for …", "docker"]` — so the last one is "docker" for every suite. Reading it collapsed the four
+ * environments of the matrix into one, and a test failing in every environment since a regression
+ * then read as a flicker of one (XWIKI-25778, 2026-11-17).
  */
 export function environmentOf(suite) {
-  const blocks = suite.enclosingBlockNames || [];
-  const name = blocks[blocks.length - 1] || "";
-  const env = name.split(" - Docker tests")[0].trim();
-  return env && env !== name ? env : "default";
+  const name = (suite.enclosingBlockNames || []).find(block => / - Docker tests\b/.test(block)) || "";
+  return name.replace(/^Build for /, "").split(" - Docker tests")[0].trim() || "default";
 }
 
 /**
