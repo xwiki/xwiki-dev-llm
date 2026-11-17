@@ -188,8 +188,7 @@ so there is nothing to split the pool on: the only two ways to reach an abstract
 are `super(…)` in a subclass and `new AbstractX(…){…}`, and [JLS §6.6.2.2] permits both on a
 `protected` one from anywhere — plain `new AbstractX(…)` is already illegal. `revapi:check` agrees on
 published, non-`internal` API, because XWiki's `revapi.json` reclassifies every *source*-compatibility
-difference to EQUIVALENT severity and this change is source-only. Confirmed by sweeping all 162 open
-sites across the three repos with `revapi:check` green in every one of the 33 modules.
+difference to EQUIVALENT severity and this change is source-only.
 
 Two things to watch: the line grows by three characters, so it can cross the 120-column limit; and
 drop a site whose declaration line already carries an open method-metric issue (`S3776`, `S107`,

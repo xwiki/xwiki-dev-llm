@@ -86,9 +86,7 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
   exception and creates a fresh **`S1163`**. The other S899 shape is `queue.offer()` on an unbounded
   queue (always `true`), where "doing something" with the result is a design decision.
 - **`S2386`** "make this member `protected`" — reduces the visibility of a public static member →
-  Revapi `java.field.visibilityReduced`. (Not the same as **`S5993`**, which is not a break — see
-  [[syntax-rules]]: a field really is reachable by name from another package; an abstract class's
-  constructor is not.)
+  Revapi `java.field.visibilityReduced`.
 - **`S6213`** "rename this **method**…" (`record`, `yield`, `var`) — a rename of a public method is an
   API change, and the pool sits on the `record(…)` methods of the `*QuestionRecorder` classes. The
   rule's *variable* half is a different matter and is **not** denylisted — see [[syntax-rules]].

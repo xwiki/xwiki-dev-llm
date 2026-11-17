@@ -171,14 +171,14 @@
     },
     "S5993 — an `abstract` class's constructor should not be `public`": {
       "questions": [
-        "Sonar says an abstract class constructor should not be public. Is changing it to protected a backward-compatibility break?",
-        "Will changing a public abstract constructor to protected make revapi fail?",
-        "Are there any cases where making an abstract class constructor protected breaks a caller?"
+        "Sonar says an abstract class constructor should not be public, will changing it to protected break callers?",
+        "Is changing a public constructor on an abstract class to protected a backward-compatibility break?",
+        "Why is my new line for an abstract constructor now over 120 columns after the fix?"
       ],
       "aliases": [
-        "abstract class public constructor",
-        "protected constructor",
-        "revapi constructor change"
+        "abstract constructor visibility",
+        "protected constructor abstract class",
+        "public constructor abstract"
       ]
     },
     "S6355 — `@Deprecated` should carry `since`": {
@@ -229,7 +229,7 @@
       "**/*.java"
     ]
   },
-  "source_hash": "033ef0c16a6c5589cb639a4d6551e10f45da5820a831010a80d5daae16d3fc38",
+  "source_hash": "63929d78bf706d20debf0434640077ae1be78134e3c3203c9b42cc45f988dbdd",
   "file_hash": "73dae5575039c1a4b4c7f3bc485f9acbd1c507c0776b33aa92cb42df4c1b36be",
   "section_hashes": {
     "SonarQube syntax and annotation rules": "6af2a61507abf9f72679618481c8e70a31819f5b13857a56c298d144e33efc68",
@@ -245,7 +245,7 @@
     "S3878 — array created for a varargs parameter": "a9b200cffbbddd8d02e23173c3b1ced273225ae6e3c5ab45fb78f44b334f6e4c",
     "S7476 — a single-line comment should start with exactly two slashes": "48b25f1616d558b42683388c01acb11d13b960954a932ab4bfc25acefcdd5934",
     "S1659 — declare each local variable on its own line": "5334e61b4320ea34854e33b82d87ccb37bb5b3c193d00e2d26f5d384c618c6c8",
-    "S5993 — an `abstract` class's constructor should not be `public`": "5ac76096bf57b068bcce7ed8bd44141e869d2ff7c01e46995aee92ebc077e549",
+    "S5993 — an `abstract` class's constructor should not be `public`": "1ef68573a07aaadd905cc633d955311c1a72cc73f07905c91437d9309e4bd701",
     "S6355 — `@Deprecated` should carry `since`": "6d8cf59b31265412393912f6d6b9df74ed01a136f2cc9642e01e786ab0137890",
     "S6213 — an identifier matching a restricted identifier": "0ab02d95e3a05355b56f6eeaafa3d58c815aa90e39ccd9d13db0b994f132828f",
     "Related": "ba283b03eabf55b610b70738ba3c21ab24eaa9184007b2b24a151dd8a379aa1a"
