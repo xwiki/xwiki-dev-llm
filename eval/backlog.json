@@ -480,7 +480,7 @@
     "kb_target": "kb/conventions/build-checks.md",
     "probe": "Spoon fails because I `@Inject` a `javax.script.ScriptEngineFactory`; how do I fix it?",
     "status": "candidate",
-    "note": "Unfamiliar Spoon failure message; model does not know the `excludedFieldTypes` escape hatch or `xwiki.spoon.skip`. kb/architecture/component-system.md#Injection says inject a role, not that Spoon enforces it."
+    "note": "Unfamiliar Spoon failure message; model does not know the `excludedFieldTypes` escape hatch or `xwiki.spoon.skip`."
   },
   {
     "id": "A08",

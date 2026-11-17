@@ -1,16 +1,17 @@
 {
   "file": {
     "questions": [
-      "How does dependency injection work when I write back-end XWiki code?",
-      "How do I register a Java class so XWiki can inject it into other code?",
-      "Where do I list my classes in META-INF/components.txt, and when do I need it?",
-      "How do I share a service between XWiki modules without passing a context object everywhere?"
+      "How does dependency injection work for back-end Java code in XWiki?",
+      "How do I register a new Java service so XWiki can inject it?",
+      "Why does my new XWiki class not get picked up, or why does the build fail on components.txt?",
+      "Should I add my new feature code to xwiki-platform-oldcore or somewhere else?",
+      "How do I write a hook that reacts to XWiki events without running twice on a cluster?"
     ],
     "aliases": [
-      "XWiki dependency injection",
-      "XWiki IoC container",
-      "XWiki component manager",
-      "xwiki components"
+      "dependency injection",
+      "IoC container",
+      "component manager",
+      "JMX"
     ]
   },
   "sections": {
@@ -28,28 +29,15 @@
     },
     "The core concepts": {
       "questions": [
-        "What's the difference between a @Role interface and a @Component class in XWiki?",
-        "Why does my injection of a generic role like Provider<MyRole<String>> give me nothing or the wrong implementation?",
-        "Do I have to edit META-INF/components.txt by hand when I add a new component class?",
-        "Which annotations should I use to inject a dependency into a field, @Inject or @Autowired?"
+        "Why does my Provider<MyRole<String>> injection find no implementation?",
+        "What does @Role mean and how do I declare an interface as injectable?",
+        "Why does the build fail saying my @Component class is missing from components.txt?"
       ],
       "aliases": [
-        "service interface",
-        "extension point",
-        "components.txt registration"
-      ]
-    },
-    "Hints (multiple implementations of a role)": {
-      "questions": [
-        "How do I have two implementations of the same XWiki interface and choose one at injection time?",
-        "What does @Named do on a component, and which hint does a component get by default?",
-        "How do I select a specific implementation of a role when I inject it?"
-      ],
-      "aliases": [
-        "@Named qualifier",
-        "component hint",
-        "default hint",
-        "named implementation"
+        "generic role matching",
+        "@Role annotation",
+        "components.txt",
+        "Spoon check"
       ]
     },
     "Instantiation strategy": {
@@ -63,19 +51,6 @@
         "singleton scope",
         "prototype scope",
         "component scope"
-      ]
-    },
-    "Programmatic lookup": {
-      "questions": [
-        "How do I get a component at runtime when I cannot inject it with a field?",
-        "How do I look up an implementation by role and hint using ComponentManager?",
-        "When should I use a runtime lookup instead of @Inject?"
-      ],
-      "aliases": [
-        "ComponentManager getInstance",
-        "service locator",
-        "dynamic component lookup",
-        "runtime component retrieval"
       ]
     },
     "Never grow `xwiki-platform-oldcore`": {
@@ -135,21 +110,20 @@
     "related": [
       "architecture/platform-modules.md",
       "architecture/module-design.md",
-      "conventions/code-style.md"
+      "conventions/code-style.md",
+      "processes/module-lifecycle.md"
     ],
     "applies-to": [
       "**/META-INF/components.txt",
       "**/src/main/java/**/*.java"
     ]
   },
-  "source_hash": "829a577012d138478635f10df6cbc3e441280abc29dd8ed23fa646e4bb21ca81",
-  "file_hash": "fe6a2936cd49582abaa3269286efa1909c9ac24e47dffbc996230384d90fce66",
+  "source_hash": "226d2f0993f295d70fbe08caaf7d80346662d83ca9796ae5d8100835dfae7fa0",
+  "file_hash": "b853b71c299cbf0ee52931bf55dc430849f07c994acb7113fa627648989a40c2",
   "section_hashes": {
     "The XWiki component system": "16ed1f424585dbd7722be4f569fd0814437bf12bfb9314975afd1ec5dcca44cd",
-    "The core concepts": "3275164d383115e2cff2927f8332fb77ebfca0a55dbb508f0a1ad62011c72e3e",
-    "Hints (multiple implementations of a role)": "c21d6db11bf74bdfbe39778bddffe8b317117d44d88e028ac53b3e3f23d22ac0",
+    "The core concepts": "dc90e9d15c94ef34ac4716aaeb4084bccbd70fee7027adc703053bab5cb13b95",
     "Instantiation strategy": "70f592547319a1a83748ee56eadb74a6f8781d4d9ca779cab6b5cfa001a108b4",
-    "Programmatic lookup": "e61b5103ecf95d6a0a679fa1ec3e67a9dbcbb9b2f7bbb46d4466ca520096f428",
     "Never grow `xwiki-platform-oldcore`": "5362697d96f0939e3c0cd88e9b6e6a77dcafbc0690b2b033f78ef68e489d4141",
     "Event listeners: local-only vs. cluster-wide": "8fbcc6bf9718ffa6da66e6a0b88fee0a58535ec7b0ff8c67ad8ea0533b05589f",
     "Monitoring: expose it as a JMX MBean": "0ef12616db5e370d568ee69e652f3622c0e90dd4aef8937d18a9f49b9419264c",

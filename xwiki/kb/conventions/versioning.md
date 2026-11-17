@@ -82,9 +82,6 @@ Version, an advisory's patched version) comes from that branch's root `pom.xml` 
 checkout, which go stale. Drop `-SNAPSHOT` on a stable branch (`16.10.20-SNAPSHOT` gives `16.10.20`);
 an `X.Y.0-SNAPSHOT` (master) gives `X.Y.0RC1`, as above.
 
-XWiki Commons, XWiki Rendering and XWiki Platform are **released together with the same version**,
-so the same version string applies across those repos.
-
 See also [[backward-compatibility]] for the `@Unstable` lifecycle that pairs with `@since`.
 
 ## Affected version of an issue

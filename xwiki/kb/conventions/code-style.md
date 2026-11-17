@@ -1,8 +1,8 @@
 ---
 title: Code style and structural conventions
 stability: durable
-summary: Line length, license headers, the component system, the javax→jakarta migration, and the
-  -legacy module rules for XWiki Java code.
+summary: Line length, license headers, the javax→jakarta migration, and the -legacy module rules for
+  XWiki Java code.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HCopyrightheaderinsourcefiles
@@ -67,12 +67,6 @@ authoritative source of truth.
 
 A macro for XWiki Platform is written **in Java**, not as a wiki page (wiki macros lack most of what a
 platform macro needs — see the comparison table on the dev wiki).
-
-## Use the component system, not context passing
-
-Use the XWiki **Component system** (`@Component`, `@Inject`, `@Role`, declared in
-`META-INF/components.txt`) rather than passing context objects around in new code. See
-[[component-system]] for how it works.
 
 ## javax → jakarta migration
 

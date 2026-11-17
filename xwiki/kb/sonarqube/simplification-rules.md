@@ -22,9 +22,6 @@ change what the regex matches.
 
 - **Keep the escaping the class was carrying.** `"[\\.]"` → `"\\."` (a bare `"."` would match any
   character) and likewise for `[\\(]`, `[\\$]`, `[\\^]`. A non-metacharacter needs no escape.
-- **Match the source *text*, not the decoded character**, when scripting the edit: XWiki's
-  transliteration tables are written as `"[\u0132]"` — six literal characters in the file — so a
-  pattern built from the decoded `Ĳ` finds nothing.
 - Only single-character classes are flagged; leave the multi-character ones (`"[\u0136\u01e8]"`)
   alone, and do not "improve" the flagged call into `replace()` — that is S5361 and a separate issue.
 
@@ -48,10 +45,6 @@ body, which is why the `for` had no update clause). Nothing else changes.
 Message: "Use `Arrays.copyOf`, `Arrays.asList`, `Collections.addAll` or `System.arraycopy` instead."
 
 - Copying a whole array into a collection → `Collections.addAll(target, array)`.
-- Copying a *sub-range* of an array into a new list →
-  `new ArrayList<>(Arrays.asList(array).subList(from, to))`. Keep the `new ArrayList<>(…)` wrapper
-  whenever the result is later mutated or handed on as a mutable list — `subList` returns a view and
-  `Arrays.asList` a fixed-size list, so dropping the wrapper is a behaviour change, not a cleanup.
 - Check the import: `Arrays` / `Collections` are frequently *not* yet imported in the file.
 
 ## S3024 — do not concatenate inside a `StringBuilder.append`
@@ -69,21 +62,10 @@ Drop the call. Trust the rule; it only fires when the receiver is statically a `
 - **S1155**: `size() > 0` → `!isEmpty()`, `size() == 0` → `isEmpty()` (collections).
 - **S7158**: `length() == 0` → `isEmpty()`, `length() > 0` (or `!= 0`) → `!isEmpty()`.
 
-**S7158 fires on `String` receivers too, not only `StringBuilder`/`StringBuffer`.** The rule *message*
-always names `StringBuilder`, but issues land on plain `String` locals and fields. Do not reject a
-site because the receiver turns out to be a `String`: `isEmpty()` exists on `String` (Java 6),
-`CharSequence` (default method, Java 15), `StringBuilder` and `StringBuffer`, so the transform is
-correct for every receiver on which `.length()` is a *method*.
-
 **Only `.length()`, never `.length`.** The array-length *field* has no `isEmpty()`.
 
 Both rules only shrink the line, so the 120-column check never fires — and `!x.isEmpty()` is a unary
 expression, so it never needs parentheses inside `&&`, `||`, `if`, a ternary or a `return`.
-
-Compound conditions are common and safe, because only the flagged comparison changes:
-`if (buffer.length() > 0 && buffer.charAt(buffer.length() - 1) == ' ')` →
-`if (!buffer.isEmpty() && buffer.charAt(buffer.length() - 1) == ' ')`. The `length() - 1` is not a
-comparison against zero and must be left alone.
 
 Two receiver shapes that a simple chained-receiver pattern misses, both safe: a cast-parenthesized
 receiver `((StringBuffer) getStackParameter(K)).length() == 0`, and redundant parentheses around the
@@ -96,10 +78,6 @@ which is *required* when the key is used, when the body throws a checked excepti
 uses `continue`/`break` or mutates an enclosing local. `Map.Entry` needs no import.
 
 ## S1612 — replace a lambda with a method reference
-
-`x -> obj.foo(x)` → `obj::foo`. Also: block bodies `() -> { obj.foo(); }`, constructors
-`s -> new Foo(s)` → `Foo::new`, `x -> x instanceof Foo` → `Foo.class::isInstance`, enum
-`v -> v.name()` → `Enum::name`, and qualified `super` references.
 
 **Import trap (build-breaker):** a method reference names its target *type*, which the lambda form
 never needed imported. If that type is a nested class, or the stream's element type, and it is not
@@ -151,10 +129,6 @@ half-converted.
 
 ## S1066 — merge collapsible nested `if`
 
-Sonar flags the **inner** `if`. Fix: `if (A) { if (B) { BODY } }` → `if (A && B) { BODY }` — merge with
-`&&`, delete the inner `if` line, dedent the body by four, remove one trailing brace. Wrap an operand
-that contains a top-level `||` in parentheses.
-
 A triple nest collapses to `if (A && B && C)` and resolves **two** issues, so count resolved issues by
 key rather than by edit.
 
@@ -182,29 +156,16 @@ The sibling of S6397 and just as safe: the two forms are identical in Java's reg
 `UNICODE_CHARACTER_CLASS` is set**, which XWiki never does — verify with a grep for
 `UNICODE_CHARACTER_CLASS` / `(?U)` before a large batch and then stop worrying about it.
 
-Remember the source text carries a doubled backslash: the file contains `"\\d"`. Several issues on
-one line are normal (a pattern with two `[0-9]` groups gives two keys) — combine them into one edit.
-
 ## S1905 — remove an unnecessary cast
 
 Usually a genuine no-op: a cast to the declared type of the expression, or `(String)` on an
 `Iterator<String>.next()`.
-
-**Drop when the cast is an argument of an OVERLOADED method.** Removing it can silently re-dispatch
-to a different overload and still compile, so the build will not catch the mistake. Read the callee's
-overload set first; a cast such as `write(x, filter, (Map<String, Object>) properties)` where `write`
-has several 3-argument forms is not a mechanical fix.
 
 ## S4201 — remove a null check made redundant by `instanceof`
 
 `x != null && x instanceof T` → `x instanceof T`; `x == null || !(x instanceof T)` →
 `!(x instanceof T)`. `instanceof` is `false` for `null` by definition, so this is exact. Nearly every
 site is the head of an `equals()` or a `remove(Object)`, and the observed drop rate is zero.
-
-## S1596 — `Collections.EMPTY_LIST` → `Collections.emptyList()`
-
-Also `EMPTY_MAP`/`EMPTY_SET`. The typed factory infers its type argument from the target, so a call
-site that passed the raw constant keeps compiling; it just stops being a raw type.
 
 ## S3358 — extract a nested ternary into its own statement
 

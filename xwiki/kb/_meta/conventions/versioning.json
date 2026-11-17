@@ -29,15 +29,16 @@
     },
     "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": {
       "questions": [
-        "How do I deprecate a Java method in XWiki, and what goes in the javadoc?",
-        "When I deprecate a method on master and on a stable branch, what do I write in the since attribute?",
-        "Should the version number be repeated in the @deprecated javadoc text too?"
+        "Should I put the version in the @deprecated javadoc or only in the @Deprecated annotation?",
+        "How do I deprecate a method that was deprecated on two branches, which since value do I list?",
+        "Do I set forRemoval = true when I deprecate an XWiki API method?",
+        "What should the @deprecated javadoc say: the reason and replacement, or the version too?"
       ],
       "aliases": [
         "deprecated annotation",
-        "@deprecated javadoc tag",
-        "forRemoval",
-        "deprecating a method"
+        "deprecating a method",
+        "deprecation javadoc",
+        "forRemoval"
       ]
     },
     "Affected version of an issue": {
@@ -64,11 +65,11 @@
       "**/*.java"
     ]
   },
-  "source_hash": "26494a75d1c89e05f91454ec2c17e9dede200868a197c85d4acbacb2a0dc6da0",
+  "source_hash": "4e7145ef893a93bc216c42b7292e5dd1cf36984c2ca941f38c419e81910722f7",
   "file_hash": "1459980600af03867789060917666021f78060bf38ac22562b25d91b1d03f73f",
   "section_hashes": {
     "Versions in code and issues (@since / @Deprecated, affected version)": "b9e4cfe8c8cf88a58efda02be6ec7e2a79ee6293e4673788b0acc42968a24bc6",
-    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "65b853dd07da27dd0ef3f17093b596e8e12f888416dc24619146f897b65d31c0",
+    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "385ec47d8db379318695047c0e50d4af1357f7258c46f3014671677a647857e5",
     "Affected version of an issue": "b378f6370bb5c31b05d6bdd2174bc0b92cc6759b5a71555955bd1fe1cf99bc81"
   }
 }

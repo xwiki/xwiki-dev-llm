@@ -1,8 +1,9 @@
 ---
 title: The XWiki component system
 stability: durable
-summary: XWiki's dependency-injection model — roles (@Role interfaces), implementations (@Component),
-  registration via META-INF/components.txt, injection with @Inject/@Named, and lookup hints.
+summary: XWiki's dependency-injection model — exact role-type matching for generic roles,
+  hand-maintained META-INF/components.txt registration, instantiation strategy, the oldcore rule,
+  event listeners and JMX monitoring.
 sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/DevGuide/Tutorials/WritingComponents/
   - https://extensions.xwiki.org/xwiki/bin/view/Extension/Component+Module
@@ -28,32 +29,15 @@ architectural convention for back-end XWiki code.
   contract other code depends on. A role can be parameterized by a generic type, and lookups match
   the registered role type exactly: inject `Provider<SomeRole<String>>` for a role registered
   parameterized, a raw `Provider<SomeRole>` only for one registered raw (`@Component(roles = …)`).
-- **Implementation** — a class annotated `@Component` that implements a role. It is registered so
-  the container can instantiate and inject it.
 - **Registration** — implementations are listed in `META-INF/components.txt` (one fully-qualified
   class name per line), maintained by hand: nothing generates it. The build's Spoon checks fail a
   `@Component` class missing from it (unless `staticRegistration = false`), an entry listed twice or
   without its class, and a file not ending with a newline.
-- **Injection** — depend on a role with `@Inject` on a field. Prefer the `jakarta.inject.*`
-  annotations (`@Inject`, `@Named`, `Provider`) in new code; see [[code-style]] for the
-  javax→jakarta migration.
-
-## Hints (multiple implementations of a role)
-
-When several implementations share a role, each declares a **hint** via `@Named("hint")` on the
-component, and consumers select one with `@Inject @Named("hint")`. A component with no explicit
-hint has the `"default"` hint.
 
 ## Instantiation strategy
 
 Components are **singletons by default**. For a fresh instance per lookup, annotate the
 implementation with `@InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)`.
-
-## Programmatic lookup
-
-When injection is not possible (e.g. you need a component chosen at runtime), inject a
-`ComponentManager` and look the component up by role + hint. Prefer field injection wherever the
-dependency is known at development time.
 
 ## Never grow `xwiki-platform-oldcore`
 

@@ -1,17 +1,17 @@
 {
   "file": {
     "questions": [
-      "What coding style rules apply to XWiki Java code before I open a pull request?",
-      "Do new XWiki source files need a license header, and which comment syntax do I use for each file type?",
-      "Where are the XWiki code conventions written down, and which one wins if they disagree?",
-      "Why does the build fail on my Java change even though it compiles?"
+      "What coding style rules apply to XWiki Java code, like line length and headers?",
+      "How do I migrate a XWiki Java file from javax to jakarta packages?",
+      "Can I add new logic to a -legacy module, or should it go elsewhere?",
+      "What license header and encoding does a new XWiki source file need?",
+      "How do I suppress a SonarQube warning in XWiki Java code the right way?"
     ],
     "aliases": [
       "CodeStyle",
-      "coding conventions",
-      "coding guidelines",
-      "LGPL header",
-      "copyright header"
+      "coding standards",
+      "Checkstyle rules",
+      "style guide"
     ]
   },
   "sections": {
@@ -73,19 +73,6 @@
         "wiki macro vs Java macro",
         "macro implementation",
         "script macro"
-      ]
-    },
-    "Use the component system, not context passing": {
-      "questions": [
-        "Should I pass the XWikiContext through method parameters or inject a service in new XWiki code?",
-        "How do I get a service or helper in XWiki without threading the context object through every call?",
-        "How do I declare a new injectable class with @Component in XWiki?"
-      ],
-      "aliases": [
-        "dependency injection",
-        "context passing",
-        "@Inject",
-        "components.txt"
       ]
     },
     "javax → jakarta migration": {
@@ -154,25 +141,23 @@
   "proposed": {
     "related": [
       "conventions/backward-compatibility.md",
-      "architecture/component-system.md",
       "conventions/code-comments.md",
+      "conventions/versioning.md",
       "sonarqube/index.md"
     ],
     "applies-to": [
       "**/*.java",
-      "**/*.properties",
       "**/pom.xml"
     ]
   },
-  "source_hash": "f5c120af65c999efe1046ae79e2522c1c22f2350f18bde44a0e896f2a5553eff",
-  "file_hash": "fce95a5c8085ede4877bf876b18abc30f04d615a71653613b1b7f31b90d6281b",
+  "source_hash": "ec89e9874418b53c2fc942adf2c0c68d5c1b078887ecf359414768e9a686838a",
+  "file_hash": "88d6b53cc0a43f998b5f3f437791115100574da715c631d1c10b2adeb547c887",
   "section_hashes": {
     "Code style and structural conventions": "7e13825cf53cb6e9d91ebcdd115d05819ea72533c2e396cd0eb0ad3b352ab823",
     "Formatting": "dc5dae3a36804e03f6af5c491878ed6b0bbb546458bf2217382a721eee338e98",
     "Comment formatting": "9eabf5164fe04fb856b0e22eaa6dfe60a03f9341f32aa59340f49f1018aae0ee",
     "File encoding": "6fff6a33478d218722002c55dc568d882cd4fce87faec7692cb917333bedb9af",
     "Rendering macros": "3200f95500cadb6837cee48abbf476ec6d7cd89584f32472ac0439aa80112316",
-    "Use the component system, not context passing": "16860e9ccbc7e23a4e9e288c7720b2a87c497f9eb86e23448d1774da06ac2ed2",
     "javax → jakarta migration": "ad7d2646b51a5ad2ad0d71bc9773f3187dce4a8b897a73f5306e1b11398eb9d3",
     "-legacy modules": "c1da8ddd460358681f04ae156bbc92825e07a00fa804a672664babe9cdf946db",
     "Backward compatibility": "6c9047525e3c59c2817d7d0e1d712fb0b3dd545f6a28a748ab4364bfd5caa11e",

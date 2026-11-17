@@ -25,13 +25,13 @@
     },
     "S6397 — redundant single-character regex character class": {
       "questions": [
-        "Sonar says to replace a regex character class with the character itself, but my pattern is escaped. What do I do?",
-        "Why does my regex stop matching after I remove the square brackets around a single character?"
+        "Sonar says to replace a regex character class like [.] by the character itself, but my replaceAll breaks when I do, why?",
+        "How do I fix a Sonar warning on a single-character class in a split or matches regex without changing what it matches?"
       ],
       "aliases": [
         "S6397",
-        "single character class regex sonar",
-        "redundant regex brackets"
+        "single character class in regex",
+        "unnecessary brackets in regex"
       ]
     },
     "S1125 — redundant boolean literal": {
@@ -69,13 +69,13 @@
     },
     "S3012 — replace a manual array/collection copy loop with a library call": {
       "questions": [
-        "Sonar wants me to replace my loop that copies an array into a list with a library call. Which one should I use?",
-        "How do I copy part of an array into a new ArrayList without losing mutability?"
+        "Sonar wants me to replace my manual loop that copies an array into a list. Which library call should I use?",
+        "How do I copy all elements of an array into a collection without writing a for loop?"
       ],
       "aliases": [
-        "S3012",
         "manual array copy loop",
-        "Arrays.asList or Collections.addAll"
+        "Collections.addAll",
+        "System.arraycopy"
       ]
     },
     "S3024 — do not concatenate inside a `StringBuilder.append`": {
@@ -101,15 +101,14 @@
     },
     "S1155 / S7158 — use `isEmpty()`": {
       "questions": [
-        "Sonar says I should use isEmpty instead of comparing size or length to zero. How do I change it?",
-        "Is isEmpty safe to use on a String, not only on a StringBuilder or collection?",
-        "Sonar flags my length() == 0 check inside a larger condition. What changes and what stays?"
+        "Sonar wants me to use isEmpty() instead of size() == 0 or length() == 0. How do I change it?",
+        "Why can't I replace array.length with isEmpty() when Sonar flags a length check?",
+        "How do I rewrite an empty check on a String or collection so the line is shorter?"
       ],
       "aliases": [
-        "S1155",
-        "S7158",
-        "length() == 0 sonar",
-        "size() > 0 replacement"
+        "isEmpty instead of size",
+        "length zero check",
+        "empty check"
       ]
     },
     "S2864 — iterate `entrySet()` rather than `keySet()` + `get(k)`": {
@@ -125,13 +124,13 @@
     },
     "S1612 — replace a lambda with a method reference": {
       "questions": [
-        "Sonar wants me to turn a lambda into a method reference. How do I do that?",
-        "After switching a lambda to a method reference my build says cannot find symbol. Why?"
+        "Sonar says to replace this lambda with a method reference. How do I do that without breaking the build?",
+        "Why does my code fail with cannot find symbol after I simplify a lambda to a method reference?"
       ],
       "aliases": [
-        "S1612",
         "lambda to method reference",
-        "method reference import error"
+        "method ref",
+        "double colon"
       ]
     },
     "S1602 — useless curly braces around a single-statement lambda body": {
@@ -180,34 +179,33 @@
     },
     "S1066 — merge collapsible nested `if`": {
       "questions": [
-        "Sonar says two nested ifs can be merged. How do I combine them safely?",
-        "When should I not merge nested ifs because of an else branch or a comment between them?"
+        "Sonar wants me to merge two nested if statements. When is it safe to collapse them into one condition?",
+        "How do I combine nested ifs and keep the braces balanced across the file?"
       ],
       "aliases": [
-        "S1066",
-        "merge nested if statements",
-        "collapsible if"
+        "collapsible if",
+        "nested if",
+        "merge if statements"
       ]
     },
     "S6353 — use the concise character class": {
       "questions": [
-        "Sonar wants me to replace [0-9] in my regex with a shorthand class. Is that safe?",
-        "How do I rewrite character ranges like a-zA-Z0-9 in a Java regex?"
+        "Sonar wants me to replace [0-9] with \\d in my regex. Is that safe?",
+        "How do I use shorthand regex classes like \\w or \\s instead of explicit ranges?"
       ],
       "aliases": [
-        "S6353",
         "concise character class",
-        "[0-9] to \\d"
+        "regex shorthand",
+        "digit class"
       ]
     },
     "S1905 — remove an unnecessary cast": {
       "questions": [
-        "Sonar says a cast in my code is unnecessary. Can I remove it without changing behaviour?",
-        "When does removing a cast change which overloaded method gets called?"
+        "Sonar says a cast is unnecessary. How do I confirm it and remove it?",
+        "How do I remove a redundant cast on the value returned by an Iterator next call?"
       ],
       "aliases": [
-        "S1905",
-        "redundant cast sonar",
+        "redundant cast",
         "unnecessary cast"
       ]
     },
@@ -219,17 +217,6 @@
       "aliases": [
         "S4201",
         "null check before instanceof"
-      ]
-    },
-    "S1596 — `Collections.EMPTY_LIST` → `Collections.emptyList()`": {
-      "questions": [
-        "Sonar says Collections.EMPTY_LIST is deprecated. What should I use instead?",
-        "Will switching to Collections.emptyList break my existing code that expects a raw type?"
-      ],
-      "aliases": [
-        "S1596",
-        "Collections.EMPTY_LIST replacement",
-        "emptyList vs EMPTY_LIST"
       ]
     },
     "S3358 — extract a nested ternary into its own statement": {
@@ -261,29 +248,28 @@
       "**/*.java"
     ]
   },
-  "source_hash": "d3a6a4f09b03863d2021881e204ffcfede40e9f9f027efbb1f920d39e7987f1f",
+  "source_hash": "e8921712196032d842f64c549c804d37a4cc2b7de4022f217965f78dbd077aaa",
   "file_hash": "fb6667fd1528261d97e156ada821c394fc463e35a0e00d4a5aa15370c848c671",
   "section_hashes": {
     "SonarQube simplification rules": "2640ac72805e3906ee0be9f6243516dd35bcb5af446965005677acf0fa96e8ec",
-    "S6397 — redundant single-character regex character class": "61e70454ed2b1fe37ec0715072e924131f5c0fdb3c9dc465bc073b4d8dd344ab",
+    "S6397 — redundant single-character regex character class": "f772d4311cd2269a05561bebc5a1464444a0b964684c99eba649ea97a4cce303",
     "S1125 — redundant boolean literal": "7b7e856cf556f5d75e3aa8a0d0e3013b187deef2dee0b55409631537787379c9",
     "S1488 — inline an immediately-returned local": "514e5e1811f80703fc684d2e188cd8ed2de413bdb6cdd4e3413fd3ce15e7e52a",
     "S1264 — a `for` with neither initializer nor update is a `while`": "c189674dec49a7476d9078a51cb38f24f2a7e39fa877f4e1046f40bc2069e5db",
-    "S3012 — replace a manual array/collection copy loop with a library call": "558355c7e54254bbbf14433978bc9e6ec4aa97a0e3df16c87e7d72f0464acb7d",
+    "S3012 — replace a manual array/collection copy loop with a library call": "09a5687cf507cf60e5c9eda6bd44216eef128f7e8ee31e0fc00ee4bd85e42d22",
     "S3024 — do not concatenate inside a `StringBuilder.append`": "a725ca46751f59efaabcae8cd49c2a2d1509ea0f0d8696e44e5656c727232411",
     "S1858 — pointless `toString()` on a `String`": "7fa1324022f3c21afe3421ffab837e09a73b55b81c29cf8ff347e03e85378100",
-    "S1155 / S7158 — use `isEmpty()`": "ba72c0a5432939168bb7483d4f30b1261dd747aab3ac8bede8cfc6a3f2eef8b5",
+    "S1155 / S7158 — use `isEmpty()`": "33be76d7c9d1e310ee0513a34b639797100d04b8c0bbe1faac93e27b1cecb383",
     "S2864 — iterate `entrySet()` rather than `keySet()` + `get(k)`": "66d101f0b08ce55d87a2996bb2c6b8c523794d6cdfeb481b880b9fe64b6cedba",
-    "S1612 — replace a lambda with a method reference": "9a7b7f9be8c0be5a1e18d2ec0532947f94ad5fd4a51dbc6a8df20e4bbcca1916",
+    "S1612 — replace a lambda with a method reference": "e33f3c6ae24d2b732fc71191edcd8dbc6e98f4c4aaa3aab5db4e8b95f3e5b7f2",
     "S1602 — useless curly braces around a single-statement lambda body": "1edd61334327d40dc53c8981fe755c859086cafa57ed8d711916835a6549773e",
     "S1126 — replace an if-then-else returning booleans with a single return": "f282b57bb679e39f8f16e369e5c43c1bf23f2a9b96431aa13c0cbf19b560e8ba",
     "S3706 — `.stream().forEach()` → `.forEach()`": "c3b27771f420707746bf769f086f0c4a74565828cd16983497ecad114e235b00",
     "S2130 — parse instead of boxing then unboxing": "51957d691259b369f1c5982aa9a96c9cdb8dfbab89ffca5054972e3c03004bc2",
-    "S1066 — merge collapsible nested `if`": "a279f27c162635ffd18fae08b41def1d5d122928590a1fb27c0936c5a14d2b4d",
-    "S6353 — use the concise character class": "910c689e255502de4373b5eaf406890a46081f7781dc28a45a94b46379da4ec0",
-    "S1905 — remove an unnecessary cast": "cdb3553ebd303da6cc0c291327f1831ae595286a8482336becda8084d9a217dc",
+    "S1066 — merge collapsible nested `if`": "5246424fb7ca0f2f7e5e198c41abe4fc9cdec06fbdfdd1891b3e2109d14d410f",
+    "S6353 — use the concise character class": "20e0c163a2a70c01292b663b1113ed3c41efdf2f07b40328ce92061ffbe57c12",
+    "S1905 — remove an unnecessary cast": "539b9b2046e0ff851e5ee1db48a9e1d5564784a4fe40e5e4e7ed1dbd799accaf",
     "S4201 — remove a null check made redundant by `instanceof`": "89ef8647890d67a39c62f3eb6617e05eb5ae286045ec6f91ee0f1efa5c075952",
-    "S1596 — `Collections.EMPTY_LIST` → `Collections.emptyList()`": "d3c918fa3320bd1e7f783776abef260fe3f98c56fe8e9b02f6924cb162b89a0b",
     "S3358 — extract a nested ternary into its own statement": "462d993195a5fe0e4c021fab495119d7ae2d53c4088310fbe0a351017ce25651",
     "Related": "046c2832305947e8009f3e0f51498996adf53f1b43bf1d0a0f88203089e77b97"
   }
