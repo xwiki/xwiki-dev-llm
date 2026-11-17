@@ -70,13 +70,10 @@ below). When filing/curating an issue — Bug, Improvement, New Feature **or Tas
   `Rendering`, `Platform - …`): required for triage. Elsewhere (contrib), optional: set one when
   the project defines a fitting component.
 - **Affects Version/s** — always set, per [[versioning]].
-- **Fix Version/s** — only on an issue whose fix is in progress or done, as the version the fix ships
-  in: normally the next release of the current dev version. An issue merely **reported** gets none,
-  except a regression (the next versions of the supported branches) and a `Development Issues only`
-  Task (the version it is due before). Note the naming: JIRA version names use dashes (e.g.
-  `18.7.0-rc-1`), whereas the source `@since` / `@Deprecated(since=…)` tag for the *same* release
-  uses `18.7.0RC1` — see [[versioning]] for the tag format. Add the stable-branch fix versions too
-  when the fix is backported.
+- **Fix Version/s** — none on an issue only reported: it is set when the issue is closed (see
+  *Resolving / closing an issue*). Two exceptions: a regression gets the next versions of the
+  supported branches, and a non-code roadmap Task (design, investigation, decision — `Development
+  Issues only`) gets the version it must be done before.
 - **Issue links** — link every related issue it names (the one that introduced the code involved, the
   one it follows up on, …) with a real JIRA link, by default **`Related`**; naming it in the
   description alone does not show up in either issue's links.
@@ -157,7 +154,9 @@ the PR's URL on the work package once the PR is opened (`notify=false`).
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
 (you are the one resolving/verifying it). The distinction that is easy to get wrong:
 
-- **A change fixed it** → resolution **Fixed** (set the Fix Version/s where the project has them).
+- **A change fixed it** → resolution **Fixed**, with Fix Version/s (where the project has them) set to
+  the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`). JIRA version
+  names use dashes, unlike the `18.7.0RC1` of a `@since` tag ([[versioning]]).
 - **A change made for another issue fixed it** → **Solved By**, linked to that issue, with **its Fix
   Version/s**, so that querying JIRA by version finds it (e.g. a security issue fixed by a
   non-security change).
