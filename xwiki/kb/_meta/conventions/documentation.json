@@ -15,13 +15,15 @@
   "sections": {
     "XWiki documentation conventions (Documentation Guide)": {
       "questions": [
-        "Where are the official rules for writing xwiki.org documentation?",
-        "What do I need to know before I start writing a documentation page for an extension?",
-        "Do I write xwiki.org docs in a git repo or on the wiki?"
+        "Where are the official rules for writing xwiki.org documentation pages?",
+        "Which source wins if the documentation guide and a page I'm editing disagree?",
+        "Does the xwiki.org documentation tree follow the same rules as dev.xwiki.org pages?"
       ],
       "aliases": [
-        "doc guide",
-        "xwiki docs style guide"
+        "DocGuide",
+        "documentation rules",
+        "xwiki.org doc conventions",
+        "Diataxis guide"
       ]
     },
     "Diataxis: one type + one audience per page": {
@@ -205,10 +207,10 @@
     ],
     "applies-to": []
   },
-  "source_hash": "cc9457e29365a3468bafe459948bde7797be148eb3e75cf76a17d6dc3c4bbfc8",
+  "source_hash": "e151955117d817bc3c8872f64e91b72ba7ca93f93ada644ad3020918951982f8",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
-    "XWiki documentation conventions (Documentation Guide)": "5243a5c6cc67bde84fde799382e04afc2cc4924067ead0da9f07b08f21921967",
+    "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
     "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
     "Titles and page names": "f615fb1e9ddcf7541bfb1beadb405143f6d5d17a0d7bc13c1be9c387d479aa4d",
     "Content rules per type": "3724cb8e3a7095c12aca427fd3f6946ce4f6f739f0c97e424c7800ec6075e71d",
