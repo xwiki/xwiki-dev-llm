@@ -56,6 +56,19 @@
         "JavaScript breaking change"
       ]
     },
+    "Mocks in TypeScript unit tests": {
+      "questions": [
+        "How do I mock a dependency in a Vitest test in xwiki-platform-node without type casts?",
+        "Why does my mockDeep stub return undefined when I call provider.get().method in a TypeScript test?",
+        "Why does my mock break when Vue stringifies it or passes it as a prop?"
+      ],
+      "aliases": [
+        "vitest-mock-extended",
+        "Vitest mocks",
+        "mockDeep",
+        "TypeScript test doubles"
+      ]
+    },
     "HTML, CSS, accessibility": {
       "questions": [
         "How do I show an icon or caret in my XWiki page without a CSS background image?",
@@ -76,21 +89,24 @@
       "conventions/server-side-rendering.md",
       "conventions/backward-compatibility.md",
       "conventions/naming.md",
-      "conventions/translations.md"
+      "testing/test-value.md"
     ],
     "applies-to": [
-      "**/*.js",
-      "**/*.css",
+      "**/src/main/webjar/**/*.js",
+      "**/src/main/webapp/**/*.js",
+      "**/src/main/resources/**/*.js",
       "**/*.less",
-      "**/*.vm"
+      "**/*.css",
+      "xwiki-platform-core/xwiki-platform-node/src/main/node/**/*.test.ts"
     ]
   },
-  "source_hash": "5605203d3d5403c765a43310ee79d1efdc3ae79920b5d6b485ffe4583a041a8f",
+  "source_hash": "40e93f02570f4ad0d9cc2adde60a81bea65406590a7e7eff5080c996faef28ed",
   "file_hash": "3ef48cb81fc46933c535e982b8af41b8cf8a3ddddb99f882fd0ee72ba5f3cf55",
   "section_hashes": {
     "JavaScript modules": "b0c3be44bea528bef47b7fb63edb6755ecb7c764ecdfb997ab99c8b2be7d97b6",
     "Never mix server-side scripting into JavaScript": "f1f3233d94e6bf2ff6c23ce87dff720a3641236c8e3024fd47e965fdb3c91d8f",
     "JavaScript backward compatibility": "d47f1bba0218b52bb39d45ef960e2791568e695e8fe8a3d594f00a11ceafa58b",
+    "Mocks in TypeScript unit tests": "76646d0483bb66a394d474e0ebc625105384552fcfb46ffc64163e2d6096d616",
     "HTML, CSS, accessibility": "38b62635a7cf7c629da9f0a79a5677dae3bfee847bc948f60772336bfb554393"
   }
 }
