@@ -26,6 +26,7 @@
 //      Claude matches against is gone and the skill simply never triggers. This is NOT covered by
 //      `claude plugin validate`: measured against the `yaml` package, three skills here were
 //      unparseable while that command reported only one of them and then passed the repo.
+//      A description is also at most 1,024 characters, the Agent Skills limit.
 //   8. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
 //      route work to each other through these pointers, so a renamed or removed skill leaves the
 //      others sending the model to nothing.
@@ -296,6 +297,34 @@ for (const skill of skills) {
         );
       }
     }
+  }
+}
+
+// ---- Invariant 7b: a skill description fits the Agent Skills limit ----------------------------
+// The Agent Skills spec caps `description` at 1,024 characters. `claude plugin validate` accepts a
+// longer one, so nothing else notices — but the description is what routes the skill, and a host
+// enforcing the limit would cut or reject it. Measured on the value: quotes and escapes excluded.
+const DESCRIPTION_MAX = 1024;
+for (const skill of skills) {
+  const fm = read(`xwiki/skills/${skill}/SKILL.md`).match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  const m = fm?.[1].match(/^description:[ \t]*(.*(?:\r?\n[ \t]+\S.*)*)/m);
+  if (!m) {
+    errors.push(`xwiki/skills/${skill}/SKILL.md: no description — it is the only text that routes the skill`);
+    continue;
+  }
+  const raw = m[1].trim();
+  let value = raw.replace(/\s*\r?\n\s*/g, " ");
+  if (raw.startsWith('"')) {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      value = value.slice(1, -1);
+    }
+  } else if (raw.startsWith("'")) value = value.slice(1, -1).replace(/''/g, "'");
+  const length = [...value].length;
+  if (length > DESCRIPTION_MAX) {
+    errors.push(`xwiki/skills/${skill}/SKILL.md: description is ${length} characters, over the ` +
+      `${DESCRIPTION_MAX} the Agent Skills spec allows — shorten it, keeping every routing phrase`);
   }
 }
 
