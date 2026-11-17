@@ -40,26 +40,26 @@
     },
     "Rule map": {
       "questions": [
-        "Which family file covers rule S1116 or S1192 in XWiki?",
-        "I got a Sonar rule key like S1488 or S6208, where is its transform and its drop conditions written up?"
+        "Which note file covers Sonar rule S1192 about repeated string literals?",
+        "Sonar flagged commented-out or unused code in my diff (S125). Where are those rules documented?",
+        "Which rule keys belong to simplification fixes and which to modernization fixes?"
       ],
       "aliases": [
-        "rule key table",
-        "rule index",
-        "sonar rule to file"
+        "S-number lookup",
+        "rule key table"
       ]
     },
     "Rules not worth fixing (denylist)": {
       "questions": [
-        "Should I try to reduce the cognitive complexity of a method Sonar flags with S3776?",
-        "Why does Sonar want me to remove a toString() in a log call, and why should I leave it?",
-        "Is it safe to make a public constructor or method protected to clear a Sonar issue?",
-        "Why is the transient keyword on a job or request class something Sonar must not change?"
+        "Should I fix the cognitive complexity warning S3776 or split the method?",
+        "Why can't I remove the explicit toString() in a log call to satisfy S2629?",
+        "Is it fine to suppress the S1181 catch Throwable warning, or is it a false positive?",
+        "Which SonarCloud issues are false positives in XWiki that I should not touch?"
       ],
       "aliases": [
         "false positives",
-        "wontfix sonar rules",
-        "do not fix list"
+        "won't fix Sonar issues",
+        "Sonar ignore list"
       ]
     },
     "Universal drop conditions": {
@@ -106,16 +106,17 @@
       "conventions/logging.md"
     ],
     "applies-to": [
-      "**/*.java"
+      "**/*.java",
+      "**/pom.xml"
     ]
   },
-  "source_hash": "be90a00065996888e6e379567e030ded1079754643f5ac0abcda53d4da93f17d",
+  "source_hash": "f9bb558dc746eb111d31593cd155670d5e747d4706651553fc18933c87fe1a91",
   "file_hash": "652068777d8b2fd8117fb78f9cd20e836f9af0307c60200e25e6971fd130bc20",
   "section_hashes": {
     "SonarQube rule fixes — index / map": "2edb79a79891d19c7e83659726700693f4c0ab75cdad9c344773811a5d74192a",
     "How to use this (READ)": "ecb3ecf919e57fdada1be4741a4e66b53dcd49896bc0a5ab519ec7831a489548",
-    "Rule map": "3d70fdfee34ea3c3a2a91c8f0817a671690186564a2ddb18279c34e06ad01115",
-    "Rules not worth fixing (denylist)": "bc387e42790c6e0cfe2ecde1adaef004bdc63c6dc1aaecce0eceba75702d0812",
+    "Rule map": "f9151eec5ae0edd6cb159430aecc67f99c38175d8904f6c648efcb0a1d8d9fd0",
+    "Rules not worth fixing (denylist)": "dd89582ee8f4fb8fb0697068a60409d5c05dd747279f85c1b7fb9dc686aff485",
     "Universal drop conditions": "14e06f40a07c623c245a9128fcf7f4f955731982aee7de78e64648870cba8a64",
     "Retiring an issue that should not be fixed": "d0bb6f4ad7c015a8346af59b0be27826d4dd7aae51f12fb0d82b66308ec6ff07",
     "Related": "9781163269b195c78dc28a840ccc246c0894224096941f78d42cb31b975aa7c3"
