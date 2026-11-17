@@ -1313,7 +1313,7 @@
   },
   {
     "id": "A01",
-    "fact": "Variables used only inside a Velocity macro are set in the `$macro` scope (`#set ($macro.userName = …)`) so they do not leak out and overwrite the calling code's variables; convert the whole macro at once (mixing `$macro.x` and `$x` fails silently), set before reading in nested macros (`#set ($macro.x = $NULL)`) since `$macro` is shared between nested macros; parameters and `#foreach` loop variables need no `$macro`.",
+    "fact": "Variables used only inside a Velocity macro are set in the `$macro` scope (`#set ($macro.userName = …)`) so they do not leak out and overwrite the calling code's variables; convert the whole macro at once (mixing `$macro.x` and `$x` fails silently), set before reading in nested macros (`#set ($macro.x = $NULL)`) since `$macro` is shared between nested macros; parameters and `#foreach` loop variables need no `$macro`. Applies to new macros and to the macros you modify (then convert the whole macro, not only the changed lines); existing macros need not be converted otherwise.",
     "sources": [
       {
         "url": "https://dev.xwiki.org/xwiki/bin/view/Community/VelocityCodeStyle",
@@ -1647,6 +1647,23 @@
     "probe": "When does the 18.10.0 RC normally ship relative to the final, and when is 18.10.2 due?",
     "status": "candidate",
     "note": "Generic release-train assumptions (quarterly, several RCs). partial: kb/processes/release.md#Durable facts (branching months, monthly stable)."
+  },
+  {
+    "id": "S04",
+    "fact": "Changes to the development tooling (the build: POMs, Maven plugins and the checks they run; the test frameworks; the quality checks) are backported to the supported LTS branches, so that every branch builds, tests and checks the code the same way. A backported check must pass on the branch, so the backport also fixes what the check reports there. Skip a branch only when the change needs something it doesn't have (e.g. a newer Java version or API).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices",
+        "version": "43.1",
+        "sections": [
+          "Releases and SCM"
+        ]
+      }
+    ],
+    "kb_target": "kb/processes/release.md",
+    "probe": "I just added a new Checkstyle rule to the build on master. Does it need backporting, and what if it fails on stable-17.10.x?",
+    "status": "candidate",
+    "note": "A model treats build and test tooling as master-only and backports only bug fixes; it would also backport a check without fixing what it reports on the branch. partial: kb/processes/release.md#Durable facts (backport targets are the LTS branches)."
   },
   {
     "id": "AC1",

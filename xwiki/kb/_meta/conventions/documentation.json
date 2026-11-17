@@ -40,14 +40,15 @@
     },
     "Titles and page names": {
       "questions": [
-        "How should I word the title of a how-to page so it starts with a verb?",
-        "How do I turn a page title into a kebab-case URL segment without stop words?",
-        "Why does the checker reject my page name when the parent page already has the same word?"
+        "How do I word a how-to page title so it starts with a verb?",
+        "What page name or URL slug should I give a new wiki page?",
+        "Why does the checker complain that my page title says How to or Reference?"
       ],
       "aliases": [
-        "page naming",
+        "page title rules",
+        "kebab-case page name",
         "URL slug",
-        "page title rules"
+        "naming a wiki page"
       ]
     },
     "Content rules per type": {
@@ -209,12 +210,12 @@
     ],
     "applies-to": []
   },
-  "source_hash": "ad4144e066624c1dbc39e0ed33d1ad881989d043a5814a93b680739999c27c1d",
+  "source_hash": "6db71b365952f2279fc69a402d6a2d85fbdf2f6041d53ddfac2c674827b50452",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
     "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
-    "Titles and page names": "f615fb1e9ddcf7541bfb1beadb405143f6d5d17a0d7bc13c1be9c387d479aa4d",
+    "Titles and page names": "edc5c851f83e7c3e2ddac5792228f2fe5e4b3318503cce2da179cafb1ebc054f",
     "Content rules per type": "3724cb8e3a7095c12aca427fd3f6946ce4f6f739f0c97e424c7800ec6075e71d",
     "How much belongs on one page": "b0939995820f66508ac6f7c36531f98bd89798f1e51fcdcdb0e954a25943a9d0",
     "Page-structure fields": "639c8a0cabdb84b538aba2d1f1aa24964f995d5a64c33b4c3130ca8423ccbbbe",
