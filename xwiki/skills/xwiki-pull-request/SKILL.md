@@ -81,7 +81,8 @@ complete every section meaningfully:
   expertise. Dependency-upgrade PR default assignees: webjar Maven → @mflorea,
   non-webjar Maven → @tmortagne, npm → @manuelleduc.
 - Reserved branch names: `master`/`main`, `stable-xxx`. Cross-repo changes use a shared
-  `feature-deploy-xxx` branch in each repo — keep it until every repo's PR is merged.
+  `feature-deploy-xxx` branch in each repo — keep it until every repo's PR is merged, and never commit
+  its branch version (`kb/processes/feature-deploy-branches.md`).
 - Merge with `gh pr merge <url> --squash --delete-branch`: backports cherry-pick the merge commit,
   and GitHub retargets the PRs stacked on the deleted branch.
 

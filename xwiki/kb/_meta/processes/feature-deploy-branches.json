@@ -1,0 +1,69 @@
+{
+  "file": {
+    "questions": [
+      "How do I build and test a change that spans several XWiki repositories on a matching feature branch?",
+      "Why does my feature-deploy branch version not match what the poms say?",
+      "How do I install a cross-repo feature branch locally without polluting my ~/.m2 snapshots?",
+      "What version should the pom.xml contain on a feature-deploy branch?"
+    ],
+    "aliases": [
+      "feature branch",
+      "multi-repo branch",
+      "cross-repository branch",
+      "feature-deploy",
+      "xbranch"
+    ]
+  },
+  "sections": {
+    "Cross-repository feature branches (feature-deploy-*)": {
+      "questions": [
+        "How do I name a branch that has to change several XWiki repositories at once?",
+        "Why do the downstream repositories need the same branch name for CI to pick up my change?"
+      ],
+      "aliases": [
+        "multi-repo feature branch",
+        "feature-deploy branch"
+      ]
+    },
+    "The CI sets the branch version": {
+      "questions": [
+        "Why does CI build my feature branch with a different version than the one in my pom?",
+        "Should I put a branch version like 1.2-mybranch-SNAPSHOT in my pom.xml on a feature branch?",
+        "Why did my feature branch artifacts not overwrite the master snapshots on nexus?"
+      ],
+      "aliases": [
+        "branch version",
+        "jenkins version rewrite",
+        "xwikiBuild"
+      ]
+    },
+    "Building the branches locally": {
+      "questions": [
+        "How do I switch the version of all my repositories to a feature snapshot before building locally?",
+        "How do I undo the local version change before committing my branch?",
+        "Why does the version script go through Maven and fail on a branch parent that is not built yet?"
+      ],
+      "aliases": [
+        "xbranch-set-version",
+        "xbranch-reset-version",
+        "local feature build",
+        "m2 pollution"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "processes/release.md",
+      "conventions/versioning.md",
+      "servers/jenkins.md"
+    ],
+    "applies-to": []
+  },
+  "source_hash": "a9a199654dfdb5674f939bca6517862dab0c122eef5595259d726ca1aa5e93ae",
+  "file_hash": "5727c2f2abfcdf0952973c037677f5e1e787d36c511de61b11bca2053dec9eed",
+  "section_hashes": {
+    "Cross-repository feature branches (feature-deploy-*)": "4866e0a721fc96bc82f303feba4382d7c56579add8d943d85b1d819baa3acfef",
+    "The CI sets the branch version": "1f2af2f7ffd0a6cff8863d1ecc48edb093738a3dd35ce67690dab37494d63c0d",
+    "Building the branches locally": "a907590959573fe4baab4fb161ec3731d05b6d80d986b368ddc94590f81f6c88"
+  }
+}
