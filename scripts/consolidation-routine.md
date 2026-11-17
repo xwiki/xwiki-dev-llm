@@ -47,7 +47,7 @@ node scripts/consolidation-candidates.mjs --exclude <files of open PRs, comma-se
 
 It lists near-duplicate paragraphs (25–50% shared, below the validator's 50%), files at ≥95% of
 their size budget, similar skill descriptions, one-way skill pointers, KB text restated in skills,
-KB topics no skill cites and orphan `references/` files, and split candidates. **It narrows, it does not decide**:
+orphan `references/` files, and split candidates. **It narrows, it does not decide**:
 open both sides of every candidate you consider and judge whether they really state the same rule.
 These overlaps are intended and stay:
 
@@ -57,9 +57,7 @@ These overlaps are intended and stay:
 - the same practice in two skills that never load together (e.g. "pipe REST output through `jq`" in
   the JIRA and the OpenProject references), and a file's one-line boilerplate header;
 - a skill that already points to the topic in another form ("see `xwiki-knowledge` → versioning")
-  although `kb-restated` says "does not cite it";
-- a KB topic no skill cites — search and the pointer hooks reach it; only one missing from
-  `kb/index.md` (or its sub-index) is an orphan.
+  although `kb-restated` says "does not cite it".
 
 ### 3. Pick this week's batch
 
@@ -102,7 +100,7 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   growing fast (`growth4w`)?
 - **Skill:** which `##` sections only one branch of a run, one mode or one sub-agent reads? Those
   move to `references/`, handed over by path; `SKILL.md` keeps the decision flow.
-- **KB topic:** do its sections belong to different topics of `kb/index.md`
+- **KB topic:** do its sections belong to different KB topics
   (`foreignSections`), or do different skills each read only one part (`sectionReaders`)?
 - **KB section:** the `##` section is what kb-search retrieves, and one far above the KB's p90
   section size (`splitSections` in `xwiki/scripts/kb-search.mjs`; about 2.6 KB today) gets skipped,
@@ -113,7 +111,7 @@ check and old-vs-new trial runs, so it is a committer's change, not part of this
   before creating a file — but not one whose readers differ (a topic on *running* tests is not the
   home of rules for *writing* them), and not where `foreignSections` merely echoes a deliberate
   rules-vs-storage split. Check a new name against its siblings, and list what must follow: the
-  `kb/index.md` entry (≤240 bytes each); the topic's search sidecar (`kb/_meta/`, regenerated
+  topic's `summary:` and search sidecar (`kb/_meta/`, regenerated
   by `scripts/kb-pipeline/gen-metadata.mjs`); its `sources:` pins and `applies-to:`/`related:`
   frontmatter (the edit hooks match on these); the eval gold sections naming a moved heading
   (`eval/questions/a.json`, `a-sections.json`); the skill pointers; the README row; and any open PR

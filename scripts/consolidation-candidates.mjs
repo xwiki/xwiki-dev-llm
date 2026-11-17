@@ -4,12 +4,12 @@
 // if anything, to change. validate.mjs fails on the clear cases; this reports what sits just below
 // them, where only a reader can tell a restated rule from two different ones.
 //
-//   near-duplicates   blocks sharing 25-50% of their 8-word shingles across files (50% fails invariant 11)
-//   budget-pressure   files at 95% of their size budget or more (invariants 5, 8, 12)
+//   near-duplicates   blocks sharing 25-50% of their 8-word shingles across files (50% fails invariant 9)
+//   budget-pressure   files at 95% of their size budget or more (invariants 4, 10)
 //   similar-skills    skill descriptions with a high word overlap, so the model may pick the wrong one
 //   one-way-pointers  a description routing to a sibling that names it nowhere in return
 //   kb-restated      KB topics whose text reappears in skills, grouped by topic
-//   orphans           KB topics no skill cites, references/ files their skill never names
+//   orphans           references/ files their skill never names
 //   split             skills and KB topics that are large, growing, or cover several readers or topics
 //
 // Usage: node scripts/consolidation-candidates.mjs [--json] [--limit N] [--exclude path,path,...]
@@ -22,8 +22,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
-  COPY_RATIO, DEFAULT_MAX_BYTES, KB_ENTRY_MAX_BYTES, KB_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES, SKILL_MAX_BYTES,
-  budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock, sharedWithOtherFiles,
+  COPY_RATIO, DEFAULT_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES, SKILL_MAX_BYTES,
+  budgetOf, inDupScope, indexBlocks, isBudgeted, orgMapBlock, sharedWithOtherFiles,
   EXTERNAL_SKILLS, shingles, skillPointers, words,
 } from "./md-blocks.mjs";
 
@@ -133,11 +133,8 @@ const press = (file, what, size, max) => {
 };
 for (const p of tracked.filter(isBudgeted)) press(p, "file", bytes(read(p)), budgetOf(p, budgets));
 const orgMd = read("xwiki/instructions/xwiki-org.md");
-const kbIndex = read("xwiki/kb/index.md");
 press("xwiki/instructions/xwiki-org.md", "always-on file", bytes(orgMd), ORG_MAX_BYTES);
 press("xwiki/instructions/xwiki-org.md", "knowledge-base block", bytes(orgMapBlock(orgMd) ?? ""), ORG_MAP_MAX_BYTES);
-press("xwiki/kb/index.md", "file", bytes(kbIndex), KB_INDEX_MAX_BYTES);
-for (const e of kbIndexEntries(kbIndex)) press("xwiki/kb/index.md", `entry '${e.name}'`, bytes(e.text), KB_ENTRY_MAX_BYTES);
 
 // ---- similar-skills and one-way-pointers -------------------------------------------------------
 const skillMd = Object.fromEntries(skills.map((s) => [s, read(`xwiki/skills/${s}/SKILL.md`)]));
@@ -168,7 +165,7 @@ for (const a of skills) {
 }
 
 // ---- kb-restated ------------------------------------------------------------------------------
-// 6-word shingles, a lower bar than invariant 11: a skill paraphrasing a KB rule keeps its phrases.
+// 6-word shingles, a lower bar than invariant 9: a skill paraphrasing a KB rule keeps its phrases.
 const kbSkillIndex = indexBlocks([...kbTopics, ...skills.flatMap(skillDocs)], read, 6);
 const restated = new Map(); // kb file -> { skills: Map(skill -> shared), cites: Set }
 kbSkillIndex.blocks.forEach((block, i) => {
@@ -190,19 +187,8 @@ const kbRestated = [...restated].filter(([t, r]) => kept(t, ...[...r.skills.keys
   }));
 
 // ---- orphans -----------------------------------------------------------------------------------
-const allSkillText = skills.flatMap(skillDocs).map(read).join("\n");
-const indexNames = new Set(kbIndexEntries(kbIndex).map((e) => e.name));
+// Only references/ files: a KB topic no skill cites is still reached by kb-search and the pointer hooks.
 const orphans = [];
-for (const t of kbTopics) {
-  const name = t.split("/").pop().replace(/\.md$/, "");
-  const sub = t.replace(/[^/]+$/, "index.md"); // kb/servers/index.md and the like map their own topics
-  const inIndex = indexNames.has(name) || (existsSync(join(repoRoot, sub)) && read(sub).includes(name));
-  const cited = allSkillText.includes(t.slice("xwiki/".length));
-  if ((!inIndex || !cited) && kept(t)) {
-    orphans.push({ score: inIndex ? 0.5 : 2, files: [t],
-      why: [!inIndex && "no `**name**` entry in kb/index.md or its sub-index", !cited && "no skill cites its path"].filter(Boolean).join("; ") });
-  }
-}
 for (const s of skills) {
   const docs = skillDocs(s);
   const text = docs.map(read).join("\n");

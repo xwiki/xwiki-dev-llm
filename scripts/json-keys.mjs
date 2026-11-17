@@ -1,4 +1,4 @@
-// Used by validate.mjs (invariant 14). JSON.parse keeps only the last of two equal keys in one
+// Used by validate.mjs (invariant 12). JSON.parse keeps only the last of two equal keys in one
 // object, so a manifest that names an event twice (two "UserPromptSubmit" arrays after a merge)
 // silently drops the first array's hooks. The opposite slip — one hook declared twice, which a
 // merge can also leave — parses fine and runs the hook twice per call. Node built-ins only.
