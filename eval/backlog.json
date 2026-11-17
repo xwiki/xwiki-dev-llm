@@ -648,7 +648,7 @@
     "kb_target": "kb/conventions/documentation.md",
     "probe": "Updating a legacy xwiki/2.0 doc page: keep 2.0?",
     "status": "candidate",
-    "note": "The KB treats 2.0 pages as editable as is. partial: kb/conventions/documentation.md#Documentation style (\"write content in XWiki syntax\"), #XWiki syntax traps (2.0 vs 2.1 anchors)."
+    "note": "The KB treats 2.0 pages as editable as is. partial: kb/conventions/documentation.md#Documentation style (\"write content in XWiki syntax\"), #Syntax traps: anchors and headings (2.0 vs 2.1 anchors)."
   },
   {
     "id": "D18",
@@ -665,7 +665,7 @@
     "kb_target": "kb/conventions/documentation.md",
     "probe": "Can I add a one-line description after each Related link?",
     "status": "candidate",
-    "note": "Models annotate Related links with a description, as Highlights do; documentation.md#Page-structure fields lists the Related rules without this one."
+    "note": "Models annotate Related links with a description, as Highlights do; documentation.md#Related links field: no children, no self-link, audience labels lists the Related rules without this one."
   },
   {
     "id": "D19",
@@ -1918,7 +1918,7 @@
     "kb_target": "kb/conventions/documentation.md",
     "probe": "What value goes in a doc page's Technical ID for `org.xwiki.platform:xwiki-platform-icon-macro`?",
     "status": "done",
-    "note": "The xwiki: prefix is required (best practice); an unprefixed id still renders the badge; the id must match the Website field. Fixed in https://github.com/xwiki/xwiki-dev-llm/pull/409: kb/conventions/documentation.md#Page-structure fields. The DocGuide LinkDocumentationPageExtension step 5 fix goes upstream."
+    "note": "The xwiki: prefix is required (best practice); an unprefixed id still renders the badge; the id must match the Website field. Fixed in https://github.com/xwiki/xwiki-dev-llm/pull/409: kb/conventions/documentation.md#Technical ID field: the `xwiki:`/`npm:` prefix and the Website match. The DocGuide LinkDocumentationPageExtension step 5 fix goes upstream."
   },
   {
     "id": "D02",
