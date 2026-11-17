@@ -107,12 +107,18 @@ export function parseFrontmatter(text) {
  * A `## Related` section holding only `[[topic]]` bullets: a list of links to other topics. Pointing a
  * session at it never answers anything, so it is never a hit.
  * It stays in the index, so the corpus statistics, and every other section's score, are unchanged. A
- * Related section with its own text (routing to a skill or server) is a hit like any other.
+ * Related section with its own text — a paragraph, or a bullet not opening on a link (routing to a skill
+ * or server) — is a hit like any other, and so is a heading that says more than "Related" (a map of
+ * which topic owns which rule).
  */
 export function isLinkList(section) {
   if (section.heading.trim().toLowerCase() !== "related") return false;
-  const items = section.text.split("\n").filter((l) => /^\s*[-*] /.test(l));
-  return items.length > 0 && items.every((l) => /^\s*[-*] \[\[[^\]]+\]\]/.test(l));
+  const blocks = section.text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  const lines = blocks.flatMap((b) => b.split("\n"));
+  const items = lines.filter((l) => /^[-*] /.test(l));
+  // Every block is a list, and every item opens on a link; indented lines continue an item.
+  return items.length > 0 && blocks.every((b) => /^[-*] /.test(b))
+    && items.every((l) => /^[-*] \[\[[^\]]+\]\]/.test(l));
 }
 
 /**
