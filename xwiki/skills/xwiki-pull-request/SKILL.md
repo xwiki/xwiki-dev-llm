@@ -97,6 +97,12 @@ A SonarCloud PR analysis is the *only* pre-merge check for server-side rules (`j
 appear locally): **every PR changing Java gets one; fix what it reports before asking for review.** In
 xwiki-commons, -rendering and -platform the `Quality / Analyze` check runs it with Checkstyle and fails
 on a Sonar issue in a changed line — wait for it (`gh pr checks <n> --watch`), never run it by hand. It
+ignores the quality gate: it fails on any issue on a line SonarCloud marks new, and a moved or
+re-indented line is new, so splitting a method re-raises its findings. Its verdict needs no token: the
+annotations on the changed lines, and the job log (`gh run view --job <id> --log`), which also lists
+the issues the changed files already had. `issues/search?componentKeys=<key>&pullRequest=<n>` (keys
+`org.xwiki.commons:xwiki-commons`, `org.xwiki.rendering:xwiki-rendering`,
+`org.xwiki.platform:xwiki-platform`) answers `total:0` for an unanalyzed PR too. The check
 skips dependency bots; a fork by a non-member of the `xwiki` org gets Checkstyle only. Elsewhere
 (contrib, outside forks), with a `SONARQUBE_TOKEN`, run it once the PR exists, from the
 repository root on the whole reactor:
