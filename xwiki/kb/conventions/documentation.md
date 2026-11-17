@@ -276,10 +276,22 @@ itself (`GET /rest/wikis/xwiki/classes/DocApp.Code.DocumentationClass`) rather t
 | `type` | `tutorial` \| `howto` \| `reference` \| `explanation` |
 | `target` | `user` \| `administrator` \| `developer` (**`administrator`**, not `admin`) |
 
-The fields:
+The fields — FAQ and Highlights, Related links and the Technical ID each have their own section
+below:
 
 - **Content** — the main content for the page type. Additional headings go under it as level-2 (or
   lower) headings.
+- **More** — **automatic**; a filterable livedata table of the page's **child** pages plus a search
+  box. Nothing to fill. Highlights are displayed inside this section.
+
+The **Documentation application's own reference** for these fields is
+[Documentation Page Structure](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/create-documentation-page/page-structure/)
+— note that it lives on **www**.xwiki.org under `/documentation`, and is a *different* resource from
+the [Documentation Guide](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide) on **dev**.xwiki.org.
+Use the guide for the authoring rules, and that page for what each structure field does.
+
+## FAQ and Highlights fields: entry limits and when to fill them
+
 - **FAQ** — **optional**; level-2 headings phrased as **questions** a user/admin/developer might have, with answers
   limited to **1–2 sentences**. If a longer answer is needed, create a dedicated Explanation page.
   **At most 5 entries, and at most 25 lines of FAQ content**: beyond either limit the `faqEntryCount`
@@ -305,8 +317,9 @@ The fields:
   check enforces the threshold (counting only child *documentation* pages), the maximum and the syntax,
   but never sees landing pages, which carry no `DocumentationClass`. Source of truth:
   [Highlights on a Page](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HighlightsPage/).
-- **More** — **automatic**; a filterable livedata table of the page's **child** pages plus a search
-  box. Nothing to fill. Highlights are displayed inside this section.
+
+## Related links field: no children, no self-link, audience labels
+
 - **Related links** — links to pages with related content that are **NOT children** of this page. A
   child belongs in **Highlights**, never here. Further rules:
   - **A `related` field must never link to its own page.**
@@ -320,6 +333,9 @@ The fields:
   - **After a restructure, re-check it.** Moving a page *in* under a hub makes it a child, silently
     breaking the not-children rule in that hub's `related`: the link still resolves, so no
     broken-reference sweep detects it.
+
+## Technical ID field: the `xwiki:`/`npm:` prefix and the Website match
+
 - **Technical ID** — **every documentation page must be associated with an Extension**, and located
   accordingly (see "Choose the right location" below); the Technical ID is that extension's id (or its
   NPM package), copied from the Extensions-wiki `ExtensionCode` xobject. The value is
@@ -337,12 +353,6 @@ The fields:
   **Older pages carrying an unprefixed id are the non-conformant ones** (fix them with the Website
   field) — do not "fix" a prefixed id to match them. Authority:
   [Page Structure on xwiki.org](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/documentation-xwiki-org/page-structure-xwikiorg/).
-
-The **Documentation application's own reference** for these fields is
-[Documentation Page Structure](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/create-documentation-page/page-structure/)
-— note that it lives on **www**.xwiki.org under `/documentation`, and is a *different* resource from
-the [Documentation Guide](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide) on **dev**.xwiki.org.
-Use the guide for the authoring rules, and that page for what each structure field does.
 
 ## Documentation style
 
@@ -412,7 +422,33 @@ The guide's own page is
 - **In the `documentation` space `size` is mandatory and `width` is forbidden.** The quality checker
   rejects the image otherwise: *"Best practice: The Image macro, when used in the "documentation"
   space, must specify a 'size' parameter and no 'width' one."* A screenshot therefore **cannot** be
-  rendered at its natural width, which is why the capture rules below fix the width at capture time.
+  rendered at its natural width, which is why the capture rules in the next section fix the width at
+  capture time.
+- **Several images side by side go in the Gallery macro**, so variations don't clutter the page.
+- **No animated GIFs** — they are unmaintainable; use several PNGs instead.
+- **Videos: avoid them unless they carry real value** — they rot as the UI changes. When one is
+  justified it is in **`webm`** format and it is **displayed with the `{{embed}}` macro**:
+  `{{embed attachment="usage.webm" width="780"/}}`, which renders a real HTML5 player. **A video is
+  embedded, never linked:** an `attach:` link loses the player, and nothing flags it.
+- **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
+  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
+  and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
+  3.0:1, and 3:1 is the bar for large text, not for PlantUML's 12px. So `!theme bluegray` is always
+  followed, verbatim, by **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, which keeps
+  the XWiki blue; `docpages.py lint` fails a diagram without it, and that directory's README
+  explains the palette.
+- **Updating an attachment means re-uploading it under the same name**, which versions it — do not
+  delete and re-add. The one place attachments *are* deleted is the original page after a migration
+  (see [[documentation-migration]]).
+- **An image has exactly one owning page**, so needing the same screenshot on two pages means the
+  *content* is duplicated: fix that (see "How much belongs on one page") instead of uploading the
+  file twice, or the copies drift as re-capturing one reaches only its own page. And **never point at
+  another page's attachment** — `{{image reference="other-page.WebHome@shot.png"/}}` stops rendering
+  as soon as that page is moved or renamed (`XWIKI-24413`, still open) — which rules out the obvious
+  way around the first half of this rule.
+
+## Screenshots: capture width, framing and the red box
+
 - **Screenshot standards** — capture with the **latest skin**; capture while actually **using the
   feature** (not a staged state); capture **at exactly the pixel width of the `size` it will be shown
   at**, at `devicePixelRatio` 1 (resize the browser first) and by **cropping** a region of that width
@@ -449,28 +485,6 @@ The guide's own page is
   stretches it.
 - **Never generate an example of rendered output — screenshot it.** A generated example (calling
   `{{displayIcon}}` to show an icon, say) silently changes when the product does.
-- **Several images side by side go in the Gallery macro**, so variations don't clutter the page.
-- **No animated GIFs** — they are unmaintainable; use several PNGs instead.
-- **Videos: avoid them unless they carry real value** — they rot as the UI changes. When one is
-  justified it is in **`webm`** format and it is **displayed with the `{{embed}}` macro**:
-  `{{embed attachment="usage.webm" width="780"/}}`, which renders a real HTML5 player. **A video is
-  embedded, never linked:** an `attach:` link loses the player, and nothing flags it.
-- **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
-  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
-  and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
-  3.0:1, and 3:1 is the bar for large text, not for PlantUML's 12px. So `!theme bluegray` is always
-  followed, verbatim, by **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, which keeps
-  the XWiki blue; `docpages.py lint` fails a diagram without it, and that directory's README
-  explains the palette.
-- **Updating an attachment means re-uploading it under the same name**, which versions it — do not
-  delete and re-add. The one place attachments *are* deleted is the original page after a migration
-  (see [[documentation-migration]]).
-- **An image has exactly one owning page**, so needing the same screenshot on two pages means the
-  *content* is duplicated: fix that (see "How much belongs on one page") instead of uploading the
-  file twice, or the copies drift as re-capturing one reaches only its own page. And **never point at
-  another page's attachment** — `{{image reference="other-page.WebHome@shot.png"/}}` stops rendering
-  as soon as that page is moved or renamed (`XWIKI-24413`, still open) — which rules out the obvious
-  way around the first half of this rule.
 
 ## Choose the right location
 
@@ -591,9 +605,10 @@ A migration is not done until the **source** page is handled (prose, attachments
 Before removing any page, even one you created earlier in the task, **list and handle its backlinks**;
 relocating content is a **rename/move**, not a delete-and-recreate. See [[page-deletion]].
 
-## XWiki syntax traps that bite when authoring documentation
+## Syntax traps: newlines, lists and escaping
 
-All verified on www.xwiki.org; each renders plausibly instead of failing.
+All verified on www.xwiki.org; each renders plausibly instead of failing. Links and anchors have their
+own two sections below.
 
 - **Newlines are significant.** A paragraph, a table row or a list item must be on **one single
   line** — never wrap for readability. A newline inside a paragraph splits it in two; inside a table
@@ -614,6 +629,23 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
     moves `on` to a new cell (` !^` survives; outside a table it is harmless). Write `~!=`.
   - A macro executes: `##{{deprecated/}}##` renders a *"Failed to execute the [deprecated] macro"*
     box, in a Change Request description too. Write `##~{{deprecated/}}##`.
+- **Never escape the hashes of a monospace span.** `~#~#1/1~#~#` renders as a *literal* `##1/1##`.
+  Plain `##1/1##` works fine, even directly after a sentence.
+- **A blank line between two list items ends the list**, so numbering restarts at 1. Keep list items on
+  consecutive lines.
+- **Angle brackets inside `##…##` are safe in page content** — `##<prefix>_xwiki-data##` and
+  `##xwiki-tomcat<version>-<database>##` render literally: XWiki 2.1 has no raw HTML outside
+  `{{html}}`, so `<…>` placeholders need no escaping.
+- **Copy-pasted content carries non-breaking spaces (`\xa0`)**, which defeat exact-string matching and
+  look like double spaces. Match on line prefixes rather than whole-string equality.
+- **An image inside a list item must be wrapped in `(((…)))`.** Writing the `{{image}}` macro on its
+  own line after a list item ends the list and starts a second one, leaving the image outside the
+  item. `* Item 2(((` + the macro + `)))` keeps it inside. Per the guide's
+  [Documentation Style](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle/)
+  "List Items" section.
+
+## Syntax traps: linking to xwiki.org pages
+
 - **Never link a page of the xwiki.org farm by URL — use `doc:<wiki>:<ref>`.** `extensions`, `dev`,
   `design`, `snippets`, `rendering`, `commons`, `contrib`, `cristal` and `test` are **subwikis of the
   same farm** as `www.xwiki.org` (`GET /rest/wikis` lists them), so write
@@ -642,16 +674,12 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
 - **A `url:` prefix on the link target does not mean "keep this a URL".** It reads like the writer
   declaring intent, but it is what the WYSIWYG editor emits when a URL is pasted, and it lands on
   internal and external links alike. Decide by the exception list above, not by the prefix.
-- **Never escape the hashes of a monospace span.** `~#~#1/1~#~#` renders as a *literal* `##1/1##`.
-  Plain `##1/1##` works fine, even directly after a sentence.
+
+## Syntax traps: anchors and headings
+
 - **Never put a bare URL in a heading** — the autolinker absorbs the trailing punctuation into the
   href, so `== …look like https://wiki.example.com:80/? ==` loses its question mark, and it poisons the
   generated anchor id. Rephrase the heading and put the URL in the body inside a code macro.
-- **A blank line between two list items ends the list**, so numbering restarts at 1. Keep list items on
-  consecutive lines.
-- **Angle brackets inside `##…##` are safe in page content** — `##<prefix>_xwiki-data##` and
-  `##xwiki-tomcat<version>-<database>##` render literally: XWiki 2.1 has no raw HTML outside
-  `{{html}}`, so `<…>` placeholders need no escaping.
 - **Section anchors work, but the syntax differs per page syntax — check which one the page uses.**
   The anchor id is `H` + the heading text with whitespace dropped, letters, digits and `:_.-` kept,
   and every other character replaced by its hex code — so `== My heading ==` gives `HMyheading`, but
@@ -671,13 +699,6 @@ All verified on www.xwiki.org; each renders plausibly instead of failing.
   [Handle the Original Documentation Pages](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/MigrateDocumentation/HandleOriginalDocumentationPages/):
   `{{id name="HOldheadingtext"/}}` (`name` is mandatory, `reference` renders an error box).
   `faq`-field entries are headings too.
-- **Copy-pasted content carries non-breaking spaces (`\xa0`)**, which defeat exact-string matching and
-  look like double spaces. Match on line prefixes rather than whole-string equality.
-- **An image inside a list item must be wrapped in `(((…)))`.** Writing the `{{image}}` macro on its
-  own line after a list item ends the list and starts a second one, leaving the image outside the
-  item. `* Item 2(((` + the macro + `)))` keeps it inside. Per the guide's
-  [Documentation Style](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationStyle/)
-  "List Items" section.
 
 ## Navigation order — pinning child pages
 

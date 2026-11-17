@@ -77,15 +77,46 @@
     },
     "Page-structure fields": {
       "questions": [
-        "What do the Highlights, More and Related links fields on a documentation page do?",
-        "How many FAQ entries can I add to a documentation page?",
-        "What Technical ID format should I use for an extension documentation page?"
+        "Which fields does an xwiki.org documentation page have and what does each one mean?",
+        "Where do I set the page type and target audience in the documentation application?"
       ],
       "aliases": [
-        "xobject fields",
         "DocumentationClass",
+        "page metadata fields",
+        "xobject fields"
+      ]
+    },
+    "FAQ and Highlights fields: entry limits and when to fill them": {
+      "questions": [
+        "How many FAQ entries can I add to a documentation page?",
+        "When should I fill in the Highlights field on a page with many children?",
+        "My FAQ answer is too long, what should I do with it?"
+      ],
+      "aliases": [
+        "highlights limit",
+        "FAQ maximum entries"
+      ]
+    },
+    "Related links field: no children, no self-link, audience labels": {
+      "questions": [
+        "How do I link a related page on xwiki.org without listing a child page?",
+        "Can the related links field point to the page itself?",
+        "How should I label a related link that points to another audience's page?"
+      ],
+      "aliases": [
+        "related pages field",
+        "see also links"
+      ]
+    },
+    "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": {
+      "questions": [
+        "What value should the Technical ID of my doc page have, including the xwiki: prefix?",
+        "Why does the Documentation button on my extension page stop working?",
+        "How do I set the Technical ID for an npm package's documentation page?"
+      ],
+      "aliases": [
         "extension id",
-        "FAQ field"
+        "npm package id"
       ]
     },
     "Documentation style": {
@@ -102,17 +133,27 @@
     },
     "Attachments, images and videos": {
       "questions": [
-        "How do I insert a screenshot with the image macro and the right size?",
-        "What dimensions and format should my screenshots have on xwiki.org?",
-        "How do I draw a red box around a button in a screenshot?",
-        "How do I embed a video in an xwiki.org documentation page?"
+        "How do I add a screenshot to a documentation page with alt text?",
+        "Can I embed a video or an animated GIF in an xwiki.org doc page?",
+        "How should I name and upload an image file to a doc page?"
       ],
       "aliases": [
-        "screenshot rules",
         "image macro",
-        "WCAG alt text",
-        "webm video",
-        "PlantUML bluegray"
+        "attachment naming",
+        "embed video",
+        "PlantUML diagram"
+      ]
+    },
+    "Screenshots: capture width, framing and the red box": {
+      "questions": [
+        "What width should I capture a screenshot at for an xwiki.org doc page?",
+        "How do I draw a red box around a UI element in my screenshot?",
+        "My screenshot looks blurry in the documentation, what size should I use?"
+      ],
+      "aliases": [
+        "screen capture",
+        "screenshot size",
+        "highlight an element"
       ]
     },
     "Choose the right location": {
@@ -172,21 +213,39 @@
         "page deletion"
       ]
     },
-    "XWiki syntax traps that bite when authoring documentation": {
+    "Syntax traps: newlines, lists and escaping": {
       "questions": [
-        "Why does my link or monospace text render wrong on the documentation page?",
-        "Why does my command-line flag with two dashes turn into strikethrough text?",
-        "Why did != in a table cell or a macro name in monospace text render wrong?",
-        "How do I link to another xwiki.org page without using a full URL?",
-        "How do I link to a section heading in an xwiki.org page?"
+        "Why does my numbered list restart at 1 in the xwiki.org doc page?",
+        "Why does my text render wrong after I write a colon following the word image?",
+        "How do I escape a double dash or a hash so it shows as plain text?"
       ],
       "aliases": [
         "XWiki syntax gotchas",
-        "strikethrough dashes",
-        "monospace does not escape",
-        "wiki syntax 2.1",
-        "anchor link",
-        "doc reference link"
+        "escape characters in XWiki syntax"
+      ]
+    },
+    "Syntax traps: linking to xwiki.org pages": {
+      "questions": [
+        "How do I link to another xwiki.org page without pasting its full URL?",
+        "Why does my absolute URL link to a documentation page not appear in backlinks?",
+        "When is it correct to use an absolute xwiki.org URL in a page?"
+      ],
+      "aliases": [
+        "doc reference syntax",
+        "cross-wiki link",
+        "absolute URL link"
+      ]
+    },
+    "Syntax traps: anchors and headings": {
+      "questions": [
+        "How do I link to a section heading in an xwiki.org doc page?",
+        "My section link breaks after I rename a heading, how do I keep the anchor?",
+        "Why does my anchor link point to a page that doesn't exist?"
+      ],
+      "aliases": [
+        "section link",
+        "heading anchor",
+        "fragment identifier"
       ]
     },
     "Navigation order — pinning child pages": {
@@ -210,7 +269,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "6db71b365952f2279fc69a402d6a2d85fbdf2f6041d53ddfac2c674827b50452",
+  "source_hash": "d8d98ca6af4e0d9cc7c21a98e26124a874fbd135b859c16ad973cab111d3c2b7",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
@@ -218,15 +277,21 @@
     "Titles and page names": "edc5c851f83e7c3e2ddac5792228f2fe5e4b3318503cce2da179cafb1ebc054f",
     "Content rules per type": "3724cb8e3a7095c12aca427fd3f6946ce4f6f739f0c97e424c7800ec6075e71d",
     "How much belongs on one page": "b0939995820f66508ac6f7c36531f98bd89798f1e51fcdcdb0e954a25943a9d0",
-    "Page-structure fields": "639c8a0cabdb84b538aba2d1f1aa24964f995d5a64c33b4c3130ca8423ccbbbe",
+    "Page-structure fields": "933be0230aa2fc9fe9c841c9ed8c072a3356d36beb39a8751ad3c37ec74b1fcf",
+    "FAQ and Highlights fields: entry limits and when to fill them": "d897fb1eef672748be02deb4febd13c2feca4b41841d1d31829e7c73ed235684",
+    "Related links field: no children, no self-link, audience labels": "43569636b83cc23040dc49fbe8ef2b1b99b9def1040144a027c44d10d5b8b443",
+    "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": "1944ecbbcd15c876f4b9beaff29bda35e4ea33ea8e13c779fb21ed1bc4ee836e",
     "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",
-    "Attachments, images and videos": "8a9f4b2f4e26b25704e049caa760ba65e60d6c10a068022bca409ec73afb28ce",
+    "Attachments, images and videos": "d836da9011766878214c3bc6e9a74024369560294ec516a20697855d3d213969",
+    "Screenshots: capture width, framing and the red box": "27ee5fc561705604eaebefd4b761a267ebed2e2fe1be4d92d96f0758fc2ecccb",
     "Choose the right location": "e48d459fdc5c6274d53931779e501e9840708a4d665df61f274083610c99af06",
     "Versioning and perspective": "515b9a62fbbf377da701d7cfe8a86ded52f26985cfe2948149de95e4edfdf6c1",
     "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
     "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
     "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
-    "XWiki syntax traps that bite when authoring documentation": "2a64a4073b8e7015806baf7c4cd30b558de4567ed8fc102ed3e75dfe2ec1ea1b",
+    "Syntax traps: newlines, lists and escaping": "0524db54ae9340283522f8eff470b91b0bdec09822f8c78c75152399f5a11f72",
+    "Syntax traps: linking to xwiki.org pages": "e0a9885c7913cc1c99ed9dd626f76834d09d71ea76f63df88d944b18a9c25b03",
+    "Syntax traps: anchors and headings": "a45886f80ed4387e8191fbfe056563fe4cd52e1a9bc9c3efd8901adf9f2aa693",
     "Navigation order — pinning child pages": "d5522b550471a8c8f79e0cf8fb211e892f59a27cebf95dceb5c002109a63c95d"
   }
 }
