@@ -256,13 +256,13 @@
   },
   {
     "id": "B35",
-    "fact": "A WCAG issue in JIRA gets the label wcag and the broken rule's id/name (WCAG 2.1 rule ids field), with a screenshot of the element and DOM.",
+    "fact": "Before filing a WCAG issue in JIRA, search the open issues labelled wcag; a new one gets the label wcag, the number and name of the broken success criterion in the WCAG 2.1 Rule ids field (e.g. 2.4.1 Bypass Blocks), and a screenshot of the element showing both the page and its DOM tree.",
     "sources": [
       {
-        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/WCAGTesting/Reading through WCAG reports",
-        "version": "9.3",
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility",
+        "version": "50.1",
         "sections": [
-          "Understanding an issue to report it properly"
+          "Report an Accessibility Issue"
         ]
       }
     ],
@@ -1114,6 +1114,23 @@
     "probe": "I fixed the last remaining violations of a WCAG warning rule. Anything else to change?",
     "status": "candidate",
     "note": "Models stop at fixing the violations and leave the rule a warning, so regressions go unnoticed."
+  },
+  {
+    "id": "S03",
+    "fact": "Vue components are validated with Axe Core in their unit tests, not by the functional tests' page-object validation.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/AutomatedTesting",
+        "version": "1.1",
+        "sections": [
+          "Vue Components"
+        ]
+      }
+    ],
+    "kb_target": "kb/testing/web-standards.md",
+    "probe": "I wrote a new Vue component. How do I check its accessibility in tests?",
+    "status": "candidate",
+    "note": "Models write a Docker functional test for it or skip the check. How: the xwiki.org page \"Test the accessibility of a Vue component\" (documentation/xs/dev/front-end/test/test-vue-component-accessibility, v1.1) — vitest with @xwiki/platform-test-accessibility, mountHelper and runTest (axe-core after each test), assertAxe for intermediate states."
   },
   {
     "id": "B28",
