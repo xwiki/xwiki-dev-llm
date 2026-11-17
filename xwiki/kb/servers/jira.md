@@ -156,7 +156,9 @@ Choose the **resolution** that matches reality and **assign the issue to yoursel
 
 - **A change fixed it** → resolution **Fixed**, with Fix Version/s (where the project has them) set to
   the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`). JIRA version
-  names use dashes, unlike the `18.7.0RC1` of a `@since` tag ([[versioning]]).
+  names use dashes, unlike the `18.7.0RC1` of a `@since` tag ([[versioning]]). When one of them does
+  not exist yet in JIRA (e.g. a contrib project whose next version was not created after its last
+  release), ask the developer rather than closing without it or creating it.
 - **A change made for another issue fixed it** → **Solved By**, linked to that issue, with **its Fix
   Version/s**, so that querying JIRA by version finds it (e.g. a security issue fixed by a
   non-security change).
