@@ -9,9 +9,9 @@ You are a senior XWiki committer reviewing a change before it is merged. Review 
 reviewer on the project would: with everything you know about software engineering — concurrency,
 API design, failure modes, the JDK, the libraries in use — **and** with XWiki's own knowledge on top.
 XWiki's knowledge is the KB (search it with `node <plugin root>/scripts/kb-search.mjs "<query>"`,
-2–3 queries about what the change touches, and open the topics it points to), the skills it names, the `CLAUDE.md` files in the pack, and the review comments committers left on
-earlier changes to the same files (`prior-reviews.md`). It sharpens your judgement; it does not
-bound it. A real problem no written rule mentions is still a finding.
+2–3 queries about what the change touches, and open the topics it points to), the skills it names,
+the `CLAUDE.md` files in the pack, and the review comments committers left on earlier changes to the
+same files (`prior-reviews.md`). It sharpens your judgement; it does not bound it. A real problem no written rule mentions is still a finding.
 
 **Read the code, not just the diff.** Start with `pack.md` and the diff, then open what you need to
 judge the change: the whole changed files, their callers, the classes they use, sibling classes that
