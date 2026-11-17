@@ -1,7 +1,7 @@
-// Shared by validate.mjs (invariants 11 and 12) and consolidation-candidates.mjs, so that the copy
+// Shared by validate.mjs (invariants 9 and 10) and consolidation-candidates.mjs, so that the copy
 // check and the candidate finder split, word and budget the Markdown the same way. Node built-ins only.
 
-// ---- Paragraph blocks and shingles (invariant 11) --------------------------------------------
+// ---- Paragraph blocks and shingles (invariant 9) ---------------------------------------------
 // A block is a paragraph or a list item, with frontmatter and code fences left out. Below
 // MIN_BLOCK_WORDS a repeat is a phrase, not a rule. A block naming a host's path variable is exempt:
 // each skill has to say for itself where the shared kb/ and scripts/ are on each host, as a skill
@@ -63,23 +63,21 @@ export const sharedWithOtherFiles = ({ blocks, owners }, i) => {
   return shared;
 };
 
-// ---- Size budgets (invariants 5, 8 and 12) ---------------------------------------------------
+// ---- Size budgets (invariants 4 and 10) ------------------------------------------------------
 export const ORG_MAX_BYTES = 7000;
 export const ORG_MAP_MAX_BYTES = 800;
-export const KB_INDEX_MAX_BYTES = 11000;
-export const KB_ENTRY_MAX_BYTES = 240;
 export const SKILL_MAX_BYTES = 20000;
 export const DEFAULT_MAX_BYTES = 12000;
 
-// Whether invariant 12 budgets this tracked Markdown file.
+// Whether invariant 10 budgets this tracked Markdown file.
 export const isBudgeted = (p) =>
-  /^xwiki\/(skills|kb)\//.test(p) && !/\/tools\//.test(p) && p !== "xwiki/kb/index.md";
+  /^xwiki\/(skills|kb)\//.test(p) && !/\/tools\//.test(p);
 
 // Its budget: the entry in scripts/size-budgets.json, else the default for its kind.
 export const budgetOf = (p, budgets) =>
   budgets[p] ?? (p.endsWith("/SKILL.md") ? SKILL_MAX_BYTES : DEFAULT_MAX_BYTES);
 
-// The knowledge-base block of xwiki-org.md (invariant 5) — how to reach the KB, which is searched,
+// The knowledge-base block of xwiki-org.md (invariant 4) — how to reach the KB, which is searched,
 // not mapped — or null when its delimiters are missing.
 export const orgMapBlock = (orgMd) => {
   const start = orgMd.indexOf("## Knowledge base");
@@ -87,25 +85,7 @@ export const orgMapBlock = (orgMd) => {
   return start === -1 || end === -1 || end < start ? null : orgMd.slice(start, end);
 };
 
-// The topic entries of kb/index.md (invariant 8): each `- **name** — …` with its wrapped lines.
-export const kbIndexEntries = (kbIndex) => {
-  const entries = [];
-  let entry = null;
-  for (const line of kbIndex.split("\n")) {
-    const head = line.match(/^- \*\*([a-z0-9-]+)\*\* —/);
-    if (head) {
-      entry = { name: head[1], text: line };
-      entries.push(entry);
-    } else if (entry && /^ {2}\S/.test(line)) {
-      entry.text += "\n" + line;                         // a wrapped continuation of the same entry
-    } else {
-      entry = null;
-    }
-  }
-  return entries;
-};
-
-// ---- Skill pointers (invariant 10) -----------------------------------------------------------
+// ---- Skill pointers (invariant 8) ------------------------------------------------------------
 // Only a name in a pointer phrase counts ("use `xwiki-x` instead", "the `xwiki-x` skill"): a bare
 // `xwiki-…` is usually a Maven module or a repo. The skills of another plugin, which this repo
 // cannot see, are listed so that a pointer to one is not reported as dangling.

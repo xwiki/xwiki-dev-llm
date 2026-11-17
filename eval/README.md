@@ -130,7 +130,7 @@ and lands only the ones the model needs, with numbers showing they help and harm
   `scripts/kb-sources.mjs --pin <url>@<version>` at the version the fact was taken from (the backlog
   entry's `sources`), never a bare `--pin`, which would hide an edit made since; when `--diff
   <url>@<version>` shows the page changed since that version, re-check the fact first. A `kb_target` may be a file that does not exist yet: a new KB
-  file also needs its entry in `kb/index.md`, its `_meta` sidecar (`gen-metadata`) and, above the
+  file also needs its `_meta` sidecar (`gen-metadata`) and, above the
   default size, an entry in `scripts/size-budgets.json`.
 - **Compare** master and the branch, each extracted with `git archive` and passed with `--plugin`, three
   runs per side: group (e) with the gate's model and code; groups (a) and (d) without the code, with

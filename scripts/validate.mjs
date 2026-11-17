@@ -1,59 +1,53 @@
 #!/usr/bin/env node
 // Repo consistency validator for xwiki-dev-llm. Enforces the invariants that are otherwise kept in
 // sync by hand, so they can never drift silently:
-//   1. Every skill directory under xwiki/skills/ is listed in README.md, and (except the KB
-//      governor xwiki-knowledge) in xwiki/kb/index.md.
+//   1. Every skill directory under xwiki/skills/ is listed in README.md.
 //   2. Each SKILL.md frontmatter `name:` equals its directory name.
 //   3. The plugin version fields are identical across all hosts (Claude marketplace + plugin, Kimi
 //      plugin, opencode config comment).
-//   4. Every KB topic file is referenced in xwiki/kb/index.md. The injected
-//      xwiki/instructions/xwiki-org.md no longer mirrors that map: the KB is reached by search
-//      (kb-search.mjs and the pointer hooks), so listing every topic there would only cost tokens.
-//   5. The injected xwiki-org.md, and its knowledge-base block, stay within their size budgets: a
+//   4. The injected xwiki-org.md, and its knowledge-base block, stay within their size budgets: a
 //      file loaded into every session grows by accretion, because each extension appends and none
 //      ever cuts.
-//   6. A branch does NOT change any version field, compared against its *merge base* with the base
+//   5. A branch does NOT change any version field, compared against its *merge base* with the base
 //      branch. The bump is not a pull request's job: five manifest fields carry the version, so
 //      every concurrent PR used to conflict with every other one on the same five lines over
 //      something that was never the change itself. Instead scripts/release.mjs sets them on master
 //      after the merge (automatically, via .github/workflows/release.yml), which is what makes
 //      installed plugins pull the update.
-//   7. Every `kb/...md` path a skill cites actually exists, and so does every `references/...md`
+//   6. Every `kb/...md` path a skill cites actually exists, and so does every `references/...md`
 //      file it names. Skills delegate their rules to the KB rather than restating them, and keep
 //      what only one branch of a run needs in references/ files opened on demand, so a renamed or
 //      deleted file would otherwise leave a skill pointing at nothing — and a reviewer that cannot
 //      read its rule source fails silently. All of a skill's Markdown is checked, not only SKILL.md.
-//   8. The KB index stays a map: each entry, and the file, within a size budget. An entry exists to
-//      pick a topic, so it says what the topic is and when to open it; a description long enough to
-//      restate the rules gets acted on in place of the file it points at, at a third of the detail.
-//   9. Every SKILL.md frontmatter parses as YAML. A `name`/`description` is written as an unquoted
+//   7. Every SKILL.md frontmatter parses as YAML. A `name`/`description` is written as an unquoted
 //      (plain) scalar, in which `: ` and ` #` are structural — `: ` anywhere in the value makes the
 //      block unparseable, and ` #` silently truncates the value at that point. The host then loads
 //      the skill with EMPTY (or truncated) metadata rather than failing loudly, so the description
 //      Claude matches against is gone and the skill simply never triggers. This is NOT covered by
 //      `claude plugin validate`: measured against the `yaml` package, three skills here were
 //      unparseable while that command reported only one of them and then passed the repo.
-//  10. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
+//   8. Every skill a pointer names ("use `xwiki-x` instead", "the `xwiki-x` skill") exists. Skills
 //      route work to each other through these pointers, so a renamed or removed skill leaves the
 //      others sending the model to nothing.
-//  11. No paragraph is copied across files. Each fact has one home — a skill, a KB topic, the
+//   9. No paragraph is copied across files. Each fact has one home — a skill, a KB topic, the
 //      injected xwiki-org.md, README.md — and the other places link to it; a copy drifts from its
 //      original at the first edit of either, and the model then has two rules to choose from.
-//  12. Each skill and KB file stays within its size budget (scripts/size-budgets.json). Like the
-//      budgets of invariants 5 and 8, it turns growth into a decision: a file only gets longer
+//  10. Each skill and KB file stays within its size budget (scripts/size-budgets.json). Like the
+//      budgets of invariant 4, it turns growth into a decision: a file only gets longer
 //      when its budget is raised, in the same change and with the reason in the commit message.
 //      A SKILL.md is capped at 20,000 bytes — Anthropic's guideline of 500 lines / 5,000 tokens for
 //      a loaded skill body — and the budget of one already above the cap may only go down: detail
 //      past it moves into a file the skill opens on demand.
-//  13. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
+//  11. Every searchable KB topic has a current search-metadata sidecar (kb/_meta/), and no sidecar
 //      outlives its topic. kb-search silently drops a sidecar whose `source_hash` no longer matches
 //      the topic body, so an edited topic would lose its generated questions and aliases unnoticed;
 //      a sidecar whose `file_hash` no longer matches the title and summary keeps file-level questions
-//      written for the old ones.
-//  14. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
+//      written for the old ones. The KB has no index — kb-search and the pointer hooks reach a topic
+//      through its frontmatter and sidecar — so this is also what keeps every topic findable.
+//  12. No JSON manifest repeats a key in one object: JSON.parse keeps the last, so a hook event named
 //      twice (as a merge can leave it) silently loses the first entry's hooks. Nor does a hook
 //      manifest declare one hook twice (same event, matcher, `if`, command), which runs it twice.
-//  15. Every dev.xwiki.org page a KB file cites in `sources:` has a pin in scripts/kb-source-pins.json
+//  13. Every dev.xwiki.org page a KB file cites in `sources:` has a pin in scripts/kb-source-pins.json
 //      (the page version the KB reflects). The weekly source sync diffs each page from its pin; a
 //      page pinned only when that routine first meets it gets the version current then, so any
 //      edit made between writing the KB text and that run would never be reviewed.
@@ -63,10 +57,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, basename, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import {
-  COPY_RATIO, KB_ENTRY_MAX_BYTES, KB_INDEX_MAX_BYTES, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
-  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, kbIndexEntries, orgMapBlock,
+  COPY_RATIO, ORG_MAP_MAX_BYTES, ORG_MAX_BYTES,
+  SKILL_MAX_BYTES, EXTERNAL_SKILLS, budgetOf, inDupScope, indexBlocks, isBudgeted, orgMapBlock,
   sharedWithOtherFiles, skillPointers,
 } from "./md-blocks.mjs";
 import { corpus, sidecarCurrent } from "./kb-pipeline/gen-metadata.mjs";
@@ -85,7 +79,6 @@ const skills = readdirSync(join(repoRoot, "xwiki/skills"), { withFileTypes: true
   .sort();
 
 const readme = read("README.md");
-const kbIndex = read("xwiki/kb/index.md");
 
 for (const skill of skills) {
   const skillMd = read(`xwiki/skills/${skill}/SKILL.md`);
@@ -99,13 +92,10 @@ for (const skill of skills) {
   if (!readme.includes(`\`${skill}\``)) {
     errors.push(`README.md: skill '${skill}' is not listed in the Skills section`);
   }
-  if (skill !== "xwiki-knowledge" && !kbIndex.includes(`\`${skill}\``)) {
-    errors.push(`xwiki/kb/index.md: skill '${skill}' is not listed in "Related skills"`);
-  }
 }
 
 // ---- Invariant 3: version sync ---------------------------------------------------------------
-// Parameterised by a reader so invariant 6 can extract the same five fields from a different commit.
+// Parameterised by a reader so invariant 5 can extract the same five fields from a different commit.
 // A field that cannot be read comes back undefined rather than throwing, which both invariants
 // report as a mismatch.
 const extractVersions = (reader) => {
@@ -138,7 +128,7 @@ if (new Set(Object.values(versions)).size !== 1) {
   errors.push(`Plugin version mismatch across manifests: ${JSON.stringify(versions)}`);
 }
 
-// ---- Invariant 4: KB index completeness -----------------------------------------------------
+// ---- Invariant 4: the always-on file stays small ---------------------------------------------
 const orgMd = read("xwiki/instructions/xwiki-org.md");
 const kbRoot = join(repoRoot, "xwiki/kb");
 const walk = (dir) =>
@@ -146,25 +136,13 @@ const walk = (dir) =>
     const p = join(dir, d.name);
     return d.isDirectory() ? walk(p) : [p];
   });
-for (const abs of walk(kbRoot)) {
-  if (!abs.endsWith(".md")) continue;
-  if (abs === join(kbRoot, "index.md")) continue;        // the map itself
-  const base = basename(abs, ".md");
-  if (base === "_template") continue;                     // ADR template, not a topic
-  if (/[\\/]decisions[\\/]/.test(abs)) continue;          // ADRs are listed individually only in index.md
-  if (!kbIndex.includes(base)) {
-    errors.push(`xwiki/kb/index.md: KB topic '${base}' is not referenced in the map`);
-  }
-}
-
-// ---- Invariant 5: the always-on file stays small ---------------------------------------------
 // xwiki-org.md is injected at the start of every session in every xwiki/* repo, so each line is
 // paid for by every task, including the ones that never needed it. The knowledge-base block says how
 // to reach the KB, never what is in it — search finds that. Raise a budget only with a reason.
 if (Buffer.byteLength(orgMd) > ORG_MAX_BYTES) {
   errors.push(
     `xwiki/instructions/xwiki-org.md: ${Buffer.byteLength(orgMd)} bytes exceeds the ${ORG_MAX_BYTES}-byte budget ` +
-      `for the always-on file — move the detail into an kb/ topic (described in kb/index.md) or a skill`
+      `for the always-on file — move the detail into a kb/ topic or a skill`
   );
 }
 const mapBlock = orgMapBlock(orgMd);
@@ -183,7 +161,7 @@ if (mapBlock === null) {
   }
 }
 
-// ---- Invariant 6: a branch leaves the version alone ------------------------------------------
+// ---- Invariant 5: a branch leaves the version alone ------------------------------------------
 // The version is released, not authored: scripts/release.mjs writes all five fields on master once
 // per release, so a pull request that also writes them conflicts with every other open PR for no
 // reason. Compared merge base -> working tree, so a stray bump is caught before it is even
@@ -236,7 +214,7 @@ if (!baseSha) {
   }
 }
 
-// ---- Invariant 7: KB and references/ paths cited by skills resolve -------------------------
+// ---- Invariant 6: KB and references/ paths cited by skills resolve -------------------------
 // Matches `kb/<dir>/<topic>.md` (resolved against xwiki/) and `references/<file>.md` (resolved
 // against the skill's own directory) wherever they appear, in backticks or bare.
 const kbRefPattern = /kb\/[a-z0-9-]+\/[a-z0-9-]+\.md/g;
@@ -259,7 +237,7 @@ for (const skill of skills) {
   }
 }
 
-// ---- Invariant 9: skill frontmatter parses as YAML -------------------------------------------
+// ---- Invariant 7: skill frontmatter parses as YAML -------------------------------------------
 // A skill whose frontmatter does not parse loads with empty metadata instead of reporting anything,
 // so its description — the only thing Claude matches on to invoke it — is gone and the skill simply
 // never fires. The descriptions here are long English sentences written as unquoted (plain) scalars,
@@ -321,33 +299,13 @@ for (const skill of skills) {
   }
 }
 
-// ---- Invariant 8: the KB index stays a map ---------------------------------------------------
-// kb/index.md is read whenever the KB is consulted, and every topic is already described by its
-// own `summary:` frontmatter, so a long entry is the same text a third time. Budgets, not good
-// intentions, are what stop it growing back: extending the KB always appends here and never cuts.
-if (Buffer.byteLength(kbIndex) > KB_INDEX_MAX_BYTES) {
-  errors.push(
-    `xwiki/kb/index.md: ${Buffer.byteLength(kbIndex)} bytes exceeds the ${KB_INDEX_MAX_BYTES}-byte budget — ` +
-      `an entry picks a topic, it does not summarise it; the rules belong in the topic file`
-  );
-}
-for (const entry of kbIndexEntries(kbIndex)) {
-  if (Buffer.byteLength(entry.text) > KB_ENTRY_MAX_BYTES) {
-    errors.push(
-      `xwiki/kb/index.md: the '${entry.name}' entry is ${Buffer.byteLength(entry.text)} bytes, over the ` +
-        `${KB_ENTRY_MAX_BYTES}-byte per-entry budget — say what the topic is and when to open it, ` +
-        `and leave the rules to xwiki/kb/**/${entry.name}.md`
-    );
-  }
-}
-
-// ---- Invariants 10-12 read every tracked Markdown file ---------------------------------------
+// ---- Invariants 8-10 read every tracked Markdown file ----------------------------------------
 // Tracked files only, so a scratch note in a working tree is neither compared nor budgeted.
 const trackedMd = (git(["ls-files", "-z", "--", "*.md"]) ?? "")
   .split("\0")
   .filter((p) => p && existsSync(join(repoRoot, p)));
 
-// ---- Invariant 10: skill pointers resolve ----------------------------------------------------
+// ---- Invariant 8: skill pointers resolve -----------------------------------------------------
 // Only a name in a pointer phrase is checked: a bare `xwiki-…` is usually a Maven module or a repo.
 // Skills that live in another plugin are listed in md-blocks.mjs, since this repo cannot see them.
 for (const p of trackedMd) {
@@ -359,7 +317,7 @@ for (const p of trackedMd) {
   }
 }
 
-// ---- Invariant 11: no paragraph copied across files ------------------------------------------
+// ---- Invariant 9: no paragraph copied across files -------------------------------------------
 // A block (paragraph or list item, code fences and frontmatter left out) is a copy when at least half
 // of its 8-word sequences also appear in one block of another file. Below 20 words a repeat is a
 // phrase, not a rule. This catches copy-paste only; a paraphrase is a reviewer's job.
@@ -382,9 +340,9 @@ blocks.forEach((block, i) => {
   }
 });
 
-// ---- Invariant 12: skill and KB files stay within their size budget -------------------------
+// ---- Invariant 10: skill and KB files stay within their size budget -------------------------
 // Covers what the model reads as instructions: skills (not their tools/, which hold data and the
-// scripts' own docs) and KB topics. kb/index.md has its own budgets (invariant 8). A file with no
+// scripts' own docs) and KB topics. A file with no
 // entry gets the default, so a new file needs an entry only once it outgrows it.
 // A SKILL.md is read whole once the skill fires, so its ceiling is the published guideline for a skill
 // body (https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices): under 500 lines,
@@ -406,7 +364,7 @@ for (const p of trackedMd) {
 for (const p of Object.keys(budgets)) {
   if (!trackedMd.includes(p)) errors.push(`scripts/size-budgets.json: '${p}' no longer exists — remove its entry`);
 }
-// Compared with the merge base, like invariant 6, so only what this branch did is judged. Skipped when
+// Compared with the merge base, like invariant 5, so only what this branch did is judged. Skipped when
 // the base has no budgets yet: the change introducing them is what sets the over-cap entries.
 const baseBudgetsText = baseSha && git(["show", `${baseSha}:scripts/size-budgets.json`]);
 const baseBudgets = baseBudgetsText ? JSON.parse(baseBudgetsText) : null;
@@ -421,7 +379,7 @@ for (const [p, max] of Object.entries(baseBudgets ? budgets : {})) {
   }
 }
 
-// ---- Invariant 13: KB search metadata is current -------------------------------------------
+// ---- Invariant 11: KB search metadata is current -------------------------------------------
 const topics = corpus(kbRoot);
 for (const t of topics) {
   if (!sidecarCurrent(kbRoot, t)) {
@@ -439,7 +397,7 @@ for (const abs of walk(join(kbRoot, "_meta"))) {
   }
 }
 
-// ---- 14. No repeated key or hook in a JSON manifest-----------------------------------------------
+// ---- 12. No repeated key or hook in a JSON manifest-----------------------------------------------
 for (const f of [".claude-plugin/marketplace.json", "xwiki/.claude-plugin/plugin.json", "kimi.plugin.json",
   "xwiki/hooks/hooks.json", "xwiki/.mcp.json", "xwiki/kb/_meta/skills.json", "scripts/size-budgets.json"]) {
   for (const key of duplicateKeys(read(f))) {
@@ -452,7 +410,7 @@ for (const f of ["xwiki/hooks/hooks.json", "kimi.plugin.json"]) {
   }
 }
 
-// ---- 15. Every cited dev.xwiki.org page is pinned ---------------------------------------------------
+// ---- 13. Every cited dev.xwiki.org page is pinned ---------------------------------------------------
 const pins = JSON.parse(read(PINS_FILE));
 const kbFiles = (git(["ls-files", "--", "xwiki/kb/*.md"]) ?? "").split("\n").filter(Boolean)
   .map((file) => ({ file, markdown: read(file) }));
@@ -461,7 +419,7 @@ for (const { file, key } of unpinnedSources(kbFiles, pins)) {
     `\`node scripts/kb-sources.mjs --pin ${key}@<version>\` with the page version the text was written from`);
 }
 
-// ---- 16. The KB batch backlog is usable --------------------------------------------------------
+// ---- 14. The KB batch backlog is usable --------------------------------------------------------
 // The weekly source sync writes it unattended and the batch routine reads nothing else.
 let backlog;
 try {
@@ -478,4 +436,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`validate.mjs: OK (${skills.length} skills, Claude + Kimi + opencode versions in sync at ` +
-    `${versions["marketplace.metadata.version"]}, KB index complete).`);
+    `${versions["marketplace.metadata.version"]}).`);
