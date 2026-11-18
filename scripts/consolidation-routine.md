@@ -164,9 +164,10 @@ affected skill, old vs new.
   regenerated: run `node scripts/kb-pipeline/gen-metadata.mjs --only <path under kb/>` (Haiku through
   `claude -p`) for each, in the same commit and before the recall check — it edits the generated
   questions of the sections you changed (and the file's, when its title or summary changed), so it too
-  changes what search finds. A `tests/kb-hooks/` probe failing after it, or a `RANK` line it prints, is
-  reported as that script's header says, never re-rolled. If it fails, never drop the edit for that alone: keep it and list the
-  topic and that command under `## For a committer`.
+  changes what search finds. A `tests/kb-hooks/` probe failing after it, or a `RANK` line it prints (copy
+  them verbatim whatever the exit code: a rerun shows nothing), is handled as that script's header says,
+  never re-rolled. Never drop the edit for any of these alone, nor for a failed model call (exit 1): keep
+  it and list the topic, the lines and that command under `## For a committer`.
 - Re-read each diff hunk against the rule it touched: same trigger, same scope, same strength.
 
 ### 6. Have a critic review the batch

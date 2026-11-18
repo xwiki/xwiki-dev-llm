@@ -73,9 +73,9 @@ excerpt when its key points are not the fact.
   "findable in the code (3, 3)".
 - Write the survivors per the README's "Write" bullet and CLAUDE.md's rules: one home per fact, a budget
   raised only under its three tests, stated in the PR body. A `tests/kb-hooks/` probe failing after the
-  sidecars are regenerated, or a `RANK` line `gen-metadata.mjs` prints, is reported as its header says,
-  never re-rolled. None
-  survives: go to step 9.
+  sidecars are regenerated, or a `RANK` line `gen-metadata.mjs` prints (copy the lines verbatim
+  whatever the exit code: a rerun never shows them again), is handled as its header says, never re-rolled. None survives: go to
+  step 9.
 - Run the checks of the consolidation routine's step 5 that apply (the `--lossless` one does not: a batch
   adds facts), with `recall.mjs` on groups (a) and (e), `origin/master` against your branch. A failure
   already on `origin/master` is not yours: name it.

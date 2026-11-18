@@ -88,20 +88,28 @@ test('previousOf hands the model the old metadata of the changed parts only', as
     ...hashes(v1) };
   const v2 = topicOf(`${TOPIC}\n## Format\n\nTwo lines.\n`);
   const previous = previousOf(v2, old);
-  assert.deepEqual(previous, { file: null, sections: { Format: { questions: ['format q'], aliases: ['fmt'] } } });
+  assert.deepEqual(previous, { file: null, sections: { Format: { questions: ['format q'], aliases: ['fmt'] } }, gone: {} });
   const text = prompt(v2, [v2], previous);
   assert.match(text, /section "Format": questions \["format q"\], aliases \["fmt"\]/);
-  assert.doesNotMatch(text, /levels q|file q/);
-  assert.doesNotMatch(prompt(v1, [v1], previousOf(v1, old)), /had metadata before/);
+  assert.match(text, /Only when the new text answers something none of them covers/);
+  assert.doesNotMatch(text, /levels q|file q|no longer exist/);
+  assert.doesNotMatch(prompt(v1, [v1], previousOf(v1, old)), /had metadata before|no longer exist/);
+  // A renamed heading: its old questions go to the model as a former section, not lost.
+  const v3 = topicOf(`${TOPIC}\n## Layout\n\nOne line.\n`);
+  const renamed = previousOf(v3, old);
+  assert.deepEqual(renamed.gone, { Format: { questions: ['format q'], aliases: ['fmt'] } });
+  assert.match(prompt(v3, [v3], renamed), /no longer exist[\s\S]*former section "Format": questions \["format q"\]/);
 });
 
-test('rankDrops reports a previous question its part no longer ranks for, not one it still does', async () => {
+test('rankDrops reports a previous question its part no longer ranks for, not one it still does', async (t) => {
   const { hashes, rankDrops } = await import('../../scripts/kb-pipeline/gen-metadata.mjs');
   const { splitSections: split } = await import('../../xwiki/scripts/kb-search.mjs');
   const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
+  const { rmSync } = await import('node:fs');
   const root = mkdtempSync(join(tmpdir(), 'rank-drops-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'conventions'));
   const text = '---\ntitle: Logging\n---\n\n# Logging\n\n## Levels\n\nUse info.\n\n## Format\n\nOne line.\n';
   writeFileSync(join(root, 'conventions', 'logging.md'), text);
@@ -114,4 +122,9 @@ test('rankDrops reports a previous question its part no longer ranks for, not on
   assert.deepEqual(rankDrops(root, topic, sidecar(['kept wording']), previous),
     [{ part: 'Format', question: 'zebra crossing', before: 1, after: null, kept: false }]);
   assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing', 'kept wording']), previous), []);
+  // A gone heading's question: reported only when no section of the file ranks for it.
+  const gone = { file: null, sections: {}, gone: { Old: { questions: ['zebra crossing'], aliases: [] } } };
+  assert.deepEqual(rankDrops(root, topic, sidecar(['kept wording']), gone),
+    [{ part: 'Old', question: 'zebra crossing', before: 'heading gone', after: null, kept: false }]);
+  assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing']), gone), []);
 });

@@ -19,8 +19,8 @@ if (process.env.FAKE_FAIL) process.exit(1);
 const tag = process.env.FAKE_TAG;
 const heads = [...input.split('Sections, in order:')[1].split('Other files of the knowledge base:')[0].matchAll(/^- (.+)$/gm)].map((m) => m[1]);
 console.log(JSON.stringify({ total_cost_usd: 0, structured_output: {
-  file: { questions: [tag + ' file'], aliases: [] },
-  sections: heads.map((h) => ({ heading: h, questions: [tag + ' ' + h], aliases: [] })),
+  file: { questions: [process.env.FAKE_NOHEAD ? 'summary' : tag + ' file'], aliases: [] },
+  sections: heads.map((h) => ({ heading: h, questions: [process.env.FAKE_NOHEAD ? tag : tag + ' ' + h], aliases: [] })),
   related: [], applies_to: [] } }));
 `;
 
@@ -33,13 +33,17 @@ function setup() {
   writeFileSync(join(dir, 'log'), '');
   const topic = join(dir, 'kb', 'conventions', 'logging.md');
   const sidecar = join(dir, 'kb', '_meta', 'conventions', 'logging.json');
+  let stderr = '';
   return {
+    get stderr() { return stderr; },
     write: (summary, body) => writeFileSync(topic, `---\ntitle: Logging\nsummary: ${summary}\n---\n\n# Logging\n\n${body}\n`),
     run: (tag, env = {}) => {
       writeFileSync(join(dir, 'log'), '');
       const r = spawnSync('node', [script, '--root', join(dir, 'kb')], { encoding: 'utf8',
         env: { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}`, FAKE_LOG: join(dir, 'log'), FAKE_TAG: tag, ...env } });
-      return { status: r.status, calls: readFileSync(join(dir, 'log'), 'utf8').split('\n').filter(Boolean).length };
+      const calls = readFileSync(join(dir, 'log'), 'utf8').split('\n').filter(Boolean).length;
+      stderr = r.stderr;
+      return { status: r.status, calls };
     },
     raw: () => readFileSync(sidecar, 'utf8'),
     json: () => JSON.parse(readFileSync(sidecar, 'utf8')),
@@ -94,4 +98,16 @@ test('generate: a current sidecar without hashes gets them, its generated text u
   k.setRaw(unhashed);
   assert.deepEqual(k.run('g2'), { status: 0, calls: 0 });
   assert.deepEqual(k.json(), { ...unhashed, file_hash: file, section_hashes: sections });
+});
+
+test('generate: a previous question its section no longer finds exits 2 with a RANK line, sidecar written', () => {
+  const k = setup();
+  k.write('About logs.', `${LEVELS}\n\n${FORMAT}`);
+  k.run('zebra', { FAKE_NOHEAD: '1' });
+  k.write('About logs.', `${LEVELS}\n\n## Format\n\nTwo lines.`);
+  assert.deepEqual(k.run('g2', { FAKE_NOHEAD: '1' }), { status: 2, calls: 1 });
+  assert.match(k.stderr, /RANK conventions\/logging\.md#Format: "zebra" \d+ → gone \(dropped\)/);
+  assert.deepEqual(k.json().sections.Format.questions, ['g2']);
+  // The sidecar is current now: a rerun calls nothing and shows nothing, which is why RANK has its own code.
+  assert.deepEqual(k.run('g3'), { status: 0, calls: 0 });
 });
