@@ -19,7 +19,8 @@
       "questions": [
         "What version string do I write in @since for a method I just added?",
         "Which version should I put in the Affects Version field when reporting a bug?",
-        "How do I deprecate a method that was changed on two stable branches?"
+        "How do I deprecate a method that was changed on two stable branches?",
+        "What version string goes in @since for a new class I'm writing on the current dev branch?"
       ],
       "aliases": [
         "since version",

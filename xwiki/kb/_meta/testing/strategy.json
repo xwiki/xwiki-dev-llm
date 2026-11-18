@@ -29,7 +29,8 @@
       "questions": [
         "How do I name a test class in XWiki so Maven runs it as a unit test or as an integration test?",
         "How should I name my test methods in XWiki?",
-        "What is the difference between a *Test class and an *IT class?"
+        "What is the difference between a *Test class and an *IT class?",
+        "Why does my *IT class not run with a plain mvn test?"
       ],
       "aliases": [
         "Surefire vs Failsafe",

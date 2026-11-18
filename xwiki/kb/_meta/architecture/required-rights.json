@@ -19,7 +19,8 @@
       "questions": [
         "How do I declare which rights a wiki page shipped in my extension needs?",
         "Why does my extension's page silently stop working after I enable enforced rights?",
-        "How can I check in a test which rights an installed page actually enforces?"
+        "How can I check in a test which rights an installed page actually enforces?",
+        "My page in the extension needs Script right to run its Velocity, so what required rights level should I declare?"
       ],
       "aliases": [
         "page rights declaration",
