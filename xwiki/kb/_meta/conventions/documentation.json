@@ -55,7 +55,8 @@
       "questions": [
         "What must every step of a how-to procedure look like?",
         "Do I need a screenshot on the last step of a procedure?",
-        "What should the opening sentence of a how-to or topic page say?"
+        "When should I use a code block instead of a screenshot?",
+        "What should a reference or explanation page contain and how should it be laid out?"
       ],
       "aliases": [
         "how-to structure",
@@ -78,7 +79,8 @@
     "Page-structure fields": {
       "questions": [
         "Which fields does an xwiki.org documentation page have and what does each one mean?",
-        "Where do I set the page type and target audience in the documentation application?"
+        "Where do I set the page type and target audience in the documentation application?",
+        "What is the difference between Highlights, More and Related links on a documentation page?"
       ],
       "aliases": [
         "DocumentationClass",
