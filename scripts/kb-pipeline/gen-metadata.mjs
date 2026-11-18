@@ -70,7 +70,7 @@ export const SCHEMA = {
         type: "object",
         additionalProperties: false,
         required: ["heading", "questions", "aliases"],
-        properties: { heading: { type: "string" }, questions: stringList(2, 5), aliases: stringList(0, 5) },
+        properties: { heading: { type: "string" }, questions: stringList(2, 4), aliases: stringList(0, 5) },
       },
     },
     related: stringList(0, 4),
@@ -110,7 +110,7 @@ For the whole file and for each of its sections, write:
 - questions: how a developer would ask, in their own words, while coding, for what this file or section
   answers. Write them as that developer would — someone who may not know XWiki's name for the thing:
   use the everyday terms they would use, not just the section's own jargon. Vary the angle: the task
-  they are doing, the problem they hit, the decision they face. File: 2–5. Each section: 2–5.
+  they are doing, the problem they hit, the decision they face. File: 2–5. Each section: 2–4.
 - aliases: other names a developer might search for — synonyms, older or other names, abbreviations,
   the generic term for an XWiki-specific name and vice versa. 0–5; none rather than padding.
 
