@@ -7,9 +7,8 @@ To read or change pages or objects on a running XWiki, use `xwiki-rest-api`; to 
 
 To deploy an XWiki extension (XAR, JAR), to a running XWiki install, do the following:
 0) If the extension is a core extension (i.e. located in webapps/xwiki/WEB-INF/lib) then simply replace the jar with the new one and don't go over the next steps and ask the dev to restart XWiki. Find that directory from the process listening on the port (`lsof -nP -iTCP:8080 -sTCP:LISTEN -t`, then `lsof -a -p <pid> -d cwd -Fn`), never by guessing. Build the jar on the instance's branch; for a module that a `-legacy` module weaves, the jar to replace is the legacy one.
-1) Find the id of the extension to deploy: it's the maven groupId followed by ":", followed by the maven artifactId of the extension, which you can find in the pom.xml
-2) Also find the version in the version property in the pom.xml
-3) Generate an XML file named installjobrequest.xml in the target dir of the extension to deploy,  exactly like the following one (replace the string "id here" and "version here" by the extension id and the version value):
+1) The extension id is `<groupId>:<artifactId>` and its version the `<version>`, both from its pom.xml.
+2) Generate `installjobrequest.xml` in the extension's target dir, exactly like the following one, with the id and version in place of "id here" and "version here":
 
 ```
 
@@ -60,7 +59,7 @@ To deploy an XWiki extension (XAR, JAR), to a running XWiki install, do the foll
   </property>
 </jobRequest>
 ```
-4) If the install fails because the extension is already installed, first uninstall it by generating an XML file named uninstalljobrequest.xml in the target dir, exactly like installjobrequest.xml but without the `extensions.excluded` and `interactive` properties, then run:
+3) If the install fails because the extension is already installed, first uninstall it by generating `uninstalljobrequest.xml` in the target dir, like installjobrequest.xml but without the `extensions.excluded` and `interactive` properties, then run:
 `curl -i --user "Admin:admin" -X PUT -H "Content-Type: text/xml" "http://localhost:8080/xwiki/rest/jobs?jobType=uninstall&async=false" --upload-file uninstalljobrequest.xml`
-Then re-run the install curl command.
-5) Run `curl -i --user "Admin:admin" -X PUT -H "Content-Type: text/xml" "http://localhost:8080/xwiki/rest/jobs?jobType=install&async=false" --upload-file installjobrequest.xml`
+Then re-run the install curl command, then check it with the browser cache disabled: reinstalled pages are back at version 1.1, and their JSX/SSX URLs (cached 30 days) only change with it, so the browser keeps the old scripts.
+4) Run `curl -i --user "Admin:admin" -X PUT -H "Content-Type: text/xml" "http://localhost:8080/xwiki/rest/jobs?jobType=install&async=false" --upload-file installjobrequest.xml`
