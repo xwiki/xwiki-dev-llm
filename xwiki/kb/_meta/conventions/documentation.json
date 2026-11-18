@@ -171,7 +171,8 @@
       "questions": [
         "How do I document a feature that only exists in a newer XWiki version?",
         "How do I write a version badge that says a behaviour changed?",
-        "Should I remove documentation for old XWiki versions?"
+        "Should I remove documentation for old XWiki versions?",
+        "When should I document the issues I fixed, before or after the release?"
       ],
       "aliases": [
         "version macro",
@@ -269,7 +270,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "d8d98ca6af4e0d9cc7c21a98e26124a874fbd135b859c16ad973cab111d3c2b7",
+  "source_hash": "fa1895c931563b7d414c571c24f94ae4cb0a2eabd6d89aa40475e70e96e1fdd5",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
@@ -285,7 +286,7 @@
     "Attachments, images and videos": "d836da9011766878214c3bc6e9a74024369560294ec516a20697855d3d213969",
     "Screenshots: capture width, framing and the red box": "27ee5fc561705604eaebefd4b761a267ebed2e2fe1be4d92d96f0758fc2ecccb",
     "Choose the right location": "e48d459fdc5c6274d53931779e501e9840708a4d665df61f274083610c99af06",
-    "Versioning and perspective": "515b9a62fbbf377da701d7cfe8a86ded52f26985cfe2948149de95e4edfdf6c1",
+    "Versioning and perspective": "a7578b02471d51649b739531dabf3f4f3b2d7aa47e03ee0f5ed9e84a98352292",
     "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
     "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
     "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
