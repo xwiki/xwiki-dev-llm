@@ -1,0 +1,45 @@
+{
+  "file": {
+    "questions": [
+      "How do I add an autocomplete popup to a CKEditor plugin in XWiki?",
+      "My CKEditor autocomplete fires on every keystroke after the trigger character, how do I set a minimum query length?",
+      "minChars is ignored by AdvancedAutoComplete in the xwiki-slash plugin, what do I do?",
+      "Should I use CKEditor mentions or AdvancedAutoComplete for my editor suggestions?"
+    ],
+    "aliases": [
+      "CKEditor mentions",
+      "slash command menu",
+      "typeahead",
+      "autosuggest",
+      "xwiki-slash"
+    ]
+  },
+  "sections": {
+    "Adding an autocomplete to the CKEditor integration (AdvancedAutoComplete vs mentions)": {
+      "questions": [
+        "Which should I use to add a suggestion dropdown in the CKEditor integration, mentions config or AdvancedAutoComplete?",
+        "My editor autocomplete triggers with an empty query right after I type the marker, how do I stop that?",
+        "How do I wire a dataCallback for a custom suggestion list in an XWiki CKEditor plugin?"
+      ],
+      "aliases": [
+        "CKEditor autocomplete",
+        "editor suggestions",
+        "slash menu plugin"
+      ]
+    }
+  },
+  "proposed": {
+    "related": [
+      "conventions/frontend.md"
+    ],
+    "applies-to": [
+      "**/*.js",
+      "**/*.xml"
+    ]
+  },
+  "source_hash": "e5314dea4997404ef9862965b489dcb9670d66839fd2267079cf81d3e1c97535",
+  "file_hash": "0027d2c4201da6038579c62d2fc12e77c538c5639ef5d4363c014ef8aa0c6f2c",
+  "section_hashes": {
+    "Adding an autocomplete to the CKEditor integration (AdvancedAutoComplete vs mentions)": "0e31ad29961a2caa27913d529bd8e26b009fb217471e87bc0a388898585cd4cb"
+  }
+}
