@@ -22,17 +22,19 @@
 // hashes gets them, with no model call.
 //
 // Edited, not rerolled: a changed part's previous questions and aliases go to the model, which keeps
-// those the new text still answers word for word, drops the others and adds what is new. Each previous
-// question is then searched with the part's old and new metadata; a part now ranking lower for one it
-// ranked within RANK_WATCH is printed as a `RANK` line and the run exits 1, the sidecar written. A
-// dropped question the text no longer answers is expected; anything else is a regression to fix by hand
-// in the sidecar (the validator checks hashes, not wording).
+// those the new text still answers word for word and, at the cap, replaces the least central one with
+// what is new. The questions of a section whose heading is gone (renamed, merged, split) go too, for the
+// model to place. Each previous question is then searched with the part's old and new metadata (a gone
+// heading's: anywhere in the file); a part now ranking lower for one it ranked within RANK_WATCH is
+// printed as a `RANK` line and the run exits 2, the sidecar written — so a rerun finds it current and
+// prints nothing: the RANK lines are the only record, whatever the exit code. Exit 1 is a failed model
+// call, to rerun — after copying any RANK lines the same run printed.
 //
-// Residual risk: kb-search counts a file's generated questions in every section of that file, document
-// frequencies included, so regenerating them (a title or summary edit, or `--force`) can still move the
-// prompt-hook probes of other files across MIN_SCORE. When a tests/kb-hooks/ probe fails or a `RANK` line
-// is printed after a regeneration, the change keeps that sidecar and lists them in its PR (or run report)
-// for a committer; it never regenerates again until the tests pass, which tunes the KB to the probes.
+// After a `RANK` line or a tests/kb-hooks/ probe failure: a dropped question the text no longer answers
+// is expected; otherwise put the question back in the sidecar by hand (the validator checks hashes, not
+// wording). Whatever is not fixed, the change lists verbatim in its PR (or run report) for a committer.
+// Never regenerate to make it pass: that tunes the KB to the probes. Residual risk: kb-search counts a
+// file's questions in every section of that file, so regenerating them can move other files' probes.
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
@@ -139,15 +141,24 @@ ${topic.text}
 function previousBlock(previous) {
   const parts = [...(previous.file ? [["the whole file", previous.file]] : []),
     ...Object.entries(previous.sections).map(([h, m]) => [`section "${h}"`, m])];
-  if (!parts.length) return "";
-  const list = parts.map(([name, m]) => `- ${name}: questions ${JSON.stringify(m.questions || [])}, aliases ${
-    JSON.stringify(m.aliases || [])}`).join("\n");
-  return `
-These parts had metadata before their text changed. Keep, word for word, every question and alias the
-new text still answers; drop only those it no longer answers; then add what the new text answers that
-they miss, within the counts above:
-${list}
-`;
+  const line = (name, m) => `- ${name}: questions ${JSON.stringify(m.questions || [])}, aliases ${
+    JSON.stringify(m.aliases || [])}`;
+  const gone = Object.entries(previous.gone || {});
+  if (!parts.length && !gone.length) return "";
+  const changed = parts.length ? `
+These parts had metadata before their text changed. Keep, word for word, every question the new text
+still answers and every alias that still names something in it; drop the others; then add what the new
+text answers that they miss. Only when the new text answers something none of them covers and the part
+is already at its maximum count, replace its previous question least central to the new text:
+${parts.map(([name, m]) => line(name, m)).join("\n")}
+` : "";
+  const moved = gone.length ? `
+These sections no longer exist under these headings (renamed, merged or split). Give each of their
+questions and aliases, word for word, to the section that now holds what it asks about, if any, under
+the same rules:
+${gone.map(([h, m]) => line(`former section "${h}"`, m)).join("\n")}
+` : "";
+  return changed + moved;
 }
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -192,9 +203,12 @@ export function reusable(topic, old) {
   return { ...kept, complete: kept.file !== null && Object.keys(kept.sections).length === (topic.sections || []).length };
 }
 
-/** The previous metadata of the parts of `topic` that changed since `old`: `{ file, sections }`. */
+/**
+ * The previous metadata of the parts of `topic` that changed since `old`: `{ file, sections, gone }`,
+ * `gone` holding the sections whose heading no longer exists.
+ */
 export function previousOf(topic, old) {
-  const out = { file: null, sections: {} };
+  const out = { file: null, sections: {}, gone: {} };
   if (!old || typeof old !== "object") return out;
   if (old.file && old.file_hash !== fileHash(topic)) out.file = old.file;
   for (const s of topic.sections || []) {
@@ -202,19 +216,23 @@ export function previousOf(topic, old) {
       out.sections[s.heading] = old.sections[s.heading];
     }
   }
+  const now = new Set((topic.sections || []).map((s) => s.heading));
+  for (const [h, m] of Object.entries(old.sections || {})) if (!now.has(h) && m?.questions?.length) out.gone[h] = m;
   return out;
 }
 
 /**
  * The previous questions of `topic`'s changed parts for which the part ranks lower in kb-search with
  * `sidecar` than with the previous metadata put back, among those it ranked within RANK_WATCH:
- * `[{ part, question, before, after, kept }]`, a rank 1-based or null past RANK_DEPTH. Searches a copy
- * of `root`, so the KB is not touched.
+ * `[{ part, question, before, after, kept }]`, a rank 1-based or null past RANK_DEPTH. A gone heading's
+ * question has no "before" to rebuild: it is reported when no section of the file ranks within
+ * RANK_WATCH for it (`before` "heading gone"). Searches a copy of `root`, so the KB is not touched.
  */
 export function rankDrops(root, topic, sidecar, previous) {
   const asked = [...(previous.file?.questions || []).map((q) => ["(file)", q]),
     ...Object.entries(previous.sections).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]))];
-  if (!asked.length) return [];
+  const moved = Object.entries(previous.gone || {}).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]));
+  if (!asked.length && !moved.length) return [];
   const tmp = mkdtempSync(join(tmpdir(), "kb-rank-"));
   try {
     cpSync(root, tmp, { recursive: true });
@@ -229,9 +247,13 @@ export function rankDrops(root, topic, sidecar, previous) {
       return i < 0 ? null : i + 1;
     };
     const now = (part) => (part === "(file)" ? sidecar.file : sidecar.sections[part])?.questions || [];
-    return asked.map(([part, question]) => ({ part, question, before: rank(before, part, question),
+    const everywhere = [sidecar.file, ...Object.values(sidecar.sections)].flatMap((m) => m?.questions || []);
+    return [...asked.map(([part, question]) => ({ part, question, before: rank(before, part, question),
       after: rank(after, part, question), kept: now(part).includes(question) }))
-      .filter((r) => r.before !== null && r.before <= RANK_WATCH && (r.after === null || r.after > r.before));
+      .filter((r) => r.before !== null && r.before <= RANK_WATCH && (r.after === null || r.after > r.before)),
+    ...moved.map(([part, question]) => ({ part, question, before: "heading gone", after: rank(after, "(file)", question),
+      kept: everywhere.includes(question) }))
+      .filter((r) => r.after === null || r.after > RANK_WATCH)];
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }
@@ -378,21 +400,13 @@ async function generate(o) {
       console.log(`kept ${topic.rel} (no section, title or summary changed)`);
       return;
     }
-    for (let attempt = 1; ; attempt++) {
+    const previous = previousOf(topic, old);
+    let sidecar = null;
+    for (let attempt = 1; !sidecar; attempt++) {
       try {
-        const previous = previousOf(topic, old);
         const env = await claude(prompt(topic, all, previous), o.model);
         cost += env.total_cost_usd || 0;
-        const sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known), old);
-        const lower = rankDrops(o.root, topic, sidecar, previous);
-        writeSidecar(o.root, topic.rel, sidecar);
-        console.log(`ok   ${topic.rel} (${topic.headings.length} sections)`);
-        for (const d of lower) {
-          console.error(`RANK ${topic.rel}#${d.part}: "${d.question}" ${d.before} → ${d.after ?? "gone"}${
-            d.kept ? "" : " (dropped)"}`);
-        }
-        drops += lower.length;
-        return;
+        sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known), old);
       } catch (e) {
         if (attempt < 2) continue;
         failed++;
@@ -400,10 +414,26 @@ async function generate(o) {
         return;
       }
     }
+    writeSidecar(o.root, topic.rel, sidecar);
+    console.log(`ok   ${topic.rel} (${topic.headings.length} sections)`);
+    let lower;
+    try {
+      lower = rankDrops(o.root, topic, sidecar, previous);
+    } catch (e) {
+      lower = [{ part: "*", question: `rank check failed: ${e.message}`, before: "?", after: "?", kept: true }];
+    }
+    for (const d of lower) {
+      console.error(`RANK ${topic.rel}#${d.part}: "${d.question}" ${d.before} → ${d.after ?? "gone"}${
+        d.kept ? "" : " (dropped)"}`);
+    }
+    drops += lower.length;
   });
   console.log(`cost: $${cost.toFixed(4)}${failed ? `, ${failed} failed — rerun to retry them` : ""}`);
-  if (drops) console.error(`${drops} previous question(s) rank lower — see this script's header`);
-  if (failed || drops) process.exitCode = 1;
+  if (drops) {
+    console.error(`${drops} previous question(s) rank lower; a rerun will not show them again — see this script's header`);
+  }
+  if (failed) process.exitCode = 1;
+  else if (drops) process.exitCode = 2;
 }
 
 function applyFrontmatter(o) {
