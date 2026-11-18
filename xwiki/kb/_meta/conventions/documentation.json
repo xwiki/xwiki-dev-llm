@@ -169,15 +169,15 @@
     },
     "Versioning and perspective": {
       "questions": [
-        "How do I document a behavior that changed in a specific XWiki version?",
-        "How do I mark a new feature as available since a given version in docs?",
-        "When should I remove old version notes or unsupported version content from docs?"
+        "How do I document a feature that only exists in a newer XWiki version?",
+        "How do I write a version badge that says a behaviour changed?",
+        "Should I remove documentation for old XWiki versions?",
+        "When should I document the issues I fixed, before or after the release?"
       ],
       "aliases": [
         "version macro",
-        "version badge",
-        "since version",
-        "deprecated docs"
+        "since before",
+        "deprecated content"
       ]
     },
     "Saving changes: minor directly, major via a Change Request": {
