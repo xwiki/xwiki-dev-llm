@@ -21,24 +21,35 @@
 // varied word moves search scores; `--force` regenerates everything. A current sidecar without these
 // hashes gets them, with no model call.
 //
+// Edited, not rerolled: a changed part's previous questions and aliases go to the model, which keeps
+// those the new text still answers word for word, drops the others and adds what is new. Each previous
+// question is then searched with the part's old and new metadata; a part now ranking lower for one it
+// ranked within RANK_WATCH is printed as a `RANK` line and the run exits 1, the sidecar written. A
+// dropped question the text no longer answers is expected; anything else is a regression to fix by hand
+// in the sidecar (the validator checks hashes, not wording).
+//
 // Residual risk: kb-search counts a file's generated questions in every section of that file, document
 // frequencies included, so regenerating them (a title or summary edit, or `--force`) can still move the
-// prompt-hook probes of other files across MIN_SCORE. When a tests/kb-hooks/ probe fails after a
-// regeneration, the change keeps that sidecar and lists the failing probe in its PR (or run report) for
-// a committer; it never regenerates again until the tests pass, which tunes the KB to the probes.
+// prompt-hook probes of other files across MIN_SCORE. When a tests/kb-hooks/ probe fails or a `RANK` line
+// is printed after a regeneration, the change keeps that sidecar and lists them in its PR (or run report)
+// for a committer; it never regenerates again until the tests pass, which tunes the KB to the probes.
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { invokedDirectly } from "../../xwiki/scripts/invoked-directly.mjs";
 import {
-  bodyHash, defaultRoot, isCorpusFile, loadSidecar, parseFrontmatter, sidecarOf, splitSections,
+  bodyHash, buildIndex, defaultRoot, isCorpusFile, loadSidecar, parseFrontmatter, search, sidecarOf,
+  splitSections,
 } from "../../xwiki/scripts/kb-search.mjs";
 
 const MODEL = "haiku";
 const CONCURRENCY = 4;
+// A previous question counts when its part ranked within RANK_WATCH hits; searched RANK_DEPTH deep.
+const RANK_WATCH = 10;
+const RANK_DEPTH = 30;
 
 const stringList = (min, max) => ({ type: "array", items: { type: "string" }, minItems: min, maxItems: max });
 
@@ -90,7 +101,7 @@ export function corpus(root) {
   });
 }
 
-export function prompt(topic, all) {
+export function prompt(topic, all, previous = { file: null, sections: {} }) {
   const others = all.filter((t) => t.rel !== topic.rel).map((t) => `- ${t.rel} — ${t.title}`).join("\n");
   return `You write search metadata for one file of the XWiki developers' knowledge base. A search engine
 matches developers' questions against it; nobody reads it but the engine.
@@ -111,7 +122,7 @@ Also propose:
   about editing code or files in a repository (a process, a server, a policy).
 
 Return the sections in the order given, each with its heading copied exactly.
-
+${previousBlock(previous)}
 Sections, in order:
 ${topic.headings.map((h) => `- ${h}`).join("\n")}
 
@@ -122,6 +133,21 @@ The file (${topic.rel}):
 <file>
 ${topic.text}
 </file>`;
+}
+
+/** The prompt's list of the changed parts' previous metadata, or nothing. */
+function previousBlock(previous) {
+  const parts = [...(previous.file ? [["the whole file", previous.file]] : []),
+    ...Object.entries(previous.sections).map(([h, m]) => [`section "${h}"`, m])];
+  if (!parts.length) return "";
+  const list = parts.map(([name, m]) => `- ${name}: questions ${JSON.stringify(m.questions || [])}, aliases ${
+    JSON.stringify(m.aliases || [])}`).join("\n");
+  return `
+These parts had metadata before their text changed. Keep, word for word, every question and alias the
+new text still answers; drop only those it no longer answers; then add what the new text answers that
+they miss, within the counts above:
+${list}
+`;
 }
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -164,6 +190,51 @@ export function reusable(topic, old) {
     }
   }
   return { ...kept, complete: kept.file !== null && Object.keys(kept.sections).length === (topic.sections || []).length };
+}
+
+/** The previous metadata of the parts of `topic` that changed since `old`: `{ file, sections }`. */
+export function previousOf(topic, old) {
+  const out = { file: null, sections: {} };
+  if (!old || typeof old !== "object") return out;
+  if (old.file && old.file_hash !== fileHash(topic)) out.file = old.file;
+  for (const s of topic.sections || []) {
+    if (old.sections && Object.hasOwn(old.sections, s.heading) && old.section_hashes?.[s.heading] !== sectionHash(s)) {
+      out.sections[s.heading] = old.sections[s.heading];
+    }
+  }
+  return out;
+}
+
+/**
+ * The previous questions of `topic`'s changed parts for which the part ranks lower in kb-search with
+ * `sidecar` than with the previous metadata put back, among those it ranked within RANK_WATCH:
+ * `[{ part, question, before, after, kept }]`, a rank 1-based or null past RANK_DEPTH. Searches a copy
+ * of `root`, so the KB is not touched.
+ */
+export function rankDrops(root, topic, sidecar, previous) {
+  const asked = [...(previous.file?.questions || []).map((q) => ["(file)", q]),
+    ...Object.entries(previous.sections).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]))];
+  if (!asked.length) return [];
+  const tmp = mkdtempSync(join(tmpdir(), "kb-rank-"));
+  try {
+    cpSync(root, tmp, { recursive: true });
+    writeSidecar(tmp, topic.rel, sidecar);
+    const after = buildIndex(tmp);
+    writeSidecar(tmp, topic.rel, { ...sidecar, file: previous.file || sidecar.file,
+      sections: { ...sidecar.sections, ...previous.sections } });
+    const before = buildIndex(tmp);
+    const rank = (index, part, q) => {
+      const i = search(index, q, { k: RANK_DEPTH })
+        .findIndex((h) => h.file === topic.rel && (part === "(file)" || h.section === part));
+      return i < 0 ? null : i + 1;
+    };
+    const now = (part) => (part === "(file)" ? sidecar.file : sidecar.sections[part])?.questions || [];
+    return asked.map(([part, question]) => ({ part, question, before: rank(before, part, question),
+      after: rank(after, part, question), kept: now(part).includes(question) }))
+      .filter((r) => r.before !== null && r.before <= RANK_WATCH && (r.after === null || r.after > r.before));
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 /** `fresh` (a new sidecar) with the parts of `old` that `reusable` keeps, and the topic's hashes. */
@@ -299,6 +370,7 @@ async function generate(o) {
   console.log(`${all.length} topics, ${todo.length} to generate`);
   let cost = 0;
   let failed = 0;
+  let drops = 0;
   await pool(todo, o.concurrency, async (topic) => {
     const old = o.force ? null : readRaw(o.root, topic.rel);
     if (old && reusable(topic, old).complete) {
@@ -308,11 +380,18 @@ async function generate(o) {
     }
     for (let attempt = 1; ; attempt++) {
       try {
-        const env = await claude(prompt(topic, all), o.model);
+        const previous = previousOf(topic, old);
+        const env = await claude(prompt(topic, all, previous), o.model);
         cost += env.total_cost_usd || 0;
         const sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known), old);
+        const lower = rankDrops(o.root, topic, sidecar, previous);
         writeSidecar(o.root, topic.rel, sidecar);
         console.log(`ok   ${topic.rel} (${topic.headings.length} sections)`);
+        for (const d of lower) {
+          console.error(`RANK ${topic.rel}#${d.part}: "${d.question}" ${d.before} → ${d.after ?? "gone"}${
+            d.kept ? "" : " (dropped)"}`);
+        }
+        drops += lower.length;
         return;
       } catch (e) {
         if (attempt < 2) continue;
@@ -323,7 +402,8 @@ async function generate(o) {
     }
   });
   console.log(`cost: $${cost.toFixed(4)}${failed ? `, ${failed} failed — rerun to retry them` : ""}`);
-  if (failed) process.exitCode = 1;
+  if (drops) console.error(`${drops} previous question(s) rank lower — see this script's header`);
+  if (failed || drops) process.exitCode = 1;
 }
 
 function applyFrontmatter(o) {
