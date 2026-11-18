@@ -522,6 +522,11 @@ it. For a conversion, the split into pages *is* that decision.
   day), provided the unreleased content carries `{{version since="…"}}`. Keep the **released** version as
   the baseline prose, which is also what screenshots can show, and badge the additions: describing
   unreleased UI as if it were current is the failure mode.
+- **Document a version's changes before releasing it, in one pass** — the developer, for the issues
+  they fixed, not whoever releases. Writing the pages and shooting their screenshots on a running
+  instance is the first end-to-end use of the version, so it finds bugs: leave time to fix them in
+  that version (no new issue: [[../servers/jira]] "Whether to file an issue at all"). One pass starts
+  one instance for all the issues.
 - **Version bounds** — for **XWiki itself**, only specify versions **at or after the LTS**, and only
   while that version is within the currently supported **LTS cycle**. For **extensions**, specify the
   **released version**. Per the guide's

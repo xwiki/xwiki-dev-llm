@@ -7,7 +7,8 @@ description: "EXPLICIT INVOCATION ONLY. Audit the documentation of fixed XWiki i
 
 **This skill is opt-in.** It is never the answer to "document this" — that is `xwiki-doc-writing`.
 It runs only when the developer names it, because it reads the full diff of every issue in scope,
-writes to xwiki.org and writes back to JIRA.
+writes to xwiki.org and writes back to JIRA. A SWEEP belongs before the version's release, while what
+it finds can still be fixed (`kb/conventions/documentation.md#Versioning and perspective`).
 
 What it produces, per fixed issue: a **documentation verdict** and a **release-note verdict**, each
 either a URL or `N/A`, each *proven* from the change itself, and each written into the issue's JIRA
