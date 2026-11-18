@@ -74,3 +74,44 @@ test('a regenerated sidecar keeps unchanged sections and the file part while tit
   const { section_hashes: _s, file_hash: _f, ...unhashed } = old;
   assert.deepEqual(mergeSidecar(v1, fresh, unhashed).sections.Levels.questions, ['new levels q']);
 });
+
+test('previousOf hands the model the old metadata of the changed parts only', async () => {
+  const { hashes, previousOf, prompt } = await import('../../scripts/kb-pipeline/gen-metadata.mjs');
+  const { splitSections: split } = await import('../../xwiki/scripts/kb-search.mjs');
+  const topicOf = (text) => {
+    const sections = split(parseFrontmatter(text).body, 'Logging');
+    return { rel: 'conventions/logging.md', text, title: 'Logging', summary: '', sections, headings: sections.map((s) => s.heading) };
+  };
+  const v1 = topicOf(`${TOPIC}\n## Format\n\nOne line.\n`);
+  const old = { file: { questions: ['file q'], aliases: [] },
+    sections: { Levels: { questions: ['levels q'], aliases: [] }, Format: { questions: ['format q'], aliases: ['fmt'] } },
+    ...hashes(v1) };
+  const v2 = topicOf(`${TOPIC}\n## Format\n\nTwo lines.\n`);
+  const previous = previousOf(v2, old);
+  assert.deepEqual(previous, { file: null, sections: { Format: { questions: ['format q'], aliases: ['fmt'] } } });
+  const text = prompt(v2, [v2], previous);
+  assert.match(text, /section "Format": questions \["format q"\], aliases \["fmt"\]/);
+  assert.doesNotMatch(text, /levels q|file q/);
+  assert.doesNotMatch(prompt(v1, [v1], previousOf(v1, old)), /had metadata before/);
+});
+
+test('rankDrops reports a previous question its part no longer ranks for, not one it still does', async () => {
+  const { hashes, rankDrops } = await import('../../scripts/kb-pipeline/gen-metadata.mjs');
+  const { splitSections: split } = await import('../../xwiki/scripts/kb-search.mjs');
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = mkdtempSync(join(tmpdir(), 'rank-drops-'));
+  mkdirSync(join(root, 'conventions'));
+  const text = '---\ntitle: Logging\n---\n\n# Logging\n\n## Levels\n\nUse info.\n\n## Format\n\nOne line.\n';
+  writeFileSync(join(root, 'conventions', 'logging.md'), text);
+  const sections = split(parseFrontmatter(text).body, 'Logging');
+  const topic = { rel: 'conventions/logging.md', text, title: 'Logging', summary: '', sections, headings: sections.map((s) => s.heading) };
+  const sidecar = (format) => ({ file: { questions: [], aliases: [] },
+    sections: { Levels: { questions: ['which severity'], aliases: [] }, Format: { questions: format, aliases: [] } },
+    source_hash: bodyHash(text), ...hashes(topic) });
+  const previous = { file: null, sections: { Format: { questions: ['zebra crossing', 'kept wording'], aliases: [] } } };
+  assert.deepEqual(rankDrops(root, topic, sidecar(['kept wording']), previous),
+    [{ part: 'Format', question: 'zebra crossing', before: 1, after: null, kept: false }]);
+  assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing', 'kept wording']), previous), []);
+});

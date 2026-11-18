@@ -162,10 +162,10 @@ affected skill, old vs new.
   the PR body or run log, and judge only what your change adds.
 - A KB topic whose body, title or summary you changed fails `validate.mjs` until its search sidecar is
   regenerated: run `node scripts/kb-pipeline/gen-metadata.mjs --only <path under kb/>` (Haiku through
-  `claude -p`) for each, in the same commit and before the recall check — it rewrites the generated
+  `claude -p`) for each, in the same commit and before the recall check — it edits the generated
   questions of the sections you changed (and the file's, when its title or summary changed), so it too
-  changes what search finds. A `tests/kb-hooks/` probe failing after it is reported as that script's
-  header says, never re-rolled. If it fails, never drop the edit for that alone: keep it and list the
+  changes what search finds. A `tests/kb-hooks/` probe failing after it, or a `RANK` line it prints, is
+  reported as that script's header says, never re-rolled. If it fails, never drop the edit for that alone: keep it and list the
   topic and that command under `## For a committer`.
 - Re-read each diff hunk against the rule it touched: same trigger, same scope, same strength.
 
