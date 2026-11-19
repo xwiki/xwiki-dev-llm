@@ -1042,6 +1042,21 @@ function signatureLabel(signature, was) {
   return at ? `the ${tool} failure in \`${at}\`` : `the ${tool} failure`;
 }
 
+/**
+ * How often Develocity saw it fail. The days are the window the runs were counted in, not how long
+ * it has failed: "11/11 over 28d, first failed 2026-11-17" read as 28 days of failures that began two
+ * days ago (2026-11-19). A test failing every run it has had has no history before its first failure.
+ */
+function develocityClause(dv) {
+  const since = dv.firstSeen ? ` since ${dv.firstSeen}` : '';
+  if (dv.runs && dv.failures === dv.runs) {
+    return dv.firstSeenDays != null && dv.firstSeenDays < dv.windowDays - 1
+      ? `failed all ${plural(dv.runs, 'run')}${since}`
+      : `failed all ${plural(dv.runs, 'run')} in ${dv.windowDays}d`;
+  }
+  return `${dv.failures}/${dv.runs} runs in ${dv.windowDays}d${dv.firstSeen ? `, first failed ${dv.firstSeen}` : ''}`;
+}
+
 /** The *What* cell: what is red, and the one fact a dashboard does not have. */
 function whatOf(incident, moves = []) {
   const sonar = incident.sonar;
@@ -1060,7 +1075,7 @@ function whatOf(incident, moves = []) {
     what = `${kindOf(incident)} \`${subjectOf(incident)}\``;
   }
   const dv = incident.develocity;
-  if (dv) what += `, ${dv.failures}/${dv.runs} over ${dv.windowDays}d${dv.firstSeen ? `, first failed ${dv.firstSeen}` : ''}`;
+  if (dv) what += `, ${develocityClause(dv)}`;
   if (incident.jiraClosed) {
     what += `, ${linked(incident.jiraClosed.key, browse(incident.jiraClosed.key))} closed`
       + `${unfixed(incident.jiraClosed) ? ` as ${incident.jiraClosed.resolution}` : ''}`;

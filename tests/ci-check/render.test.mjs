@@ -108,6 +108,20 @@ test('a failure Develocity saw weeks ago is aged from it, not new, and keeps its
   assert.match(renderDigest(order24([fresh]), NOBODY_YESTERDAY), /\| 🆕/);
 });
 
+test("Develocity's window qualifies the run count, never the failure's age", () => {
+  // 2026-11-19: "RecordsMacroIT#createEntries breakage, 11/11 over 28d, first failed 2026-11-17".
+  const records = { ...DRAG, id: 'platform/master/org.xwiki.records.test.ui.RecordsMacroIT#createEntries',
+    develocity: { failures: 11, runs: 11, windowDays: 28, firstSeen: '2026-11-17', firstSeenDays: 2, news: 'known' } };
+  const rowOf = incident => renderDigest(order24([incident]), NOBODY_YESTERDAY).split('\n')
+    .find(line => line.includes(incident.id.split('#')[1]));
+  const young = rowOf(records);
+  assert.match(young, /failed all 11 runs since 2026-11-17/);
+  assert.doesNotMatch(young, /28d/);
+  const old = { ...records, develocity: { ...records.develocity, firstSeen: '2026-10-22', firstSeenDays: 28 } };
+  assert.match(rowOf(old), /failed all 11 runs in 28d/);
+  assert.match(rowOf(DRAG), /55\/667 runs in 28d, first failed 2026-09-27/);
+});
+
 test('what went green is said in words, and a JUnit engine reporting itself is not a test', () => {
   const previous = { available: true, at: '2026-10-23T06:00:00Z', state: {
     'platform/master/main:Build/maven:xwiki-platform-activeinstalls2-api': 'build-break/build-break//',
