@@ -32,7 +32,8 @@
       "questions": [
         "How do I deprecate a Java method in XWiki, and what goes in the javadoc?",
         "When I deprecate a method on master and on a stable branch, what do I write in the since attribute?",
-        "Should the version number be repeated in the @deprecated javadoc text too?"
+        "Should the version number be repeated in the @deprecated javadoc text too?",
+        "Does a new page object or test helper class need an @since, or only public API?"
       ],
       "aliases": [
         "deprecated annotation",
@@ -65,11 +66,11 @@
       "**/*.java"
     ]
   },
-  "source_hash": "26494a75d1c89e05f91454ec2c17e9dede200868a197c85d4acbacb2a0dc6da0",
+  "source_hash": "215dbaaefdc4bbc761598fe16d1bcdcbc0fca824bf020289b186eb526ac45244",
   "file_hash": "1459980600af03867789060917666021f78060bf38ac22562b25d91b1d03f73f",
   "section_hashes": {
     "Versions in code and issues (@since / @Deprecated, affected version)": "b9e4cfe8c8cf88a58efda02be6ec7e2a79ee6293e4673788b0acc42968a24bc6",
-    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "65b853dd07da27dd0ef3f17093b596e8e12f888416dc24619146f897b65d31c0",
+    "`@Deprecated` — the annotation carries the version, the Javadoc tag carries the reason": "a558a3df7edd1b01e21f31135518f92cac0e19d255119c0b465e627898a57ac4",
     "Affected version of an issue": "b378f6370bb5c31b05d6bdd2174bc0b92cc6759b5a71555955bd1fe1cf99bc81"
   }
 }
