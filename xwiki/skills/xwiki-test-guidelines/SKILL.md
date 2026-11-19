@@ -6,7 +6,8 @@ description: Rules and XWiki-specific framework documentation for writing tests.
   one method", "the class already exists" and "this one is simple" are not reasons to skip it — the traps it
   carries (rights granted to the content a test creates, the page-object boundary, waits, ordering) bite the
   smallest additions. For CONVERTING existing tests use xwiki-convert-tests (unit) or xwiki-convert-tests-docker
-  (functional); for a flickering test use xwiki-fix-flickering-docker-test.
+  (functional); for a flickering test use xwiki-fix-flickering-docker-test; for testing a release by hand
+  through the UI use xwiki-manual-test.
 ---
 
 For the declarative testing map — test kinds and naming, the no-stdout rule, the lightest-base rule, coverage, and **where each test framework lives** — see `kb/testing/strategy.md` (via the `xwiki-knowledge` skill). This skill is the *procedure* for writing a test.
