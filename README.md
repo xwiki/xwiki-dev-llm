@@ -188,6 +188,7 @@ means it needs nothing.
 | [`xwiki-rest-api`](xwiki/skills/xwiki-rest-api/) | Read and write a live instance over REST: pages, xobjects, Solr search | the instance's login (`~/.xwiki-credentials` for xwiki.org) | "what's in the sandbox page?" |
 | [`xwiki-deploy-extension`](xwiki/skills/xwiki-deploy-extension/) | Install a built XAR/JAR into a running XWiki via the job REST API | the instance's login | "deploy this XAR to localhost:8080" |
 | [`xwiki-capture-ui-change`](xwiki/skills/xwiki-capture-ui-change/) | Capture the "before" screenshot of a UI fix that the branch can no longer produce, on the released version's Docker image or by deploying the pre-fix code locally. Runs only with your approval | the `agent-browser` skill; Docker, or a prebuilt jetty+hsqldb distribution | "show the before of this button fix" |
+| [`xwiki-manual-test`](xwiki/skills/xwiki-manual-test/) | Manual acceptance testing of a release or a list of issues: blind tester sub-agents check each fix through the UI, before (on a baseline) and after, an independent verifier re-judges the evidence, and a report proposes issues. Posts nothing without your approval | the `agent-browser` skill; Docker or a jetty+hsqldb distribution | "manually test the fixes of 1.4.1 before the release" |
 
 ### What the skills use
 
