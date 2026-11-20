@@ -12,7 +12,7 @@ verify: |
   computing CVSS" section (linked in the scoring section) and take each metric from it. What is kept
   below is XWiki's *interpretation* — how its rights map onto the scale, and the traps — not values.
 provenance: official
-last-confirmed: 2026-10-21
+last-confirmed: 2026-11-20
 related: [conventions/security.md, conventions/commit-messages.md, servers/jira.md, servers/index.md]
 ---
 
@@ -37,6 +37,22 @@ XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is 
   The Security Policy's "Security Advisory template and information" section has required this
   since October 2026, so past advisories (often with one) are no model for it. Drafting details:
   the `xwiki-security-advisory` skill.
+
+## One vulnerability per confidential JIRA issue
+
+Removing the Confidential level makes the issue's whole history public: description, comments,
+field changes and attachments. Editing a detail out does not remove it from the history. So a
+confidential issue holds only what is disclosed together:
+
+- One vulnerability per issue, as defined by
+  [CNA rules 4.1.9 and 4.1.10](https://www.cve.org/ResourcesSupport/AllResources/CNARules#section_4-1_Vulnerability_Determination):
+  problems that cannot be fixed independently, or that only occur together, are one vulnerability.
+  An independently fixable one found later gets its own confidential issue, never a comment on an
+  existing one.
+- **Splitting** an issue whose history covers several: one new self-contained confidential issue per
+  vulnerability, crediting the original reporter and linked to the original ("is related to"). Close
+  the original as Duplicate, with a comment saying it was split and stays confidential until every
+  split issue is disclosed. It is then made public on a best-effort basis.
 
 ## Merging a non-committer's security pull request
 

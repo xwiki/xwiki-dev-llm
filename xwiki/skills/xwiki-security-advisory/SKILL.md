@@ -60,6 +60,9 @@ From the response's `fields`, collect:
   means the issue is public: either it was disclosed, and the check below finds its published
   advisory, or it was filed public, and the policy's checklist ("Verify that the Confidential level
   is set") comes first — tell the user before drafting.
+- The history (`?expand=changelog`, comments, attachments) must describe only this vulnerability,
+  since disclosure makes all of it public. If it covers another independently fixable one, stop and
+  tell the user it must be split first (`kb/processes/security-policy.md`).
 - The **CVSS vector** (`customfield_11870`, e.g. `CVSS:4.0/…`) and its numeric **score**
   (`customfield_11871`); both fields are described in `kb/processes/security-policy.md`.
 - A `customfield_*` holding a `devSummaryJson`/pull-request bean can reveal whether a fix PR/commit
