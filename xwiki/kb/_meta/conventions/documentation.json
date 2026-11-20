@@ -243,7 +243,8 @@
       "questions": [
         "How do I link to a section heading in an xwiki.org doc page?",
         "My section link breaks after I rename a heading, how do I keep the anchor?",
-        "Why does my anchor link point to a page that doesn't exist?"
+        "Why does my anchor link point to a page that doesn't exist?",
+        "Why does my xwiki/2.0 link to another page's heading lose its anchor?"
       ],
       "aliases": [
         "section link",
@@ -272,7 +273,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "fa1895c931563b7d414c571c24f94ae4cb0a2eabd6d89aa40475e70e96e1fdd5",
+  "source_hash": "4287af1dfa270b4790850a27b8ad106980259d67aff3142f02f83a7b3573bc31",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
@@ -294,7 +295,7 @@
     "Deleting a page": "26d2e05945aaa70764c070f1e9edfa33a036105be5831cff967f0df4ad89e897",
     "Syntax traps: newlines, lists and escaping": "0524db54ae9340283522f8eff470b91b0bdec09822f8c78c75152399f5a11f72",
     "Syntax traps: linking to xwiki.org pages": "e0a9885c7913cc1c99ed9dd626f76834d09d71ea76f63df88d944b18a9c25b03",
-    "Syntax traps: anchors and headings": "a45886f80ed4387e8191fbfe056563fe4cd52e1a9bc9c3efd8901adf9f2aa693",
+    "Syntax traps: anchors and headings": "a384abecf61fe0d67499f7e268f82d44c6feb8ea25d65938ffd93c02f408c90d",
     "Navigation order — pinning child pages": "d5522b550471a8c8f79e0cf8fb211e892f59a27cebf95dceb5c002109a63c95d"
   }
 }

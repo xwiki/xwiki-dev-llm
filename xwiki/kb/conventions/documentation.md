@@ -51,7 +51,7 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/?syntax=2.0&section=Links
   - https://diataxis.fr/
 provenance: official
-last-confirmed: 2026-10-30
+last-confirmed: 2026-11-19
 related: [conventions/documentation-mechanics.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
@@ -690,9 +690,9 @@ own two sections below.
   and every other character replaced by its hex code — so `== My heading ==` gives `HMyheading`, but
   `== "File path too long" ==` gives `H22Filepathtoolong22`. In **xwiki/2.1** the anchor is a link
   *parameter*:
-  `[[label>>PageA.PageB||anchor="HMyheading"]]`. In **xwiki/2.0** it is appended to the *reference*
-  itself: `[[label>>PageA.PageB#HMyheading]]`. Both forms serialize the fragment into the rendered
-  `href`. Do not carry one form over to the other syntax: on a 2.1 page, `#HMyheading` appended to the
+  `[[label>>PageA.PageB||anchor="HMyheading"]]`. In **xwiki/2.0** it goes in the *reference*, behind
+  a `?`: `[[label>>PageA.PageB?#HMyheading]]` — the plain `PageA.PageB#HMyheading` renders without its
+  fragment. Do not carry one form over to the other syntax: on a 2.1 page, `#HMyheading` appended to the
   reference is parsed as part of the page **name** and yields a red `wikicreatelink` to a non-existent
   page. A page's syntax is not guessable from its age or location — read it (the `syntax` field of
   `GET …/rest/…/pages/{page}?media=json`, or the editor's syntax selector) before editing links.
