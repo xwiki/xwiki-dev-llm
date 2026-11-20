@@ -4,7 +4,8 @@
       "What checks must a third-party library pass before we can add it to XWiki?",
       "Can we use a library with a GPL or other non-LGPL license in an XWiki distribution?",
       "When does adding a dependency that misses one of the criteria need a community vote?",
-      "How do I judge whether an open source project is maintained well enough to depend on it?"
+      "How do I judge whether an open source project is maintained well enough to depend on it?",
+      "When should a dependency upgrade be backported to the stable branches, and which version should the backport target?"
     ],
     "aliases": [
       "dependency approval process",
@@ -39,12 +40,28 @@
         "pnpm lockfile update",
         "pnpm dedupe"
       ]
+    },
+    "Backporting a dependency upgrade": {
+      "questions": [
+        "Should a library upgrade go only to master, or also to the stable branches?",
+        "A release note mentions a CVE in a library we ship, which stable branches need the upgrade and which version do I target?",
+        "How do I backport a dependency bump to an older branch without creating a new commit?",
+        "How do I tell whether a dependency changelog entry is a real security fix worth backporting, or just a bug fix?",
+        "Can a stable-branch backport also bump the transitive libraries it pulls in, and is a major-version upgrade safe to backport?"
+      ],
+      "aliases": [
+        "security backport",
+        "CVE backport",
+        "stable branch backport",
+        "cherry-pick backport"
+      ]
     }
   },
   "proposed": {
     "related": [
       "conventions/commit-messages.md",
-      "servers/jira.md"
+      "servers/jira.md",
+      "processes/security-policy.md"
     ],
     "applies-to": [
       "**/pom.xml",
@@ -52,10 +69,11 @@
       "**/pnpm-lock.yaml"
     ]
   },
-  "source_hash": "69b7bcc03285ee22ee188a95db8e87381c024325d138264c7d2b7c472fc8c927",
-  "file_hash": "abe8fd072d907984375df270779dfb1c2db07a497358e747842e91323c38bcb4",
+  "source_hash": "52fe752397bf2e7d4354994f909dc1023c7790d62bdf2097364f103cd48e90dd",
+  "file_hash": "54d0e42bcf30a98b812dd82e5dabc3c4c7c1b8b4e580139b5252a20c4d5a1ac2",
   "section_hashes": {
     "Accepting a new third-party dependency": "aa5ede999b85c7b929e3d08f7325480959e8f5890d2a530955ed15feecdb7284",
-    "Upgrading a JavaScript dependency": "abf21363c12cd9f819eca621fbc33c8fd21708ae81de6ee009af7813fe258b5d"
+    "Upgrading a JavaScript dependency": "abf21363c12cd9f819eca621fbc33c8fd21708ae81de6ee009af7813fe258b5d",
+    "Backporting a dependency upgrade": "61331df03014b44bc87c810730d8181b8d86f74187f086caa22368f191cf032f"
   }
 }
