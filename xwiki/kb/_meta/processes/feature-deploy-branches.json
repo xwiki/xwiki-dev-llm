@@ -41,12 +41,14 @@
       "questions": [
         "How do I build my branch against a sibling repo's branch on my laptop without overwriting the normal snapshots in ~/.m2?",
         "How do I switch all the pom versions to a branch version, then restore them before I commit?",
-        "Do the xbranch version scripts work on macOS, or do they need GNU sed?"
+        "When do I need to pass -a to xbranch-set-version.sh for a local build?",
+        "Does xwiki-commons need the -a flag, or does it always rewrite every pom including the parent?"
       ],
       "aliases": [
         "xbranch scripts",
         "local Maven repository",
-        "m2 snapshots"
+        "m2 snapshots",
+        "xbranch-reset-version.sh"
       ]
     }
   },
@@ -60,11 +62,11 @@
       "**/pom.xml"
     ]
   },
-  "source_hash": "94eec9e50043d7aa3f0b0b892a3882280087c336d671b1291db15e922fdd7f35",
+  "source_hash": "5fba61cced757b47e09a8a9816f54069fa0fc6c3eb81037fef67a5c7c8581cad",
   "file_hash": "5727c2f2abfcdf0952973c037677f5e1e787d36c511de61b11bca2053dec9eed",
   "section_hashes": {
     "Cross-repository feature branches (feature-deploy-*)": "4866e0a721fc96bc82f303feba4382d7c56579add8d943d85b1d819baa3acfef",
     "The CI sets the branch version": "3980fb42a7469e7da8e74a63a16b63069ba495baa2faf6ee88e208da70d3e446",
-    "Building the branches locally": "b702860f0368309cfd6f924d706a95245e64e0a20f63579dc6d9368445a530e1"
+    "Building the branches locally": "031ef2e152c641fcbe4c50ba9a5e8f85450624b09d0e95fe1152e97bbaf5a315"
   }
 }

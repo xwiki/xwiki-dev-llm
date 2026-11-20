@@ -30,5 +30,4 @@ A change spanning several repositories lives on a branch named `feature-deploy-<
 Installed under the standard version, they mix into `~/.m2` with master's snapshots. From the root of
 each repository, switch with xwiki-dev-tools' `xbranch-set-version.sh -v X.Y.Z-SNAPSHOT` and restore
 with `xbranch-reset-version.sh` before recording the change. Add `-a` when the parent's branch exists
-too: it rewrites every pom textually, parent included (xwiki-commons always takes that path). Both
-scripts need GNU `sed`.
+too: it rewrites every pom textually, parent included (xwiki-commons always takes that path).
