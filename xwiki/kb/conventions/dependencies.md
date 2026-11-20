@@ -3,7 +3,9 @@ title: Accepting a new third-party dependency
 stability: durable
 summary: The checklist a third-party project must pass before it can be added to an XWiki
   distribution — license (non-negotiable), longevity, release cadence, support responsiveness, active
-  contributors, documentation, security; a VOTE can waive everything but the license.
+  contributors, documentation, security; a VOTE can waive everything but the license. Also when an
+  upgrade is backported: only for a security fix of a shipped JAR, to the first fixed version of
+  each stable branch's line.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HAddinganewDependency
 provenance: official
@@ -46,3 +48,27 @@ versions behind; expect it to touch entries unrelated to the dependency you bump
 
 Whether the bump is `[Misc]` or needs an issue, and what that issue's description holds, are in
 [[commit-messages]] and [[jira]].
+
+## Backporting a dependency upgrade
+
+An upgrade is backported to the maintained stable branches when it fixes a **security issue**, and
+otherwise stays on master. Read the release notes of **every** version crossed: only a CVE, a GHSA
+or an entry upstream itself labels as a vulnerability counts — a fix that merely looks
+security-relevant is reported as such and left to the developer to judge, never called a security
+fix in the PR or the issue. Check that the CVE belongs to a version actually crossed.
+
+- **What decides is the shipped JAR**, as a scanner sees it: the advisory's affected package must be
+  an artifact XWiki ships, at the version a branch uses. Whether XWiki reaches the vulnerable code
+  does not matter. A CVE fixed in the dependency's *own* dependencies is irrelevant when XWiki
+  manages those versions itself.
+- **Every branch using an affected version** gets it, the security-only LTS included, unless the
+  upgrade is incompatible with that branch. An upgrade carrying big compatibility changes (removed
+  APIs, split artifacts) is weighed case by case with the developer.
+- **Per branch, the first fixed version of the line it uses** (a patch release of its minor), not
+  master's version. Only the dependency moves, plus the transitive runtime upgrades it strictly
+  requires, and only those **known to be safe** on a stable branch: that is a judgement per
+  library — a bugfix or minor upgrade of a library following semantic versioning usually is, a
+  major one usually is not — so when in doubt, ask a committer who knows it. Such an upgrade reuses
+  its master commit (cherry-pick `-x`, adapted to the version the branch needs) under its own issue.
+- Propose the backports, with the release-note link of the security fix, before doing them, and add
+  the stable Fix Versions to the issue.
