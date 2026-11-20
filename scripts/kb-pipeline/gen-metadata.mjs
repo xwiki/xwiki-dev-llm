@@ -22,17 +22,17 @@
 // hashes gets them, with no model call.
 //
 // Edited, not rerolled: a changed part's previous questions and aliases go to the model, which keeps
-// those the new text still answers word for word and, at the cap, replaces the least central one with
-// what is new. So that it sees what is new, a changed section comes with the lines its text did not
-// have before (the old text found in git by its recorded hash) and must get a question about them; so
-// that it keeps what developers find the section by, the previous questions the section ranked first
-// for are marked, to keep while the text still answers them (a section whose questions all are takes a
-// fifth for what is new). The questions of a section whose heading is gone (renamed, merged, split) go
-// too, for the model to place. Each previous question is then searched with the part's old and new
-// metadata (a gone heading's: anywhere in the file); a part now ranking lower for one it ranked within
-// RANK_WATCH is printed as a `RANK` line and the run exits 2, the sidecar written — so a rerun finds
-// it current and prints nothing: the RANK lines are the only record, whatever the exit code. Exit 1 is
-// a failed model call, to rerun — after copying any RANK lines the same run printed.
+// those the new text still answers word for word and adds what is new. A changed section comes with
+// its new sentences (against its old text, found in git by the recorded hash, and logged as a `note`
+// when not found) and gets a question about them. The previous questions a part ranks first for are
+// marked, to keep while the text still answers them; when all four of a section's are, the new
+// question is its fifth, the only case the code lets a section have five. A section whose heading is
+// gone (renamed, merged, split) gets neither: its questions go to the model to place. Each previous
+// question is then searched with the part's new metadata (a gone heading's: anywhere in the file); a
+// part now ranking lower for one it ranked within RANK_WATCH is printed as a `RANK` line and the run
+// exits 2, the sidecar written — so a rerun finds it current and prints nothing: the RANK lines are
+// the only record, whatever the exit code. Exit 1 is a failed model call, to rerun — after copying any
+// RANK lines the same run printed.
 //
 // After a `RANK` line or a tests/kb-hooks/ probe failure: a dropped question the text no longer answers
 // is expected; otherwise put the question back in the sidecar by hand (the validator checks hashes, not
@@ -58,6 +58,8 @@ const RANK_WATCH = 10;
 const RANK_DEPTH = 30;
 // How many commits back the old text of a changed section is looked for.
 const HISTORY_DEPTH = 30;
+// A section's questions: at most SECTION_QUESTIONS, one more only where `fifths` allows it.
+const SECTION_QUESTIONS = 4;
 
 const stringList = (min, max) => ({ type: "array", items: { type: "string" }, minItems: min, maxItems: max });
 
@@ -120,7 +122,7 @@ For the whole file and for each of its sections, write:
 - questions: how a developer would ask, in their own words, while coding, for what this file or section
   answers. Write them as that developer would — someone who may not know XWiki's name for the thing:
   use the everyday terms they would use, not just the section's own jargon. Vary the angle: the task
-  they are doing, the problem they hit, the decision they face. File: 2–5. Each section: 2–4 (5 only as
+  they are doing, the problem they hit, the decision they face. File: 2–5. Each section: 2–4 (5 where
   said below).
 - aliases: other names a developer might search for — synonyms, older or other names, abbreviations,
   the generic term for an XWiki-specific name and vice versa. 0–5; none rather than padding.
@@ -152,24 +154,25 @@ function previousBlock(previous) {
     ...Object.entries(previous.sections).map(([h, m]) => [`section "${h}"`, m, h])];
   const line = (name, m) => `- ${name}: questions ${JSON.stringify(m.questions || [])}, aliases ${
     JSON.stringify(m.aliases || [])}`;
-  const best = new Set((previous.best || []).map(([part, q]) => `${part}\n${q}`));
+  const best = new Set(bestMatches(previous).map(([part, q]) => `${part}\n${q}`));
+  const fifth = new Set(fifths(previous));
   const detail = (m, heading) => {
     const top = (m.questions || []).filter((q) => best.has(`${heading ?? "(file)"}\n${q}`));
     const added = (heading !== null && previous.added?.[heading]) || [];
     return (top.length ? `\n  its best search match for: ${JSON.stringify(top)}` : "")
-      + (added.length ? `\n  new or changed lines:\n${added.map((l) => `    > ${l}`).join("\n")}` : "");
+      + (added.length ? `\n  new sentences:\n${added.map((l) => `    > ${l}`).join("\n")}` : "")
+      + (fifth.has(heading) ? "\n  may have 5 questions: the one about its new sentences is a fifth" : "");
   };
   const gone = Object.entries(previous.gone || {});
   if (!parts.length && !gone.length) return "";
   const changed = parts.length ? `
 These parts had metadata before their text changed. Keep, word for word, every question the new text
 still answers and every alias that still names something in it; drop the others; then add what the new
-text answers that they miss. Only when the new text answers something none of them covers and the part
-is already at its maximum count, replace its previous question least central to the new text — never
-one listed as its best search match while the new text still answers it, even in part: developers find
-the part by those. When new or changed lines are listed, at least one of the part's questions asks for
-what they say; if every question of a section at 4 is a best search match, that one is a fifth, and
-at 5 it replaces the least central one:
+text answers that they miss — at least one question asking for what its new sentences say, when listed.
+Only when the new text answers something none of them covers and the part is already at its maximum,
+replace its previous question least central to the new text, but not one it is the best search match
+for that the new text still answers, even in part — developers find the part by those — unless all of
+its questions are:
 ${parts.map(([name, m, heading]) => line(name, m) + detail(m, heading)).join("\n")}
 ` : "";
   const moved = gone.length ? `
@@ -278,22 +281,72 @@ export function oldSectionTexts(root, topic, old) {
   return found;
 }
 
-/** The lines of `now` that `before` does not have, trimmed, blank ones left out. */
-export function addedLines(before, now) {
-  const had = new Set(before.split("\n").map((l) => l.trim()));
-  return now.split("\n").map((l) => l.trim()).filter((l) => l && !had.has(l));
+/**
+ * The sentences of a section's text, so that re-wrapping a paragraph changes none: wrapped lines joined
+ * (a blank line, a list item, a table row, a heading or a fence starts a new block), split after `.!?`.
+ */
+export function sentences(text) {
+  const blocks = [];
+  let open = false;
+  for (const line of text.split("\n").map((l) => l.trim())) {
+    if (!line) open = false;
+    else if (open && !/^([-*+]\s|\d+\.\s|\||#|```)/.test(line)) blocks[blocks.length - 1] += ` ${line}`;
+    else {
+      blocks.push(line);
+      open = true;
+    }
+  }
+  return blocks.flatMap((b) => b.split(/(?<=[.!?])\s+/)).map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
+}
+
+/** The sentences of `now` that `before` does not have. */
+export function addedSentences(before, now) {
+  const had = new Set(sentences(before));
+  return sentences(now).filter((s) => !had.has(s));
+}
+
+/** The previous questions of `topic`'s changed parts, as `[part, question]`, part "(file)" or a heading. */
+function askedOf(previous) {
+  return [...(previous.file?.questions || []).map((q) => ["(file)", q]),
+    ...Object.entries(previous.sections).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]))];
 }
 
 /**
- * The previous questions of `topic`'s changed parts that the part ranked first for with `old`'s metadata
- * against the new text — what developers find it by — as `[part, question]`, part "(file)" or a heading.
+ * What the model and the RANK check need to know of `topic`'s changes since `old`: `previousOf`'s parts,
+ * plus `added` (each changed section's new sentences), `missing` (the changed sections whose old text
+ * git does not have) and `ranks` (`[part, question, rank]` for each previous question, ranked with
+ * `old`'s metadata against the new text).
  */
-export function bestMatches(root, topic, old, previous) {
-  const asked = [...(previous.file?.questions || []).map((q) => ["(file)", q]),
-    ...Object.entries(previous.sections).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]))];
-  if (!asked.length) return [];
-  const [index] = indexes(root, topic, [{ ...old, source_hash: bodyHash(topic.text) }]);
-  return asked.filter(([part, q]) => rank(index, topic, part, q) === 1);
+export function changesOf(root, topic, old) {
+  const previous = previousOf(topic, old);
+  const texts = oldSectionTexts(root, topic, old);
+  previous.added = {};
+  previous.missing = [];
+  for (const s of topic.sections) {
+    if (!Object.hasOwn(previous.sections, s.heading)) continue;
+    if (Object.hasOwn(texts, s.heading)) previous.added[s.heading] = addedSentences(texts[s.heading], s.text);
+    else previous.missing.push(s.heading);
+  }
+  const asked = askedOf(previous);
+  const [index] = asked.length ? indexes(root, topic, [{ ...old, source_hash: bodyHash(topic.text) }]) : [];
+  previous.ranks = asked.map(([part, q]) => [part, q, rank(index, topic, part, q)]);
+  return previous;
+}
+
+/** The previous questions each changed part ranked first for — what developers find it by. */
+export function bestMatches(previous) {
+  return (previous.ranks || []).filter(([, , r]) => r === 1).map(([part, q]) => [part, q]);
+}
+
+/**
+ * The changed sections allowed a fifth question: those with new sentences whose previous questions, at
+ * least SECTION_QUESTIONS of them, all are best matches — no room for the new one without dropping one.
+ */
+export function fifths(previous) {
+  const best = new Set(bestMatches(previous).map(([part, q]) => `${part}\n${q}`));
+  return Object.entries(previous.sections).filter(([h, m]) => previous.added?.[h]?.length
+    && (m.questions || []).length >= SECTION_QUESTIONS && m.questions.every((q) => best.has(`${h}\n${q}`)))
+    .map(([h]) => h);
 }
 
 /** kb-search indexes of `root` with `topic`'s sidecar replaced by each of `sidecars`, built on a copy. */
@@ -319,21 +372,19 @@ function rank(index, topic, part, question) {
 
 /**
  * The previous questions of `topic`'s changed parts for which the part ranks lower in kb-search with
- * `sidecar` than with the previous metadata put back, among those it ranked within RANK_WATCH:
+ * `sidecar` than it did (`previous.ranks`, from `changesOf`), among those it ranked within RANK_WATCH:
  * `[{ part, question, before, after, kept }]`, a rank 1-based or null past RANK_DEPTH. A gone heading's
- * question has no "before" to rebuild: it is reported when no section of the file ranks within
- * RANK_WATCH for it (`before` "heading gone"). Searches a copy of `root`, so the KB is not touched.
+ * question has no "before": it is reported when no section of the file ranks within RANK_WATCH for it
+ * (`before` "heading gone"). Searches a copy of `root`, so the KB is not touched.
  */
 export function rankDrops(root, topic, sidecar, previous) {
-  const asked = [...(previous.file?.questions || []).map((q) => ["(file)", q]),
-    ...Object.entries(previous.sections).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]))];
+  const ranks = previous.ranks || [];
   const moved = Object.entries(previous.gone || {}).flatMap(([h, m]) => (m.questions || []).map((q) => [h, q]));
-  if (!asked.length && !moved.length) return [];
-  const [after, before] = indexes(root, topic, [sidecar, { ...sidecar, file: previous.file || sidecar.file,
-    sections: { ...sidecar.sections, ...previous.sections } }]);
+  if (!ranks.length && !moved.length) return [];
+  const [after] = indexes(root, topic, [sidecar]);
   const now = (part) => (part === "(file)" ? sidecar.file : sidecar.sections[part])?.questions || [];
   const everywhere = [sidecar.file, ...Object.values(sidecar.sections)].flatMap((m) => m?.questions || []);
-  return [...asked.map(([part, question]) => ({ part, question, before: rank(before, topic, part, question),
+  return [...ranks.map(([part, question, before]) => ({ part, question, before,
     after: rank(after, topic, part, question), kept: now(part).includes(question) }))
     .filter((r) => r.before !== null && r.before <= RANK_WATCH && (r.after === null || r.after > r.before)),
   ...moved.map(([part, question]) => ({ part, question, before: "heading gone",
@@ -349,8 +400,11 @@ export function mergeSidecar(topic, fresh, old) {
   return { ...fresh, file: kept.file || fresh.file, sections, ...hashes(topic), source_hash: bodyHash(topic.text) };
 }
 
-/** Turns the model's answer into the sidecar object, or throws when it does not fit the topic. */
-export function toSidecar(topic, answer, known) {
+/**
+ * Turns the model's answer into the sidecar object, or throws when it does not fit the topic. A section
+ * keeps SECTION_QUESTIONS questions, one more when listed in `fifth`.
+ */
+export function toSidecar(topic, answer, known, fifth = []) {
   if (answer.sections.length !== topic.headings.length) {
     throw new Error(`${answer.sections.length} sections returned for ${topic.headings.length}`);
   }
@@ -358,7 +412,8 @@ export function toSidecar(topic, answer, known) {
   const sections = {};
   topic.headings.forEach((heading, i) => {
     const s = answer.sections.find((x) => x.heading.trim() === heading) || answer.sections[i];
-    sections[heading] = { questions: clean(s.questions), aliases: clean(s.aliases) };
+    sections[heading] = { questions: clean(s.questions).slice(0, SECTION_QUESTIONS + (fifth.includes(heading) ? 1 : 0)),
+      aliases: clean(s.aliases) };
   });
   return {
     file: { questions: clean(answer.file.questions), aliases: clean(answer.file.aliases) },
@@ -482,21 +537,23 @@ async function generate(o) {
       console.log(`kept ${topic.rel} (no section, title or summary changed)`);
       return;
     }
-    const previous = previousOf(topic, old);
-    const before = oldSectionTexts(o.root, topic, old);
-    previous.added = Object.fromEntries(topic.sections.filter((s) => Object.hasOwn(before, s.heading))
-      .map((s) => [s.heading, addedLines(before[s.heading], s.text)]));
+    let previous;
     try {
-      previous.best = bestMatches(o.root, topic, old, previous);
+      previous = changesOf(o.root, topic, old);
     } catch (e) {
-      console.error(`best-match check failed for ${topic.rel}: ${e.message}`);
+      console.error(`note ${topic.rel}: no new sentences nor search ranks (${e.message})`);
+      previous = previousOf(topic, old);
+    }
+    for (const h of previous.missing || []) {
+      console.error(`note ${topic.rel}#${h}: old text not in the last ${HISTORY_DEPTH} commits of git (shallow `
+        + "clone, renamed file, uncommitted): no new sentences");
     }
     let sidecar = null;
     for (let attempt = 1; !sidecar; attempt++) {
       try {
         const env = await claude(prompt(topic, all, previous), o.model);
         cost += env.total_cost_usd || 0;
-        sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known), old);
+        sidecar = mergeSidecar(topic, toSidecar(topic, env.structured_output, known, fifths(previous)), old);
       } catch (e) {
         if (attempt < 2) continue;
         failed++;
