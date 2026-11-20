@@ -128,3 +128,60 @@ test('rankDrops reports a previous question its part no longer ranks for, not on
     [{ part: 'Old', question: 'zebra crossing', before: 'heading gone', after: null, kept: false }]);
   assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing']), gone), []);
 });
+
+test('a changed section shows the model its new lines and the questions it is found by', async (t) => {
+  const { addedLines, bestMatches, hashes, oldSectionTexts, previousOf, prompt, topicOf } =
+    await import('../../scripts/kb-pipeline/gen-metadata.mjs');
+  const { execFileSync } = await import('node:child_process');
+  const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = mkdtempSync(join(tmpdir(), 'changed-section-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'servers'));
+  const file = join(root, 'servers', 'jira.md');
+  // The change that motivated this: an exception added to the Fix Version/s rule, whose previous
+  // questions the section ranked first for were dropped and none asked about the exception.
+  const v1 = '---\ntitle: JIRA\n---\n\n# JIRA\n\n## Closing\n\nSet Fix Version/s to the next version of every branch.\n'
+    + 'Choose the resolution Fixed.\n\n## Bulk edits\n\nUse the REST API.\n';
+  const v2 = v1.replace('every branch.\n', 'every branch,\nexcept a more recent branch while X.Y.0 is unreleased.\n');
+  const git = (...a) => execFileSync('git', a, { cwd: root, stdio: 'ignore' });
+  git('init', '-q');
+  writeFileSync(file, v1);
+  git('add', '.');
+  git('-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'v1');
+  writeFileSync(file, v2);
+  const before = topicOf('servers/jira.md', v1);
+  const topic = topicOf('servers/jira.md', v2);
+  const old = { file: { questions: [], aliases: [] }, sections: {
+    Closing: { questions: ['which fix version on master and a stable branch', 'which resolution'], aliases: [] },
+    'Bulk edits': { questions: ['many issues at once'], aliases: [] } }, ...hashes(before) };
+  mkdirSync(join(root, '_meta', 'servers'), { recursive: true });
+  writeFileSync(join(root, '_meta', 'servers', 'jira.json'), JSON.stringify(old));
+
+  const texts = oldSectionTexts(root, topic, old);
+  assert.deepEqual(Object.keys(texts), ['Closing']);
+  const added = addedLines(texts.Closing, topic.sections.find((s) => s.heading === 'Closing').text);
+  assert.deepEqual(added, ['Set Fix Version/s to the next version of every branch,',
+    'except a more recent branch while X.Y.0 is unreleased.']);
+  const previous = { ...previousOf(topic, old), added: { Closing: added } };
+  previous.best = bestMatches(root, topic, old, previous);
+  assert.deepEqual(previous.best, [['Closing', 'which fix version on master and a stable branch'],
+    ['Closing', 'which resolution']]);
+  // A best match is its part's own: the same question in another part is not marked there.
+  const shared = { ...previous, sections: { ...previous.sections, 'Bulk edits': { questions: ['which resolution'] } } };
+  assert.doesNotMatch(prompt(topic, [topic], shared), /section "Bulk edits"[^\n]*\n {2}its best search match/);
+
+  const text = prompt(topic, [topic], previous);
+  assert.match(text, /its best search match for: \["which fix version on master and a stable branch","which resolution"\]/);
+  assert.match(text, /new or changed lines:\n {4}> Set Fix Version\/s[^\n]*\n {4}> except a more recent branch/);
+  assert.match(text, /never\none listed as its best search match/);
+  assert.match(text, /at least one of the part's questions asks for\nwhat they say/);
+  // Outside git, or with no recorded hash, there is no old text to compare: no lines, no failure.
+  const noGit = mkdtempSync(join(tmpdir(), 'no-git-'));
+  t.after(() => rmSync(noGit, { recursive: true, force: true }));
+  mkdirSync(join(noGit, 'servers'));
+  writeFileSync(join(noGit, 'servers', 'jira.md'), v2);
+  assert.deepEqual(oldSectionTexts(noGit, topic, old), {});
+  assert.deepEqual(oldSectionTexts(root, topic, { ...old, section_hashes: undefined }), {});
+});
