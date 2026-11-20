@@ -10,7 +10,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://www.xwiki.org/xwiki/bin/view/Main/Support/
 provenance: official
-last-confirmed: 2026-11-17
+last-confirmed: 2026-11-19
 related: [conventions/versioning.md, conventions/commit-messages.md, processes/release-notes.md, testing/flickers.md]
 ---
 
@@ -155,7 +155,9 @@ Choose the **resolution** that matches reality and **assign the issue to yoursel
 (you are the one resolving/verifying it). The distinction that is easy to get wrong:
 
 - **A change fixed it** → resolution **Fixed**, with Fix Version/s (where the project has them) set to
-  the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`). JIRA version
+  the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`), leaving out
+  any branch more recent than one whose `X.Y.0` is unreleased (`18.0.0-rc-1` or `18.0.0`, not also
+  `18.1.0-rc-1`). JIRA version
   names use dashes, unlike the `18.7.0RC1` of a `@since` tag ([[versioning]]). When one of them does
   not exist yet in JIRA (e.g. a contrib project whose next version was not created after its last
   release), ask the developer rather than closing without it or creating it.

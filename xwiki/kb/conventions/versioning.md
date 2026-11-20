@@ -15,7 +15,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HDeprecation
   - https://dev.xwiki.org/xwiki/bin/view/Community/CodeStyle/JavaCodeStyle/#HUseone40sinceperversion
 provenance: official
-last-confirmed: 2026-10-17
+last-confirmed: 2026-11-19
 related: [conventions/backward-compatibility.md, servers/jira.md, processes/release.md]
 applies-when:
   - '@since\s'
@@ -56,7 +56,9 @@ on every branch** the code lives on (master included). Write the lines **ascendi
 / `@since 18.4.3` / `@since 18.5.0RC1`), but the order is not an XWiki rule: never flag or reorder an
 existing block for it. When it is clear that a change will be backported (a security fix, an
 important bug fix), the original commit already carries one line per branch it will reach; remove a
-line whose backport does not happen.
+line whose backport does not happen. **Exception:** a branch whose `X.Y.0` is unreleased is released
+before, and contained in, every more recent branch, so a change it carries gets no line for those:
+`@since 18.10.0RC1`, not also `19.0.0RC1`; a backport to that branch replaces the source's line.
 
 **`@since` goes on reusable code, not only on public API.** Anything something else calls carries
 `@since` — including `internal` classes and methods, and the *tools* tests are written with: page
@@ -80,10 +82,7 @@ The version a change will **ship in on another branch** (the `@since` line of a 
 Version, an advisory's patched version) comes from that branch's root `pom.xml` on the remote —
 `git fetch origin <branch> && git show origin/<branch>:pom.xml` — never from local tags or a local
 checkout, which go stale. Drop `-SNAPSHOT` on a stable branch (`16.10.20-SNAPSHOT` gives `16.10.20`);
-an `X.Y.0-SNAPSHOT` (master) gives `X.Y.0RC1`, as above.
-
-XWiki Commons, XWiki Rendering and XWiki Platform are **released together with the same version**,
-so the same version string applies across those repos.
+an `X.Y.0-SNAPSHOT` gives `X.Y.0RC1` (on a stable branch, `X.Y.0` once that RC is released).
 
 See also [[backward-compatibility]] for the `@Unstable` lifecycle that pairs with `@since`.
 

@@ -131,11 +131,13 @@ If any cherry-picked commit adds new public API — or an `@Deprecated(since = "
 `@since` tag, that tag lists the versions in which the API becomes available. Backporting makes it
 available in the **target branch's next release** too, so the tag must be adjusted. `@since` is
 Javadoc, so it does **not** surface as a compile error (§5 won't catch it) — this is a review check.
-Backporting **adds** `@since` lines, it never replaces the existing ones. Two things to verify:
+Backporting **adds** `@since` lines, it never replaces the existing ones — except into a branch whose
+`X.Y.0` is unreleased, whose line replaces the more recent ones (`kb/conventions/versioning.md`). Two
+things to verify:
 
 - **The target branch's line is present.** Add `@since <target-next-release>` (three numeric
-  segments, e.g. `17.10.10`, `18.4.3` — the version this target branch will next release, §1) —
-  unless it is already there.
+  segments, e.g. `17.10.10`, `18.4.3`, or `X.Y.0RC1` / `X.Y.0` for a branch whose `X.Y.0` is
+  unreleased — the version this target branch will next release, §1) — unless it is already there.
 - **The source branch you cherry-picked from also carries it.** The `@since` block must be
   **identical on every branch the code lives on**, the source/master included. So the version line(s)
   you added here must also exist on the source branch (and on every other branch that received the
