@@ -75,7 +75,10 @@ Each of these is either bad ROI or a false positive against a deliberate XWiki i
 - **`javabugs:S2259`** "fix this access that will throw a NullPointerException" — not a sweep. It is
   100% `src/main`, every site needs its own dataflow argument, and the fix changes behaviour. Sonar
   reports it where its analysis cannot follow an indirection, so the false-positive rate is highest on
-  the files carrying the most of them. One shape is mechanical: a helper defaulting a nullable
+  the files carrying the most of them. Before guarding a dereference, read the callee's `@return`: when
+  it promises non-null, the bug is the implementation returning `null` — fix it there, with a JIRA
+  issue since it breaks an API contract; a caller-side guard that changes nothing at runtime is the
+  wrong fix. One shape is mechanical: a helper defaulting a nullable
   parameter (`return factory != null ? factory : DEFAULT;`) called from an overload that passes
   `DEFAULT` in *as* that parameter — the analyzer takes the `null` branch, which constrains `DEFAULT`
   itself to null, then reports every dereference of the helper's result. Fix it by passing `null`, the
