@@ -260,6 +260,9 @@ export function alsoInfra(stages, cause) {
  * failures beside it come back as `also`; a build only the infrastructure broke is infra.
  */
 async function causeOf(stages) {
+  // A red build can have no failed stage to read (none marked FAILED/ABORTED, or the stage API
+  // returned nothing): that is an unexplained break, never no cause at all.
+  if (!stages.length) return codeCauseOf([]);
   const infra = stages.map(bag => infraOf(bag));
   const code = stages.filter((bag, index) => !infra[index]);
   const fromCode = code.length ? await codeCauseOf(code) : null;
