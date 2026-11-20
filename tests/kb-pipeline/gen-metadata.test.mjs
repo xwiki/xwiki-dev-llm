@@ -103,6 +103,7 @@ test('previousOf hands the model the old metadata of the changed parts only', as
 
 test('rankDrops reports a previous question its part no longer ranks for, not one it still does', async (t) => {
   const { hashes, rankDrops } = await import('../../scripts/kb-pipeline/gen-metadata.mjs');
+  // `before` is the rank `changesOf` recorded, with the old metadata.
   const { splitSections: split } = await import('../../xwiki/scripts/kb-search.mjs');
   const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
@@ -118,7 +119,8 @@ test('rankDrops reports a previous question its part no longer ranks for, not on
   const sidecar = (format) => ({ file: { questions: [], aliases: [] },
     sections: { Levels: { questions: ['which severity'], aliases: [] }, Format: { questions: format, aliases: [] } },
     source_hash: bodyHash(text), ...hashes(topic) });
-  const previous = { file: null, sections: { Format: { questions: ['zebra crossing', 'kept wording'], aliases: [] } } };
+  const previous = { file: null, sections: { Format: { questions: ['zebra crossing', 'kept wording'], aliases: [] } },
+    ranks: [['Format', 'zebra crossing', 1], ['Format', 'kept wording', 1]] };
   assert.deepEqual(rankDrops(root, topic, sidecar(['kept wording']), previous),
     [{ part: 'Format', question: 'zebra crossing', before: 1, after: null, kept: false }]);
   assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing', 'kept wording']), previous), []);
@@ -127,4 +129,77 @@ test('rankDrops reports a previous question its part no longer ranks for, not on
   assert.deepEqual(rankDrops(root, topic, sidecar(['kept wording']), gone),
     [{ part: 'Old', question: 'zebra crossing', before: 'heading gone', after: null, kept: false }]);
   assert.deepEqual(rankDrops(root, topic, sidecar(['zebra crossing']), gone), []);
+});
+
+test('a changed section shows the model its new sentences and the questions it is found by', async (t) => {
+  const { changesOf, fifths, hashes, oldSectionTexts, prompt, toSidecar, topicOf } =
+    await import('../../scripts/kb-pipeline/gen-metadata.mjs');
+  const { execFileSync } = await import('node:child_process');
+  const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = mkdtempSync(join(tmpdir(), 'changed-section-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'servers'));
+  const file = join(root, 'servers', 'jira.md');
+  // The change that motivated this: an exception added to the Fix Version/s rule, whose previous
+  // questions the section ranked first for were dropped and none asked about the exception. The edit
+  // re-wraps the paragraph, which must not make its unchanged sentences look new.
+  const v1 = '---\ntitle: JIRA\n---\n\n# JIRA\n\n## Closing\n\nSet Fix Version/s to the next version of every\n'
+    + 'branch the fix landed on. Choose the resolution Fixed when\na change fixed it.\n\n'
+    + '## Bulk edits\n\nUse the REST API to edit many issues at once.\n';
+  const v2 = v1.replace('every\nbranch the fix landed on.', 'every branch the fix\nlanded on, except a more recent '
+    + 'branch while X.Y.0 is unreleased.').replace('Fixed when\na change', 'Fixed\nwhen a change');
+  const git = (...a) => execFileSync('git', a, { cwd: root, stdio: 'ignore' });
+  git('init', '-q');
+  writeFileSync(file, v1);
+  git('add', '.');
+  git('-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'v1');
+  writeFileSync(file, v2);
+  const topic = topicOf('servers/jira.md', v2);
+  const closing = ['which fix version on master and a stable branch', 'which resolution when a change fixed it',
+    'fix version for a fix', 'closing an issue'];
+  const old = { file: { questions: [], aliases: [] }, sections: {
+    Closing: { questions: closing, aliases: [] },
+    'Bulk edits': { questions: ['many issues at once'], aliases: [] } }, ...hashes(topicOf('servers/jira.md', v1)) };
+  mkdirSync(join(root, '_meta', 'servers'), { recursive: true });
+  writeFileSync(join(root, '_meta', 'servers', 'jira.json'), JSON.stringify(old));
+
+  const previous = changesOf(root, topic, old);
+  assert.deepEqual(previous.added, { Closing: ['Set Fix Version/s to the next version of every branch the fix landed '
+    + 'on, except a more recent branch while X.Y.0 is unreleased.'] });
+  assert.deepEqual(previous.missing, []);
+  assert.deepEqual(previous.ranks.map(([, q, r]) => [q, r]), closing.map((q) => [q, 1]));
+  // All four are what the section is found by, so the code allows a fifth, and only there.
+  assert.deepEqual(fifths(previous), ['Closing']);
+  const text = prompt(topic, [topic], previous);
+  assert.match(text, /section "Closing"[^\n]*\n {2}its best search match for: \["which fix version/);
+  assert.match(text, /new sentences:\n {4}> Set Fix Version\/s[^\n]*unreleased\.\n {2}may have 5 questions/);
+  assert.doesNotMatch(text, /> Choose the resolution/);
+  const answer = (n) => ({ file: { questions: ['f', 'g'], aliases: [] }, related: [], applies_to: [],
+    sections: topic.headings.map((h) => ({ heading: h, questions: ['a', 'b', 'c', 'd', 'e'].slice(0, n), aliases: [] })) });
+  const counts = (s) => Object.values(s.sections).map((m) => m.questions.length);
+  assert.deepEqual(counts(toSidecar(topic, answer(5), new Set(), fifths(previous))), [5, 4]);
+  assert.deepEqual(counts(toSidecar(topic, answer(5), new Set())), [4, 4]);
+
+  // A question another section answers better is not marked, and then no fifth is allowed.
+  const mixed = { ...old, sections: { ...old.sections,
+    Closing: { questions: [...closing.slice(0, 3), 'use the REST API to edit many issues at once'], aliases: [] } } };
+  writeFileSync(join(root, '_meta', 'servers', 'jira.json'), JSON.stringify(mixed));
+  const partly = changesOf(root, topic, mixed);
+  assert.notEqual(partly.ranks.at(-1)[2], 1);
+  assert.deepEqual(fifths(partly), []);
+  assert.doesNotMatch(prompt(topic, [topic], partly), /may have 5/);
+  // A best match is its part's own: the same question in another part is not marked there.
+  const shared = { ...previous, sections: { ...previous.sections, 'Bulk edits': { questions: [closing[1]] } } };
+  assert.doesNotMatch(prompt(topic, [topic], shared), /section "Bulk edits"[^\n]*\n {2}its best search match/);
+
+  // Outside git, or with no recorded hash, there is no old text: the section is listed as missing.
+  const noGit = mkdtempSync(join(tmpdir(), 'no-git-'));
+  t.after(() => rmSync(noGit, { recursive: true, force: true }));
+  mkdirSync(join(noGit, 'servers'));
+  writeFileSync(join(noGit, 'servers', 'jira.md'), v2);
+  assert.deepEqual(oldSectionTexts(noGit, topic, old), {});
+  assert.deepEqual(changesOf(noGit, topic, old).missing, ['Closing']);
+  assert.deepEqual(oldSectionTexts(root, topic, { ...old, section_hashes: undefined }), {});
 });
