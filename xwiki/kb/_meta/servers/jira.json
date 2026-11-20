@@ -122,7 +122,7 @@
         "Which resolution should I choose when closing a JIRA issue fixed by a commit without the issue key?",
         "How do I close an issue that was fixed as a side effect of other work?",
         "Which Fix Version do I set when my fix lands on master and a stable branch?",
-        "Do I need to fill in the documentation fields when I close a JIRA issue?"
+        "Which Fix Version when the fix is on a stable branch whose X.Y.0 isn't released yet?"
       ],
       "aliases": [
         "Solved By link",
@@ -201,7 +201,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "adfca291ee7b9fa6c81b9792a91682d1b3b28340c4f36cf82a4cafc5b8a5908b",
+  "source_hash": "abf1c0f5765af910300d23f9117137b863b44d9a0d586a3244e327e810f00eee",
   "file_hash": "ff0af982fbbf0cd702d72c0691583e6ce30d17ee5440a49989f04f3fd2ff6336",
   "section_hashes": {
     "JIRA (jira.xwiki.org) — access and issue-field conventions": "22f8c8fdd5dad93872a558af8f785059b48424c7faf447d48324655ff5311349",
@@ -213,7 +213,7 @@
     "The documentation fields": "0a60fd8c32024564491556acf648c9d72281abf82fedd3da5438da1fcc849915",
     "Starting work on an issue": "cb4bbe5272b853aa442724328119233b541d88a2b719a517781310fec1c392d2",
     "Linking the pull request": "f92159a83dc9a7e30bb46137d341d36962c38cc1da66830ad509dcae6072c7f5",
-    "Resolving / closing an issue": "e1ada3978abeba0b97fceb19e6a3b8bf2aaf5b390db45dc22141e9ce4add35fb",
+    "Resolving / closing an issue": "d004bd690cffeb66f09c8173202430dc45cdb21868362ab25c639bddb1aa4468",
     "Bulk edits": "85a639fcd12033a756ba4e444bab871712d096ad53a011ba0dbd08b108a188cb",
     "Attachments (screenshots)": "7daf36c7f8acb3de0f5d202992c38160571629eddc538a67d69834c44ecb06be",
     "Wiki-markup gotchas (descriptions and comments)": "66c4d9fd9c25e246a7c8dd308a8f586a82c631b1af1bcb1cae2d576a492479b6",

@@ -56,8 +56,9 @@ on every branch** the code lives on (master included). Write the lines **ascendi
 / `@since 18.4.3` / `@since 18.5.0RC1`), but the order is not an XWiki rule: never flag or reorder an
 existing block for it. When it is clear that a change will be backported (a security fix, an
 important bug fix), the original commit already carries one line per branch it will reach; remove a
-line whose backport does not happen. **Exception:** a branch whose `X.Y.0` is unreleased ships first,
-so a change it carries gets no line for a more recent branch: `@since 18.10.0RC1`, not also `19.0.0RC1`.
+line whose backport does not happen. **Exception:** a branch whose `X.Y.0` is unreleased is released
+before, and contained in, every more recent branch, so a change it carries gets no line for those:
+`@since 18.10.0RC1`, not also `19.0.0RC1`; a backport to that branch replaces the source's line.
 
 **`@since` goes on reusable code, not only on public API.** Anything something else calls carries
 `@since` — including `internal` classes and methods, and the *tools* tests are written with: page
