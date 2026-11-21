@@ -31,13 +31,28 @@
         "non-public vulnerability"
       ]
     },
+    "One vulnerability per confidential JIRA issue": {
+      "questions": [
+        "Can I put two security bugs in the same confidential JIRA ticket?",
+        "I found another problem while working on a security issue. Should I add it as a comment on the existing ticket?",
+        "How do I split a confidential JIRA issue that covers several vulnerabilities?",
+        "What counts as one vulnerability when two bugs only occur together?",
+        "After all the split security issues are disclosed, will the original confidential JIRA ticket be made public?"
+      ],
+      "aliases": [
+        "one CVE per issue",
+        "CNA rules",
+        "duplicate security issue",
+        "security ticket split"
+      ]
+    },
     "Merging a non-committer's security pull request": {
       "questions": [
         "How do I merge a pull request from an outside contributor on a GitHub security advisory?",
         "The GitHub merge button doesn't let me set the commit message, so how do I squash-merge a private fork PR by hand?",
         "How do I credit the external contributor as the author when I merge their security fix?",
         "What do I clean up after merging a security PR from a temporary private fork?",
-        "How do I adjust the squashed changes, such as @since tags, before committing a security PR merge?"
+        "Which git commands commit the squashed security fix with the contributor as author, push it, and remove the temporary remote?"
       ],
       "aliases": [
         "GHSA pull request",
@@ -92,10 +107,11 @@
     ],
     "applies-to": []
   },
-  "source_hash": "0eb419354ab99411462246696da6510a30fcf1dcc23faeddc995fc5c9874b31d",
+  "source_hash": "8e33b94dfe5f3b3438a082d757ac3afbc72f7cf655ae5e612bdbf8268a338612",
   "file_hash": "c4db5caeaeacde6fb9a81fd0392424e8d8728def19e1be1bfaf91e3bf3981119",
   "section_hashes": {
     "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "e67957dfd9bcbb249a287eccb00f19df04811d051707f559c8e9be11d39d7444",
+    "One vulnerability per confidential JIRA issue": "c45725c06aede7e73a07dd83a8e0432f4ea6c9310688b1650b3b02d334820ee2",
     "Merging a non-committer's security pull request": "08278abdc366872eccac67bdc86c724e4dbe1eaa6ac3e350d072610a5f4bbc4d",
     "Severity scoring — CVSS 4 (read the source before scoring)": "5a7780fa9ac7621790e281a7dd468464043ac79d57e6bebc67f16f5b4fcabe68",
     "JIRA security labels": "77312b5fd2371ff4e6a0bdba5cda7529e890e4f16965adcb8836d9f13a0a5a29",

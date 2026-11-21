@@ -30,12 +30,12 @@
   "https://dev.xwiki.org/xwiki/bin/view/Community/L10N/Conventions": "11.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy": "51.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess": "104.3",
-  "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy": "64.1",
+  "https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy": "65.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/SourceRepository": "43.2",
   "https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy": "4.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/Testing": "175.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/DockerTesting": "83.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/Testing/JavaUnitTesting": "24.1",
   "https://dev.xwiki.org/xwiki/bin/view/Community/VelocityCodeStyle": "10.2",
-  "https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices": "43.1"
+  "https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices": "47.1"
 }
