@@ -20,7 +20,8 @@ XWiki instance: its work packages are **`xwiki-openproject`**'s.
   browser-like one or none ([[servers/index]]).
 - **Format:** responses are XML by default. Ask for JSON with `?media=json` on the URL **or** an
   `Accept: application/json` header. Send bodies with `-H "Content-Type: application/xml"` (or
-  `application/x-www-form-urlencoded`).
+  `application/x-www-form-urlencoded`). Send a body file with `--data-binary @file`, never
+  `-d @file`: `-d` strips the newlines, saving the whole page on a single line.
 - **Reference identifiers, not URLs, for reasoning:** a page reference like `Sandbox.WebHome` maps
   to path segments — see nested spaces below.
 - **Nested spaces (important):** each space is its own `/spaces/{name}` segment. The page reference
