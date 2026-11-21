@@ -61,3 +61,8 @@ artifact XWiki ships is a security fix, backported like any security bug. When i
   itself.
 - Per branch, target the **first fixed version of the line it uses** (a patch release of its minor),
   not master's version, reusing the master commit (`cherry-pick -x`, adapted to that version).
+- The flavor's functional tests run a CVE scan (`ExtensionSecurityScanIT`, `ExtensionSecurityTest`
+  on older branches) that fails the build of any branch shipping a vulnerable version whose CVE is
+  still "to review". Such a CVE is either fixed by the upgrade, or marked reviewed on the
+  [Security Reviews](https://extensions.xwiki.org/xwiki/bin/view/Extension/Extension/Security/Code/Reviews)
+  page when it does not affect XWiki.

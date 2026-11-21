@@ -47,21 +47,22 @@
         "A release note mentions a CVE in a library we ship, which stable branches need the upgrade and which version do I target?",
         "How do I backport a dependency bump to an older branch without creating a new commit?",
         "How do I tell whether a dependency changelog entry is a real security fix worth backporting, or just a bug fix?",
-        "Can a stable-branch backport also bump the transitive libraries it pulls in, and is a major-version upgrade safe to backport?"
+        "Why does my stable-branch backport fail the CVE scan with a vulnerability still marked 'to review', and what do I do about it?"
       ],
       "aliases": [
         "security backport",
         "CVE backport",
         "stable branch backport",
-        "cherry-pick backport"
+        "cherry-pick backport",
+        "CVE scan"
       ]
     }
   },
   "proposed": {
     "related": [
-      "processes/release.md",
       "conventions/commit-messages.md",
       "servers/jira.md",
+      "processes/release.md",
       "processes/security-policy.md"
     ],
     "applies-to": [
@@ -70,11 +71,11 @@
       "**/pnpm-lock.yaml"
     ]
   },
-  "source_hash": "5b8474ae53074406b7afb73bb558044c6dcdad24b9d122a49adc2a896e93dc29",
+  "source_hash": "3797c1846db1d3756a1cacbad24164779eb23ddd014421f5003d2bce7756ca82",
   "file_hash": "c89695a0a4346f5dffb21f6239d8834ac12a8907f6c9ce7f46bb2161639c1327",
   "section_hashes": {
     "Accepting a new third-party dependency": "aa5ede999b85c7b929e3d08f7325480959e8f5890d2a530955ed15feecdb7284",
     "Upgrading a JavaScript dependency": "abf21363c12cd9f819eca621fbc33c8fd21708ae81de6ee009af7813fe258b5d",
-    "Backporting a dependency upgrade": "cb33cb8a04f43c84187f89ade35770ab1dbc8af240b33f9c2eaf6333bd05fca6"
+    "Backporting a dependency upgrade": "9c16fc29a4a62f6b4a5aa43a20fd075b28f0ca25ee34e865ed0e75193dd3769a"
   }
 }
