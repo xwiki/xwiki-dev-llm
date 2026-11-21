@@ -42,7 +42,8 @@
         "How do I build my branch against a sibling repo's branch on my laptop without overwriting the normal snapshots in ~/.m2?",
         "How do I switch all the pom versions to a branch version, then restore them before I commit?",
         "When do I need to pass -a to xbranch-set-version.sh for a local build?",
-        "Does xwiki-commons need the -a flag, or does it always rewrite every pom including the parent?"
+        "Does xwiki-commons need the -a flag, or does it always rewrite every pom including the parent?",
+        "Why does my local build leave package.json at the standard version, and how do I make jq set it?"
       ],
       "aliases": [
         "xbranch scripts",
@@ -59,14 +60,15 @@
       "servers/jenkins.md"
     ],
     "applies-to": [
-      "**/pom.xml"
+      "**/pom.xml",
+      "**/package.json"
     ]
   },
-  "source_hash": "5fba61cced757b47e09a8a9816f54069fa0fc6c3eb81037fef67a5c7c8581cad",
+  "source_hash": "bc8cfc9f8f4ee0404050bb35023835abc443449b519797434ac24eccb5ce0175",
   "file_hash": "5727c2f2abfcdf0952973c037677f5e1e787d36c511de61b11bca2053dec9eed",
   "section_hashes": {
     "Cross-repository feature branches (feature-deploy-*)": "4866e0a721fc96bc82f303feba4382d7c56579add8d943d85b1d819baa3acfef",
     "The CI sets the branch version": "3980fb42a7469e7da8e74a63a16b63069ba495baa2faf6ee88e208da70d3e446",
-    "Building the branches locally": "031ef2e152c641fcbe4c50ba9a5e8f85450624b09d0e95fe1152e97bbaf5a315"
+    "Building the branches locally": "2ac7633cc438967130eb9b6bc834f0a919ceef9c65eb252585b43cea3b3edc76"
   }
 }

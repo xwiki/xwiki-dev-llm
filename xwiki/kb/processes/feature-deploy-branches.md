@@ -7,7 +7,7 @@ summary: How the CI versions the feature-deploy-* branches of a change spanning 
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices
 provenance: official
-last-confirmed: 2026-11-17
+last-confirmed: 2026-11-20
 related: [processes/release.md, conventions/versioning.md, servers/jenkins.md]
 ---
 
@@ -31,3 +31,5 @@ Installed under the standard version, they mix into `~/.m2` with master's snapsh
 each repository, switch with xwiki-dev-tools' `xbranch-set-version.sh -v X.Y.Z-SNAPSHOT` and restore
 with `xbranch-reset-version.sh` before recording the change. Add `-a` when the parent's branch exists
 too: it rewrites every pom textually, parent included (xwiki-commons always takes that path).
+Both also set the version of the non-private node packages (`package.json`), which needs `jq`: without
+it they only warn, leaving those packages at the standard version.
