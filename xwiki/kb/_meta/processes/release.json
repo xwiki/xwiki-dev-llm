@@ -29,16 +29,17 @@
     "Durable facts": {
       "questions": [
         "Can I backport my fix to the latest stable branch or only to the LTS branches?",
-        "Do Commons, Rendering and Platform always get released together with the same version number?",
-        "What kinds of changes am I allowed to backport to an LTS branch: only bug fixes, or dependency upgrades too?",
-        "Can I mention the oldest LTS line in a PR description or JIRA fix version when explaining why my backport skipped it?"
+        "Which branches should a fix for master be backported to?",
+        "Why does the repo have a backport label for an older stable branch, and should I use it?",
+        "Do commons, rendering and platform always share one version number?",
+        "What kinds of changes are allowed to be backported, and who decides on the ones that are not routine?"
       ],
       "aliases": [
         "backport targets",
         "LTS backport",
         "stable branch backport",
         "version numbering rules",
-        "security-only backport"
+        "backport policy"
       ]
     },
     "Volatile — follow the pointer, do not cache": {
@@ -58,9 +59,9 @@
   "proposed": {
     "related": [
       "conventions/versioning.md",
+      "conventions/backward-compatibility.md",
       "processes/security-policy.md",
-      "processes/release-notes.md",
-      "conventions/backward-compatibility.md"
+      "processes/release-notes.md"
     ],
     "applies-to": []
   },
