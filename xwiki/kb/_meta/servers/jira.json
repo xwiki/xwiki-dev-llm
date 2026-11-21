@@ -68,7 +68,8 @@
         "How should I file a JIRA issue for upgrading a third-party library?",
         "What goes in the description of a dependency upgrade ticket?",
         "Which component do I pick for a dependency upgrade that only affects developers?",
-        "Can I reuse an open upgrade ticket for the same library instead of filing a new one, and what if a release branch was already cut?"
+        "Can I reuse an open upgrade ticket for the same library instead of filing a new one, and what if a release branch was already cut?",
+        "When can I reuse an existing upgrade issue for a newer version of the same library, and when must I file a new one?"
       ],
       "aliases": [
         "library upgrade ticket",
@@ -202,14 +203,14 @@
     ],
     "applies-to": []
   },
-  "source_hash": "3f9b1a04e8efadc02b35e3f2768f00a5ef178757552acc57a1219ffa5ab2ec38",
+  "source_hash": "c8beb9e309417ede0af2e74d235950d8aba4b80537666bcdda12fb9738da4b1b",
   "file_hash": "ff0af982fbbf0cd702d72c0691583e6ce30d17ee5440a49989f04f3fd2ff6336",
   "section_hashes": {
     "JIRA (jira.xwiki.org) — access and issue-field conventions": "22f8c8fdd5dad93872a558af8f785059b48424c7faf447d48324655ff5311349",
     "Project keys": "0605a990f910e62b572b44a468737142a59b5124db44b3f6e7f30b9910e87ea9",
     "Whether to file an issue at all": "f710782c4ee0b0a3d0b3f3eadf73682f279d402094632a79047650a22b54de71",
     "Issue-field conventions (every issue type)": "a7dfc00bee19dc5f4632c7b8c552aee5b77021a1d9e7f9f4b158bd7d6bee3b3a",
-    "Dependency-upgrade issues": "25fcd84e80c6dc36f2f8022f2c812d36455130e4fc3d5ad624a201b799de2fe8",
+    "Dependency-upgrade issues": "5177237e72dd6cb1fe00eaf408b38338dc31da58e4fa149dd61019e1ac1e1079",
     "Flickering tests": "17683f0582ac801ca1519f13f2e8e0fd9e448b84a00109447e06da522fce9d08",
     "The documentation fields": "0a60fd8c32024564491556acf648c9d72281abf82fedd3da5438da1fcc849915",
     "Starting work on an issue": "cb4bbe5272b853aa442724328119233b541d88a2b719a517781310fec1c392d2",

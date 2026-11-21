@@ -98,10 +98,11 @@ the description over REST: `jira-cli` runs a body through its Markdown converter
 URL as `[url|url]`.
 
 Before filing one, look for an upgrade issue of the **same** dependency (a sibling project of the
-same vendor does not count) whose Fix Version/s are all unreleased, and **reuse** it: retarget its
-summary to the new version, extend its release-note URLs, and commit under its key. Unreleased is not
-enough once a release branch is cut: an issue fixed in the cut branch's version (e.g. `18.10.0-rc-1`)
-does not cover an upgrade that only lands on master — file a new one for master's version.
+same vendor does not count) whose Fix Version/s are all unreleased **and are exactly the branches the
+new upgrade lands on**, and **reuse** it: retarget its summary to the new version, extend its
+release-note URLs, and commit under its key. One that also names a branch the new version does not
+reach (a stable-branch backport, or a cut release branch's `18.10.0-rc-1` for a master-only bump)
+does not cover it: file a new one.
 
 ## Flickering tests
 
