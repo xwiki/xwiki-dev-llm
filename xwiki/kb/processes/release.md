@@ -10,7 +10,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
 provenance: official
-last-confirmed: 2026-10-19
+last-confirmed: 2026-11-21
 related: [conventions/versioning.md, conventions/backward-compatibility.md, processes/security-policy.md, processes/release-notes.md]
 ---
 
@@ -21,8 +21,7 @@ of truth and changes over time — fetch it when actually releasing.
 
 ## Durable facts
 
-- **Commons, Rendering and Platform release together** with the **same version number**. Treat them
-  as one coordinated release train.
+- **Commons, Rendering and Platform release together** with the **same version number**.
 - Version numbering and the milestone/RC/final cadence are defined in **Versioning and Release
   Practices** (the same page that backs the `@since`/`@Unstable` rules — see [[versioning]] and
   [[backward-compatibility]]).
@@ -30,12 +29,17 @@ of truth and changes over time — fetch it when actually releasing.
   Intermediate LTS `N.4.x` (branched end of May) and the Cycle LTS `N.10.x` (branched end of
   November) — with master on `N.9`, `N.4.x` and `(N-1).10.x`. Derive them from the root `pom.xml`
   version rather than memorising them.
+- **What may be backported** ([rules](https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/#HWhattoBackport)):
+  bugs only — `Blocker`s and Critical security fixes must be, others at the committer's discretion.
+  Anything else needs a forum proposal or vote, except test/build or JDBC driver upgrades, an
+  upgrade a backported fix needs, and tooling changes, which go to every LTS branch that can take
+  them (bringing only runtime upgrades known safe).
 - **The recent stable branches are not routine backport targets.** A new stable ships every month,
   so an ordinary fix rides the next release instead of paying for an extra one — a release is
   expensive and the wait is under a month. Backport to one only **on demand**: a mistake bad
   enough that a freshly released stable needs a bugfix release now.
 - The LTS line **older** than the maintained two takes **security fixes only** — a "Critical"
-  vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix, however small; with
+  vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix; with
   master on `N.x` that is `(N-2).10.x`. A repo offering a `backport stable-<old>.x` GitHub label does
   not make that branch a routine target. **Never name that line in a public artifact** — a PR body,
   a JIRA issue or fix version, a commit message, a forum post — not even to explain why it is
