@@ -31,6 +31,21 @@
         "non-public vulnerability"
       ]
     },
+    "One vulnerability per confidential JIRA issue": {
+      "questions": [
+        "Can I put two security bugs in the same confidential JIRA ticket?",
+        "I found another problem while working on a security issue. Should I add it as a comment on the existing ticket?",
+        "How do I split a confidential JIRA issue that covers several vulnerabilities?",
+        "What counts as one vulnerability when two bugs only occur together?",
+        "After all the split security issues are disclosed, will the original confidential JIRA ticket be made public?"
+      ],
+      "aliases": [
+        "one CVE per issue",
+        "CNA rules",
+        "duplicate security issue",
+        "security ticket split"
+      ]
+    },
     "Merging a non-committer's security pull request": {
       "questions": [
         "How do I merge a pull request from an outside contributor on a GitHub security advisory?",
@@ -91,10 +106,11 @@
     ],
     "applies-to": []
   },
-  "source_hash": "4d7a98fc583972c0a75a4cf4cc8ade80a3bd360be8b00d59fedce1732ebc93e2",
+  "source_hash": "e999d45701090f7466b33b36f93479e570e08ce3bb0ac3831314cffe07d5eaf1",
   "file_hash": "c4db5caeaeacde6fb9a81fd0392424e8d8728def19e1be1bfaf91e3bf3981119",
   "section_hashes": {
     "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "e67957dfd9bcbb249a287eccb00f19df04811d051707f559c8e9be11d39d7444",
+    "One vulnerability per confidential JIRA issue": "c45725c06aede7e73a07dd83a8e0432f4ea6c9310688b1650b3b02d334820ee2",
     "Merging a non-committer's security pull request": "ad068b1432b32c180c8b3f443a432527a4c802f873f247d267c89707ab93ec2f",
     "Severity scoring — CVSS 4 (read the source before scoring)": "5a7780fa9ac7621790e281a7dd468464043ac79d57e6bebc67f16f5b4fcabe68",
     "JIRA security labels": "77312b5fd2371ff4e6a0bdba5cda7529e890e4f16965adcb8836d9f13a0a5a29",
