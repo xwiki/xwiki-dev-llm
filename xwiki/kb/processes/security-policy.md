@@ -66,7 +66,7 @@ git fetch ghsa-xxxx-xxxx-xxxx
 git merge --squash ghsa-xxxx-xxxx-xxxx/<branch>
 # adjust what needs adjusting (e.g. @since tags), then:
 git commit --author="Contributor Name <contributor@example.org>"   # credit the contributor
-git push
+git push origin <branch>
 git remote remove ghsa-xxxx-xxxx-xxxx
 ```
 

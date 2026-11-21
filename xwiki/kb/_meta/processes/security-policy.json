@@ -51,7 +51,8 @@
         "How do I merge a pull request from an outside contributor on a GitHub security advisory?",
         "The GitHub merge button doesn't let me set the commit message, so how do I squash-merge a private fork PR by hand?",
         "How do I credit the external contributor as the author when I merge their security fix?",
-        "What do I clean up after merging a security PR from a temporary private fork?"
+        "What do I clean up after merging a security PR from a temporary private fork?",
+        "Which git commands commit the squashed security fix with the contributor as author, push it, and remove the temporary remote?"
       ],
       "aliases": [
         "GHSA pull request",
@@ -106,12 +107,12 @@
     ],
     "applies-to": []
   },
-  "source_hash": "e999d45701090f7466b33b36f93479e570e08ce3bb0ac3831314cffe07d5eaf1",
+  "source_hash": "8e33b94dfe5f3b3438a082d757ac3afbc72f7cf655ae5e612bdbf8268a338612",
   "file_hash": "c4db5caeaeacde6fb9a81fd0392424e8d8728def19e1be1bfaf91e3bf3981119",
   "section_hashes": {
     "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "e67957dfd9bcbb249a287eccb00f19df04811d051707f559c8e9be11d39d7444",
     "One vulnerability per confidential JIRA issue": "c45725c06aede7e73a07dd83a8e0432f4ea6c9310688b1650b3b02d334820ee2",
-    "Merging a non-committer's security pull request": "ad068b1432b32c180c8b3f443a432527a4c802f873f247d267c89707ab93ec2f",
+    "Merging a non-committer's security pull request": "08278abdc366872eccac67bdc86c724e4dbe1eaa6ac3e350d072610a5f4bbc4d",
     "Severity scoring — CVSS 4 (read the source before scoring)": "5a7780fa9ac7621790e281a7dd468464043ac79d57e6bebc67f16f5b4fcabe68",
     "JIRA security labels": "77312b5fd2371ff4e6a0bdba5cda7529e890e4f16965adcb8836d9f13a0a5a29",
     "Related": "863eb2397ec3885432974b0b06fec13ecee28622d0feaa29fda76ecfaa104592"

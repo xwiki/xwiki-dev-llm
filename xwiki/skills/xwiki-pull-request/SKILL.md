@@ -20,9 +20,8 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
   Do not create unnecessary JIRA issues
   (see https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices).
 - Keep **one squashed commit per issue** — the backport automation only works with a single commit.
-  Amending it means force-pushing: **always name the remote and the branch** (`git push
-  --force-with-lease origin <branch>`). Where `push.default=matching` is set, a refspec-less force
-  push rewrites *every* local branch that also exists on the remote, and the lease does not stop it.
+  Amending it means force-pushing, naming the remote and the branch like every push: `git push
+  --force-with-lease origin <branch>`.
 - **Backtick `@` tokens and `#123` in the commit body and the PR body** — a bare `@since` there
   notifies the GitHub account of that name, and a pushed message cannot be corrected. The summary
   line is exempt. Rule and exceptions:
