@@ -1,8 +1,8 @@
 ---
 title: Release and versioning process (outline)
 stability: durable
-summary: How XWiki versions and releases its projects at a high level, and which stable branches a
-  fix may be backported to. The detailed steps and any current dates/plans/owners are volatile —
+summary: How XWiki versions and releases its projects at a high level, and what may be backported to
+  which stable branches. The detailed steps and any current dates/plans/owners are volatile —
   follow the dev-wiki pointers.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/ReleaseProcess
@@ -10,7 +10,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
 provenance: official
-last-confirmed: 2026-10-19
+last-confirmed: 2026-11-21
 related: [conventions/versioning.md, conventions/backward-compatibility.md, processes/security-policy.md, processes/release-notes.md]
 ---
 
@@ -34,6 +34,13 @@ of truth and changes over time — fetch it when actually releasing.
   so an ordinary fix rides the next release instead of paying for an extra one — a release is
   expensive and the wait is under a month. Backport to one only **on demand**: a mistake bad
   enough that a freshly released stable needs a bugfix release now.
+- **What to backport: bugs only.** `Blocker` bugs must be, the important security issues included;
+  lower priorities are the developer's call. Anything else (an improvement, a runtime dependency
+  upgrade) needs a forum proposal or vote first — except a test or build dependency upgrade, an
+  upgrade a backported fix needs, a JDBC driver upgrade, and development tooling changes (build,
+  Maven plugins and their checks, test frameworks, quality checks), which go to the supported LTS
+  branches with only the runtime upgrades they pull along that are known to be safe for that
+  library (semantic versioning is a hint, not the rule; when in doubt, ask on the forum or chat).
 - The LTS line **older** than the maintained two takes **security fixes only** — a "Critical"
   vulnerability, CVSS >= 7 per [[security-policy]] — never an ordinary bug fix, however small; with
   master on `N.x` that is `(N-2).10.x`. A repo offering a `backport stable-<old>.x` GitHub label does

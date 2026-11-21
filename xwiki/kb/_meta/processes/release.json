@@ -4,7 +4,8 @@
       "How does XWiki choose version numbers and release its projects?",
       "Which stable or LTS branches can I backport a bug fix to?",
       "Do commons, rendering and platform get released together with the same version?",
-      "What is the overall XWiki release cycle, from milestones to final release?"
+      "What is the overall XWiki release cycle, from milestones to final release?",
+      "Where do I find the detailed steps to actually cut an XWiki release?"
     ],
     "aliases": [
       "release train",
@@ -31,7 +32,8 @@
         "Can I backport my fix to the latest stable branch or only to the LTS branches?",
         "Which branches should a fix for master be backported to?",
         "Why does the repo have a backport label for an older stable branch, and should I use it?",
-        "Do commons, rendering and platform always share one version number?"
+        "Do commons, rendering and platform always share one version number?",
+        "Is it only bug fixes that can go into an LTS branch, or can dependency and build upgrades go too?"
       ],
       "aliases": [
         "backport targets",
@@ -63,11 +65,11 @@
     ],
     "applies-to": []
   },
-  "source_hash": "5511579ebbf985cf9ea4e764a3976f46cad8cb82583e7750aed981aa1a1f0c75",
-  "file_hash": "405ff0f53e58ab3018e911f7685c5fce5c60db6566034335cd604f1d5138472b",
+  "source_hash": "ad6091eff27020473e3bde6d7b8e8eb48b23f8ec32079b9eeaff98ce69c56abd",
+  "file_hash": "1f2250bbb8f15a6ec94946b7016f7f6115d0413272d0d48ff255a1f6267e39de",
   "section_hashes": {
     "Release and versioning process (outline)": "a2637067f756da1f583949a865442eeedee4ff5be91f3bf02afc5c59b5883dd5",
-    "Durable facts": "dc0d8758b3029045776f128dc3741ad638d4dd7d2e5714ad03beca8383941431",
+    "Durable facts": "a80c8926973bd062653a94f95c38c1f5cc436df24bdf93f94444948cd894753e",
     "Volatile — follow the pointer, do not cache": "c7a3d2c939e9b12c30f1b77b042b271c2cf3c993341e8566ee892ce92cd65cf3"
   }
 }
