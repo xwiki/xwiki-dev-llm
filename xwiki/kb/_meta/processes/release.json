@@ -32,7 +32,8 @@
         "Which branches should a fix for master be backported to?",
         "Why does the repo have a backport label for an older stable branch, and should I use it?",
         "Do commons, rendering and platform always share one version number?",
-        "What kinds of changes are allowed to be backported, and who decides on the ones that are not routine?"
+        "What kinds of changes are allowed to be backported, and who decides on the ones that are not routine?",
+        "Does a fix get into the official XWiki Docker images, and are already-released image tags rebuilt when it lands?"
       ],
       "aliases": [
         "backport targets",
@@ -59,17 +60,17 @@
   "proposed": {
     "related": [
       "conventions/versioning.md",
-      "conventions/backward-compatibility.md",
       "processes/security-policy.md",
-      "processes/release-notes.md"
+      "processes/release-notes.md",
+      "conventions/backward-compatibility.md"
     ],
     "applies-to": []
   },
-  "source_hash": "9ca3213415ec82470050ef6f92be1860942c649222a896fffa1934f637c1c113",
+  "source_hash": "8a7e882b9105a77193bf7bbce3038df8835d7b8cab97b340ddc8a91c55bfd656",
   "file_hash": "405ff0f53e58ab3018e911f7685c5fce5c60db6566034335cd604f1d5138472b",
   "section_hashes": {
     "Release and versioning process (outline)": "a2637067f756da1f583949a865442eeedee4ff5be91f3bf02afc5c59b5883dd5",
-    "Durable facts": "0218ee8b0f6308cba5772cf96cef42a4735a8f2ceab96d8aace6f499dafbac7f",
+    "Durable facts": "0081b4032c9b570ab75792e5b4571d13bae986421687303684da3993934a0419",
     "Volatile — follow the pointer, do not cache": "c7a3d2c939e9b12c30f1b77b042b271c2cf3c993341e8566ee892ce92cd65cf3"
   }
 }

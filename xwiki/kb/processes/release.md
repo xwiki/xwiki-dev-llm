@@ -9,8 +9,9 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SecurityPolicy/
+  - https://github.com/xwiki/xwiki-docker#contribute
 provenance: official
-last-confirmed: 2026-11-21
+last-confirmed: 2026-11-23
 related: [conventions/versioning.md, conventions/backward-compatibility.md, processes/security-policy.md, processes/release-notes.md]
 ---
 
@@ -23,8 +24,7 @@ of truth and changes over time — fetch it when actually releasing.
 
 - **Commons, Rendering and Platform release together** with the **same version number**.
 - Version numbering and the milestone/RC/final cadence are defined in **Versioning and Release
-  Practices** (the same page that backs the `@since`/`@Unstable` rules — see [[versioning]] and
-  [[backward-compatibility]]).
+  Practices** (see [[versioning]]).
 - **Backport targets are the LTS branches.** Two LTS lines are maintained in parallel: the
   Intermediate LTS `N.4.x` (branched end of May) and the Cycle LTS `N.10.x` (branched end of
   November) — with master on `N.9`, `N.4.x` and `(N-1).10.x`. Derive them from the root `pom.xml`
@@ -46,6 +46,10 @@ of truth and changes over time — fetch it when actually releasing.
   excluded: naming it implies a support commitment that does not exist. List the targets and stop.
 - Released artifacts and snapshots are published to **nexus.xwiki.org** (see [[index]] in
   `servers/`); the Extension Manager consumes them.
+- The **official Docker images** ([xwiki/xwiki-docker](https://github.com/xwiki/xwiki-docker#contribute))
+  ship with XWiki: a change goes out when the official tags are next updated for an XWiki release,
+  in that version's release notes. Released tags are not rebuilt, except ASAP (no announcement
+  needed) for a broken image or an important bugfix decided case by case among the committers.
 - xwiki-contrib extensions follow their **own** release + documentation process — use the
   `xwiki-contrib-release` skill, which hands the release blog post off to
   `xwiki-contrib-release-blog-post`.
