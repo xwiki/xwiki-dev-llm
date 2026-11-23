@@ -7,7 +7,9 @@ summary: Correct fixes and XWiki-specific drop conditions for the dead-code and 
   unused-parameter and narrowed-throws rules, and why most commented-out blocks are anchored by a
   TODO and must be kept.
 provenance: official
-last-confirmed: 2026-10-17
+sources:
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HRevapiIgnores
+last-confirmed: 2026-11-23
 related: [sonarqube/index.md, sonarqube/verification.md, conventions/backward-compatibility.md, architecture/component-system.md]
 ---
 
@@ -43,20 +45,15 @@ idiom).
   static members is already non-instantiable; a private constructor breaks its subclasses' implicit
   `super()`, and adding any constructor to a public abstract class risks Revapi. This is a false
   positive.
-- **Public-API holder classes in a non-`internal` package** (for example an enum's
-  `public static class Constants`): adding a private constructor *removes* the implicit public one →
-  Revapi `java.method.visibilityReduced`.
 
-**Revapi and the legacy re-export.** Reducing a previously-public (or implicit-public) constructor to
-`private` on an API class is a breaking change, needing a Revapi ignore. Because `-legacy` modules
-**re-export** oldcore's public classes, the same change trips the legacy module's Revapi too — the
-ignore must be added in **both** the legacy module and the original. An S1118 change that skips this
-leaves the affected module (typically `xwiki-platform-legacy-oldcore`) failing Revapi on a clean build
-for everyone. Conversely, if your build fails Revapi on `<init>()` of legacy classes you never touched,
-that is this pre-existing debt, not your change — see [[verification]].
-
-**The safe subset** is the purely additive "add a private constructor plus `final`" on a class in an
-`internal` package or a package-private inner holder, where Revapi does not apply.
+**Public utility classes: allowed, with a Revapi ignore.** Removing the implicit public constructor of
+a public class with only static members is an
+[agreed breakage](https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HRevapiIgnores):
+add a `java.method.visibilityReduced` ignore with `<criticality>highlight</criticality>` and a
+justification. `-legacy` modules **re-export** oldcore's public classes, so add it in the legacy module
+too, or `xwiki-platform-legacy-oldcore` fails Revapi for everyone. A Revapi failure on `<init>()` of
+legacy classes you never touched is that pre-existing debt, not your change — see [[verification]].
+No ignore is needed in an `internal` package or on a package-private holder.
 
 ## S1185 — remove an override that only calls `super`
 
