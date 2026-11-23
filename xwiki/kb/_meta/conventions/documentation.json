@@ -61,7 +61,8 @@
       "aliases": [
         "how-to structure",
         "tutorial structure",
-        "topic page"
+        "topic page",
+        "PlantUML macro"
       ]
     },
     "How much belongs on one page": {
@@ -137,13 +138,16 @@
       "questions": [
         "How do I add a screenshot to a documentation page with alt text?",
         "Can I embed a video or an animated GIF in an xwiki.org doc page?",
-        "How should I name and upload an image file to a doc page?"
+        "How should I name and upload an image file to a doc page?",
+        "How do I add a PlantUML diagram to an xwiki.org doc page without setting a theme or colors?",
+        "Why must a diagram in a doc page be a PlantUML macro with no theme or colors set, and not a screenshot?"
       ],
       "aliases": [
         "image macro",
         "attachment naming",
         "embed video",
-        "PlantUML diagram"
+        "PlantUML diagram",
+        "Default Diagram Style"
       ]
     },
     "Screenshots: capture width, framing and the red box": {
@@ -271,25 +275,24 @@
     "related": [
       "conventions/documentation-mechanics.md",
       "conventions/documentation-migration.md",
-      "conventions/page-deletion.md",
-      "servers/jira.md"
+      "conventions/page-deletion.md"
     ],
     "applies-to": []
   },
-  "source_hash": "f10106a581d8c35f6801a7a4fd19f8efbe3b6781c13c17b55d307d00ac1c23c3",
+  "source_hash": "c5b739ba6d2fd968397bad207ba174bfec41fe579ff043f7a307c8708078c14c",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
     "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
     "Titles and page names": "edc5c851f83e7c3e2ddac5792228f2fe5e4b3318503cce2da179cafb1ebc054f",
-    "Content rules per type": "3724cb8e3a7095c12aca427fd3f6946ce4f6f739f0c97e424c7800ec6075e71d",
+    "Content rules per type": "f2fe4bcc2cb8a43c22bf50661a4ab5c565948ba97db084741ac597638249a3a1",
     "How much belongs on one page": "b0939995820f66508ac6f7c36531f98bd89798f1e51fcdcdb0e954a25943a9d0",
     "Page-structure fields": "933be0230aa2fc9fe9c841c9ed8c072a3356d36beb39a8751ad3c37ec74b1fcf",
     "FAQ and Highlights fields: entry limits and when to fill them": "d897fb1eef672748be02deb4febd13c2feca4b41841d1d31829e7c73ed235684",
     "Related links field: no children, no self-link, audience labels": "43569636b83cc23040dc49fbe8ef2b1b99b9def1040144a027c44d10d5b8b443",
     "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": "1944ecbbcd15c876f4b9beaff29bda35e4ea33ea8e13c779fb21ed1bc4ee836e",
     "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",
-    "Attachments, images and videos": "d836da9011766878214c3bc6e9a74024369560294ec516a20697855d3d213969",
+    "Attachments, images and videos": "cb64c341b55bcd4431e2807d8164630748bb6643b9fc17bf0983c3adb9d7a4a8",
     "Screenshots: capture width, framing and the red box": "27ee5fc561705604eaebefd4b761a267ebed2e2fe1be4d92d96f0758fc2ecccb",
     "Choose the right location": "48d3f4847175c9daf942d44dd449c57705ffa795d0101f7eec34be9f457d774d",
     "Versioning and perspective": "0f8930edc329ae2868dcccd694daabea0ca2be354d7d2e3e7bbc205df6624b19",
