@@ -8,6 +8,12 @@
 // issues live in JIRA; a repo tracked in GitHub Issues (XWiki SAS's, some contrib ones) means it, so
 // usesJiraIssues() decides from the repo's own files whether to check it.
 //
+// Before a `gh pr|issue comment`, `gh pr review` or `gh api` call posts a comment to a repo in scope
+// (repo-scope.mjs), refuse it when it does not say it was co-written (the rule is in xwiki-org.md):
+// the comment goes out under the developer's name, and recalling a KB rule while answering a review
+// in passing proved unreliable. Such a comment is not checked for autolinks, since it mentions people
+// on purpose.
+//
 // Why a hook and not a documented convention: a pushed commit message can only be corrected by
 // rewriting history on a shared branch, which is worse than the mention. A rule has to be recalled
 // at the right moment; this cannot be forgotten, and it stays silent until violated. Same reasoning
@@ -35,6 +41,7 @@ import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 
 import { invokedDirectly } from "./invoked-directly.mjs";
+import { isScopedRemote, isScopedRepo } from "./repo-scope.mjs";
 import { HEREDOC, resolvePath, simpleCommands } from "./shell-commands.mjs";
 
 // A code span suppresses the autolink, so blank one out before looking for violations. Markdown
@@ -82,9 +89,48 @@ function messageOptions(args, short, long) {
   return found;
 }
 
-// The text a command line writes as a commit message or PR body: one `{ summary, body, dir }` per
-// `git commit` (the summary being its first line, exempt) and per `gh pr create`/`edit` (no summary:
-// a PR's title is passed separately and is not checked). Only the message is read — the -m/--message
+// A REST endpoint of GitHub comments or reviews, as passed to `gh api`: an issue or PR comment,
+// a review comment, a review (`repos/o/r/issues/1/comments`, `repos/o/r/pulls/comments/2`, …).
+const COMMENT_ENDPOINT = /^\/?repos\/[^/\s]+\/[^/\s]+\/(?:issues|pulls)\/(?:\d+\/)?(?:comments|reviews)\b/;
+
+// The repo a comment goes to when the command names it — `gh api repos/<owner>/<repo>/…`, `-R`/`--repo
+// <owner>/<repo>`, a PR or issue URL — as a `github.com/<owner>/<repo>` string, or null (then it is the
+// repo of the directory the command runs in).
+function commentTarget(args) {
+  for (let i = 0; i < args.length; i++) {
+    const { value } = args[i];
+    const api = /^\/?repos\/([^/\s]+\/[^/\s]+)\//.exec(value);
+    if (api) return `github.com/${api[1]}/`;
+    const url = /github\.com\/([^/\s]+\/[^/\s]+)\//.exec(value);
+    if (url) return `github.com/${url[1]}/`;
+    if ((value === "-R" || value === "--repo") && args[i + 1]) return `github.com/${args[i + 1].value.replace(/^(?:https?:\/\/)?github\.com\//, "")}/`;
+    const attached = /^--repo=(.+)$/.exec(value);
+    if (attached) return `github.com/${attached[1]}/`;
+  }
+  return null;
+}
+
+// The `body` fields among `gh api` arguments, as `[kind, value]` pairs like messageOptions():
+// `-f`/`--raw-field body=<text>`, and `-F`/`--field body=<text>` or `body=@<file>` (`@-`: stdin).
+function apiBodyFields(args) {
+  const found = [];
+  for (let i = 0; i < args.length; i++) {
+    const m = /^(-f|--raw-field|-F|--field)(?:=([\s\S]*))?$/.exec(args[i].flag ? args[i].value : "");
+    if (!m) continue;
+    const field = m[2] ?? args[++i]?.value ?? "";
+    if (!field.startsWith("body=")) continue;
+    const value = field.slice(5);
+    const typed = m[1] === "-F" || m[1] === "--field";
+    found.push(typed && value.startsWith("@") ? ["file", value.slice(1)] : ["text", value]);
+  }
+  return found;
+}
+
+// The text a command line writes as a commit message, PR body or GitHub comment: one
+// `{ summary, body, dir, kind }` per `git commit` (the summary being its first line, exempt), per
+// `gh pr create`/`edit` (no summary: a PR's title is passed separately and is not checked), and,
+// with kind "comment", per `gh pr|issue comment`, `gh pr review` and `gh api` call posting to a
+// comment or review endpoint. Only the message is read — the -m/--message
 // values, the -F/--file content (a heredoc or the stdin fed to that command, a file the same command
 // line writes from a heredoc, or else the file on disk), and gh's --body/--body-file likewise — never
 // the rest of a compound command, whose heredocs and arguments may well hold `@Annotations`. `dir` is
@@ -135,10 +181,17 @@ export function extractMessages(command, cwd = process.cwd()) {
     const gh = subcommand(cmd.tokens, "gh");
     const commit = git?.name === "commit";
     let parts;
+    let kind = commit ? "commit" : "pr";
     if (commit) {
       parts = messageOptions(git.args, { m: "text", F: "file" }, { message: "text", file: "file" });
     } else if (gh?.name === "pr" && ["create", "edit"].includes(gh.args[0]?.value)) {
       parts = messageOptions(gh.args.slice(1), { b: "text", F: "file" }, { body: "text", "body-file": "file" });
+    } else if (["pr", "issue"].includes(gh?.name) && ["comment", "review"].includes(gh.args[0]?.value)) {
+      kind = "comment";
+      parts = messageOptions(gh.args.slice(1), { b: "text", F: "file" }, { body: "text", "body-file": "file" });
+    } else if (gh?.name === "api" && gh.args.some((t) => COMMENT_ENDPOINT.test(t.value))) {
+      kind = "comment";
+      parts = apiBodyFields(gh.args);
     } else {
       return;
     }
@@ -155,7 +208,7 @@ export function extractMessages(command, cwd = process.cwd()) {
       const [summary, ...body] = text.split("\n");
       messages.push({ summary, body: body.join("\n"), dir });
     } else {
-      messages.push({ summary: "", body: text, dir });
+      messages.push({ summary: "", body: text, dir, kind, target: kind === "comment" ? commentTarget(gh.args) : null });
     }
   });
   return messages;
@@ -233,8 +286,18 @@ export function checkCommitText(command, { cwd = process.cwd() } = {}, depth = 0
   return checkWrappers(command, cwd, depth);
 }
 
-// The autolink violations in one `{ summary, body }` message, or null.
+// A comment the model writes in an XWiki repo (one in scope, see repo-scope.mjs) goes out under the
+// developer's name, so it has to say it was co-written (the rule is in xwiki-org.md). A comment
+// mentions people and PRs on purpose, so it is not checked for autolinks.
+const CO_WRITTEN = /\bco-written with\b/i;
+
+// The violations in one `{ summary, body, kind }` message, or null: the autolinks of a commit
+// message or PR body, the missing co-written note of a comment.
 function messageViolations(message, cwd) {
+  if (message.kind === "comment") {
+    const scoped = message.target ? isScopedRemote(message.target) : isScopedRepo(cwd);
+    return !scoped || CO_WRITTEN.test(message.body) ? null : { findings: [], coWritten: false, summary: "" };
+  }
   const scanned = blankCodeSpans(message.body);
   const findings = [];
   const seen = new Set();
@@ -272,7 +335,14 @@ function checkWrappers(command, cwd, depth) {
 
 // Format the guidance shown to the model on a violation. Shared so every host reports the same
 // wording.
-export function formatCommitTextMessage({ findings }) {
+export function formatCommitTextMessage({ findings, coWritten }) {
+  if (coWritten === false) {
+    return "GitHub comment without its co-written note\n" +
+      "This comment goes out under the developer's name: end it with " +
+      "`PS: This post was co-written with <your tool, e.g. Claude Code>.` (plus what else you did, " +
+      "when that matters) and run the command again. If the developer wrote it themselves, word for " +
+      "word, let them post it.\n";
+  }
   const mentions = findings.filter((f) => f.kind === "mention").map((f) => f.token);
   const refs = findings.filter((f) => f.kind === "reference").map((f) => f.token);
   let out = "Unescaped GitHub autolink in commit/PR text\n";

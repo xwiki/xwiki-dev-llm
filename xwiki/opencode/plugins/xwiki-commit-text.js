@@ -5,7 +5,8 @@
 // contains a bare `@token` or `#123`, which GitHub would autolink into a mention of an unrelated
 // account or a reference to the wrong issue tracker. It throws so the model rewrites the message
 // with backticks — a pushed commit message can no longer be corrected. The `#123` check only applies
-// to a repo whose issues live in JIRA (see usesJiraIssues() in the shared script).
+// to a repo whose issues live in JIRA (see usesJiraIssues() in the shared script). It also refuses a
+// GitHub comment posted to an XWiki repo without its co-written note.
 //
 // Install it by symlinking (or copying) this file into one of opencode's plugin directories:
 //   ~/.config/opencode/plugins/   (global)   or   <repo>/.opencode/plugins/   (per project)
