@@ -488,24 +488,28 @@ The guide's own page is
 
 ## Choose the right location
 
-**Step 1 is bundled-vs-not.** Every documentation page must be associated with an Extension: a
-**bundled** extension's page goes under `documentation.xs`, a **non-bundled** one under
-`documentation.extensions`. This is the *first* decision an author makes, before audience or topic.
-Per the guide's
+Three steps, in this order, per the guide's
 [Choose the Right Location](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation/)
-page.
+page:
 
-Then place the page under the **most relevant existing topic / subtopic** of the `/documentation`
-tree, matching its audience (User / Admin / Developer) and type. Create a new top-level topic **only**
-when no existing topic fits.
+1. **Extension.** Every documentation page must be associated with an Extension: a **bundled**
+   extension's page goes under `documentation.xs`, a **non-bundled** one under
+   `documentation.extensions`.
+2. **Audience** (User / Admin / Developer).
+3. **Topic.** Place the page under the **most relevant existing topic / subtopic**; create a new
+   top-level topic **only** when no existing topic fits.
+
+Both trees are audience > topic. Under `documentation.extensions` the topic is the **extension's
+name** rather than a functional domain, repeated under each audience it documents
+(`…extensions.user.<ext>`, `…extensions.admin.<ext>`, `…extensions.dev.<ext>`) — never one extension
+tree with the audiences nested under it.
 
 **Have the developer confirm the placement before creating the first page**, and present it as **two
 or three written-out page trees** (page names, titles, types, audiences) with each one's cost and your
 recommendation — not as an open question. Placement is expensive to undo once pages are saved and
-linked (relocating is a rename/move with its own backlink handling, [[page-deletion]]), and the rules
-under-determine it: the same extension can defensibly be filed audience-first
-(`…admin.<ext>`/`…user.<ext>`/`…dev.<ext>`) or as one topic tree with the other audiences nested under
-it. For a conversion, the split into pages *is* that decision.
+linked (relocating is a rename/move with its own backlink handling, [[page-deletion]]), and the
+choice of topic and subtopic stays a judgment call. For a conversion, the split into pages *is* that
+decision.
 
 ## Versioning and perspective
 

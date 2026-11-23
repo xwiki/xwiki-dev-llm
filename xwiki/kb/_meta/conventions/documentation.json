@@ -162,7 +162,8 @@
       "questions": [
         "Where in the xwiki.org documentation tree should my new page go?",
         "Should my extension docs go under documentation.xs or documentation.extensions?",
-        "How do I propose page placement to the developer before I create pages?"
+        "How do I propose page placement to the developer before I create pages?",
+        "In what order do I decide extension, audience and topic when placing a doc page?"
       ],
       "aliases": [
         "page hierarchy",
@@ -273,7 +274,7 @@
     ],
     "applies-to": []
   },
-  "source_hash": "4287af1dfa270b4790850a27b8ad106980259d67aff3142f02f83a7b3573bc31",
+  "source_hash": "15adcfb7d0b618404c67f6d3a8a6de1c1fa763ead954265aa6bbe0d6828b0b53",
   "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
@@ -288,7 +289,7 @@
     "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",
     "Attachments, images and videos": "d836da9011766878214c3bc6e9a74024369560294ec516a20697855d3d213969",
     "Screenshots: capture width, framing and the red box": "27ee5fc561705604eaebefd4b761a267ebed2e2fe1be4d92d96f0758fc2ecccb",
-    "Choose the right location": "e48d459fdc5c6274d53931779e501e9840708a4d665df61f274083610c99af06",
+    "Choose the right location": "48d3f4847175c9daf942d44dd449c57705ffa795d0101f7eec34be9f457d774d",
     "Versioning and perspective": "a7578b02471d51649b739531dabf3f4f3b2d7aa47e03ee0f5ed9e84a98352292",
     "Saving changes: minor directly, major via a Change Request": "a674875327964e7473ba049dadfe1b876ddf391f409e4d265d619b9786f86933",
     "Handling the original page after migration": "42d573040567e7fd0d9cd3caddc4d5ae4cba29e0fe52c16339cf90a2672be793",
