@@ -85,6 +85,10 @@ This release brings the following changes:
 * <...one bullet per change; last one is the minimal-version bump if any>
 ```
 
+When the version fixes security issues, put the security-severity sentence of
+`kb/processes/security-policy.md` between the intro and the list (then "This release also brings…"),
+and say it in the extract too. Its issues get no bullet.
+
 **Summary / extract:**
 
 ```

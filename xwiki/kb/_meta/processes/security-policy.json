@@ -21,7 +21,8 @@
         "Can I put a description of the security bug in the commit message of the fix?",
         "What should I name the branch for a security fix so it doesn't give the vulnerability away?",
         "Is it okay to open a public GitHub issue or forum thread about a security bug that isn't published yet?",
-        "Where do I track an unpublished security bug in JIRA so only the security team can see it?"
+        "Where do I track an unpublished security bug in JIRA so only the security team can see it?",
+        "Do I list the security issues in a release's notes, or only give the highest CVSS score?"
       ],
       "aliases": [
         "embargo",
@@ -103,14 +104,14 @@
       "conventions/security.md",
       "conventions/commit-messages.md",
       "servers/jira.md",
-      "servers/index.md"
+      "processes/release-notes.md"
     ],
     "applies-to": []
   },
-  "source_hash": "8e33b94dfe5f3b3438a082d757ac3afbc72f7cf655ae5e612bdbf8268a338612",
+  "source_hash": "8b7c672b2d29f8e60c94be4c02355085f2ad7cb8c78d59778bd4c05101a7be7a",
   "file_hash": "c4db5caeaeacde6fb9a81fd0392424e8d8728def19e1be1bfaf91e3bf3981119",
   "section_hashes": {
-    "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "e67957dfd9bcbb249a287eccb00f19df04811d051707f559c8e9be11d39d7444",
+    "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "833ec91e2159574e5fcfe19e8efe4902f8d3f4ff42761e434128b8aa0f3f6f07",
     "One vulnerability per confidential JIRA issue": "c45725c06aede7e73a07dd83a8e0432f4ea6c9310688b1650b3b02d334820ee2",
     "Merging a non-committer's security pull request": "08278abdc366872eccac67bdc86c724e4dbe1eaa6ac3e350d072610a5f4bbc4d",
     "Severity scoring — CVSS 4 (read the source before scoring)": "5a7780fa9ac7621790e281a7dd468464043ac79d57e6bebc67f16f5b4fcabe68",

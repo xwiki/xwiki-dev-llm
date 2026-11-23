@@ -120,16 +120,17 @@ Project's `ExtensionCode.ProjectVersionClass` for a multi-module project, otherw
 - **JIRA**: `notes` holds a `{{jira}}` macro over the Fix Version. The import may leave it empty: then
   `PUT` the previous version's `notes` with its `fixVersion` changed, as below.
 - **OpenProject**: `notes` stays empty, so copy the version's work packages in, matching the
-  previous versions' `notes`: Bugs, then Improvements, then New Features, each by id, one line each:
+  previous versions' `notes`: Bugs, then Improvements, then New Features, by id, one per line:
   `* [[<Type> <displayId>>>url:https://op.xwiki.org/work_packages/<displayId>]]<subject>`. Escape
   macro calls in subjects (`{{image}}` → `~{~{image}}`). `PUT` it as `text/plain` on
   `…/objects/<class>/0/properties/notes`, read it back, and check that the Versions table renders it
   without errors.
 
-Then set the release-notes field of every issue or work package of the version to the version page
-URL (`kb/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
-(`?notifyUsers=false` spares the watchers an email per issue), OpenProject **Release Notes
-Documentation** (find its `customFieldN` key in the work package schema).
+Security fixes: `notes` opens with the sentence of `kb/processes/security-policy.md`.
+
+Then set the release-notes field of every issue or work package to the version page URL
+(`kb/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
+(`?notifyUsers=false`), OpenProject **Release Notes Documentation** (find its `customFieldN` key in the work package schema).
 
 ## 8. Recovering from a failed release
 

@@ -37,6 +37,13 @@ XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is 
   The Security Policy's "Security Advisory template and information" section has required this
   since October 2026, so past advisories (often with one) are no model for it. Drafting details:
   the `xwiki-security-advisory` skill.
+- **Release notes and announcements never list a release's security issues, but their summary
+  gives the highest CVSS score among them** (Security Policy, "How do I know if I need to
+  upgrade?"), so administrators can decide to upgrade. That holds for xwiki-contrib extensions too
+  (version page notes and blog post): `This release contains security fixes, with the [[highest
+  severity being 8.7/10>>doc:dev:Community.SecurityPolicy.WebHome||anchor="HSeverity"]].` Take the
+  score from the issues' `CVSS Score` field, and leave out the change-list bullets that would point
+  at them.
 
 ## One vulnerability per confidential JIRA issue
 
