@@ -51,7 +51,7 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/?syntax=2.0&section=Links
   - https://diataxis.fr/
 provenance: official
-last-confirmed: 2026-11-19
+last-confirmed: 2026-11-23
 related: [conventions/documentation-mechanics.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
@@ -533,9 +533,8 @@ decision.
   one instance for all the issues.
 - **Version bounds** — for **XWiki itself**, only specify versions **at or after the LTS**, and only
   while that version is within the currently supported **LTS cycle**. For **extensions**, specify the
-  **released version**. Per the guide's
-  [Versioning](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/) page, "The Version
-  Macro" section.
+  **released version**; the **Docker distribution** takes the XWiki version(s)
+  ([Versioning](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/#HTheVersionMacro)).
 - **Maintenance** — remove content and version macros for **unsupported old versions**, and obsolete
   macros once their version no longer matters. Leave out, too, what rots unflagged on an upgrade without
   the reader needing it: a bundled library's version ("Pygments 2.4.2"), a full copy of what it supports

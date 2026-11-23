@@ -56,7 +56,8 @@
       "questions": [
         "Which Solr version works with my version of XWiki?",
         "Why does my standalone Solr fail to load the search core with an SPI class error?",
-        "How do I enable the analysis-extras module on Solr in Docker?"
+        "How do I enable the analysis-extras module on Solr in Docker?",
+        "How do I point the official XWiki Docker image at an external Solr with one environment variable?"
       ],
       "aliases": [
         "analysis-extras",
@@ -70,14 +71,17 @@
       "architecture/component-system.md",
       "servers/index.md"
     ],
-    "applies-to": []
+    "applies-to": [
+      "**/xwiki.properties*",
+      "**/*.java"
+    ]
   },
-  "source_hash": "c126b60e35b0bb9c56623320c168c3133b8e88f30135626e0a31290d7fe2c2b6",
+  "source_hash": "7c83b8b1d1f845bc8e2529b6048dadc95e973a58b6ff97f468712ad3a055914e",
   "file_hash": "d09708afeced4a1d4ce073d88ecefa85c3a62427603758923b95672d7ca476ac",
   "section_hashes": {
     "Solr search backend (embedded vs remote/standalone, multi-core setup)": "111900234d24a4bc5f4c61a5ea64be03495ec03e120c17d63e77af0a646bdc0a",
     "A remote Solr needs several cores, and XWiki does not create them": "bc76b6de0f5fd7150c8ec2078772b2200dab882cf4181d9a3b51ecea7eba3e82",
     "Configuring a remote Solr (xwiki.properties)": "c8fb85caf52e2e334333e0ff9c404bd64fb0976e9f0b35810795310a171b662e",
-    "Solr version compatibility and the analysis-extras module": "e3c9e34902a9c48ee6b80c78fe16672a63b8b4f82b3fc930c0774b98bd2a77c4"
+    "Solr version compatibility and the analysis-extras module": "70176449012ab8923b454c35afc9d3d7a20ac43c618370ef06353a72fa01982a"
   }
 }
