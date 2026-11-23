@@ -685,6 +685,91 @@
     "note": "Weak, borderline generic: admin How-tos bake in OS-specific paths silently."
   },
   {
+    "id": "S05",
+    "fact": "If a reader would hesitate between two documentation topics, they are one topic: you should merge them and make the old ones subtopics of the merged one; when a reader with a question would click either name, they must be merged.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "12.7",
+        "sections": [
+          "Merge topics readers can't tell apart"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "There are both a Skin Extensions topic and a Flamingo Skin topic in the developer docs. Where should my page on overriding a template go?",
+    "status": "candidate",
+    "note": "Models pick one of the two topics and leave the overlap in place. The page still carries a WIP banner (C-domains was dropped for it at version 2.1); this rule is new since then, stated with should/must. partial: kb/conventions/documentation.md#Choose the right location (\"most relevant existing topic\")."
+  },
+  {
+    "id": "S06",
+    "fact": "A documentation page should have at most 20 direct children; User, Administrator and Developer Documentation are exempt, and a page whose children are one flat list with nothing meaningful to group them by may go over 20: never invent a grouping only to get under the number.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "12.7",
+        "sections": [
+          "Keep at most 20 pages directly under a page"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "The Rights topic already has 24 child pages. Is that a problem?",
+    "status": "candidate",
+    "note": "Models have no limit, or invent arbitrary groupings to shrink a list. The page still carries a WIP banner (C-domains was dropped for it at version 2.1); this rule is new since then, stated with should/must."
+  },
+  {
+    "id": "S07",
+    "fact": "A full documentation topic must not push a new page somewhere else: group its children into subtopics that are themselves functional domains, move each child under the one it belongs to, then place the new page.",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "12.7",
+        "sections": [
+          "What to do when a topic is full"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "The Notifications topic is full. Where do I put my new notifications page?",
+    "status": "candidate",
+    "note": "Models file the page under a neighbouring topic, which is how unrelated pages end up together. The page still carries a WIP banner (C-domains was dropped for it at version 2.1); this rule is new since then, stated with should/must. partial: kb/conventions/documentation.md#Choose the right location (\"most relevant existing topic\")."
+  },
+  {
+    "id": "S08",
+    "fact": "A documentation page should be at most 6 levels below User, Administrator or Developer Documentation; before adding a 7th level, check that the levels above are not artificial (a level grouping a kind of page rather than a subject).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "12.7",
+        "sections": [
+          "Don't nest too much the pages"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "My new how-to would sit 7 levels below Administrator Documentation. Is that fine?",
+    "status": "candidate",
+    "note": "Models nest without a depth limit. The page still carries a WIP banner (C-domains was dropped for it at version 2.1); this rule is new since then, stated with should/must."
+  },
+  {
+    "id": "S09",
+    "fact": "When a subject serves two documentation domains and one shared page remains, put it where the thing is produced and link to it from the domain that consumes it (e.g. XAR Format Specifications sits under Exports, linked from the import pages).",
+    "sources": [
+      {
+        "url": "https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/ChooseRightLocation",
+        "version": "12.7",
+        "sections": [
+          "When two domains both claim a page"
+        ]
+      }
+    ],
+    "kb_target": "kb/conventions/documentation.md",
+    "probe": "Should the XAR format specification page go under Imports or Exports?",
+    "status": "candidate",
+    "note": "Models duplicate the page or pick a domain arbitrarily. The page still carries a WIP banner (C-domains was dropped for it at version 2.1); this rule is new since then, stated with should/must."
+  },
+  {
     "id": "B06",
     "fact": "Only the latest stable Firefox, Chrome, Edge and Safari are supported (Edge and Safari tested manually only). IE11 support was dropped in XWiki 14.0 (IE6/7 in 3.3M1, IE8/9 in 7.0, IE10 in 9.9); Opera and others are unsupported, but an easy fix or a provided patch is accepted.",
     "sources": [
