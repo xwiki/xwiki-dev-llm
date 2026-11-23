@@ -143,9 +143,9 @@ build gate to make a fix pass.
   no slack is an unavoidable drop. (Note that files rich in a given issue are often *excluded from
   Checkstyle* at the module-pom level — which is why the debt accumulated there — but Sonar scans
   them anyway, so the 120-char rule still applies to what you write.)
-- **The fix changes a public API's shape or visibility** → Revapi fails the build. Reducing an
-  implicit-public constructor to `private`, narrowing a modifier, or removing a public member are all
-  breaking. See [[backward-compatibility]]. Classes in an `internal` package are exempt (Revapi
+- **The fix changes a public API's shape or visibility** → Revapi fails the build. Narrowing a
+  modifier or removing a public member is breaking (the one agreed exception: S1118 on a utility
+  class, see [[dead-code-rules]]). See [[backward-compatibility]]. Classes in an `internal` package are exempt (Revapi
   ignores them) and are therefore the clean subset for these rules.
 - **The fix removes covered instructions from a module pinned near its coverage floor** → JaCoCo
   fails. See [[verification]] — the resolution is to drop that module from the change, never to lower

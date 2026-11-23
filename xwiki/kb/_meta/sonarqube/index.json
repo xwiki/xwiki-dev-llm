@@ -67,12 +67,14 @@
       "questions": [
         "When should I throw away a Sonar fix even if the change looks correct?",
         "My Sonar fix pushes a line over 120 characters, what do I do?",
-        "What makes a fix fail the Revapi or JaCoCo gate, so I should drop it?"
+        "What makes a fix fail the Revapi or JaCoCo gate, so I should drop it?",
+        "Is it OK to make a public method private or remove a public member as part of a Sonar fix?"
       ],
       "aliases": [
         "fix rejection criteria",
         "120 character limit",
-        "when to drop a fix"
+        "when to drop a fix",
+        "breaking API change"
       ]
     },
     "Retiring an issue that should not be fixed": {
@@ -107,18 +109,17 @@
       "conventions/logging.md"
     ],
     "applies-to": [
-      "**/src/main/java/**/*.java",
-      "**/src/test/java/**/*.java"
+      "**/*.java"
     ]
   },
-  "source_hash": "516684667703f799753b44182e277c6de10d3878c9c514a8157632d1f0ea1f89",
+  "source_hash": "549b0a249257fdaca7098e74ae60a344aece3e9531807823feb45e4dcba9c966",
   "file_hash": "652068777d8b2fd8117fb78f9cd20e836f9af0307c60200e25e6971fd130bc20",
   "section_hashes": {
     "SonarQube rule fixes — index / map": "2edb79a79891d19c7e83659726700693f4c0ab75cdad9c344773811a5d74192a",
     "How to use this (READ)": "ecb3ecf919e57fdada1be4741a4e66b53dcd49896bc0a5ab519ec7831a489548",
     "Rule map": "f9151eec5ae0edd6cb159430aecc67f99c38175d8904f6c648efcb0a1d8d9fd0",
     "Rules not worth fixing (denylist)": "282163ea901d00b07454267651495b288634ce54edd9029b00c779ac5b771481",
-    "Universal drop conditions": "14e06f40a07c623c245a9128fcf7f4f955731982aee7de78e64648870cba8a64",
+    "Universal drop conditions": "7fe88a2e1d4eca89586a8275e701f67e4358a522a87067b3d7dc0847b17639b1",
     "Retiring an issue that should not be fixed": "1cc873f2fd8b2cce633f45849c5145f7b910797564eb2b05e6ff98f69c36c1ad",
     "Related": "9781163269b195c78dc28a840ccc246c0894224096941f78d42cb31b975aa7c3"
   }
