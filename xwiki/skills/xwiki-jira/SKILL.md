@@ -1,6 +1,6 @@
 ---
 name: xwiki-jira
-description: Interact with XWiki's self-hosted JIRA (jira.xwiki.org) — view, search, create, update, comment on and transition issues. Use when the user mentions a JIRA issue key (e.g. XWIKI-12345, XCOMMONS-123, XRENDERING-45), asks to file/triage/update a bug or task, or wants issue/sprint status. Writes descriptions and comments over the REST API (jira-cli mangles text bodies) and uses jira-cli, when installed, for everything else. For the issue-field conventions (Component, Affects/Fix Version) it relies on kb/servers/jira.md; for commit/PR conventions use xwiki-pull-request; for drafting a GitHub Security Advisory from a security-restricted issue use xwiki-security-advisory; for filling the Documentation / Documentation in Release Notes fields of fixed issues use xwiki-release-documentation; for a Bug Fixing Day sweep of the old backlog (scoring bugs and closing many at once) use xwiki-jira-bfd.
+description: Interact with XWiki's self-hosted JIRA (jira.xwiki.org) — view, search, create, update, comment on and transition issues. Use when the user mentions a JIRA issue key (e.g. XWIKI-12345, XCOMMONS-123, XRENDERING-45), asks to file/triage/update a bug or task, or wants issue/sprint status. Writes descriptions and comments over the REST API (jira-cli mangles text bodies) and uses jira-cli, when installed, for everything else. For the issue-field conventions (Component, Affects/Fix Version) it relies on kb/servers/jira.md; for commit/PR conventions use xwiki-pull-request; for drafting a GitHub Security Advisory from a security-restricted issue use xwiki-security-advisory; for filling the Documentation / Documentation in Release Notes fields of fixed issues use xwiki-release-documentation; for a Bug Fixing Day sweep of the old backlog (scoring bugs and closing many at once) use xwiki-jira-bfd; for triaging a branch's failing CI tests use xwiki-release-test-triage.
 ---
 
 # XWiki JIRA
@@ -82,8 +82,7 @@ per `kb/servers/jira.md`. Pass `--no-input` only when every required field is su
    Version/s** (oldest affected, else last LTS — verify the version values, don't cache them),
    **Fix Version/s** (usually none until the issue is closed — see that file). Write the description
    in JIRA wiki markup, explaining the *user-visible* problem, following "Wiki-markup gotchas" in that
-   file, preview it with the render endpoint described there, and send it over REST (see the gotcha
-   above).
+   file, and preview it with the render endpoint described there.
 3. Show the user the drafted summary + description + fields, then create.
 4. Read the description back rendered, link the related issues (see `kb/servers/jira.md`), then
    report the created key and URL.
@@ -114,7 +113,7 @@ Each of these guards an operation that cannot be undone or that reaches other pe
 ## Safety
 
 - Show the command / REST call before running it, and get approval before modifying anything.
-- Preserve original information when editing; verify updates after applying.
+- Preserve original information when editing.
 - Surface authentication failures clearly so the user can fix their setup (see the README).
 
 ## No backend available
