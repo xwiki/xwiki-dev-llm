@@ -30,7 +30,8 @@
       "questions": [
         "What is each XWiki dev server for, and what is its URL?",
         "Which XWiki server hosts JIRA, Jenkins, Sonar, and the forum, and how do I reach it?",
-        "How do I check whether an XWiki server has an MCP tool or only a REST API?"
+        "How do I check whether an XWiki server has an MCP tool or only a REST API?",
+        "Which XWiki forum categories are private, and where do committers talk now that the committers@ mailing list is retired?"
       ],
       "aliases": [
         "xwiki server list",
@@ -56,7 +57,8 @@
         "How do I upload an attachment to an xwiki.org page with curl and why do I get a 400?",
         "How do I pick the right wiki id in the REST URL for dev.xwiki.org or test.xwiki.org?",
         "How do I authenticate to xwiki.org REST with my credentials without leaking the password?",
-        "Can a script call an xwiki.org /bin/ action like ImportExtension with Basic auth, without a browser?"
+        "Can a script call an xwiki.org /bin/ action like ImportExtension with Basic auth, without a browser?",
+        "Why does the page title come back with &amp; in it from the REST API, and what should I send back to keep the title unchanged?"
       ],
       "aliases": [
         "xwiki rest api",
@@ -100,13 +102,13 @@
     ],
     "applies-to": []
   },
-  "source_hash": "82200f12a87181e1353d4487c7a3a95749b2cb4a7f5473a19f68792aa16ba2dc",
+  "source_hash": "96fceaadb6609d1cd6e6c7c0e7753e1be3938b917581ce9257b0f8d5843e61c2",
   "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
   "section_hashes": {
     "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
-    "Server map": "815ae8f9f7faff11ff884d1047b6bb4eac11e3c21582ec37f96249a9c369794e",
+    "Server map": "073aeb8e9c490d6a158661e6c84fed32278770e8642842574d6fd705b3506ade",
     "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
-    "Accessing / writing to the XWiki-run sites via REST": "7f1f8e71e06d3efdbf40f73fbd4a3229cdc79554ec992ab994bc1d314c81a72b",
+    "Accessing / writing to the XWiki-run sites via REST": "6b33d7da9e3b39c139b83684c87b70e3243531170efe546a09982cd6b59d42a7",
     "Posts an LLM co-wrote": "36c6581b775db79de2b0ce733c2e210ce8b7a38173419842144850e73008cb45",
     "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
   }
