@@ -146,3 +146,38 @@ EOF`;
   assert.equal(found(command.replace('cc @bob', 'cc `@bob`')), null);
   assert.deepEqual(found("gh pr edit 12 --body 'cc @bob'"), ['@bob']);
 });
+
+// A GitHub comment the model posts in an XWiki repo must say it was co-written.
+const blocked = (command, cwd = repo({}, 'git@github.com:xwiki/xwiki-platform.git')) =>
+  checkCommitText(command, { cwd })?.coWritten === false;
+const PS = 'PS: This post was co-written with Claude Code.';
+
+test('a comment without the co-written note is blocked, in every way gh posts one', () => {
+  assert.ok(blocked("gh pr comment 36 --body 'Thanks @someone, fixed.'"));
+  assert.ok(blocked("gh issue comment 12 -b 'Done.'"));
+  assert.ok(blocked("gh pr review 36 --comment -b 'Looks good.'"));
+  assert.ok(blocked("gh pr comment 36 --body-file - <<'EOF'\nThanks.\nEOF"));
+  assert.ok(blocked("gh api -X PATCH repos/xwiki/xwiki-jenkins-pipeline/issues/comments/70 -f body='Thanks.'"));
+  assert.ok(blocked("gh api repos/xwiki/xwiki-platform/pulls/7158/comments --field body=Fixed."));
+  assert.ok(blocked("gh api repos/xwiki/xwiki-platform/pulls/7158/reviews -f event=COMMENT -f body='Fixed.'"));
+});
+
+test('a comment with the co-written note passes, and its mentions are not autolink violations', () => {
+  assert.equal(blocked(`gh pr comment 36 --body 'Thanks @someone, see #12.\n\n${PS}'`), false);
+  assert.equal(blocked(`gh api repos/xwiki/xwiki-platform/issues/comments/70 -X PATCH -f body='Fixed.\n\n${PS}'`), false);
+});
+
+test('only comments on an XWiki repo are checked', () => {
+  const personal = repo({}, 'git@github.com:someone/dotfiles.git');
+  assert.equal(blocked("gh pr comment 3 --body 'Thanks.'", personal), false);
+  assert.equal(blocked("gh api repos/someone/dotfiles/issues/3/comments -f body='Thanks.'"), false);
+  assert.ok(blocked("gh api repos/xwiki-contrib/application-forum/issues/3/comments -f body='Thanks.'", personal));
+  assert.ok(blocked("gh pr comment 3 -R xwiki/xwiki-commons --body 'Thanks.'", personal));
+  assert.ok(blocked("gh pr comment https://github.com/xwiki/xwiki-commons/pull/3 --body 'Thanks.'", personal));
+});
+
+test('reading comments, or a review without a body, is not posting one', () => {
+  assert.equal(blocked('gh api repos/xwiki/xwiki-platform/pulls/7158/comments --jq .[].body'), false);
+  assert.equal(blocked('gh pr review 36 --approve'), false);
+  assert.equal(blocked("gh api repos/xwiki/xwiki-platform/pulls/7158 -f body='A PR body, not a comment.'"), false);
+});

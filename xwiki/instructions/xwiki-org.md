@@ -40,6 +40,9 @@ follows.
 - **Every `git push` names the remote and the branch** (`git push origin <branch>`). Where
   `push.default=matching` is set, a bare push also sends every local branch ahead of the remote — a
   local `master` or `stable-*` goes out silently — and a bare force push rewrites them all, lease or not.
+- **A post or comment an LLM co-wrote goes out under the developer's name** (GitHub, JIRA, forum),
+  so it ends with `PS: This post was co-written with Claude Code.` (plus what else it did, when that
+  matters). Commits, PRs and `xwiki-ci-check` comments are attributed their own way.
 - **A visible change carries images, plus a "before" for a UI fix** — on its JIRA issue, and in
   its PR body if any. Producing them is also how you check it works: `kb/servers/jira.md`.
 

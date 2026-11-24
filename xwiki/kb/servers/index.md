@@ -2,7 +2,7 @@
 title: XWiki development server ecosystem
 stability: durable
 summary: The servers making up the xwiki.org dev ecosystem, what each is for, and how an LLM
-  accesses or verifies each one (MCP, REST, or live `curl`), and attributing posts an LLM co-wrote.
+  accesses or verifies each one (MCP, REST, or live `curl`).
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
@@ -90,13 +90,6 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   (stdin then carries the header, so send a body with `--data-binary @file`, not `@-`). If a password does leak into the conversation, say so plainly and
   tell the developer to rotate it — a transcript cannot be un-sent. Same rule for any other secret
   store the developer points at (`~/.netrc`, an env file, a password-manager export).
-
-## Posts an LLM co-wrote
-
-A forum post, JIRA description or comment, or GitHub comment an LLM co-wrote goes out under the
-developer's name, so it ends with `PS: This post was co-written with Claude Code.` (plus what else it
-did, when that matters). Commits and PRs (`xwiki-pull-request`) and comments whose tool appends its
-own footer (`xwiki-ci-check`) are attributed their own way.
 
 ## Verifying volatile facts
 

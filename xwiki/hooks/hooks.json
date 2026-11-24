@@ -47,6 +47,16 @@
           },
           {
             "type": "command",
+            "if": "Bash(gh issue*)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh api*)",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
+          },
+          {
+            "type": "command",
             "if": "Bash(bash *)",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/check-commit-text.mjs\""
           },

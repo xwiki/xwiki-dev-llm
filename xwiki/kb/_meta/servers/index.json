@@ -4,7 +4,8 @@
       "Which XWiki servers do I need to access for code, issues, CI builds, forum, and artifacts?",
       "How do I know whether an XWiki server has an MCP tool or whether I have to use curl or REST?",
       "Where do I find the list of XWiki dev infrastructure servers and their URLs?",
-      "How do I attribute a forum post or JIRA comment that I wrote with an AI assistant?"
+      "Why does curl to an xwiki.org site return 403, and which User-Agent do I need?",
+      "What does each XWiki dev server do, and how does my AI assistant reach it?"
     ],
     "aliases": [
       "xwiki infrastructure",
@@ -66,18 +67,6 @@
         "bin basic auth"
       ]
     },
-    "Posts an LLM co-wrote": {
-      "questions": [
-        "How do I attribute a forum post I wrote with Claude Code?",
-        "What signature must a JIRA comment have when an AI assistant helped write it?",
-        "Do commits and pull requests need the same AI attribution as forum posts?"
-      ],
-      "aliases": [
-        "ai attribution",
-        "co-written with claude",
-        "llm disclosure"
-      ]
-    },
     "Verifying volatile facts": {
       "questions": [
         "How do I find the current development version of XWiki without trusting a cached number?",
@@ -100,14 +89,13 @@
     ],
     "applies-to": []
   },
-  "source_hash": "82200f12a87181e1353d4487c7a3a95749b2cb4a7f5473a19f68792aa16ba2dc",
-  "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
+  "source_hash": "0a731de79a732779efb44d9561af8c5b56a05049d052de1751dda59859030d3f",
+  "file_hash": "8984cd492f9de03577d6d20665239003660d5abdced01761e8e0ec3ffe4628d6",
   "section_hashes": {
     "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
     "Server map": "815ae8f9f7faff11ff884d1047b6bb4eac11e3c21582ec37f96249a9c369794e",
     "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
     "Accessing / writing to the XWiki-run sites via REST": "7f1f8e71e06d3efdbf40f73fbd4a3229cdc79554ec992ab994bc1d314c81a72b",
-    "Posts an LLM co-wrote": "36c6581b775db79de2b0ce733c2e210ce8b7a38173419842144850e73008cb45",
     "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
   }
 }
