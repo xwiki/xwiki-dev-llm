@@ -262,7 +262,9 @@ export function alsoInfra(stages, cause) {
 async function causeOf(stages) {
   const infra = stages.map(bag => infraOf(bag));
   const code = stages.filter((bag, index) => !infra[index]);
-  const fromCode = code.length ? await codeCauseOf(code) : null;
+  // A build Jenkins calls red with no failed or aborted stage has nothing to name it: that is an
+  // unexplained break, never no diagnosis at all — every caller reads `kind` and `signature`.
+  const fromCode = code.length || !stages.length ? await codeCauseOf(code) : null;
   if (fromCode && fromCode.kind !== 'unclassified') return fromCode;
   return infra.find(Boolean) || fromCode;
 }
