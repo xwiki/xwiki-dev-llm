@@ -71,9 +71,6 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   other farm site `<name>.xwiki.org` is the subwiki `<name>` (`dev.xwiki.org` → `/rest/wikis/dev/…`),
   listed by `GET /rest/wikis`. `/rest/wikis/xwiki/…` on another host silently reads www's main wiki:
   `404` or an empty list, never an error naming the wiki.
-- **A page `GET` returns `title` HTML-escaped; write back `rawTitle`.** `title` is the rendered
-  title (`Forums &amp; Mailing Lists`), so a `PUT` that copies it saves the escaped text as the new
-  title. Read `rawTitle` to keep a title unchanged, and compare `rawTitle` when verifying a save.
 - **Credentials convention: `~/.xwiki-credentials`** — the developer's xwiki.org write credentials, two
   lines, no quotes and no `export`: `XWIKI_USER=…` / `XWIKI_PASSWORD=…`. Look for that file before
   asking for credentials, but **never print its contents** — not `Read`, not `cat`/`head`/`less`, not
