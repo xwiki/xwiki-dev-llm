@@ -13,8 +13,8 @@ charters, not the code.
 The instance runs the baseline, a version without the fixes. Reach each given check point by hand,
 from the check's `path`, its script (up to where it broke) and the tester's evidence, and replay
 each given finding's steps. Do not explore, and do not judge whether the result is right: the
-verifier does. A step that writes data is done in fresh pages named with `before`: data the fixed
-build wrote can look fine on the baseline and hide the bug. Where the baseline UI differs from what
+verifier does. A step that writes data is done in fresh pages named with `before`, as the scripts
+do. Where the baseline UI differs from what
 the script expected (an element missing, an error in its place), note it: the difference is what the
 verifier needs.
 
@@ -23,8 +23,7 @@ and finding replayed. Read an image only to decide a visual step; keep logs and 
 
 ## Result
 
-Fill your ids in `<run>/<tester>/result-before.json` (the rest is already there): checks
-`{"id": …, "observed": "…", "result": "bug | ok | other | blocked", "evidence": [...], "byHand": "why
-the script broke"}`, where `bug` means the original bug shows; findings `{"id": "t1-f1", "observed":
-"…", "result": "present | absent | different", "evidence": [...]}`; anything new and important in
-`newObservations`. Return only a one-line summary per id.
+Fill your ids in `<run>/<tester>/result-before.json` (format: `report.md`; the rest is already
+there), with `observed`, your evidence and `byHand`: why the script broke. Leave `result` to the
+verifier. Anything new and important goes in `newObservations`. Return only a one-line summary per
+id.

@@ -24,7 +24,8 @@ Written in step 4, updated with each verdict; a re-test reads it back.
     "tours": ["many-and-none", "rights"],
     "users": ["admin", "simple", "guest"],
     "scenarios": [{"id": "confirm", "steps": ["…"]}, {"id": "explore", "charter": "…"}],
-    "baselineHasBug": true, "baselineProof": "replay | automated: <test class#method>",
+    "baselineHasBug": true,
+    "baselineProof": "replay | {\"test\": \"<class#method>\", \"assertion\": \"<quoted>\"}",
     "verdict": null, "verifierVerdict": null
   }],
   "createdData": {"spaces": [], "users": [], "external": [], "pages": []}
@@ -33,6 +34,25 @@ Written in step 4, updated with each verdict; a re-test reads it back.
 
 `createdData` is what the clean-up deletes; record each creation as it happens, so a run that stops
 half-way can still be cleaned.
+
+## `result-before.json` — the baseline replay
+
+Written by the orchestrator per tester from the script runs, completed by a replayer for the ids it
+replays by hand; the verifier, not this file, says what each shows (`before` in its result).
+
+```json
+{
+  "tester": "t1", "phase": "before", "run": "2026-11-19T14:02", "version": "18.9.0",
+  "versionEvidence": "../versions-before.png",
+  "checks": [{"id": "XWIKI-12345-c1", "result": "unjudged", "exit": 0,
+              "start": "2026-11-19T14:05:01+01:00", "end": "2026-11-19T14:05:19+01:00",
+              "observed": "only when replayed by hand", "byHand": null,
+              "evidence": ["XWIKI-12345/XWIKI-12345-before-03-text.txt", "XWIKI-12345/XWIKI-12345-before-03.png",
+                           "XWIKI-12345/XWIKI-12345-before-console.txt", "XWIKI-12345/XWIKI-12345-before-server-log.txt"]}],
+  "findings": [{"id": "t1-f1", "result": "unjudged", "exit": 0, "evidence": ["…"]}],
+  "newObservations": []
+}
+```
 
 ## The HTML report
 
@@ -49,10 +69,9 @@ published. Little prose: the tables carry the content, explanations sit in colla
    - **Expected after fix** — one sentence;
    - **Videos** — at *full* evidence only: baseline and build under test, one link per session video;
    - **Checks** — a compact table, one row per check: the path tested (expected and observed in a
-     collapsed detail), a baseline chip and a build chip (the testers' `result`), the verifier's
-     check verdict when it differs (it is the baseline result for a scripted replay, which only
-     the verifier judges; "proven by <test>" when an automated test stands for it), and the
-     evidence of both phases side by side — the text
+     collapsed detail), a baseline chip (the verifier's `before`) and a build chip (the tester's
+     `result`), the verifier's check verdict when it differs, and the evidence of both phases side
+     by side — the text
      excerpts, or the screenshots where taken (click to enlarge). The section heading shows "N/M
      fixed".
 4. **Findings detail** — collapsed, one per finding: steps, expected vs actual, the baseline and

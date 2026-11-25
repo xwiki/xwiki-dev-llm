@@ -16,8 +16,8 @@ on purpose: do not read the source, its history or its PRs. Judge what you see a
 issue says and what a reasonable user would expect.
 
 Your job is twofold: **confirm** that each item's expected result now holds, then **explore** around
-it to find what is still broken. A run that only confirms is half done. Later another agent will
-replay your checks on a baseline version from your check scripts and your result alone.
+it to find what is still broken. A run that only confirms is half done. Later your scripts will
+be replayed on a baseline version with no agent driving them.
 
 Load the `agent-browser` skill, then read `agent-browser-xwiki.md`: its traps make working features
 look broken.
@@ -45,11 +45,18 @@ look broken.
   action, `record stop` after the last).
 - **A script per check, and per reproducible finding**: the `agent-browser` commands, with their
   session names and absolute paths, that go from a logged-in session to the check point and save
-  its text evidence (and its screenshot, when the level takes one). It reads the phase from
-  `$PHASE` (`after`, `before`) for its page and file names, creates the data it needs itself, and
-  exits non-zero when a step fails, so that it runs unchanged on the baseline with no agent driving
-  it. With `PHASE=before` it always saves a screenshot too: what the baseline shows is not known in
-  advance, and an unread file costs nothing. Run it once yourself to check it works.
+  its evidence, so that it runs unchanged on the baseline with no agent driving it:
+  - page and file names carry `$PHASE` (`after`, `before`) and `$RUN`, so each run writes fresh
+    pages — data the fixed build wrote can look fine on the baseline and hide the bug;
+  - it creates the data it needs, and a global check sets its global value, saving the original
+    and restoring it on exit, failure included (a shell `trap`);
+  - it prints its start and end time, and saves the text evidence, `errors`, `console` and
+    `network requests`; with `PHASE=before` also a screenshot (what the baseline shows is not known
+    in advance, and an unread file costs nothing), and at *full* a video named by `$PHASE`;
+  - only a setup or navigation step failing exits non-zero: an element missing at the check point
+    is evidence (the bug can be just that), recorded in the text evidence, not a failure.
+
+  Run it once yourself to check it works.
 - **Keep your context small** — every token you read is paid again on each later request. Read an
   image only when your judgment is visual, never to confirm a screenshot was taken; redirect logs,
   console, network and long snapshots to files and print only counts or matching lines; scope

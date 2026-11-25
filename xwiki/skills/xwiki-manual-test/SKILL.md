@@ -73,11 +73,12 @@ show the list. A release can hold a hundred issues; testing all of them wastes t
 skipping some hides the decision from the user.
 
 For a *manual test* item, also note whether its fix's PR adds or changes an automated test that
-asserts the issue's expected result. XWiki requires such a test to fail without the fix, so it
-already proves that this behaviour is detected on a version without the fix: the item's confirm
-checks then skip the before phase (`baselineProof: "automated: <test>"` in the plan, shown in the
-triage list so the user can object). A test of something narrower than the confirm check (a helper
-rather than the UI behaviour) is not such a proof. The other checks and the findings still replay.
+asserts the confirm check's expected result **at the same level** — a functional test for a UI
+check, not a unit test of a helper. Such a test must fail without the fix
+(`kb/testing/strategy.md#Every change has a test; tests stay silent`), so it stands for the
+baseline replay of those confirm checks: record it in the plan (`baselineProof`: the test and the
+assertion, quoted), show it in the triage list so the user can object, and prove it by a run of
+the test on the baseline when that is cheap. The other checks and the findings still replay.
 
 ## 2. Run questions — ask, never assume
 
@@ -167,17 +168,15 @@ Every check runs on both versions, with the same steps and evidence. The order:
 1. **After, parallel then global** — on the build under test: confirm and explore (the tester
    brief), each check recorded with an id in `result-after.json`.
 2. **Switch to the baseline** (`xwiki-deploy-extension`, one job per extension, dependents first)
-   and prove it (step 3). Testers close their sessions and log in again: skin extensions are cached.
-3. **Before, parallel then global** — replay every check (the original bug must show) and every
-   finding (present, absent or different), except the confirm checks proven by an automated test
-   (step 1). **No agent at first**: run the check and finding scripts yourself with `PHASE=before`,
-   in a shell loop (testers' scripts in parallel, each tester's sessions being its own; global ones
-   after, alone), each script's output to a file, and record in each tester's `result-before.json`
-   the exit status and evidence paths per id, with `result: "unjudged"` — the verifier judges them
-   from the evidence. Only for the scripts that break (the baseline UI differs) and the findings
-   with no script, start a replayer on Sonnet, briefed with `references/replayer-brief.md`, to reach
-   those check points by hand. A script redoes any step that writes data in fresh pages: data the
-   fixed build wrote can look fine on the baseline and hide the bug. No new exploration.
+   and prove it (step 3). Close every tester session and log each user in again: skin extensions
+   are cached.
+3. **Before, parallel then global** — every check and finding replayed on the baseline, except the
+   confirm checks an automated test stands for (step 1), **with no agent**: you run the testers'
+   scripts (`PHASE=before`, a fresh `RUN`; parallel across testers, global ones after and alone),
+   cut the server log to each script's time window, and write `result-before.json` (format:
+   `references/report.md`) with the results left `unjudged` for the verifier. Only a script that
+   breaks before its check point, and a finding with no script, get a replayer on Sonnet
+   (`references/replayer-brief.md`). No new exploration.
 4. **Restore** the build under test when the instance outlives the run.
 
 A check that does not show the bug on the baseline is reported as such: it does not prove the fix.
@@ -211,11 +210,13 @@ introduced on the changed UI are findings; pre-existing ones are listed apart.
 
 Before reporting, hand fresh verifier sub-agents on Sonnet `references/verifier-brief.md`, the plan, the
 tracker's severity scale and filing policy, the version proofs and the evidence — not the testers'
-reasoning. Give one verifier a group of testers small enough for it to open every screenshot. It
-re-judges every check, verdict and finding from the evidence alone: a *verified* verdict whose
-expected result is not visible becomes *unverified*; a finding the evidence does not support is
-dropped or marked doubtful. Report the verifiers' verdicts, and where one disagreed with a tester,
-both.
+reasoning. Give one verifier a group of testers small enough for it to open every screenshot it
+must (its brief). It re-judges every check, verdict and finding from the evidence alone, and is the
+only judge of the scripted baseline replays: a *verified* verdict whose expected result is not
+visible becomes *unverified*; a finding the evidence does not support is dropped or marked doubtful.
+Where a baseline judgment decides an item's outcome — a check *unproven*, a finding a regression
+rather than pre-existing — a second verifier on the default model judges that evidence too, since
+no tester did. Report the verifiers' verdicts, and where one disagreed with a tester, both.
 
 ## 8. Report, drafts, clean-up
 
@@ -238,4 +239,4 @@ findings are open, so the user can look), and stop only the instances the run st
 check scripts where they still run — with the same report. It is cheaper on three counts, each to
 keep: propose *quick* depth and one tester per area of the new fixes; skip the before phase of a
 check whose baseline evidence already shows the bug (the baseline has not changed); and verify only
-the checks and findings whose verdict changed.
+the checks and findings with new evidence.
