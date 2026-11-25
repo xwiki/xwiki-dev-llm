@@ -149,8 +149,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "I'm filing a JIRA bug for a regression introduced in 17.4.0 (May 2025). Which priority and labels?",
-    "status": "candidate",
-    "note": "Generic trackers have no age-based priority rule; a model picks priority by perceived severity."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); e01, baseline with the code 0,1,0 → branch 3,3,3."
   },
   {
     "id": "C09",
@@ -166,8 +166,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "Split XWIKI-2xxxx into three sub-tasks for each module.",
-    "status": "candidate",
-    "note": "JIRA offers Sub-task/Epic/Story; a model splitting work reaches for Sub-task."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); e02, 1,2,1 → 3,3,3."
   },
   {
     "id": "B26",
@@ -183,8 +183,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "\"Draft the description of a bug I found in the PDF export.\"",
-    "status": "candidate",
-    "note": "Without it agents write free-form descriptions. KB jira.md covers fields and markup, not the description shape."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); e03, 2,2,2 → 2,3,3."
   },
   {
     "id": "B27",
@@ -200,8 +200,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "\"File the issue to automate manual test 'Web Tests.X'.\"",
-    "status": "candidate",
-    "note": "The fields are pure convention. Partial: kb/testing/manual-tests.md#Automation status (points to the section, records the status object, not the ticket fields)."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/testing/manual-tests.md#Manual tests on test.xwiki.org; e04, 1,0,1 → 3,3,3."
   },
   {
     "id": "C13",
@@ -217,8 +217,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "My fix touches the Flamingo skin LESS and the livetable JS. Which JIRA components?",
-    "status": "candidate",
-    "note": "\"At least one\" leads to a single guessed component. partial: kb/servers/jira.md#Issue-field conventions (\"set at least one\")."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); with a pointer from #Resolving / closing an issue. e05, 0,1,1 → 1,2,2."
   },
   {
     "id": "C14",
@@ -234,8 +234,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "Label a bug that only happens on PostgreSQL 16 with Tomcat 10.",
-    "status": "candidate",
-    "note": "Models freely invent `Tomcat10`/`firefox-128` labels; only flickering/security/testneeded are covered."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); e06, 2,2,1 → 3,3,3."
   },
   {
     "id": "C15",
@@ -251,8 +251,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "I'm merging a contributor's PR for XWIKI-2xxxx. Who should be the assignee when I close it?",
-    "status": "candidate",
-    "note": "The KB rule reads as \"assign whoever works on it\", i.e. the merging committer. partial: kb/servers/jira.md#Starting work on an issue; `patch` label (Contributing § Coding rules) absent."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Starting work on an issue; e07, 0,2,0 → 3,3,3. The `patch` label is not landed: it is on Community/Contributing, not on this fact's cited page."
   },
   {
     "id": "B35",
@@ -268,8 +268,8 @@
     ],
     "kb_target": "kb/servers/jira.md",
     "probe": "\"File a JIRA issue for an axe 'label' violation on the admin page.\"",
-    "status": "candidate",
-    "note": "Convention."
+    "status": "done",
+    "note": "Batch 2026-11-25: in kb/servers/jira.md#Issue-field conventions (every issue type); e08, 1,1,1 → 3,3,3."
   },
   {
     "id": "B42",
