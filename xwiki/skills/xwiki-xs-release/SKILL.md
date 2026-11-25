@@ -70,11 +70,8 @@ its own). The checks, all read-only:
   Application (`kb/processes/release-notes.md`, which holds the rules an entry is reviewed
   against).
 - **Summary**: one paragraph, the user-visible highlights first (an administrator or technical item
-  such as clustering does not belong there), then "For developers, …", then
-  `This release contains security fixes, with the [[highest severity being N/10>>doc:dev:Community.SecurityPolicy.WebHome||anchor="HSeverity"]].`
-  The highest severity is the max of JIRA's **CVSS Score** field over the `labels = security`
-  issues of the version, cross-checked with the repository security advisories. An unscored one is
-  usually solved by another issue (its "Solved By" link) or not confidential at all.
+  such as clustering does not belong there), then "For developers, …", then the security-severity
+  sentence and how to compute its score (`kb/processes/security-policy.md`).
 - **Missing documentation**: draft a Matrix message pinging the assignees (mentions below), or
   hand off to `xwiki-release-documentation` when the developer asks for it.
 - **Review the release notes only once the documentation is filled**: those fields bring new

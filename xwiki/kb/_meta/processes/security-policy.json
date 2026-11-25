@@ -22,7 +22,9 @@
         "What should I name the branch for a security fix so it doesn't give the vulnerability away?",
         "Is it okay to open a public GitHub issue or forum thread about a security bug that isn't published yet?",
         "Where do I track an unpublished security bug in JIRA so only the security team can see it?",
-        "Where do I discuss an unpublished security bug with the team, and what address do I use to report one I found?"
+        "Where do I discuss an unpublished security bug with the team, and what address do I use to report one I found?",
+        "Do I list the security issues in a release's notes, or only give the highest CVSS score?",
+        "What exact sentence should a release announcement use to state the highest CVSS severity of its security fixes?"
       ],
       "aliases": [
         "embargo",
@@ -108,10 +110,10 @@
     ],
     "applies-to": []
   },
-  "source_hash": "fc530b3f69b606d6b9272ae7f968221b4de577f4957c84e165902eb3995cf315",
+  "source_hash": "9ae700ad7f93c7bbd286d1d46bebb1fb9447e2e432e54db2b5c06ab98d4fe046",
   "file_hash": "c4db5caeaeacde6fb9a81fd0392424e8d8728def19e1be1bfaf91e3bf3981119",
   "section_hashes": {
-    "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "49a86a21b2adf77264c82f0bb71d3f6f97ac87841c4329a867b3c9047c7834dc",
+    "Do not disclose a vulnerability publicly until it is disclosed (durable rule)": "aaa0a71ea4e8223d15c49137ea043839067d0a08fd1a269524d9c78f29e364a9",
     "One vulnerability per confidential JIRA issue": "c45725c06aede7e73a07dd83a8e0432f4ea6c9310688b1650b3b02d334820ee2",
     "Merging a non-committer's security pull request": "08278abdc366872eccac67bdc86c724e4dbe1eaa6ac3e350d072610a5f4bbc4d",
     "Severity scoring — CVSS 4 (read the source before scoring)": "5a7780fa9ac7621790e281a7dd468464043ac79d57e6bebc67f16f5b4fcabe68",
