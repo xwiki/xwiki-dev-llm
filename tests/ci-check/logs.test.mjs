@@ -133,3 +133,11 @@ test('a build only the infrastructure broke is infrastructure, even beside an un
   assert.equal(diagnosis.signature, 'jenkins-xml-limit');
   assert.equal(diagnosis.also, undefined);
 });
+
+test('a red build with no failed stage is unclassified, not a crash of the sweep', async () => {
+  // 2026-11-25: one red build had no FAILED or ABORTED stage, and the whole sweep died on it.
+  const diagnosis = await diagnoseStages([]);
+  assert.equal(diagnosis.kind, 'unclassified');
+  assert.equal(diagnosis.stage, null);
+  assert.equal(diagnosis.also, undefined);
+});
