@@ -29,8 +29,9 @@ XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is 
   (ci.xwiki.org names a job after it) and its name stays on its PR for good: name it neutrally
   before the first push.
 - Track the real issue as a **JIRA issue with a restricted security level** (visible only to the
-  security group), not as a public ticket. Security discussion happens on the
-  committer-private/security mailing list (see [[index]] in `servers/`).
+  security group), not as a public ticket. Security discussion happens in the
+  private Security forum category; security@xwiki.org stays the address where anyone can report
+  (see [[index]] in `servers/`).
 - The **published advisory** carries no PoC either (no exploit request, payload or reproduction
   steps — only the affected feature, attack vector, requirements and impact), even after
   disclosure: scanners import advisories and replay their PoCs. The PoC stays in the JIRA issue.

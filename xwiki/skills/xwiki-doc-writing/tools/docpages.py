@@ -49,11 +49,6 @@ def lint_view(p):
 VIO_CLASS = 'DocApp.Code.DocumentationViolationClass'
 PIN_CLASS = 'XWiki.PinnedChildPagesClass'
 
-# The block every diagram carries under its theme line, read from the file authors paste: a page
-# holding an older copy must fail, or a palette revision quietly leaves pages behind.
-PALETTE = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            'plantuml-accessible-palette.puml'), encoding='utf-8').read().strip()
-DIAGRAM_HEAD = '!theme bluegray\n' + PALETTE
 
 # Words that must not appear in a title: the page type and the audience are both carried by the
 # path and the badge already.
@@ -219,12 +214,6 @@ def lint(mod):
             cap = re.search(r'caption="([^"]*)"', attrs)
             if cap and re.search(r'\d+\.\d+', cap.group(1)):
                 problems.append(f'{name}: caption used for a version: {cap.group(1)!r}')
-
-        # A ditaa diagram takes no theme and no skinparam.
-        for body in diagram_bodies(p['content']):
-            if '@startditaa' not in body and DIAGRAM_HEAD not in body:
-                problems.append(f'{name}: diagram lacks `!theme bluegray` followed by the current '
-                                f'tools/plantuml-accessible-palette.puml')
 
         referenced = set(re.findall(r'reference="([^"]+)"', strip_verbatim(p['content'])))
         declared = set(p['attachments'])
@@ -563,11 +552,6 @@ def outside_code(content):
         if '{{/code}}' in bare:
             inside = False
     return '\n'.join(out)
-
-
-def diagram_bodies(content):
-    """The bodies of the `{{plantuml}}` macros that render."""
-    return re.findall(r'\{\{plantuml\b[^}]*\}\}(.*?)\{\{/plantuml\}\}', outside_code(content), re.S)
 
 
 def live_diagrams(content):

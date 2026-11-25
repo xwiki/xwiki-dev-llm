@@ -76,6 +76,6 @@ must be enabled on the standalone Solr (`SOLR_MODULES=analysis-extras` for the o
 without it the search core fails to load with an SPI class error. The pre-built core packages cannot
 bundle it.
 
-The official Docker image (`xwiki`, repo `xwiki/docker-xwiki`) exposes this through a single
+The official Docker image (`xwiki`, repo `xwiki/xwiki-docker`) exposes this through a single
 `SOLR_BASE_URL` environment variable, which its entrypoint maps to the two properties above; a helper
 Solr image under `contrib/solr/` pre-creates the four cores.

@@ -38,6 +38,7 @@ sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/HorizontalMenu/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/DocumentationResources/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/Diagrams/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/DeprecatedContent/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/SaveChanges/
   - https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/WorkingAttachments/
@@ -51,7 +52,7 @@ sources:
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiSyntax/?syntax=2.0&section=Links
   - https://diataxis.fr/
 provenance: official
-last-confirmed: 2026-11-19
+last-confirmed: 2026-11-23
 related: [conventions/documentation-mechanics.md, conventions/documentation-migration.md, conventions/page-deletion.md]
 ---
 
@@ -188,7 +189,7 @@ replace a paragraph:
   **lifecycle or state machine**, and a **decision between alternatives**. Three do not: a risk or
   policy narrative, a page defining a single idea, and a FAQ-shaped page. Decide by shape, not by
   audience — but for a User audience draw it without technical vocabulary. Diagrams use the
-  **PlantUML macro with the `bluegray` theme** (see below).
+  **PlantUML macro** (see below).
 - **Textual content is shown as a code macro, never as a screenshot of text**, whatever the audience: a
   configuration file, a command line, a log line, a query, a snippet. The reader must be able to copy it,
   and a picture of text is unsearchable, inaccessible and rots silently — so an Administrator How-to
@@ -430,13 +431,9 @@ The guide's own page is
   justified it is in **`webm`** format and it is **displayed with the `{{embed}}` macro**:
   `{{embed attachment="usage.webm" width="780"/}}`, which renders a real HTML5 player. **A video is
   embedded, never linked:** an `attach:` link loses the player, and nothing flags it.
-- **Diagrams use the PlantUML macro with the `bluegray` theme**, never a screenshot of a rendered
-  diagram, so the source stays in the page and stays editable. **That theme alone fails WCAG AA**,
-  and nothing flags it because the result looks deliberate: its labels are light on mid-blue, 1.6 to
-  3.0:1, and 3:1 is the bar for large text, not for PlantUML's 12px. So `!theme bluegray` is always
-  followed, verbatim, by **`xwiki-doc-writing/tools/plantuml-accessible-palette.puml`**, which keeps
-  the XWiki blue; `docpages.py lint` fails a diagram without it, and that directory's README
-  explains the palette.
+- **Diagrams use the PlantUML macro**, never a screenshot of a rendered diagram, so the source stays
+  editable, and **set no theme or colors** (no `!theme`, color `skinparam` or `<style>`): each
+  xwiki.org wiki's default diagram style applies, and the "PlantUML Theme" check reports a diagram that does.
 - **Updating an attachment means re-uploading it under the same name**, which versions it — do not
   delete and re-add. The one place attachments *are* deleted is the original page after a migration
   (see [[documentation-migration]]).
@@ -533,9 +530,8 @@ decision.
   one instance for all the issues.
 - **Version bounds** — for **XWiki itself**, only specify versions **at or after the LTS**, and only
   while that version is within the currently supported **LTS cycle**. For **extensions**, specify the
-  **released version**. Per the guide's
-  [Versioning](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/) page, "The Version
-  Macro" section.
+  **released version**; the **Docker distribution** takes the XWiki version(s)
+  ([Versioning](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Versioning/#HTheVersionMacro)).
 - **Maintenance** — remove content and version macros for **unsupported old versions**, and obsolete
   macros once their version no longer matters. Leave out, too, what rots unflagged on an upgrade without
   the reader needing it: a bundled library's version ("Pygments 2.4.2"), a full copy of what it supports

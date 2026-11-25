@@ -95,5 +95,7 @@ Walk both lists in order, your work first:
 
 A forum topic or reply outside this sweep (brainstorming, proposal, vote) is `xwiki-forum`'s.
 
-After each write, `dc done <itemId> <action>` — the next report counts them. A "no" or "later" is
+**One item at a time.** Finish an item (its writes, the follow-ups they call for such as a doc page
+or a KB sync, then `dc done <itemId> <action>`, which the next report counts), report the outcome, and
+ask before moving on: never open the next item in the turn that finishes one. A "no" or "later" is
 not re-offered in the same run.

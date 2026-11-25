@@ -144,6 +144,11 @@ curl -s -u Admin:admin -X PUT -H "Content-Type: application/xml" \
 Returns `201` if the page was created, `202` if updated, `304` if unchanged. Add
 `?minorRevision=true` to record a minor version instead of a major one.
 
+**To keep a title, send back `rawTitle`, never `title`.** A page `GET` returns `title` rendered and
+HTML-escaped (`Forums &amp; Mailing Lists`) next to the source `rawTitle` (`Forums & Mailing Lists`).
+A `PUT` that copies `title` saves the escaped text as the new title, one more `&amp;` per round trip.
+Compare `rawTitle` too when reading a write back.
+
 ### Change xobject properties
 
 Update all given properties of an existing object (PUT the object URL, form-encoded):
