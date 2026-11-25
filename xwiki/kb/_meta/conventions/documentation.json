@@ -69,7 +69,8 @@
       "questions": [
         "When should I split a long documentation page into two pages?",
         "How do I avoid repeating the same paragraph on several documentation pages?",
-        "What belongs in a hub page's intro compared to its child page list?"
+        "What belongs in a hub page's intro compared to its child page list?",
+        "What should go in the intro of a How-to before its numbered steps?"
       ],
       "aliases": [
         "page granularity",
@@ -81,7 +82,8 @@
       "questions": [
         "Which fields does an xwiki.org documentation page have and what does each one mean?",
         "Where do I set the page type and target audience in the documentation application?",
-        "What is the difference between Highlights, More and Related links on a documentation page?"
+        "What is the difference between Highlights, More and Related links on a documentation page?",
+        "How long can a documentation page's summary be, and what should it say?"
       ],
       "aliases": [
         "DocumentationClass",
@@ -93,7 +95,8 @@
       "questions": [
         "How many FAQ entries can I add to a documentation page?",
         "When should I fill in the Highlights field on a page with many children?",
-        "My FAQ answer is too long, what should I do with it?"
+        "My FAQ answer is too long, what should I do with it?",
+        "How do I write the Highlights list, and where does each highlight's description come from?"
       ],
       "aliases": [
         "highlights limit",
@@ -279,16 +282,16 @@
     ],
     "applies-to": []
   },
-  "source_hash": "c5b739ba6d2fd968397bad207ba174bfec41fe579ff043f7a307c8708078c14c",
-  "file_hash": "0ec804e5cb64cbc1386eb9ce25bf29d3af82ddf654834c0e788c6d00b0bb6a40",
+  "source_hash": "67e6146484b6a22f0b1092b426140aa03a85623b2ee6f88f8932cfe59bdd9aeb",
+  "file_hash": "8806b286c3e404f92e9d683218b39f2a2f352adb3549b898359f5c293a13e722",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
     "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
     "Titles and page names": "edc5c851f83e7c3e2ddac5792228f2fe5e4b3318503cce2da179cafb1ebc054f",
     "Content rules per type": "f2fe4bcc2cb8a43c22bf50661a4ab5c565948ba97db084741ac597638249a3a1",
-    "How much belongs on one page": "b0939995820f66508ac6f7c36531f98bd89798f1e51fcdcdb0e954a25943a9d0",
-    "Page-structure fields": "933be0230aa2fc9fe9c841c9ed8c072a3356d36beb39a8751ad3c37ec74b1fcf",
-    "FAQ and Highlights fields: entry limits and when to fill them": "d897fb1eef672748be02deb4febd13c2feca4b41841d1d31829e7c73ed235684",
+    "How much belongs on one page": "db94f28b4c104802a55cd7d9d40f09f91cdb9e5a56e249a804f666a6e7ccbe33",
+    "Page-structure fields": "138738f2474c9d74d1a5f1e86f1108a400d066b2f6f754e485c8320a5bd00c74",
+    "FAQ and Highlights fields: entry limits and when to fill them": "12d7277dbcb045d084d0ec67e799bc70c9d8609a4f79494518b7bc51a82602c9",
     "Related links field: no children, no self-link, audience labels": "43569636b83cc23040dc49fbe8ef2b1b99b9def1040144a027c44d10d5b8b443",
     "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": "1944ecbbcd15c876f4b9beaff29bda35e4ea33ea8e13c779fb21ed1bc4ee836e",
     "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",

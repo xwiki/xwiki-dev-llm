@@ -96,12 +96,14 @@ applies to everything a regex cannot decide.
 4. **Write the title and page name** per the type's rules (verb-led for How-to/Tutorial; noun phrase
    for Reference/Explanation; kebab-case page name, stop words removed, no parent/child repetition, even of
    the action's object: `tags/add-page`, the title saying "Add a Tag to a Page").
-5. **Fill the page-structure fields** — Content (per type), FAQ (questions with 1–2 sentence
+5. **Fill the page-structure fields** — Summary (one plain-text sentence of at most 150 characters
+   saying what the page gives that its title doesn't; the content then starts where it stops, so a
+   How-to's intro *is* its summary), Content (per type), FAQ (questions with 1–2 sentence
    answers), Related links (**non-child** pages only), Technical ID (`xwiki:<extension id>`, or empty).
    When the extension page's `id` is empty, completing it is a write to extensions.xwiki.org: propose
    the value to the developer (from the module's `pom.xml`) and save it only on their yes.
-   **Leave Highlights empty unless the page has many children**: it is a two-level list of the most
-   important *child* pages, not a "key points" summary, and the automatic "More" table already lists
+   **Leave Highlights empty unless the page has many children**: it is a list of links to the most
+   important *child* pages, described by their summaries, not a "key points" summary, and the automatic "More" table already lists
    every child — see `kb/conventions/documentation.md`.
 6. **End a How-to / Tutorial with a result step** — the last numbered item shows the reader *what they
    should now see*; its form is in `kb/conventions/documentation.md` → *Content rules per type*.

@@ -31,7 +31,7 @@ diagnosing why a page renders a warning.
 
 | Class | What it holds |
 |-------|---------------|
-| `DocApp.Code.DocumentationClass` | The Diataxis `type` and `target` audience, plus the page-structure fields (`faq`, `highlights`, `related`) |
+| `DocApp.Code.DocumentationClass` | The Diataxis `type` and `target` audience, plus the page-structure fields (`summary`, `faq`, `highlights`, `related`) |
 | `DocApp.Code.DocumentationExtensionClass` | The **Technical ID** (`id` property), empty when no extension applies (e.g. installation pages) |
 | `DocApp.Code.DocumentationViolationClass` | **One object per problem** found by the doc-quality checker; present only when the page has violations |
 | `DocApp.Code.LandingPageClass` | The **landing page** equivalent of `DocumentationClass` — carries `highlights`, `summary`, `type`, `target`, `listChildren` |

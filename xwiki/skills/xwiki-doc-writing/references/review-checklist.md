@@ -52,7 +52,8 @@ Each finding cites the rule it relates to; confirm against the live guide when b
       longer answers split into an Explanation page.
 - [ ] **Attachments** — kebab-case names with lowercase extensions; images use `{{image}}` with an
       `alt`; **videos are `webm` embedded with `{{embed}}`, not links**; no animated GIFs.
-- [ ] **Structure fields** — Content filled (the FAQ is optional); a top-level page's Related links
+- [ ] **Structure fields** — Summary filled, one sentence that says what the title doesn't and that the
+      content's first sentence doesn't repeat; Content filled (the FAQ is optional); a top-level page's Related links
       its same-topic counterparts for the other audiences; Technical ID set when an extension applies. **Highlights empty** unless the page has many children (and then only a subset of them);
       **Related holds no children** and never links to the page itself. On a leaf page, an obvious
       missing Related link is advisory only.

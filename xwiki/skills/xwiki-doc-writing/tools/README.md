@@ -55,6 +55,7 @@ ALL = [dict(
     space=["documentation", "extensions", "admin", "antispam"], page="WebHome",
     title="AntiSpam", type="explanation", target="administrator", ext=EXT,
     attachments=["home-page.png"],          # files under SHOTS
+    summary="Block the pages and users that publish spam, by keywords and by IP address.",
     content="""The [[Foo application>>doc:extensions:Extension.Foo.WebHome]] …""",
     faq="""== A reader's question? ==\n\nThe answer.""",
     related=f"* [[Some Page>>doc:{ROOT}.some-page.WebHome]]",
@@ -65,6 +66,7 @@ PIN = {f"{ROOT}.WebHome": ["configure-keywords", "delete-spam-pages-users"]}   #
 ```
 
 `highlights` defaults to `""` — it stays empty unless a page has enough children to need it.
+`summary` defaults to `""` too, which `lint` reports: every page needs one (Documentation 1.21+).
 
 A bundled macro's reference page (such as `"box" Macro`) keeps an empty `content` and holds its body
 in a `DocApp.Code.RenderingMacroClass` object: give such a page `macro=dict(description=…, usage=…,
