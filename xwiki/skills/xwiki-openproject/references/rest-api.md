@@ -143,8 +143,10 @@ Then report `https://op.xwiki.org/work_packages/<displayId>` (e.g. `.../work_pac
 Required writable fields are `subject`, `project`, `type`, `status`, `priority` — `project` comes
 from the path (or the payload), and `status`/`priority` are defaulted by the instance, so
 `subject` + `type` is the minimum you must supply. Optional writable fields include `description`,
-`assignee`, `version`, `parent`, `startDate`, `dueDate`, `estimatedTime`; link-valued ones go under
-`_links` as `{"href": "/api/v3/<collection>/<id>"}`.
+`assignee`, `targetVersions`, `observedInVersions`, `parent`, `startDate`, `dueDate`, `estimatedTime`;
+link-valued ones go under `_links` as `{"href": "/api/v3/<collection>/<id>"}`, multi-valued ones (the
+two `*Versions`) as an array of them. The instance has no `version` field: the form accepts one but
+it is dropped silently, so re-read the created work package to check what stuck.
 
 ## Update a work package
 
@@ -163,7 +165,7 @@ d = json.load(sys.stdin)
 errs = d.get('_embedded', {}).get('validationErrors', {})
 print('validationErrors:', ', '.join(f\"{k}: {v['message']}\" for k,v in errs.items()) or 'none')
 # what this field will actually accept, straight from the schema
-for f in ('status','type','priority','version'):
+for f in ('status','type','priority','targetVersions'):
     s = d.get('_embedded', {}).get('schema', {}).get(f) or {}
     vals = (s.get('_embedded') or {}).get('allowedValues')
     if isinstance(vals, list):
