@@ -14,6 +14,7 @@ The page set is a module (default `pages.py` in the current directory, override 
         title="AntiSpam", type="explanation", target="administrator",
         ext="xwiki:org.xwiki.contrib:application-antispam-ui",
         attachments=["applications-panel.png"],     # files under SHOTS, kebab-case, lowercase ext
+        summary="…",                                # plain text, one sentence, at most 150 characters
         content="…", faq="…", related="…",          # XWiki 2.1 syntax; highlights defaults to ""
     ), …]
     SHOTS = "shots"                                 # optional, default "shots"
@@ -68,10 +69,33 @@ def classification_problems(p):
             for k, allowed in (('type', DOC_TYPES), ('target', DOC_TARGETS)) if p.get(k) not in allowed]
 
 
+# The mechanical rules of the xwiki.org `summary` check (Documentation 1.21+); whether the summary says
+# more than the title is left to the checker and the review.
+SENTENCE_BREAK = re.compile(r'(?<!\b(?i:e\.g|i\.e|etc))(?<!\b(?i:vs|cf))[.!?]\s+[A-Z]')
+PAGE_DESCRIPTION = re.compile(r'^(this (page|document|section|tutorial|guide)\b|learn how\b)', re.I)
+
+
+def summary_problems(p):
+    s, name = p['summary'].strip(), p['ref']
+    if not s:
+        return [f'{name}: summary is empty — one sentence saying what the page gives that its title doesn\'t']
+    problems = []
+    if len(s) > 150:
+        problems.append(f'{name}: summary is {len(s)} characters (max 150)')
+    if SENTENCE_BREAK.search(s):
+        problems.append(f'{name}: summary must be a single sentence')
+    if re.search(r'\[\[|\{\{|://', s):
+        problems.append(f'{name}: summary is plain text: no link, macro or URL')
+    if PAGE_DESCRIPTION.search(s):
+        problems.append(f'{name}: summary describes the page ("This page…", "Learn how…") instead of its content')
+    return problems
+
+
 def load(name='pages'):
     sys.path.insert(0, os.getcwd())
     mod = importlib.import_module(name)
     for p in mod.ALL:
+        p.setdefault('summary', '')
         p.setdefault('highlights', '')
         p.setdefault('faq', '')
         p.setdefault('related', '')
@@ -190,6 +214,8 @@ def lint(mod):
                     problems.append(f'{name}: self-closing {call!r} inside a {{{{code}}}} block is parsed as '
                                     f'an unclosed nested macro — write it as {{{{code ...}}}}{{{{/code}}}} or '
                                     f'show it inline as ##~{{{{code .../}}}}##')
+
+        problems += summary_problems(p)
 
         entries = len(re.findall(r'^== ', p['faq'], re.M))
         if entries > 5:
@@ -374,7 +400,7 @@ def save(mod, only=None):
 
         st, existing = x.list_objects(x.WWW, ref)
         have = {cn for cn, _ in existing}
-        docprops = {'type': p['type'], 'target': p['target'], 'faq': p['faq'],
+        docprops = {'type': p['type'], 'target': p['target'], 'summary': p['summary'], 'faq': p['faq'],
                     'highlights': p['highlights'], 'related': p['related']}
         # DocumentationClass defines its own unused `content` property — never merge it with the
         # page content, it would clobber the page.
@@ -475,7 +501,7 @@ def verify(mod):
                 problems.append(f'{ref}: {counts.get(cls, 0)} {cls.rsplit(".", 1)[-1]} object(s)')
 
         st, props = x.get_object(x.WWW, ref, DOC_CLASS)
-        for k, v in (('type', p['type']), ('target', p['target']), ('faq', p['faq']),
+        for k, v in (('type', p['type']), ('target', p['target']), ('summary', p['summary']), ('faq', p['faq']),
                      ('highlights', p['highlights']), ('related', p['related'])):
             cur = (props or {}).get(k) or ''
             if cur != v:

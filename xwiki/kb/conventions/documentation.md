@@ -11,8 +11,8 @@ summary: The rules for xwiki.org documentation — Diataxis page types & audienc
   architecture/concept diagrams for Explanations, and when *not* to force a visual, how much belongs on
   one page (granularity, keeping verbosity low, what a hub page's prose links, how
   duplication is actually detected & where the one copy of shared content lives: a visible page,
-  else a content fragment, never a hidden page), the page-structure xobject fields (Highlights/More/Related and their exact
-  semantics), documentation style (incl. never hard-wrapping prose and not overusing the em dash),
+  else a content fragment, never a hidden page), the page-structure xobject fields (Summary/Highlights/More/Related, their exact
+  semantics and the one question each part answers), documentation style (incl. never hard-wrapping prose and not overusing the em dash),
   attachment/image/video rules (incl. webm + the `{{embed}}` macro, what `caption` is and is *not*
   for, and drawing the red box as an overlay so no ancestor clips it),
   page location — settled with the developer up front, as concrete alternatives — version-perspective
@@ -232,8 +232,8 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
   with the "Content Fragment" macro. Never a second copy, however short, and never a hidden page holding it: a hidden page
   still shows in the navigation and the search for users who display hidden pages. Mechanics:
   [[documentation-mechanics]].
-- **A How-to's intro is one short paragraph.** Anything that wants to be a second or trailing
-  paragraph is misplaced content, and each kind has a home: a **prerequisite** shrinks to one clause
+- **A How-to's intro is its Summary field**: the content holds at most one prerequisite sentence,
+  then step 1. Anything that wants to be a paragraph before or after the steps is misplaced content, and each kind has a home: a **prerequisite** shrinks to one clause
   with a link, a **reader question** becomes a **FAQ** entry, the ***why*** goes to the Explanation.
   Explanatory paragraphs wrapped around the numbered list are the most common way a How-to drifts —
   the steps *are* the page.
@@ -248,7 +248,8 @@ use, even though level 2 is the norm for ordinary section headings elsewhere —
 - **A hub page's prose links, it does not only narrate.** It briefly says what the topic lets the
   reader do and links each child it introduces **where it reaches the capability that child covers** —
   context the More table, sorted by title, cannot give: how the children relate and which one fits which
-  need. Children it does not reach are left to the More table and, on a large hub, Highlights. Two
+  need. It never *describes* a child: a sentence that would work as a child's summary belongs in that
+  child's Summary field, which the More table and Highlights already display. Children it does not reach are left to the More table and, on a large hub, Highlights. Two
   failures: a mini-manual explaining the features without linking the pages that document them, and a
   bare link list ("See X and Y.") repeating the More table. Test each linking sentence: if removing its
   links leaves nothing the reader learns, it was a list. The link sits **on the words saying what the
@@ -277,13 +278,27 @@ itself (`GET /rest/wikis/xwiki/classes/DocApp.Code.DocumentationClass`) rather t
 | `type` | `tutorial` \| `howto` \| `reference` \| `explanation` |
 | `target` | `user` \| `administrator` \| `developer` (**`administrator`**, not `admin`) |
 
+**Each part answers one question no other part answers**: Title, *what is this?*; Summary, *what does
+the page give that the title doesn't say?*; Content, the substance, starting where the summary stops;
+Highlights, *which children first?*; More, *what is under this page?*; Related, *what else, outside the
+children?* To check a page, read its title, summary and content, then its children's summaries: when
+one says what an earlier one said, cut the later one.
+
 The fields — FAQ and Highlights, Related links and the Technical ID each have their own section
 below:
 
-- **Content** — the main content for the page type. Additional headings go under it as level-2 (or
-  lower) headings.
-- **More** — **automatic**; a filterable livedata table of the page's **child** pages plus a search
-  box. Nothing to fill. Highlights are displayed inside this section.
+- **Summary** (`summary`, Documentation 1.21+) — **one plain-text sentence, at most 150 characters**, no
+  link, macro or URL, starting where the title stops (remove the title's words and information must
+  remain): a How-to/Tutorial gives the result the reader gets, a Reference what it covers, an
+  Explanation its idea. Describe the content, not the page: never "This page…" or "Learn how…". It is
+  displayed as the page's first paragraph, in the parent's More table and as the page's description
+  in Highlights. The `summary` check warns when it is missing, too long, more than one sentence,
+  holds markup, starts that way, or is mostly the title's words.
+- **Content** — the main content for the page type, **never restating the summary in its first
+  sentence**. Additional headings go under it as level-2 (or lower) headings.
+- **More** — **automatic**; a filterable livedata table of the **title, summary and type** of the
+  page's **child** pages, plus a search box. Nothing to fill. Highlights are displayed inside this
+  section.
 
 The **Documentation application's own reference** for these fields is
 [Documentation Page Structure](https://www.xwiki.org/xwiki/bin/view/documentation/extensions/user/documentation/create-documentation-page/page-structure/)
@@ -300,14 +315,15 @@ Use the guide for the authoring rules, and that page for what each structure fie
   documentation page. Per [Page Structure](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/).
 - **Highlights** — **a short list of the most important *child* pages**, to guide readers when a page
   has **many** children. It is *not* prose, and *not* a general "key points" summary. The syntax is a
-  strict two-level list — level 1 is the **link**, level 2 its **one-line description** — written with
-  plain page references and **no `doc:` prefix**:
+  **plain list of links**, written with plain page references and **no `doc:` prefix**; each highlight
+  is described by the **summary of the highlighted page**:
   ```
   * [[Page Title 1>>reference.to.page1.WebHome]]
-  ** Description of the first page
   * [[Page Title 2>>reference.to.page2.WebHome]]
-  ** Description of the second page
   ```
+  A nested `**` list item, its one-line description, is only a fallback, displayed while the
+  highlighted page has no summary (or is a landing page, which has none): give that page a summary
+  instead. The `highlights` check reports a nested item under a page that has a summary as useless.
   **Fill it only when a page has many children**, and then **only with a subset** — the "More" section
   already lists every child, so highlighting all of them defeats the purpose. A **leaf page's Highlights is
   empty**; so is that of a page with one or a few children.
