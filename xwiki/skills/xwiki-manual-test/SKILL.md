@@ -1,6 +1,6 @@
 ---
 name: xwiki-manual-test
-description: Manual (acceptance) testing of XWiki features end to end, as an expert QA tester using the UI like a user - verify that fixed issues really work, prove each check detects its bug by replaying it on a baseline version without the fix (before/after), and hunt for the problems around them (functional, layout, page errors, untranslated text, accessibility). Use when asked to manually test, QA, acceptance-test or "verify the fixes of" a release, an extension version, a list of issues or a test.xwiki.org manual test plan. Asks for the scope, environment and baseline each run, tests through parallel blind tester sub-agents, has an independent verifier re-judge the evidence (video, screenshots, logs), and writes a local report; nothing is posted without approval. Not for writing automated tests (use xwiki-test-guidelines), nor for a before/after screenshot of one UI fix (use xwiki-capture-ui-change), nor for deploying an extension alone (use xwiki-deploy-extension).
+description: Manual (acceptance) testing of XWiki features end to end, as an expert QA tester using the UI like a user - verify that fixed issues really work, prove each check detects its bug by replaying it on a baseline version without the fix (before/after), and hunt for the problems around them (functional, layout, page errors, untranslated text, accessibility). Use when asked to manually test, QA, acceptance-test or "verify the fixes of" a release, an extension version, a list of issues or a test.xwiki.org manual test plan. Asks for the scope, environment and baseline each run, tests through parallel blind tester sub-agents, has an independent verifier re-judge the evidence (text excerpts and logs, screenshots of failures by default), and writes a local report; nothing is posted without approval. Not for writing automated tests (use xwiki-test-guidelines), nor for a before/after screenshot of one UI fix (use xwiki-capture-ui-change), nor for deploying an extension alone (use xwiki-deploy-extension).
 ---
 
 # Manual testing of XWiki features
@@ -11,7 +11,7 @@ The deliverable is **a trustworthy verdict per tested item** — verified, faile
 unverified — and **the problems found around it**, each with the evidence a developer needs to act.
 A verdict is trustworthy only when someone who did not run the test can check it from the evidence,
 and when the same check **fails on a version without the fix**: a check that passes on both proves
-nothing. That is why every check has a before and an after, every scenario is recorded, and an
+nothing. That is why every check has a before and an after, every check leaves evidence, and an
 independent verifier re-judges it before the user sees anything.
 
 The tester is an expert manual QA tester: it uses the product through the UI as a user would, does
@@ -32,6 +32,27 @@ only the happy path of the issue's description is what automated tests already d
   edit lock in that user's name. Check rights through the REST API or the browser, and cancel any
   edit a setup session opened (its lock shows to the testers as "locked by").
 
+## Token cost
+
+Nearly all of a run's tokens are spent by its sub-agents, and each request re-sends the agent's
+whole context: an agent's cost is its requests times its context, so it grows with the **square of
+its lifetime**. A tester that reads its own screenshots (about 1.5k tokens each, kept until it ends)
+and prints raw logs reaches 400k+ tokens of context within a few hundred requests, and a run of a
+dozen such agents spends a large share of a weekly allowance in a day. So, at every step:
+
+- **Short agents.** A tester gets one area, about three items at most: two short testers cost about
+  half of one long one. A new phase or round gets fresh agents, never a resumed one carrying the
+  previous phase's context.
+- **Text before images.** An element's text, value or count, or a snapshot scoped to it, proves a
+  content check at a fraction of an image's cost, and the verifier can check it. Screenshots follow
+  the evidence level (step 2), and an agent reads an image only when its judgment is visual.
+- **Output goes to files.** Logs, console, network and snapshots are written to files; only their
+  count or the matching lines enter the context.
+- **The cheaper model for mechanical roles.** Replayers and verifiers run on Sonnet
+  (`model: "sonnet"` when spawning), and testers too at *quick* depth.
+- **The orchestrator reads results, not evidence**: each agent's summary and result file, never
+  its screenshots or logs, which are the verifier's job.
+
 ## 1. Scope: what to test
 
 **Ask for the scope, every run**, even when the conversation makes it look obvious. It is one of:
@@ -51,6 +72,13 @@ bump) or *not testable here* (needs an environment you cannot build), with a one
 show the list. A release can hold a hundred issues; testing all of them wastes the run, and silently
 skipping some hides the decision from the user.
 
+For a *manual test* item, also note whether its fix's PR adds or changes an automated test that
+asserts the issue's expected result. XWiki requires such a test to fail without the fix, so it
+already proves that this behaviour is detected on a version without the fix: the item's confirm
+checks then skip the before phase (`baselineProof: "automated: <test>"` in the plan, shown in the
+triage list so the user can object). A test of something narrower than the confirm check (a helper
+rather than the UI behaviour) is not such a proof. The other checks and the findings still replay.
+
 ## 2. Run questions — ask, never assume
 
 Ask the user, every run, in one round of questions (a question dialog when the host has one):
@@ -68,8 +96,15 @@ Ask the user, every run, in one round of questions (a question dialog when the h
 - **Depth**: *quick* (each item's expected result, errors and text checks), *standard* (plus a
   time-boxed exploration, about 15 minutes of wall clock per item, and the layout and accessibility
   checks on changed UI) or *deep* (plus the other users and the narrow viewport).
+- **Evidence level**, default *failures only*: every check keeps its text evidence and logs, and a
+  screenshot is taken only where an after result is not `ok`, for each finding, for the visual checks
+  (layout, rendering), and by the baseline replay (opened only when its text does not settle it). The others:
+  *every check point* (a screenshot at each, both phases), and *full* (plus a video per item, phase
+  and session, for a reviewer who wants to watch the run). Say that each level up costs the testers
+  and the verifiers more, and roughly how much.
 
-Then propose — and wait for an OK on — the split into parallel testers (step 4) with its rough cost.
+Then propose — and wait for an OK on — the split into testers (step 4), with each role's model and
+the run's rough cost.
 
 ## 3. Environment, and proof it runs the build under test
 
@@ -110,10 +145,10 @@ anything else: a macro that silently renders nothing looks like a bug.
 `QATester<n>Simple` when rights matter, created by the run), its own browser sessions
 (`agent-browser --session <tester>`, `<tester>-simple`, `<tester>-guest`), its own test space
 `QA.<date>-<slug>-<tester>` and, for an integration, its own project in the external tool, created
-through that tool's API. Split by area so two testers do not exercise the same page. **Keep the
-testers alive for the whole run** and resume them with a message for the before phase, so they replay
-exactly their own checks; where the host cannot resume a sub-agent, a fresh tester given the
-`result-after.json` replays its checks.
+through that tool's API. Split by area so two testers do not exercise the same page, and keep each
+tester short (see "Token cost"). Each tester saves, per check, the commands that reach its check
+point and capture its text evidence as a **check script**, so the before phase replays it without a
+tester's context or exploration.
 
 ### Global scenarios
 
@@ -127,17 +162,22 @@ end of each phase.
 
 ## 5. Before and after
 
-Every check runs on both versions, with the same steps and screenshot framing. The order:
+Every check runs on both versions, with the same steps and evidence. The order:
 
 1. **After, parallel then global** — on the build under test: confirm and explore (the tester
    brief), each check recorded with an id in `result-after.json`.
 2. **Switch to the baseline** (`xwiki-deploy-extension`, one job per extension, dependents first)
    and prove it (step 3). Testers close their sessions and log in again: skin extensions are cached.
-3. **Before, parallel then global** — the same testers replay every check (the original bug must
-   show: `result: bug`) and every finding's steps (present, absent or different), in
-   `result-before.json`. A step that writes data is redone in fresh pages on the baseline: data the
-   fixed build wrote can look fine there and hide the bug. No new exploration; something new and
-   important goes in `newObservations`.
+3. **Before, parallel then global** — replay every check (the original bug must show) and every
+   finding (present, absent or different), except the confirm checks proven by an automated test
+   (step 1). **No agent at first**: run the check and finding scripts yourself with `PHASE=before`,
+   in a shell loop (testers' scripts in parallel, each tester's sessions being its own; global ones
+   after, alone), each script's output to a file, and record in each tester's `result-before.json`
+   the exit status and evidence paths per id, with `result: "unjudged"` — the verifier judges them
+   from the evidence. Only for the scripts that break (the baseline UI differs) and the findings
+   with no script, start a replayer on Sonnet, briefed with `references/replayer-brief.md`, to reach
+   those check points by hand. A script redoes any step that writes data in fresh pages: data the
+   fixed build wrote can look fine on the baseline and hide the bug. No new exploration.
 4. **Restore** the build under test when the instance outlives the run.
 
 A check that does not show the bug on the baseline is reported as such: it does not prove the fix.
@@ -149,24 +189,27 @@ severity, since the release decision depends on it.
 
 ## 6. Evidence
 
-Every item carries, at minimum (layout and details: the tester brief):
+Every check carries, whatever the evidence level (layout and details: the tester brief):
 
-- a **video** per item and phase, per user session it uses;
-- a **screenshot at each check point**, in the same framing in both phases;
-- each check point's wall-clock time (ISO 8601 with offset), the **browser console, page errors and
-  failed requests** saved as files, and the **server log** and external tool log excerpts for its
-  time window (with parallel testers, a line that cannot be attributed is reported as such);
-- the macro's wiki source for parameter-dependent scenarios; a HAR for findings only.
+- its **text evidence**, saved to a file: the element's text, value or count, or a snapshot scoped
+  to it — what shows the observed result;
+- its wall-clock time (ISO 8601 with offset), the **browser console, page errors and failed
+  requests** saved as files, and the **server log** and external tool log excerpts for its time
+  window (with parallel testers, a line that cannot be attributed is reported as such);
+- its **check script**, and the macro's wiki source for parameter-dependent scenarios;
+- **screenshots** as the evidence level says, in the same framing in both phases, and a **video**
+  only at *full*.
 
-A finding has: steps to reproduce from a clean state, expected and actual result, the evidence
-above, the environment, and a severity on the target tracker's own scale (JIRA priorities; the
+A finding has: steps to reproduce from a clean state, expected and actual result, a screenshot of
+the actual result in each phase where it shows, the evidence above (a HAR when a request is at
+fault), the environment, and a severity on the target tracker's own scale (JIRA priorities; the
 repository's priority labels on GitHub). A problem seen once and not reproduced goes in a separate
 "observed once" list. Accessibility findings are measured against WCAG 2.2 AA, and only violations
 introduced on the changed UI are findings; pre-existing ones are listed apart.
 
 ## 7. Independent verification
 
-Before reporting, hand fresh verifier sub-agents `references/verifier-brief.md`, the plan, the
+Before reporting, hand fresh verifier sub-agents on Sonnet `references/verifier-brief.md`, the plan, the
 tracker's severity scale and filing policy, the version proofs and the evidence — not the testers'
 reasoning. Give one verifier a group of testers small enough for it to open every screenshot. It
 re-judges every check, verdict and finding from the evidence alone: a *verified* verdict whose
@@ -178,8 +221,8 @@ both.
 
 Write the report as `report/index.html` in the run directory (structure: `references/report.md`),
 and publish it as a private artifact when the host can: the findings with their proposal (reopen,
-new issue, not a bug), then per item its before/after check table with screenshot pairs and video
-links, findings detail collapsed. Little text: the tables carry it.
+new issue, not a bug), then per item its before/after check table with each check's evidence
+(text excerpts, screenshot pairs where taken, video links at *full*), findings detail collapsed. Little text: the tables carry it.
 
 Prepare drafts — a reopen comment for a regression of an unreleased fix, a new issue per pre-existing
 finding, a "verified on <environment>" comment per verified issue — and show them. Post each only
@@ -191,5 +234,8 @@ findings are open, so the user can look), and stop only the instances the run st
 ## Re-test
 
 `plan.json` keeps the verdicts. A re-test of the same scope re-runs the items that are not
-*verified*, plus a quick check of the verified ones in the areas the new fixes touch, with the same
-verification and report.
+*verified*, plus a quick check of the verified ones in the areas the new fixes touch — through their
+check scripts where they still run — with the same report. It is cheaper on three counts, each to
+keep: propose *quick* depth and one tester per area of the new fixes; skip the before phase of a
+check whose baseline evidence already shows the bug (the baseline has not changed); and verify only
+the checks and findings whose verdict changed.

@@ -4,8 +4,8 @@ Give this file to each tester sub-agent, together with: its items (steps, actual
 result, the PR's behavioural description, the risk areas), the setup facts, its scenarios from
 `plan.json`, its XWiki users and the file holding their password (never printed), its browser
 session names, its test space, its run directory, the instance URL, the server and external tool
-logs, the version proof of the phase, the depth and the time box, and the absolute paths of
-`tours.md` and `agent-browser-xwiki.md`.
+logs, the version proof of the phase, the depth, the time box and the evidence level, and the
+absolute paths of `tours.md` and `agent-browser-xwiki.md`.
 
 ## Who you are
 
@@ -16,8 +16,8 @@ on purpose: do not read the source, its history or its PRs. Judge what you see a
 issue says and what a reasonable user would expect.
 
 Your job is twofold: **confirm** that each item's expected result now holds, then **explore** around
-it to find what is still broken. A run that only confirms is half done. Later the orchestrator will
-switch the instance to a baseline version and ask you to replay your checks.
+it to find what is still broken. A run that only confirms is half done. Later another agent will
+replay your checks on a baseline version from your check scripts and your result alone.
 
 Load the `agent-browser` skill, then read `agent-browser-xwiki.md`: its traps make working features
 look broken.
@@ -27,18 +27,34 @@ look broken.
 - Work only in your test space, as your own users, in your own browser sessions; one tab per
   session. You may change or destroy your own data (record it), and your own user's preferences
   (restore them). Do not change anything a scenario does not mark *global*.
-- Never conclude from memory or expectation: every claim in your result points to a screenshot or
-  a saved log file. A negative claim ("no request sent", "no error") needs a saved network or console
-  log, not a screenshot.
+- Never conclude from memory or expectation: every claim in your result points to a saved file. A
+  negative claim ("no request sent", "no error") needs a saved network or console log, not a
+  screenshot.
 - **Evidence layout**: everything of an item goes in `<run>/<tester>/<item>/`, named
-  `<item>-<phase>-<nn>-<what>.<ext>`: screenshots, logs (`…-console.txt`, `…-network.txt`,
-  `…-server-log.txt`), wiki sources. Paths in your result are relative to `<run>/<tester>/`.
-- Record one video per item, phase and session:
-  `agent-browser --session <s> record start <run>/<tester>/<item>/<item>-<phase>-<session>.webm`
-  before the first action, `record stop` after the last. Videos skip idle time, so they carry no
-  timestamps: log the wall-clock time of each check point instead (ISO 8601 with offset).
-- Screenshot every check point, viewport or element, with absolute paths. Frame it so the same shot
-  can be taken again on the baseline: same page, scroll position and open panel.
+  `<item>-<phase>-<nn>-<what>.<ext>`: text evidence (`…-text.txt`), screenshots, logs
+  (`…-console.txt`, `…-network.txt`, `…-server-log.txt`), wiki sources, check scripts
+  (`<check id>.sh`). Paths in your result are relative to `<run>/<tester>/`.
+- **Text evidence at every check point**: save what shows the observed result — `get text`,
+  `get value` or `get count` on the element, or `snapshot -c -s <selector>` — to a file, with the
+  check point's wall-clock time (ISO 8601 with offset).
+- **Screenshots by evidence level**, viewport or element, absolute paths, framed so the same shot
+  can be taken on the baseline (same page, scroll position, open panel). At *failures only*: where a
+  check is not `ok`, for each finding, and for a visual check (layout, rendering); at *every check
+  point* and *full*: at each check point. At *full* only, record one video per item, phase and
+  session (`record start <run>/<tester>/<item>/<item>-<phase>-<session>.webm` before the first
+  action, `record stop` after the last).
+- **A script per check, and per reproducible finding**: the `agent-browser` commands, with their
+  session names and absolute paths, that go from a logged-in session to the check point and save
+  its text evidence (and its screenshot, when the level takes one). It reads the phase from
+  `$PHASE` (`after`, `before`) for its page and file names, creates the data it needs itself, and
+  exits non-zero when a step fails, so that it runs unchanged on the baseline with no agent driving
+  it. With `PHASE=before` it always saves a screenshot too: what the baseline shows is not known in
+  advance, and an unread file costs nothing. Run it once yourself to check it works.
+- **Keep your context small** — every token you read is paid again on each later request. Read an
+  image only when your judgment is visual, never to confirm a screenshot was taken; redirect logs,
+  console, network and long snapshots to files and print only counts or matching lines; scope
+  snapshots (`-s`, `-c`, `-i`); chain commands in one call (`agent-browser batch`, or a shell
+  script) instead of one call each.
 - Log in through the login form; switch users by switching sessions, not by logging out.
 - Cite the server log and the external tool's log as excerpts saved to files, filtered by your user
   name, your pages and your time windows.
@@ -89,27 +105,27 @@ At each page the scenario reaches — not only the final one:
 
 ## Result
 
-Write `<run>/<tester>/result-<phase>.json` (phase `after`, later `before`) and return a one-line
-summary per check and finding:
+Write `<run>/<tester>/result-after.json` and return only a one-line summary per check and
+finding (the orchestrator reads the file, not your conversation):
 
 ```json
 {
   "tester": "t1", "phase": "after", "version": "18.10.0", "versionEvidence": "../versions-after.png",
   "items": [{
     "item": "XWIKI-12345", "verdict": "verified | failed | blocked",
-    "videos": ["XWIKI-12345/XWIKI-12345-after-t1.webm"],
+    "videos": [],
     "checks": [{
       "id": "XWIKI-12345-c1", "path": "attachment list sorted by date, 3 attachments",
       "expected": "the expected result after the fix (same text in both phases)",
       "observed": "newest first", "result": "ok | bug | other | blocked",
-      "time": "2026-11-19T10:04:12+01:00",
-      "evidence": ["XWIKI-12345/XWIKI-12345-after-03-sorted.png", "XWIKI-12345/XWIKI-12345-after-console.txt"]
+      "time": "2026-11-19T10:04:12+01:00", "script": "XWIKI-12345/XWIKI-12345-c1.sh",
+      "evidence": ["XWIKI-12345/XWIKI-12345-after-03-text.txt", "XWIKI-12345/XWIKI-12345-after-console.txt"]
     }],
     "toursDone": ["edit-wysiwyg", "rights"], "toursSkipped": [{"tour": "export", "why": "..."}]
   }],
   "findings": [{
     "id": "t1-f1", "title": "…, as an issue title", "item": "XWIKI-12345", "severity": "Minor",
-    "steps": ["…"], "expected": "…", "actual": "…", "evidence": ["…"],
+    "steps": ["…"], "expected": "…", "actual": "…", "evidence": ["…"], "script": "XWIKI-12345/t1-f1.sh",
     "reproduced": true, "category": "functional | layout | error | text | a11y | performance",
     "securitySensitive": false
   }],
@@ -117,9 +133,6 @@ summary per check and finding:
 }
 ```
 
-An item is *verified* only when its checks are `ok` with evidence. In the before phase, replay every
-check with the same id (`result: bug` when the original bug shows; redo in fresh pages any step that
-writes data) and every finding's steps (`{"id": "t1-f1", "observed": "…", "result": "present |
-absent | different", "evidence": [...]}`). Mark `securitySensitive` for anything that lets a user see
+An item is *verified* only when its checks are `ok` with evidence. Mark `securitySensitive` for anything that lets a user see
 or do what their rights should forbid, or that executes injected content; describe such a finding
 only in the result, never in a title meant for a public tracker.

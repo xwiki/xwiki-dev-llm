@@ -11,7 +11,8 @@ Written in step 4, updated with each verdict; a re-test reads it back.
                   "external": {}, "build": "18.10.0-SNAPSHOT from the store, 2026-11-19",
                   "buildVerified": true, "url": "http://localhost:8080/xwiki"},
   "baseline": {"version": "18.9.0", "verified": true, "why": "last release without the fixes"},
-  "depth": "standard", "timeBoxMinutes": 15,
+  "depth": "standard", "timeBoxMinutes": 15, "evidence": "failures only",
+  "models": {"tester": "inherit", "replayer": "sonnet", "verifier": "sonnet"},
   "triage": [{"item": "XWIKI-12350", "class": "nothing user-visible", "reason": "test-only change"}],
   "testers": [{"id": "t1", "users": ["QATester1", "QATester1Simple"], "sessions": ["t1", "t1-simple", "t1-guest"],
                "space": "QA.2026-11-19-xs1810-t1", "items": ["XWIKI-12345"]}],
@@ -23,7 +24,7 @@ Written in step 4, updated with each verdict; a re-test reads it back.
     "tours": ["many-and-none", "rights"],
     "users": ["admin", "simple", "guest"],
     "scenarios": [{"id": "confirm", "steps": ["…"]}, {"id": "explore", "charter": "…"}],
-    "baselineHasBug": true,
+    "baselineHasBug": true, "baselineProof": "replay | automated: <test class#method>",
     "verdict": null, "verifierVerdict": null
   }],
   "createdData": {"spaces": [], "users": [], "external": [], "pages": []}
@@ -46,11 +47,14 @@ published. Little prose: the tables carry the content, explanations sit in colla
 3. **One section per item**, labelled:
    - **Bug** — the issue title, linked;
    - **Expected after fix** — one sentence;
-   - **Videos** — baseline and build under test, one link per session video;
+   - **Videos** — at *full* evidence only: baseline and build under test, one link per session video;
    - **Checks** — a compact table, one row per check: the path tested (expected and observed in a
      collapsed detail), a baseline chip and a build chip (the testers' `result`), the verifier's
-     check verdict when it differs, and the two screenshots side by side (click to enlarge). The
-     section heading shows "N/M fixed".
+     check verdict when it differs (it is the baseline result for a scripted replay, which only
+     the verifier judges; "proven by <test>" when an automated test stands for it), and the
+     evidence of both phases side by side — the text
+     excerpts, or the screenshots where taken (click to enlarge). The section heading shows "N/M
+     fixed".
 4. **Findings detail** — collapsed, one per finding: steps, expected vs actual, the baseline and
    build screenshots, the logs, the verifier's decision. Then the "observed once" list.
 5. **Not tested, observations, test data** — the triage list with reasons, the verifier's
@@ -59,5 +63,6 @@ published. Little prose: the tables carry the content, explanations sit in colla
 6. **Drafts** — each proposed reopen comment, issue and "verified on" comment, ready to copy,
    marked "not posted".
 
-Publish screenshots and videos as files of the artifact (WebM videos of a scenario are small); when
+Build the report with a script over the result and verifier files, not by having an agent read the
+evidence again. Publish screenshots and videos as files of the artifact (WebM videos of a scenario are small); when
 the host limits the size of one publish, publish them in several batches to the same artifact.

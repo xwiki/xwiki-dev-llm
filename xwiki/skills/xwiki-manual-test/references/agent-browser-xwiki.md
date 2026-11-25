@@ -12,6 +12,8 @@ What made testers lose time, or report a working feature as broken, when driving
 - **CKEditor macro dialog**: select the macro and press Enter.
 - **"Save & View" is often below the fold**: scroll to it or use its selector.
 - **Prefer refs from `snapshot -i`** to `find text/role … click`, which can match the wrong element.
+  A whole XWiki page's snapshot is large: scope it to the part under test (`-s "#xwikicontent"`,
+  `-s .modal`) and add `-c`.
 - **One tab per session**: the network log is per tab.
 - **Switch users with sessions**, not by logging out (the logout link needs a form token).
 - **Screenshot paths must be absolute**: relative ones resolve against the agent-browser daemon's
