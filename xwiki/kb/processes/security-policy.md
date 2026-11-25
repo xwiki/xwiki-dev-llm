@@ -39,11 +39,18 @@ XWiki repos are public, so a fix can be a zero-day signpost. Until the issue is 
   the `xwiki-security-advisory` skill.
 - **Release notes and announcements never list a release's security issues, but their summary
   gives the highest CVSS score among them** (Security Policy, "How do I know if I need to
-  upgrade?"), so administrators can decide to upgrade. That holds for xwiki-contrib extensions too
-  (version page notes and blog post): `This release contains security fixes, with the [[highest
-  severity being 8.7/10>>doc:dev:Community.SecurityPolicy.WebHome||anchor="HSeverity"]].` Take the
-  score from the issues' `CVSS Score` field, and leave out the change-list bullets that would point
-  at them.
+  upgrade?"), so administrators can decide to upgrade. The Policy words it for XWiki Standard; it
+  holds for xwiki-contrib extensions too (version page notes and blog post). The sentence, on one line:
+
+  ```
+  This release contains security fixes, with the [[highest severity being N/10>>doc:dev:Community.SecurityPolicy.WebHome||anchor="HSeverity"]].
+  ```
+
+  N is the max of JIRA's **CVSS Score** over the `labels = security` issues of the version,
+  cross-checked with the repository security advisories; an unscored one is usually solved by
+  another issue (its "Solved By" link) or not confidential at all. OpenProject has no confidential
+  work packages, so a project there tracks the vulnerability in the GHSA only, behind a work package
+  that does not reveal it: take N from the GHSA. Confidential JIRA issues get no change-list bullet.
 
 ## One vulnerability per confidential JIRA issue
 

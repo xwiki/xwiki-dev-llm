@@ -86,8 +86,8 @@ This release brings the following changes:
 ```
 
 When the version fixes security issues, put the security-severity sentence of
-`kb/processes/security-policy.md` between the intro and the list (then "This release also brings…"),
-and say it in the extract too. Its issues get no bullet.
+`kb/processes/security-policy.md` between the intro and the list (then "This release also brings…",
+or no list when they are the only changes), and say it in the extract too. Its issues get no bullet.
 
 **Summary / extract:**
 

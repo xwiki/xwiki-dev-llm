@@ -130,7 +130,8 @@ Security fixes: `notes` opens with the sentence of `kb/processes/security-policy
 
 Then set the release-notes field of every issue or work package to the version page URL
 (`kb/processes/release-notes.md`), and read them back: JIRA `Documentation in Release Notes`
-(`?notifyUsers=false`), OpenProject **Release Notes Documentation** (find its `customFieldN` key in the work package schema).
+(`?notifyUsers=false`), OpenProject **Release Notes Documentation** (find its `customFieldN` key in
+the work package schema).
 
 ## 8. Recovering from a failed release
 

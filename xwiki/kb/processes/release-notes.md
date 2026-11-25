@@ -189,8 +189,8 @@ https://www.xwiki.org/xwiki/bin/view/ReleaseNotes/Data/XWiki/18.7.0RC1/Entry008/
 **What creating a release note over REST does not do.** The endpoint applies the template, which
 gives the page its `{{releasenotechanges/}}` call and its structure. It leaves for the release
 manager: the introductory paragraph, the security-severity sentence ([[security-policy]]),
-`{{language codes="…"/}}`, and the `ReleaseNotes.BackwardCompatibility` object holding the Revapi XML. Say so rather than inventing
-them.
+`{{language codes="…"/}}`, and the `ReleaseNotes.BackwardCompatibility` object holding the Revapi
+XML. Say so rather than inventing them.
 
 ## Writing an entry
 
