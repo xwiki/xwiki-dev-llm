@@ -2,12 +2,14 @@
 title: JIRA (jira.xwiki.org) — access and issue-field conventions
 stability: durable
 summary: How to reach the self-hosted XWiki JIRA (jira-cli or REST), when an issue should be filed at
-  all, the durable conventions for an issue's Component, Affects Version/s and Fix Version/s, and
-  when to assign it. Version values themselves are volatile.
+  all, the durable conventions for an issue's type, Component, Affects Version/s, Fix Version/s,
+  labels (regression, wcag) and bug description, and whom to assign it to. Version values themselves are volatile.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA/
   - https://dev.xwiki.org/xwiki/bin/view/Community/VersioningAndReleasePractices/
   - https://dev.xwiki.org/xwiki/bin/view/Community/SupportStrategy/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy/
+  - https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility/
   - https://www.xwiki.org/xwiki/bin/view/Main/Support/
 provenance: official
 last-confirmed: 2026-11-19
@@ -64,16 +66,26 @@ from the release notes.
 ## Issue-field conventions (every issue type)
 
 These field conventions are **durable**; the version *values* they resolve to are volatile (see
-below). When filing/curating an issue — Bug, Improvement, New Feature **or Task** — set:
+below). When filing/curating an issue — Bug, Idea, Improvement, New Feature **or Task** — set:
 
+- **Issue type** — only Bug, Idea, Improvement, New Feature or Task. Never Sub-task, nor any other
+  type.
 - **Component/s** — in `XWIKI`, `XCOMMONS` and `XRENDERING`, set at least one (e.g. `REST`,
   `Rendering`, `Platform - …`): required for triage. Elsewhere (contrib), optional: set one when
-  the project defines a fitting component.
+  the project defines a fitting component. Whoever closes the issue derives them from its committed
+  files: one component per Maven module changed.
 - **Affects Version/s** — always set, per [[versioning]].
 - **Fix Version/s** — none on an issue only reported: it is set when the issue is closed (see
   *Resolving / closing an issue*). Two exceptions: a regression gets the next versions of the
   supported branches, and a non-code roadmap Task (design, investigation, decision — `Development
   Issues only`) gets the version it must be done before.
+- **A regression** — label `regression`; Priority **Blocker** when the regression was introduced
+  less than two years ago, otherwise **Critical**; assign a developer as soon as possible.
+- **Labels** — lowercase and without a version: `tomcat` plus "Tomcat 9.x" in the Environment field,
+  not `tomcat9`. Also `l10n` on every issue with the Localization component.
+- **An accessibility issue** — search the open `wcag` issues first; a new one takes the label `wcag`,
+  the broken success criterion's number and name in the `WCAG 2.1 Rule ids` field (`2.4.1 Bypass
+  Blocks`), and a screenshot of the element showing both the page and its DOM tree.
 - **Issue links** — link every related issue it names (the one that introduced the code involved, the
   one it follows up on, …) with a real JIRA link, by default **`Related`**; naming it in the
   description alone does not show up in either issue's links.
@@ -85,6 +97,9 @@ correct. Check what the project actually exposes before insisting on a field.
 
 Write the **description in JIRA wiki markup** (`h2.`, `{{monospace}}`, `*bold*`, `* bullet`) and make
 it explain the **user-visible problem**, not just the code change — but mind the markup gotchas below.
+A bug's description, once you have searched for a duplicate, gives the environment (OS, browser,
+database, servlet container, XWiki version) and the template `STEPS TO REPRODUCE: … EXPECTED
+RESULTS: … ACTUAL RESULTS: …`, plus a screenshot, attachment or snippet when it helps reproduce it.
 
 ## Dependency-upgrade issues
 
@@ -151,6 +166,11 @@ issue just filed included, on JIRA and OpenProject alike — so the team sees it
 assigned to someone else is theirs: ask the developer instead of reassigning it. Asking you to work
 on an issue is the developer's approval to assign it.
 
+**A contributor's pull request** puts its issue on the contributor, also when a committer merges and
+closes it. A contributor without a JIRA account is asked to create one; meanwhile the merging
+committer is assigned, and stays if none is created. A PR the committer reworked substantially:
+decide case by case.
+
 ## Linking the pull request
 
 OpenProject does not list a work package's GitHub PRs yet (its **GitHub** tab stays empty): comment
@@ -159,7 +179,8 @@ the PR's URL on the work package once the PR is opened (`notify=false`).
 ## Resolving / closing an issue
 
 Choose the **resolution** that matches reality and **assign the issue to yourself** as you close it
-(you are the one resolving/verifying it). The distinction that is easy to get wrong:
+(you are the one resolving/verifying it), unless a contributor's PR fixed it (above), and check its
+Component/s against its committed files (*Issue-field conventions*). The distinction that is easy to get wrong:
 
 - **A change fixed it** → resolution **Fixed**, with Fix Version/s (where the project has them) set to
   the next version of every branch the fix landed on (e.g. `17.5.0-rc-1` and `17.4.1`), leaving out

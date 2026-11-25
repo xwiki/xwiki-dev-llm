@@ -1,0 +1,217 @@
+[
+  {
+    "id": "e01",
+    "group": "e",
+    "question": "I just found that a feature which worked fine in an older release is broken again, and I've traced it to a change made about three years ago. I'm filing the ticket now. How should I set its importance level and the other fields? Does how long ago the breakage was introduced make any difference?",
+    "kind": "fact",
+    "key_points": [
+      "Add the 'regression' label to the issue",
+      "Priority is Critical because the breakage was introduced more than two years ago; it would be Blocker if introduced less than two years ago",
+      "Set Fix Version to the next versions of the supported branches",
+      "Assign a developer to the issue as soon as possible"
+    ],
+    "avoided_terms": [
+      "regression",
+      "Regression Handling",
+      "Blocker",
+      "Critical",
+      "Priority",
+      "Fix Version",
+      "label",
+      "supported branches"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA@6.1",
+      "section": "Rule: Regression Handling",
+      "gap": "C06",
+      "reference": "== Rule: Regression Handling ==\n\nRegressions must be indicated in JIRA issues as follows:\n\n* The ##regression## label must be set\n* The \"Priority\" field must be set to ##Blocker## if the regression was first introduced less than two years ago, otherwise it should be set to ##Critical##.\n* The \"Fix Version\" field must be set with target versions being the next versions for the supported branches\n* A developer must be assigned ASAP to the issue.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA , page version 6.1, section \"Rule: Regression Handling\")"
+    }
+  },
+  {
+    "id": "e02",
+    "group": "e",
+    "question": "I'm splitting a large XWiki ticket into smaller pieces of work. Should I create child issues under the parent one, or what kind of issue should each piece be filed as instead?",
+    "kind": "fact",
+    "key_points": [
+      "The Subtask issue type must not be used (it only still exists because of legacy issues that need cleanup before it can be removed)",
+      "Only Bug, Idea, Improvement, New Feature and Task types are allowed; any other type must not be used",
+      "Each piece should be filed as one of the allowed types, e.g. Task for work that needs to be done or Improvement for enhancing an existing feature"
+    ],
+    "avoided_terms": [
+      "issue type",
+      "Subtask",
+      "Choose the right issue type",
+      "JIRA",
+      "Bug",
+      "Improvement",
+      "New feature",
+      "Task",
+      "Idea"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA@6.1",
+      "section": "Rule: Choose the right issue type",
+      "gap": "C09",
+      "reference": "== Rule: Choose the right issue type ==\n\nThe definition of issue types are:\n\n* Bug: A problem which impairs or prevents the functions of the product.\n* Idea: An idea or wish (something not sure that'll happen but that would be cool)\n* Improvement: An improvement or enhancement to an existing feature or task.\n* New feature: A new feature of the product, which has yet to be developed.\n* Task: A task that needs to be done.\n\nAll other types must not be used.\n\nNotes:\n* Subtask: **Must not be used**. We need to remove it but it's hard to do now as lots of issues were created a subtasks in the past and we need to clean that up before we can remove this issue type.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA , page version 6.1, section \"Rule: Choose the right issue type\")"
+    }
+  },
+  {
+    "id": "e03",
+    "group": "e",
+    "question": "I just hit a bug while testing a wiki page by hand and want to file it in the XWiki tracker. Before I write it up, how should I check that nobody has already reported it? And what structure and details does the project expect in the report so someone else can reproduce it?",
+    "kind": "fact",
+    "key_points": [
+      "Search for an existing issue first, so you don't file a duplicate",
+      "Describe the full environment: OS, browser, database, servlet container and XWiki version",
+      "Use the template sections Steps to Reproduce, Expected Results and Actual Results",
+      "Where relevant, attach a screenshot, any file needed to reproduce, and the content or code snippet that triggers the problem"
+    ],
+    "avoided_terms": [
+      "JIRA",
+      "Creating JIRA issues",
+      "STEPS TO REPRODUCE",
+      "EXPECTED RESULTS",
+      "ACTUAL RESULTS",
+      "duplicates an existing one",
+      "site:jira.xwiki.org",
+      "ManualTestStrategy"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy@51.1",
+      "section": "Creating JIRA issues",
+      "gap": "B26",
+      "reference": "== Creating JIRA issues ==\n\n[[The XWiki project uses JIRA to report bugs and issues.>>https://jira.xwiki.org/]]. A good JIRA ticket holds all the information needed to reproduce the issue that was encountered or even to describe an improvement that should be made. This includes:\n\n* a full description of the environment used (OS, Browser, Database, Servlet Container, XWiki version)\n* a description of all the steps to perform in order to trigger the issue\n* if applicable - a screenshot of the interface showing the faulty behavior\n* if applicable - the file attachment needed to reproduce the issue\n* if applicable - the content or code snippet needed to reproduce the issue\n\n**Follow this template:**\n\nSTEPS TO REPRODUCE:...\n\nEXPECTED RESULTS:...\n\nACTUAL RESULTS:...\n\n**NOTE:**\n\nPlease avoid the following when creating a new JIRA issue:\n\n* Do not create a new issue which duplicates an existing one\n* Do not create a new issue which isn't filled/written correctly\n\nUsing JIRA's built-in search or Google (with the ##site:jira.xwiki.org## operator) are good ways to find existing issues and avoid duplicating them.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy , page version 51.1, section \"Creating JIRA issues\")"
+    }
+  },
+  {
+    "id": "e04",
+    "group": "e",
+    "question": "I went through one of our QA manual test scenarios and found that nothing automated covers it, so I want to open a Jira issue asking for it to be automated. How should I file that issue (project, type, component, label), and what do I need to put in it?",
+    "kind": "fact",
+    "key_points": [
+      "File it in the XWIKI platform project with type 'Task'",
+      "Set the component to 'Development Issues Only' and add the label 'testneeded'",
+      "Include a link to the existing manual test and, where relevant, which browsers, databases and servlet containers it has to run on",
+      "Include a link to the Matrix discussion where the test was analysed"
+    ],
+    "avoided_terms": [
+      "Manual tests migration strategy",
+      "migration",
+      "ManualTestStrategy",
+      "deprecated manual test",
+      "matrix.xwiki.com",
+      "one manual test per week",
+      "Development Issues Only",
+      "testneeded"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy@51.1",
+      "section": "Manual tests migration strategy",
+      "gap": "B27",
+      "reference": "== Manual tests migration strategy ==\n\nIn order to reduce the number of manual tests, a [[strategy>>https://forum.xwiki.org/t/manual-tests-vs-automated-tests-analysis/7535]] has been proposed to identify manual tests run for XWiki Platform for which there are already automated tests or to create tasks for automation of tests that don't exist yet.\n\nStrategy description:\n\n* One manual test per week (number can be adjusted depending on the complexity of tests) is analyzed and discussed on ###xwiki:matrix.xwiki.com##. With the help of Developers team will be searched whether an automated test exists and has or not the same reproduction steps as the manual test;\n* If an automated test doesn’t exist or the scenario is different, will be decided if a JIRA ticket should be raised for it (to be automated) or should be dropped and marked as a deprecated manual test.\n\nNotes:\n\n* The JIRA ticket:\n** should be raised on XWIKI platform Project, as type //'Task'//, will have the component //'Development Issues Only'// and the label set //'testneeded'//;\n** should contain the link to the existing manual test and details about browsers/ databases/ servlet containers needed to be run on (if the case);\n** should contain the link to the matrix discussions to be easier to understand what needs to be done or it's already done.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/ManualTestStrategy , page version 51.1, section \"Manual tests migration strategy\")"
+    }
+  },
+  {
+    "id": "e05",
+    "group": "e",
+    "question": "I'm about to resolve a fixed ticket on jira.xwiki.org. My fix changed a LESS file under the Flamingo skin resources and also livetable.js in the web WAR module. How do I decide what to put in the ticket's categorization field before closing it? Is picking one value enough?",
+    "kind": "fact",
+    "key_points": [
+      "Whoever closes the issue must fill in the JIRA Components field (it is used for later queries)",
+      "Find the component from the committed files listed in the issue's Development panel and the Maven module each file belongs to",
+      "Set one component per distinct Maven module changed, so here both 'Flamingo Skin' and 'Web - Templates & Resources'"
+    ],
+    "avoided_terms": [
+      "Components must be specified",
+      "Components field",
+      "Rule",
+      "Development panel",
+      "Maven module",
+      "Flamingo Skin component",
+      "Web - Templates & Resources"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA@6.1",
+      "section": "Rule: Components must be specified",
+      "gap": "C13",
+      "reference": "== Rule: Components must be specified ==\n\nAnyone closing an issue must make sure that the JIRA Components fields is filled appropriately as this allows to perform interesting queries afterwards ([[List of empty components to fix>>https://jira.xwiki.org/issues/?jql=resolution%20%3D%20Fixed%20AND%20component%20is%20EMPTY%20%20AND%20project%20in%20(XCOMMONS%2C%20XRENDERING%2C%20XWIKI)%20]]).\n\nThe rules are:\n\n* Check the list of committed files (available in the right panel of any JIRA issue, under \"Development\"), and what Maven module they affect. This will give you the name of the JIRA Component for the change.\n** Example 1: ##xwiki-platform-core/xwiki-platform-flamingo/xwiki-platform-flamingo-skin/xwiki-platform-flamingo-skin-resources/src/main/resources/flamingo/less/action-menus.less## -> ##Flamingo Skin## Component\n** Example 2: ##xwiki-platform-core/xwiki-platform-web/xwiki-platform-web-war/src/main/webapp/resources/js/xwiki/table/livetable.js## -> ##Web - Templates & Resources## Component\n* Set as many Components as there are changes from different Maven modules\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA , page version 6.1, section \"Rule: Components must be specified\")"
+    }
+  },
+  {
+    "id": "e06",
+    "group": "e",
+    "question": "I'm filing a bug that only shows up when XWiki runs on Tomcat 9 and on PostgreSQL 15. How should I tag the issue so the tagging matches what the project usually does? Should I add a tag like \"Tomcat9\" or \"postgresql15\"?",
+    "kind": "fact",
+    "key_points": [
+      "Labels must be all lowercase",
+      "Don't put specific versions in labels: use the generic ones, e.g. tomcat and postgresql, not tomcat9",
+      "Put the version details (e.g. \"Tomcat 9.x\") in the JIRA Environment field"
+    ],
+    "avoided_terms": [
+      "lowercase labels",
+      "without versions",
+      "Use the right labels",
+      "tomcat9",
+      "Servlet-container-related labels",
+      "Database-related labels"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA@6.1",
+      "section": "Rule: create lowercase labels and without versions",
+      "gap": "C14",
+      "reference": "== Rule: create lowercase labels and without versions ==\n\nThe idea is consistency:\n\n* We use lowercase labels\n* Don't put specific versions in labels, instead use the Environment field to add more details about versions.\n** For example don't create a ##tomcat9## label, instead use the ##tomcat## one and put \"Tomcat 9.x\" in the Environment field.\n\n== Rule: Use the right labels ==\n\nUse the following labels:\n\n* [[Usability labels>>UserExperience.WebHome]]\n* [[Security label>>Community.SecurityPolicy.WebHome||anchor=\"#HJIRA\"]]\n* [[Regression label>>||anchor=\"#HRule:RegressionHandling\"]]\n* [[XWiki Days labels>>Community.XWikiDays.WebHome]] (Each XWiki Day uses a different JIRA label)\n* ##testneeded## label for issues about missing tests that need to be added\n** Note: Manual QA [[uses this label>>Community.ManualTestStrategy]]\n* ##responsive## label for issues related to Responsive UI (especially XWiki UI on small screens, like mobile)\n** TODO: Decide what we do with ##mobile##, ie whether we keep both labels or not\n* ##flickering## label for issues related to flickering tests\n* ##performance## label for issues related to performance (memory needs, speed of execution, scalability, etc)\n* Browser-related labels: ##ie##, ##chrome##, ##firefox##, etc\n* Servlet-container-related labels: ##tomcat##, ##jetty##, etc\n* Database-related labels: ##mysql##, ##mariadb##, ##postgresql##, ##oracle##, etc\n* OS-related labels: ##windows##, ##mac##, etc\n* (Deprecated) ##configurationtesting## label was used for issues related to Environment test (docker-based tests)\n* ##nestedspaces## label for issues related to Nested Spaces or Nested Pages\n* ##onboarding## label for simple issues that can be tackled by developers doing onboarding on the XWiki project\n* ##l10n## label for issues related to Localization. Note: Also set this label on issues using the \"Localization\" component\n\nSee also the [[use of lowercase labels>>||anchor=\"HRule:createlowercaselabelsandwithoutversions\"]].\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA , page version 6.1, section \"Rule: create lowercase labels and without versions\")"
+    }
+  },
+  {
+    "id": "e07",
+    "group": "e",
+    "question": "I'm about to merge an outside contributor's PR on GitHub for an XWiki ticket. Who should the ticket be assigned to when I close it? And what if the person who wrote it has no account on the issue tracker yet?",
+    "kind": "fact",
+    "key_points": [
+      "Assign the issue to the contributor who opened the PR, not to the merging committer",
+      "Without a JIRA account, ask the contributor to create one so the issue can be assigned to them",
+      "Meanwhile assign the committer who merges the PR, who stays assigned if no account is ever created"
+    ],
+    "avoided_terms": [
+      "Assign contributor",
+      "Pull Request",
+      "JIRA",
+      "JIRA account",
+      "committer merging the PR",
+      "substantial modifications"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA@6.1",
+      "section": "Rule: Assign contributor when there's a Pull Request",
+      "gap": "C15",
+      "reference": "== Rule: Assign contributor when there's a Pull Request ==\n\n* If a contributor opens a PR, [[assign the corresponding JIRA issue to the contributor>>https://markmail.org/message/6vgagzsrkxij3k3l]]\n* If the contributor doesn't have a JIRA account then ask the contributor to create an account to assign him/her and in the mean time assign the committer merging the PR (so that if no account is ever created the committer stays assigned)\n* If you have to make substantial modifications to the PR, then you decide who gets assigneed (contributor or you), on a case by case basis.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/IssueTracker/JIRA , page version 6.1, section \"Rule: Assign contributor when there's a Pull Request\")"
+    }
+  },
+  {
+    "id": "e08",
+    "group": "e",
+    "question": "I found that screen-reader users can't skip past the navigation menu to reach the main content on a page in XWiki. I'm about to open a JIRA ticket for it. What do I need to fill in or attach so the ticket gets triaged correctly as an a11y problem?",
+    "kind": "fact",
+    "key_points": [
+      "First search the open, unresolved accessibility issues in JIRA with a few keywords to avoid creating a duplicate",
+      "Add the 'wcag' label to the issue",
+      "Fill the WCAG 2.1 Rule ids field with the number and name of the violated success criterion (e.g. 2.4.1 Bypass Blocks)",
+      "Attach a screenshot of the element showing both the rendered page and its DOM tree"
+    ],
+    "avoided_terms": [
+      "Report an Accessibility Issue",
+      "wcag label",
+      "WCAG 2.1 Rule ids",
+      "success criterion",
+      "Bypass Blocks",
+      "2.4.1",
+      "DOM tree"
+    ],
+    "gold": {
+      "source": "https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility@50.1",
+      "section": "Report an Accessibility Issue",
+      "gap": "B35",
+      "reference": "= Report an Accessibility Issue =\n\n* Search the [[open accessibility issues>>https://jira.xwiki.org/issues/?jql=labels%20%3D%20wcag%20AND%20resolution%20%3D%20Unresolved]] first, with a few keywords.\n* Add the ##wcag## label to the issue.\n* Fill the ##WCAG 2.1 Rule ids## field with the number and name of the broken success criterion, for example ##2.4.1 Bypass Blocks##.\n* Add a screenshot of the element, showing both the page and its DOM tree.\n\n(Source: https://dev.xwiki.org/xwiki/bin/view/Community/Accessibility , page version 50.1, section \"Report an Accessibility Issue\")"
+    }
+  }
+]

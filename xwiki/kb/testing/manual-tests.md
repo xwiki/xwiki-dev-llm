@@ -15,8 +15,11 @@ related: [testing/strategy.md, testing/test-value.md, servers/jira.md]
 
 test.xwiki.org (wiki id `test`, REST as in [[index]]) runs the Test Reporting Application. It holds
 the manual tests run at each release, one space per area (`Web Tests`, `Administration Tests`, …).
-How a manual test is reviewed for automation, its JIRA issue, and what to record once it is
-automated: the "Manual tests migration strategy" section of the Manual Test Strategy page.
+A manual test with no automated equivalent gets a JIRA issue to automate it: project `XWIKI`, type
+Task, component `Development Issues only`, label `testneeded`, linking the manual test and its Matrix
+discussion, and naming the browsers, databases or servlet containers it must run on. How a test is
+reviewed for automation, and what to record once it is automated: the "Manual tests migration
+strategy" section of the Manual Test Strategy page.
 
 - **A test** is a page with a `QA.TestClass` object. The steps are the page content; the object holds
   `expectedResult`, `userType`, `wikiType` and `deprecated` (a test dropped instead of automated).
