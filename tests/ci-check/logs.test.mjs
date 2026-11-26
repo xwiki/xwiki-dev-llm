@@ -133,3 +133,12 @@ test('a build only the infrastructure broke is infrastructure, even beside an un
   assert.equal(diagnosis.signature, 'jenkins-xml-limit');
   assert.equal(diagnosis.also, undefined);
 });
+
+test('a red build with no failed stage is an unexplained break, not a crash', async () => {
+  // A build can fail after its last stage, leaving every stage green: stable-18.4.x Environment
+  // Tests #196 (2026-11-26) did, and a null cause crashed the whole sweep.
+  const diagnosis = await diagnoseStages([]);
+  assert.equal(diagnosis.kind, 'unclassified');
+  assert.equal(diagnosis.signature, 'unclassified:no error line');
+  assert.equal(diagnosis.also, undefined);
+});

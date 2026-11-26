@@ -264,7 +264,9 @@ async function causeOf(stages) {
   const code = stages.filter((bag, index) => !infra[index]);
   const fromCode = code.length ? await codeCauseOf(code) : null;
   if (fromCode && fromCode.kind !== 'unclassified') return fromCode;
-  return infra.find(Boolean) || fromCode;
+  // A build can fail with no stage marked failed (an error after the last stage): that is an
+  // unexplained break, never no answer, which every caller would trip on.
+  return infra.find(Boolean) || fromCode || codeCauseOf([]);
 }
 
 /** The code's cause among stages no infrastructure failure explains: the first one's, the rest its cascade. */
