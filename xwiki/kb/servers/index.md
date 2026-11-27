@@ -5,6 +5,7 @@ summary: The servers making up the xwiki.org dev ecosystem, what each is for, an
   accesses or verifies each one (MCP, REST, or live `curl`), and attributing posts an LLM co-wrote.
 sources:
   - https://dev.xwiki.org/xwiki/bin/view/Community/DevelopmentPractices#HServers
+  - https://dev.xwiki.org/xwiki/bin/view/Community/AIPolicy
   - https://www.xwiki.org/xwiki/bin/view/Documentation/UserGuide/Features/XWikiRESTfulAPI#HAuthentication
 provenance: official
 last-confirmed: 2026-11-16
@@ -96,7 +97,8 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
 A forum post, JIRA description or comment, or GitHub comment an LLM co-wrote goes out under the
 developer's name, so it ends with `PS: This post was co-written with Claude Code.` (plus what else it
 did, when that matters). Commits and PRs (`xwiki-pull-request`) and comments whose tool appends its
-own footer (`xwiki-ci-check`) are attributed their own way.
+own footer (`xwiki-ci-check`) are attributed their own way. The project's rules on AI use (disclosure,
+confidential data, automated agents) are its [AI Policy](https://dev.xwiki.org/xwiki/bin/view/Community/AIPolicy).
 
 ## Verifying volatile facts
 

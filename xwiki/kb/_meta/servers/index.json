@@ -72,12 +72,14 @@
       "questions": [
         "How do I attribute a forum post I wrote with Claude Code?",
         "What signature must a JIRA comment have when an AI assistant helped write it?",
-        "Do commits and pull requests need the same AI attribution as forum posts?"
+        "Do commits and pull requests need the same AI attribution as forum posts?",
+        "Where are XWiki's rules on using AI tools, disclosure and confidential data?"
       ],
       "aliases": [
         "ai attribution",
         "co-written with claude",
-        "llm disclosure"
+        "llm disclosure",
+        "ai policy"
       ]
     },
     "Verifying volatile facts": {
@@ -97,19 +99,19 @@
     "related": [
       "servers/jenkins.md",
       "servers/jira.md",
-      "servers/develocity.md",
+      "conventions/versioning.md",
       "sonarqube/verification.md"
     ],
     "applies-to": []
   },
-  "source_hash": "1a6cbd7da1cece97d3ec3ed92975a90056c9ae21557b5e768cdd4679d80096e8",
+  "source_hash": "516a15882aa9965af663feeae716748f7abe1aa2f1fd087fed98a8e4195530ed",
   "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
   "section_hashes": {
     "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
     "Server map": "073aeb8e9c490d6a158661e6c84fed32278770e8642842574d6fd705b3506ade",
     "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
     "Accessing / writing to the XWiki-run sites via REST": "7f1f8e71e06d3efdbf40f73fbd4a3229cdc79554ec992ab994bc1d314c81a72b",
-    "Posts an LLM co-wrote": "36c6581b775db79de2b0ce733c2e210ce8b7a38173419842144850e73008cb45",
+    "Posts an LLM co-wrote": "0078403ed71f6ba0ab7164adbe90f96380bc95aa1c4d0b9e65c93282454dd565",
     "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
   }
 }
