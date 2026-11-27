@@ -28,7 +28,8 @@ description: Create a GitHub pull request for an XWiki repo (xwiki-platform, xwi
   `kb/conventions/commit-messages.md`; the `check-commit-text` hook also blocks it.
 - When the change was authored with AI assistance, add AI attribution: a `Co-Authored-By: Claude
   <model> <noreply@anthropic.com>` trailer on the commit and a "Generated with Claude Code" line in
-  the PR body.
+  the PR body. The project's rules on AI use are its
+  [AI Policy](https://dev.xwiki.org/xwiki/bin/view/Community/AIPolicy).
 
 ## PR description — always use the template
 
@@ -75,7 +76,7 @@ complete every section meaningfully:
 - Add `backport stable-xxx` labels to trigger automated cherry-pick PRs onto release branches.
 - Only a PR opened by an **unattended LLM routine** (scheduled or CI, no developer in the session)
   carries the `llm-agent` label. Never add or propose it from an interactive session, even for an
-  AI-written change: the AI attribution above already records that.
+  AI-written change: the AI attribution above already records that. (AI Policy, "Automated agents".)
 - Assign the committer who will do the final merge; ping reviewers for parts outside their
   expertise. Dependency-upgrade PR default assignees: webjar Maven → @mflorea,
   non-webjar Maven → @tmortagne, npm → @manuelleduc.
