@@ -91,6 +91,13 @@ The procedure lives in the `xwiki-rest-api` skill; the durable gotchas are:
   (stdin then carries the header, so send a body with `--data-binary @file`, not `@-`). If a password does leak into the conversation, say so plainly and
   tell the developer to rotate it — a transcript cannot be un-sent. Same rule for any other secret
   store the developer points at (`~/.netrc`, an env file, a password-manager export).
+- **An unexpected `401` with the right credentials is the failed-login captcha, not a wrong
+  password.** XWiki Standard's `XWiki.Authentication.Configuration` puts a username behind a captcha
+  after 3 rejected authentications within 300 s, with **no expiry**: every later login of it, Basic or
+  form, is refused (a write reads as Guest, "Access denied in edit mode") until a browser login answers
+  the captcha or the node restarts. xwiki.org runs several nodes (`NODESESSIONID`), each counting on
+  its own, so a request landing on another node can look like the lock expired. Stop at the first such
+  `401` (a retry is one more failure) and ask the developer to log in once in the browser.
 
 ## Posts an LLM co-wrote
 

@@ -56,9 +56,9 @@
       "questions": [
         "How do I write a page through the REST API and why do I get a 403 invalid form token?",
         "How do I upload an attachment to an xwiki.org page with curl and why do I get a 400?",
-        "How do I pick the right wiki id in the REST URL for dev.xwiki.org or test.xwiki.org?",
         "How do I authenticate to xwiki.org REST with my credentials without leaking the password?",
-        "Can a script call an xwiki.org /bin/ action like ImportExtension with Basic auth, without a browser?"
+        "Can a script call an xwiki.org /bin/ action like ImportExtension with Basic auth, without a browser?",
+        "Why does my correct xwiki.org password suddenly fail with 401, and then my writes come back as Guest saying Access denied in edit mode?"
       ],
       "aliases": [
         "xwiki rest api",
@@ -99,18 +99,18 @@
     "related": [
       "servers/jenkins.md",
       "servers/jira.md",
-      "conventions/versioning.md",
+      "servers/develocity.md",
       "sonarqube/verification.md"
     ],
     "applies-to": []
   },
-  "source_hash": "516a15882aa9965af663feeae716748f7abe1aa2f1fd087fed98a8e4195530ed",
+  "source_hash": "6a509175215ed1039dca2c637f6666794352007b2a7e772dd6736c9c7781ebf7",
   "file_hash": "45fda19810c700c3521446cb33506fe75a450902af5989df5f8c50b3c0b8faec",
   "section_hashes": {
     "XWiki development server ecosystem": "b01da2f6d80d820436a4109464c1861c36c710f5988c424d98e84b673130388f",
     "Server map": "073aeb8e9c490d6a158661e6c84fed32278770e8642842574d6fd705b3506ade",
     "What has MCP today vs. `curl`-only": "34e2f425f3bce52b1b06f9529190fb7f22d14d0abecfa3eed7d43355d674a06e",
-    "Accessing / writing to the XWiki-run sites via REST": "7f1f8e71e06d3efdbf40f73fbd4a3229cdc79554ec992ab994bc1d314c81a72b",
+    "Accessing / writing to the XWiki-run sites via REST": "38e949ff17201a8e44a3687877689b9f7c442db89413df0f6b6a7ba8a48d485c",
     "Posts an LLM co-wrote": "0078403ed71f6ba0ab7164adbe90f96380bc95aa1c4d0b9e65c93282454dd565",
     "Verifying volatile facts": "0098908c623e3d2dddcfb3fedfe382567bca7343e23c4fa789b59f1e775d5523"
   }

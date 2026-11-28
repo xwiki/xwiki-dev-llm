@@ -3,8 +3,7 @@ title: XWiki documentation conventions (Documentation Guide)
 stability: durable
 summary: The rules for xwiki.org documentation — Diataxis page types & audiences, title/page-name
   rules, per-type content rules (a How-to opening on a link to an Explanation, a screenshot on *most*
-  steps and a mandatory one on the result step, a topic page being an Explanation that links to its
-  Extensions-wiki page), showing
+  steps and a mandatory one on the result step, a topic page being an Explanation), showing
   rather than only telling — screenshots for User/Admin pages, code examples for Developer ones,
   a code macro rather than a screenshot whenever what is shown is itself text (a config file, a command)
   and above all when the reader must edit or copy it,
@@ -167,8 +166,7 @@ result, a bookmark or a link, none of which carry the surrounding context.
   disguise; `docpages.py lint` flags it, advisory.
 - **Explanation** — explain concepts, limitations, consequences, and background; link to the How-tos
   applying the concept and the References pinning down its details.
-- **A topic page** — top of a tree, with children — **must be an Explanation whose first sentence
-  links to its Extensions-wiki page** (the one named by the tree's Technical ID).
+- **A topic page** — top of a tree, with children — **must be an Explanation**.
 
 Source: the guide's
 [Apply Diataxis](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/Diataxis/ApplyDiataxis/).
@@ -364,6 +362,9 @@ Use the guide for the authoring rules, and that page for what each structure fie
   The badge accepts an unprefixed id too (for historical reasons), but the id must match the extension
   page's **Website** field exactly, or its "Documentation" button breaks: change both or neither.
   Empty when no extension applies (e.g. installation pages).
+  Since DocApp 1.22 it also displays a bar naming and linking the extension under the title of the
+  **Administrator pages under `documentation.extensions`**, telling administrators what to install:
+  **those pages must have one**, and their text needn't name the extension (not even a topic page's).
   An **empty `id` on the extension page is completed there** (`<groupId>:<artifactId>`), and an
   extension with no page on the Extensions wiki is imported first, per
   [Link the Documentation Page to its Extension](https://dev.xwiki.org/xwiki/bin/view/Community/DocGuide/PageStructure/LinkDocumentationPageExtension/).
