@@ -309,9 +309,11 @@ def lint(mod):
             if len(p['space']) == 4 and p['page'] == 'WebHome':
                 if p['type'] != 'explanation':
                     problems.append(f'{name}: topic page is not an explanation')
-                if 'doc:extensions:' not in p['content'].split('. ')[0]:
-                    problems.append(f'{name}: topic page\'s first sentence has no wiki link to its '
-                                    f'Extensions-wiki page')
+
+        # On these pages the Technical ID displays the bar naming the extension to install (DocApp 1.22+).
+        if p['space'][:3] == ['documentation', 'extensions', 'admin'] and not p.get('ext'):
+            problems.append(f'{name}: Administrator page of a non-bundled extension has no Technical ID '
+                            f'(`ext`)')
 
         if name in p['related']:
             problems.append(f'{name}: Related links to itself')

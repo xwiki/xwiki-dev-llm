@@ -118,7 +118,9 @@
       "questions": [
         "What value should the Technical ID of my doc page have, including the xwiki: prefix?",
         "Why does the Documentation button on my extension page stop working?",
-        "How do I set the Technical ID for an npm package's documentation page?"
+        "How do I set the Technical ID for an npm package's documentation page?",
+        "Do my administrator install pages need a Technical ID, and why does a bar show up under the title?",
+        "Does an administrator install page have to name the extension it installs in its text?"
       ],
       "aliases": [
         "extension id",
@@ -282,18 +284,18 @@
     ],
     "applies-to": []
   },
-  "source_hash": "67e6146484b6a22f0b1092b426140aa03a85623b2ee6f88f8932cfe59bdd9aeb",
-  "file_hash": "8806b286c3e404f92e9d683218b39f2a2f352adb3549b898359f5c293a13e722",
+  "source_hash": "5a8e98e53b727127c6ca00f9f6add82cc2c178810f2a8401fbee83e5940427c1",
+  "file_hash": "0be5664a29c34d315e67242dd5156b12bc38f6889ae3c9e970d44fb151e5ca88",
   "section_hashes": {
     "XWiki documentation conventions (Documentation Guide)": "87444d75e01ea4997af6db6bd850e4793e9f82cbf239eb7d4382fea2302723ac",
     "Diataxis: one type + one audience per page": "66b9a4ff9f69643ba88d80acd03740ca3d4d1dffedefd59f0bb6b0ae59bd320c",
     "Titles and page names": "edc5c851f83e7c3e2ddac5792228f2fe5e4b3318503cce2da179cafb1ebc054f",
-    "Content rules per type": "f2fe4bcc2cb8a43c22bf50661a4ab5c565948ba97db084741ac597638249a3a1",
+    "Content rules per type": "aa3edc78586ffd1153c8647d9b232eca79fbbe33d508aefb4c167c7866680916",
     "How much belongs on one page": "db94f28b4c104802a55cd7d9d40f09f91cdb9e5a56e249a804f666a6e7ccbe33",
     "Page-structure fields": "138738f2474c9d74d1a5f1e86f1108a400d066b2f6f754e485c8320a5bd00c74",
     "FAQ and Highlights fields: entry limits and when to fill them": "12d7277dbcb045d084d0ec67e799bc70c9d8609a4f79494518b7bc51a82602c9",
     "Related links field: no children, no self-link, audience labels": "43569636b83cc23040dc49fbe8ef2b1b99b9def1040144a027c44d10d5b8b443",
-    "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": "1944ecbbcd15c876f4b9beaff29bda35e4ea33ea8e13c779fb21ed1bc4ee836e",
+    "Technical ID field: the `xwiki:`/`npm:` prefix and the Website match": "f13c28ba6257f48662e0e3a314cb93960170d83f821f5182bad9619c4a12619c",
     "Documentation style": "531ee6944670f0e3f2a9ad08fdff5e12da1e958df0a0265e8d03a44acf914ffe",
     "Attachments, images and videos": "cb64c341b55bcd4431e2807d8164630748bb6643b9fc17bf0983c3adb9d7a4a8",
     "Screenshots: capture width, framing and the red box": "27ee5fc561705604eaebefd4b761a267ebed2e2fe1be4d92d96f0758fc2ecccb",

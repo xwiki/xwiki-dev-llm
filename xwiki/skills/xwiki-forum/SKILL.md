@@ -43,3 +43,7 @@ Body:     <the full text>
 
 Post only after an explicit yes, with exactly the approved fields, then give the topic URL. To fix
 a topic already posted, `discourse_update_topic` changes its title, tags and category.
+
+No MCP tool marks a topic solved: `POST https://forum.xwiki.org/solution/accept` with
+`id=<concluding post id>` and the `Api-Key` / `Api-Username` headers from `DISCOURSE_API_KEY` /
+`DISCOURSE_API_USERNAME`, only on the developer's request, then check the topic's `accepted_answer`.

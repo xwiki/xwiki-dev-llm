@@ -16,4 +16,4 @@ it is meant to illustrate, trust the rule and say so.
   - [Like Java API](https://www.xwiki.org/xwiki/bin/view/documentation/xs/dev/like/java-api/) (Developer: one member table plus usage code)
 - **Explanation** (noun-phrase title, answers "why", concepts/limitations/consequences):
   - [Ways to Insert a Macro](https://www.xwiki.org/xwiki/bin/view/documentation/xs/user/rendering-macros/ways-insert/) (User, with a diagram)
-  - [Group](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/group/) (Administrator topic page: first sentence links its Extensions-wiki page)
+  - [Group](https://www.xwiki.org/xwiki/bin/view/documentation/xs/admin/group/) (Administrator topic page)
